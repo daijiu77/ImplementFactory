@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B12E488F-0521-4E23-8767-A749378AE6CE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>System.DJ.ImplementFactory.Framework</RootNamespace>
+    <AssemblyName>System.DJ.ImplementFactory.Framework</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CodeCompiler\CodeCompiler.cs" />
+    <Compile Include="CodeCompiler\DataServerProvider.cs" />
+    <Compile Include="Commons\AbsClone.cs" />
+    <Compile Include="Commons\AsynicTransaction.cs" />
+    <Compile Include="Commons\Attrs\AbsDataInterface.cs" />
+    <Compile Include="Commons\Attrs\AutoCall.cs" />
+    <Compile Include="Commons\Attrs\AutoCount.cs" />
+    <Compile Include="Commons\Attrs\AutoDelete.cs" />
+    <Compile Include="Commons\Attrs\AutoInsert.cs" />
+    <Compile Include="Commons\Attrs\AutoProcedure.cs" />
+    <Compile Include="Commons\Attrs\AutoSelect.cs" />
+    <Compile Include="Commons\Attrs\AutoUpdate.cs" />
+    <Compile Include="Commons\Attrs\ExistCall.cs" />
+    <Compile Include="Commons\Attrs\FieldMapping.cs" />
+    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForDeleteOnClass.cs" />
+    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForInsertOnClass.cs" />
+    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForSelectOnClass.cs" />
+    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForUpdateOnClass.cs" />
+    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlOnClass.cs" />
+    <Compile Include="Commons\Attrs\SingleCall.cs" />
+    <Compile Include="Commons\BasicExecForSQL.cs" />
+    <Compile Include="Commons\BufferData.cs" />
+    <Compile Include="Commons\DataAdapter.cs" />
+    <Compile Include="Commons\DataEntity.cs" />
+    <Compile Include="Commons\DataOperate\AbsBatch.cs" />
+    <Compile Include="Commons\DataOperate\DeleteBatch.cs" />
+    <Compile Include="Commons\DataOperate\InsertBatch.cs" />
+    <Compile Include="Commons\DataOperate\UpdateBatch.cs" />
+    <Compile Include="Commons\DbHelper.cs" />
+    <Compile Include="Commons\DJTools.cs" />
+    <Compile Include="Commons\DynamicCode\DynamicCodeAutoCall.cs" />
+    <Compile Include="Commons\DynamicCode\DynamicCodeChange.cs" />
+    <Compile Include="Commons\DynamicCode\DynamicCodeTempImpl.cs" />
+    <Compile Include="Commons\DynamicEntity.cs" />
+    <Compile Include="Commons\EList.cs" />
+    <Compile Include="Commons\ErrorLevels.cs" />
+    <Compile Include="Commons\ExecuteSql.cs" />
+    <Compile Include="Commons\MixedCalculate.cs" />
+    <Compile Include="Commons\TempData.cs" />
+    <Compile Include="Commons\TempImpl.cs" />
+    <Compile Include="ImplementAdapter.cs" />
+    <Compile Include="Pipelines\DataOptType.cs" />
+    <Compile Include="Pipelines\IAnalyzeSql.cs" />
+    <Compile Include="Pipelines\IClone.cs" />
+    <Compile Include="Pipelines\IDataInterface.cs" />
+    <Compile Include="Pipelines\IDataOperateAttribute.cs" />
+    <Compile Include="Pipelines\IDataServerProvider.cs" />
+    <Compile Include="Pipelines\IDbConnectionState.cs" />
+    <Compile Include="Pipelines\IDbHelper.cs" />
+    <Compile Include="Pipelines\IEmplyInterface.cs" />
+    <Compile Include="Pipelines\IExecuteSql.cs" />
+    <Compile Include="Pipelines\IInstanceCodeCompiler.cs" />
+    <Compile Include="Pipelines\IMixedCalculate.cs" />
+    <Compile Include="Pipelines\ISingleInstance.cs" />
+    <Compile Include="Pipelines\ISqlExpressionProvider.cs" />
+    <Compile Include="Pipelines\IUnSingleInstance.cs" />
+    <Compile Include="Pipelines\Pojo\DbList.cs" />
+    <Compile Include="Pipelines\Pojo\MethodComponent.cs" />
+    <Compile Include="Pipelines\Pojo\MethodInformation.cs" />
+    <Compile Include="Pipelines\Pojo\Para.cs" />
+    <Compile Include="Pipelines\Pojo\PList.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ImplementFactory.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

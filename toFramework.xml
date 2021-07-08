@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<files>
+	<copy ext="cs">
+    <!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+    <!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\ImplementAdapter.cs</source>
+    <target rootPath="" type="framework">System.DJ.ImplementFactory.Framework</target>
+		<exclude></exclude>
+    <replaces>
+      <item des="把复制文件内容里的 source 替换为 target">
+        <source>using System.DJ.DotNetCore.CodeCompiler</source>
+        <target>using System.DJ.Framework.CodeCompiler</target>
+        <extendNames>cs</extendNames>
+      </item>
+    </replaces>
+	</copy>
+	<copy ext="xml">
+    <!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+    <!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+    <source rootPath="">System.DJ.ImplementFactory.NetCore\ImplementFactory.xml</source>
+    <target rootPath="" type="framework">System.DJ.ImplementFactory.Framework</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+    <!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+    <!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+    <source rootPath="">System.DJ.ImplementFactory.NetCore\Pipelines</source>
+    <target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Pipelines</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+    <!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+    <!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+    <source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
+    <target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Commons</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,sql,config,xml">
+    <!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+    <!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+    <source rootPath="">Test.NetCore</source>
+    <target rootPath="" type="framework">Test.Framework</target>
+		<exclude des="目录前后必须以分割符开始或结束">\bin\,\obj\</exclude>
+		<replaces des="符号 ~ 表示当前文件位置的相对路径, 符号 ~~ 表示当前文件位置的绝对路径, 符号 [s->t] 表示把字符 s 替换为字符 t, 如果[s->t]前加括号, 表示仅替换括号里的内容">
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>namespace (~)[\->.]</source>
+				<target>namespace (~)[\->.]</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>using Test.NetCore</source>
+				<target>using Test.Framework</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+</files>

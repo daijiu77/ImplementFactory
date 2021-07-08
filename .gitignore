@@ -6,6 +6,30 @@
 *.lo
 *.o
 *.obj
+*.suo
+.suo
+
+# Compiled Release files
+*.cache
+
+/.vs/ImplementFactory
+/packages/
+
+# Compiled bin files
+/System.DJ.ImplementFactory.Framework/bin/
+/System.DJ.ImplementFactory.NetCore/bin/
+/Test.Framework/bin/
+/Web.Framework/bin/
+/Test.NetCore/bin/
+/Web.NetCore/bin/
+
+# Compiled obj files
+/System.DJ.ImplementFactory.Framework/obj/
+/System.DJ.ImplementFactory.NetCore/obj/
+/Test.Framework/obj/
+/Test.NetCore/obj/
+/Web.Framework/obj/
+/Web.NetCore/obj/
 
 # Precompiled Headers
 *.gch
@@ -14,7 +38,6 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -25,8 +48,8 @@
 *.la
 *.a
 *.lib
+*.pdb
 
 # Executables
-*.exe
 *.out
 *.app
