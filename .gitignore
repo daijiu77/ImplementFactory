@@ -20,8 +20,10 @@
 /System.DJ.ImplementFactory.NetCore/bin/
 /Test.Framework/bin/
 /Web.Framework/bin/
+/Web.Framework/TempImpl/
 /Test.NetCore/bin/
 /Web.NetCore/bin/
+/Web.NetCore/TempImpl/
 
 # Compiled obj files
 /System.DJ.ImplementFactory.Framework/obj/
