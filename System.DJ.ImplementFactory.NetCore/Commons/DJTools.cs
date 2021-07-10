@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -555,16 +555,67 @@ namespace System.DJ.ImplementFactory.Commons
             return mbool;
         }
 
+        public static bool isWeb { get; set; }
+
         public static string RootPath
         {
             get
             {
                 string rootPath = "";
-                Assembly asse = Assembly.GetExecutingAssembly();
-                string path = asse.Location;
-                FileInfo fileInfo = new FileInfo(path);
-                DirectoryInfo dri = fileInfo.Directory;
-                rootPath = dri.FullName;
+                object webCurrent = null;
+                if (null != webCurrent)
+                {
+                    object request = null;
+                    webCurrent.ForeachProperty((pi, piType, fn, fv) =>
+                    {
+                        if (fn.Equals("Request"))
+                        {
+                            if (piType.FullName.Equals("System.Web.HttpRequest"))
+                            {
+                                request = fv;
+                                return false;
+                            }
+                        }
+                        
+                        return true;
+                    });
+
+                    if (null != request)
+                    {
+                        try
+                        {
+                            object v = request.GetType().InvokeMember("MapPath", BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, request, new object[] { "~/" });
+                            rootPath = v.ToString();
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }                        
+                                            
+                    }
+                    //rootPath = null.Request.MapPath("~/");
+                    if ("\\" == rootPath.Substring(rootPath.Length - 1))
+                    {
+                        rootPath = rootPath.Substring(0, rootPath.Length - 1);
+                    }
+
+                    string s = rootPath + "\\bin";
+                    if (Directory.Exists(s))
+                    {
+                        isWeb = true;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(rootPath))
+                {
+                    Assembly asse = Assembly.GetExecutingAssembly();
+                    string path = asse.Location;
+                    FileInfo fileInfo = new FileInfo(path);
+                    DirectoryInfo dri = fileInfo.Directory;
+                    rootPath = dri.FullName;
+                }
+
                 return rootPath;
             }
         }

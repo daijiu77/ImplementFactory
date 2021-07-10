@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.Drawing;

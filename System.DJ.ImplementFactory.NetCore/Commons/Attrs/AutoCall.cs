@@ -182,7 +182,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 return;
             }
             string configFile = "ImplementFactory.xml";
-            string rootPath = DJTools.RootPath;
+            string rootPath = ImplementAdapter.rootPath;
             string f = Path.Combine(rootPath, configFile);
             if (File.Exists(f))
             {

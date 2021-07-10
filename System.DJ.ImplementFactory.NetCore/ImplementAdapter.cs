@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.DotNetCore.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
@@ -23,7 +23,7 @@ namespace System.DJ.ImplementFactory
     public abstract class ImplementAdapter
     {
         object currentObj = null;
-        private static string rootPath = "";
+        
         private static readonly string configFile = "ImplementFactory.config";
         private static readonly string configFile_Xml = "ImplementFactory.xml";
         private static string dbConnectionFreeStrategy = "";
@@ -58,8 +58,6 @@ namespace System.DJ.ImplementFactory
                 UserType = typeof(ImplementAdapter);
             }
 
-            rootPath = DJTools.RootPath;
-
             loadSysInstance();
             init();
         }
@@ -89,7 +87,8 @@ namespace System.DJ.ImplementFactory
 
             DataAdapter.SetConfig(dbInfo.ConnectionString, dbInfo.DatabaseType);
 
-            assemblies = DJTools.GetAssemblyCollection(rootPath, new string[] { "/TempImpl/bin/" });
+            string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
+            assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/TempImpl/bin/" });
             AutoCall.AssemblyCollection = assemblies;
             AutoCall.SetDataProviderAssemble(dbInfo.SqlProviderRelativePathOfDll);
             AutoCall.RootPath = rootPath;
@@ -116,7 +115,8 @@ namespace System.DJ.ImplementFactory
         {
             asse = null;
             object _obj = default(T);
-            string[] files = Directory.GetFiles(rootPath, "*.dll");
+            string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
+            string[] files = Directory.GetFiles(binPath, "*.dll");            
             string file = "";
             string interfaceName = typeof(T).FullName;
             if (!string.IsNullOrEmpty(likeName))
@@ -231,6 +231,7 @@ namespace System.DJ.ImplementFactory
             Type dspType = null;
 
             string f = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+            if (DJTools.isWeb) f = "bin\\" + f;
             f = Path.Combine(rootPath, f);
             Type type1 = getInstanceTypeByInterfaceType(f, typeof(IInstanceCodeCompiler));
 
@@ -270,7 +271,7 @@ namespace System.DJ.ImplementFactory
         {
             if (0 < assembliesOfTemp.Count) return;
 
-            string dir = Path.Combine(DJTools.RootPath, TempImpl.dirName);
+            string dir = Path.Combine(rootPath, TempImpl.dirName);
             dir = Path.Combine(dir, TempImpl.libName);
 
             if (Directory.Exists(dir))
@@ -292,6 +293,19 @@ namespace System.DJ.ImplementFactory
         public static string GetRootPath()
         {
             return ImplementAdapter.rootPath;
+        }
+
+        static string _rootPath = "";
+        public static string rootPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_rootPath))
+                {
+                    _rootPath = DJTools.RootPath;
+                }
+                return _rootPath;
+            }
         }
 
         public static IDbHelper DbHelper { get; set; }
@@ -1326,7 +1340,7 @@ namespace System.DJ.ImplementFactory
 
         private static void clearTempImplBin()
         {
-            string f = Path.Combine(DJTools.RootPath, TempImpl.dirName);
+            string f = Path.Combine(rootPath, TempImpl.dirName);
             f = Path.Combine(f, TempImpl.libName);
             if (Directory.Exists(f))
             {

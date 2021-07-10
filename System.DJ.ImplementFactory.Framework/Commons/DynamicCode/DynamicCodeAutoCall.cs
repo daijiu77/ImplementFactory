@@ -424,7 +424,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string[] arr = classPath.Split('.');
             string asseName = "";
             string an = "";
-            string rootPath = DJTools.RootPath;
+            string rootPath = ImplementAdapter.rootPath;
             string dllFile = "";
             Assembly ass = null;
             Type type1 = null;
@@ -432,7 +432,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 asseName += "." + item;
                 an = asseName.Substring(1);
-                dllFile = Path.Combine(rootPath, an + ".dll");
+                if (DJTools.isWeb)
+                {
+                    dllFile = Path.Combine(rootPath, "bin\\" + an + ".dll");
+                }
+                else
+                {
+                    dllFile = Path.Combine(rootPath, an + ".dll");
+                }
                 if (!File.Exists(dllFile)) continue;
                 ass = Assembly.Load(an);
                 if (null != ass)
