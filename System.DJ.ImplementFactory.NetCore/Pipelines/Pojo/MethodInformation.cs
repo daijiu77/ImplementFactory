@@ -198,5 +198,6 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
 
         public object AutoCall { get; set; }
 
+        public string autoCallParaValue { get; set; }
     }
 }

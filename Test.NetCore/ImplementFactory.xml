@@ -16,7 +16,7 @@
 	</LogsRange>
 	<SysConfig>
 		<Recomplie description="是否启用重新编译机制, false(不启用), true(启用), 默认为 false">true</Recomplie>
-		<IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">false</IsShowCode>
+		<IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">true</IsShowCode>
 	</SysConfig>
 	
 	<MatchRules description="可以不需要配置匹配规则，由组件自动适配, 但配置后可提高组件加载速度">

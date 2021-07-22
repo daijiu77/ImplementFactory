@@ -22,6 +22,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         static Random random = new Random();
         string dirName = "";
+        string PublicAutoCall = "{PublicAutoCall$}";
 
         public DynamicCodeTempImpl(string dirName)
         {
@@ -277,7 +278,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         }
 
         string getParaListStr(MethodInfo m, MethodInformation mInfo, EList<CKeyValue> uskv, PList<Para> paraList, string paraListVarName, ref Type actionType,
-            ref string actionParaName, ref string methodName, ref string paraStr, ref string lists, ref bool isDynamicEntity, ref string defaultV, ref string outParas)
+            ref string actionParaName, ref string methodName, ref string paraStr, ref string lists, ref bool isDynamicEntity, ref string defaultV, ref string outParas,
+            ref string autoCallPara, ref string autoCallParaName)
         {
             string plist = "";
             string s = "";
@@ -411,6 +413,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     plist += "," + p.Name;
 
                     uskv.Add(new CKeyValue() { Key = p.ParameterType.Namespace });
+
+                    if (typeof(AutoCall) == p.ParameterType || p.ParameterType.IsSubclassOf(typeof(AutoCall)))
+                    {
+                        autoCallParaName = p.Name;
+                        mInfo.append(ref autoCallPara, LeftSpaceLevel.four, "if(null == {0})", p.Name);
+                        mInfo.append(ref autoCallPara, LeftSpaceLevel.four, "{");
+                        mInfo.append(ref autoCallPara, LeftSpaceLevel.five, "{0} = this.{1} as {2};", p.Name, PublicAutoCall, p.ParameterType.FullName);
+                        mInfo.append(ref autoCallPara, LeftSpaceLevel.four, "}");
+                    }
                 }
                 paraList.Add(new Para(Guid.NewGuid()) { ParaName = p.Name, ParaType = p.ParameterType, ParaTypeName = s });
             }
@@ -438,10 +449,19 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             public string methodName { get; set; }
             public string plist { get; set; }
             public string actionParaName { get; set; }
+            public string autoCallPara { get; set; }
+            public string autoCallParaName { get; set; }
         }
 
         void dynamicEntityMInfo(MethodInfo m, DynamicEntityMInfoPara dynamicEntityMInfoPara, ref string code, ref string return_type)
         {
+            if (!string.IsNullOrEmpty(dynamicEntityMInfoPara.autoCallPara))
+            {
+                dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.one, "");
+                dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.one, dynamicEntityMInfoPara.autoCallPara);
+                dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.one, "");
+            }
+
             dynamicEntityMInfoPara.uskv.Add(new CKeyValue() { Key = typeof(MethodInformation).Namespace });
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "MethodInformation method_info = new MethodInformation();");
             if (null != dynamicEntityMInfoPara.implementType)
@@ -454,6 +474,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.AutoCallVarName = \"{0}\";", dynamicEntityMInfoPara.autocall_name);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.ParaListVarName = \"{0}\";", dynamicEntityMInfoPara.paraListVarName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.AutoCall = {0};", dynamicEntityMInfoPara.autocall_name);
+            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.autoCallParaValue = {0};", dynamicEntityMInfoPara.autoCallParaName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace = new StackTrace();");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame = trace.GetFrame(0);");
@@ -488,6 +509,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.InstanceVariantName = \"base\";");
             }
+
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "object[] attrArr = method_info.methodInfo.GetCustomAttributes(typeof(AutoCall), true);");
             dynamicEntityMInfoPara.uskv.Add(new CKeyValue() { Key = typeof(AutoCall).Namespace });
 
@@ -745,6 +767,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string methodAttr = "";
             string actionParaName = "";
             string err = "";
+            string autoCallPara = "";
+            string autoCallParaName = "";
             AutoCall autoCall = null;
             bool EnabledBuffer = true;
             bool isDynamicEntity = false;
@@ -795,8 +819,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     paraStr = "";
                     lists = "";
+                    autoCallPara = "";
+                    autoCallParaName = "";
                     plist = getParaListStr(m, mInfo, uskv, paraList, paraListVarName, ref actionType, ref actionParaName, ref methodName, ref paraStr, ref lists,
-                        ref isDynamicEntity, ref defaultV, ref outParas);
+                        ref isDynamicEntity, ref defaultV, ref outParas, ref autoCallPara, ref autoCallParaName);
 
                     if (!string.IsNullOrEmpty(paraStr))
                     {
@@ -865,6 +891,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", return_type);
                             mInfo.append(ref code, "");
                         }
+                    }
+
+                    if (!string.IsNullOrEmpty(autoCallPara))
+                    {
+                        mInfo.append(ref code, LeftSpaceLevel.one, autoCallPara);
                     }
 
                     #region 定义  PList<Para> 参数集合
@@ -949,7 +980,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             impl_name = impl_name,
                             methodName = methodName,
                             plist = plist,
-                            actionParaName = actionParaName
+                            actionParaName = actionParaName,
+                            autoCallPara = autoCallPara,
+                            autoCallParaName = autoCallParaName
                         };
                         dynamicEntityMInfo(m, dynamicEntityMInfoPara, ref code, ref return_type);
                     }
@@ -1151,6 +1184,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             code = code.Replace(References, referencesCode);
             code = code.Replace(privateVarName, privateVarNameCode);
             code = code.Replace(implInterfacesTag, implInterfaces);
+            code = code.Replace(PublicAutoCall, autocall_name);
 
             if (!string.IsNullOrEmpty(isDisables_Str))
             {
