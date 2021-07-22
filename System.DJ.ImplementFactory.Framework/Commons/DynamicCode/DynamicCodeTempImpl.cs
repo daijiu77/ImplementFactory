@@ -468,6 +468,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.ofInstanceType = typeof({0});", dynamicEntityMInfoPara.implementType.FullName);
             }
+
+            if (string.IsNullOrEmpty(dynamicEntityMInfoPara.autoCallParaName)) dynamicEntityMInfoPara.autoCallParaName = "null";
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.ofInterfaceType = typeof({0});", dynamicEntityMInfoPara.objType.FullName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.paraList = paraList;");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.StartSpace = \"{0}\";", dynamicEntityMInfoPara.mInfo.getSpace(4));
