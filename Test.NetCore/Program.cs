@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Test.NetCore.Entities;
 
@@ -74,7 +75,7 @@ namespace Test.NetCore
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
-            
+
             LogicCalculate logicCalculate = new LogicCalculate();
             Console.WriteLine("result: " + logicCalculate.testCalculate());
             Console.WriteLine("");

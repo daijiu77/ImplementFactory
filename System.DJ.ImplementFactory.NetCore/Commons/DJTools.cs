@@ -731,7 +731,11 @@ namespace System.DJ.ImplementFactory.Commons
                     s = isFullName ? type.FullName : type.Name;
                     if (type.IsByRef)
                     {
-                        s = s.Substring(0, s.Length - 1);
+                        rg = new Regex(".+[^a-z0-9]$", RegexOptions.IgnoreCase);
+                        if (rg.IsMatch(s))
+                        {
+                            s = s.Substring(0, s.Length - 1);
+                        }
                     }
                 }
             }
