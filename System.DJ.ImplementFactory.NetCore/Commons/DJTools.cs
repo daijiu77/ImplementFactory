@@ -729,6 +729,10 @@ namespace System.DJ.ImplementFactory.Commons
                 else
                 {
                     s = isFullName ? type.FullName : type.Name;
+                    if (type.IsByRef)
+                    {
+                        s = s.Substring(0, s.Length - 1);
+                    }
                 }
             }
             return s;

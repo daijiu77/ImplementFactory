@@ -23,8 +23,17 @@ namespace System.DJ.Framework.CodeCompiler
             List<string> fs = new List<string>();
             foreach (var item in asses)
             {
-                if (string.IsNullOrEmpty(item.Location)) continue;
-                fs.Add(item.Location);
+                try
+                {
+                    if (string.IsNullOrEmpty(item.Location)) continue;
+                    fs.Add(item.Location);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+                
             }
             references = fs.ToArray();
             CompilerParameters cp = new CompilerParameters(references);
