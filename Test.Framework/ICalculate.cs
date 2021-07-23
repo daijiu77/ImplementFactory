@@ -10,7 +10,7 @@ namespace Test.Framework
         int Sum(int a, int b);
 
         /// <summary>
-        /// ����������Ϊ AutoCall�����Ҹò���ֵΪ null ʱ������Զ�ע�� AutoCall ʵ������
+        /// 当参数类型为 AutoCall，并且该参数值为 null 时，组件自动注入 AutoCall 实例对象
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>

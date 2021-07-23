@@ -14,8 +14,17 @@ namespace System.DJ.ImplementFactory.Commons
 
         static AsynicTransaction()
         {
-            thread = new Thread(run);
-            thread.Start();
+            //thread = new Thread(run);
+            //thread.Start();
+            new Task(() =>
+            {
+                isRunning = true;
+                while (isRunning)
+                {
+                    Thread.Sleep(sleepNum);
+                    ExecAsynic(null, false, 0, 0, 0, 0, null);
+                }
+            }).Start();
         }
 
         private static void run()
