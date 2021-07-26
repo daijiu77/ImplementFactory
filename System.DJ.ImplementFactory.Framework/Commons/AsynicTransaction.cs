@@ -211,6 +211,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             Task task = new Task(() =>
             {
+                m_SyncContext = SynchronizationContext.Current;
                 if (null != m_SyncContext)
                 {
                     m_SyncContext.Post(PostFunction, null);
