@@ -383,9 +383,9 @@ namespace System.DJ.ImplementFactory
             {
                 Adapter();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                new AutoCall().e(ex.ToString());
                 //throw;
             }
         }
@@ -397,9 +397,9 @@ namespace System.DJ.ImplementFactory
             {
                 Adapter();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                new AutoCall().e(ex.ToString());
                 //throw;
             }            
         }

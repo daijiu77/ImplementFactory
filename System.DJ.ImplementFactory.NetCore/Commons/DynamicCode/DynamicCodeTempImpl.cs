@@ -18,7 +18,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 {
     class DynamicCodeTempImpl
     {
-        public static string InterfaceInstanceType => "Get_InterfaceInstanceType__";
+        public static string InterfaceInstanceType => "i_obj";
 
         static Random random = new Random();
         string dirName = "";
@@ -744,7 +744,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 mInfo.append(ref code, LeftSpaceLevel.three, "private static {0} {1} = new {0}();", implName, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
-                mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get; set; }", DJTools.GetClassName(implementType, true), InterfaceInstanceType);
+                mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get; set; } = {2};", DJTools.GetClassName(implementType, true), InterfaceInstanceType, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
                 DJTools.append(ref code, privateVarName);
             }
