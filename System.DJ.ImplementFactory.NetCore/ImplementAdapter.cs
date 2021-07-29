@@ -379,13 +379,29 @@ namespace System.DJ.ImplementFactory
         public ImplementAdapter()
         {
             currentObj = this;
-            Adapter();
+            try
+            {
+                Adapter();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
         }
 
         private ImplementAdapter(object currentObj)
         {
             this.currentObj = currentObj;
-            Adapter();
+            try
+            {
+                Adapter();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }            
         }
 
         class ImplAdapter : ImplementAdapter
