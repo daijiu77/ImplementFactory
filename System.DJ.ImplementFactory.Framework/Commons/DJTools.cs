@@ -1164,5 +1164,13 @@ namespace System.DJ.ImplementFactory.Commons
         {
             return _IsDebug(type);
         }
+
+        public static T GetSourceInstance<T>(this object newInstance)
+        {
+            T v = default(T);
+            if (newInstance.GetType().IsInterface) return v;
+            v = newInstance.GetPropertyValue<T>(TempImpl.InterfaceInstanceType);
+            return v;
+        }
     }
 }
