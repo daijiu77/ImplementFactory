@@ -13,9 +13,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B20B4874-3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.ImplementFactory.Framework", "System.DJ.ImplementFactory.Framework\System.DJ.ImplementFactory.Framework.csproj", "{B12E488F-0521-4E23-8767-A749378AE6CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.NetCore", "Web.NetCore\Web.NetCore.csproj", "{931EE5D3-FD6E-4AA9-8149-255DD244D319}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.NetCore", "Web.NetCore\Web.NetCore.csproj", "{931EE5D3-FD6E-4AA9-8149-255DD244D319}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Framework", "Web.Framework\Web.Framework.csproj", "{CC4D4B38-5A2B-4B21-8699-6FCBE1A22DA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.MicroService.NetCore", "System.DJ.MicroService.NetCore\System.DJ.MicroService.NetCore.csproj", "{BCA805FC-1360-4ABB-8892-A4B425E6CF81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.MicroService.Framework", "System.DJ.MicroService.Framework\System.DJ.MicroService.Framework.csproj", "{6260940D-8379-45BB-A224-0B8AD6D55C10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +51,14 @@ Global
 		{CC4D4B38-5A2B-4B21-8699-6FCBE1A22DA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC4D4B38-5A2B-4B21-8699-6FCBE1A22DA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC4D4B38-5A2B-4B21-8699-6FCBE1A22DA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCA805FC-1360-4ABB-8892-A4B425E6CF81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCA805FC-1360-4ABB-8892-A4B425E6CF81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCA805FC-1360-4ABB-8892-A4B425E6CF81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCA805FC-1360-4ABB-8892-A4B425E6CF81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6260940D-8379-45BB-A224-0B8AD6D55C10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6260940D-8379-45BB-A224-0B8AD6D55C10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6260940D-8379-45BB-A224-0B8AD6D55C10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6260940D-8379-45BB-A224-0B8AD6D55C10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

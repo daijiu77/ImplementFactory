@@ -17,7 +17,9 @@
 
 # Compiled bin files
 /System.DJ.ImplementFactory.Framework/bin/
+/System.DJ.MicroService.Framework/bin/
 /System.DJ.ImplementFactory.NetCore/bin/
+/System.DJ.MicroService.NetCore/bin/
 /Test.Framework/bin/
 /Web.Framework/bin/
 /Web.Framework/TempImpl/
@@ -27,7 +29,9 @@
 
 # Compiled obj files
 /System.DJ.ImplementFactory.Framework/obj/
+/System.DJ.MicroService.Framework/obj/
 /System.DJ.ImplementFactory.NetCore/obj/
+/System.DJ.MicroService.NetCore/obj/
 /Test.Framework/obj/
 /Test.NetCore/obj/
 /Web.Framework/obj/
