@@ -23,7 +23,7 @@ namespace System.DJ.ImplementFactory
     public abstract class ImplementAdapter
     {
         object currentObj = null;
-        
+
         private static readonly string configFile = "ImplementFactory.config";
         private static readonly string configFile_Xml = "ImplementFactory.xml";
         private static string dbConnectionFreeStrategy = "";
@@ -116,7 +116,7 @@ namespace System.DJ.ImplementFactory
             asse = null;
             object _obj = default(T);
             string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
-            string[] files = Directory.GetFiles(binPath, "*.dll");            
+            string[] files = Directory.GetFiles(binPath, "*.dll");
             string file = "";
             string interfaceName = typeof(T).FullName;
             if (!string.IsNullOrEmpty(likeName))
@@ -401,7 +401,7 @@ namespace System.DJ.ImplementFactory
             {
                 new AutoCall().e(ex.ToString());
                 //throw;
-            }            
+            }
         }
 
         class ImplAdapter : ImplementAdapter
@@ -454,7 +454,14 @@ namespace System.DJ.ImplementFactory
                         isSingleInstance = false;
                     }
 
-                    if ((null != (obj as ISingleInstance) || isSingleCall) && false == isUnSingleInstance)
+                    bool mboolSg = false;
+                    if (null != (obj as Type))
+                    {
+                        string cl = DJTools.GetClassName(typeof(ISingleInstance), true);
+                        mboolSg = null != ((Type)obj).GetInterface(cl);
+                    }
+
+                    if ((null != (obj as ISingleInstance) || isSingleCall || mboolSg) && false == isUnSingleInstance)
                     {
                         isSingleCall = true;
                         isSingleInstance = true;
@@ -599,6 +606,11 @@ namespace System.DJ.ImplementFactory
                                 implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
                             }
 
+                            if (false == isUnSingleInstance)
+                            {
+                                action(implType, null);
+                            }
+
                             if (enableCompiler && null == (autoCall as ExistCall))
                             {
                                 if (func_IsCompile(interfaceType, implType))
@@ -631,6 +643,11 @@ namespace System.DJ.ImplementFactory
                         else
                         {
                             implType = LoadImplementTypeByAssemblies(interfaceType);
+
+                            if (false == isUnSingleInstance)
+                            {
+                                action(implType, null);
+                            }
 
                             if (enableCompiler)
                             {
