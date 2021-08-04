@@ -603,7 +603,7 @@ namespace System.DJ.ImplementFactory
                             {
                                 if (func_IsCompile(interfaceType, implType))
                                 {
-                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode);
+                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
                                 }
                             }
 
@@ -638,7 +638,7 @@ namespace System.DJ.ImplementFactory
                                 {
                                     implType = interfaceType;
                                     interfaceType = typeof(IEmplyInterface);
-                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode);
+                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
                                 }
                             }
 

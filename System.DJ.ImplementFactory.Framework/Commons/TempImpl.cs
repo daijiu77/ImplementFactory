@@ -28,7 +28,7 @@ namespace System.DJ.ImplementFactory.Commons
             init(rootPath);
         }
 
-        public Type NewImplement(Type interfaceType, Type implementType, AutoCall autoCall_Impl, bool isShowCode)
+        public Type NewImplement(Type interfaceType, Type implementType, AutoCall autoCall_Impl, bool isShowCode, bool isSingleInstance)
         {
             Type implType = null;
 
@@ -52,7 +52,15 @@ namespace System.DJ.ImplementFactory.Commons
                     autoCall_Impl.ExecuteException(interfaceType, null, null, null, new Exception(err));
                     return null;
                 }
-                codeCompiler.SavePathOfDll = dllFilePath;
+
+                if (isSingleInstance)
+                {
+                    codeCompiler.SavePathOfDll = null;
+                }
+                else
+                {
+                    codeCompiler.SavePathOfDll = dllFilePath;
+                }
                 Assembly assObj = codeCompiler.TranslateCode(dllArr, "v4.0", code, ref err);
 
                 if (string.IsNullOrEmpty(err))
