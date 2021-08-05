@@ -591,33 +591,38 @@ namespace System.DJ.ImplementFactory
                         isShowCode = false;
                         if (interfaceType.IsInterface)
                         {
-                            if (null != mr)
-                            {
-                                isShowCode = mr.IsShowCode;
-                                implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
-                            }
-                            else
-                            {
-                                implType = LoadImplementTypeByInterface(interfaceType, autoCall);
-                            }
-
+                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
                             if (null == implType)
                             {
-                                implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
-                            }
-
-                            if (false == isUnSingleInstance)
-                            {
-                                action(implType, null);
-                            }
-
-                            if (enableCompiler && null == (autoCall as ExistCall))
-                            {
-                                if (func_IsCompile(interfaceType, implType))
+                                if (null != mr)
                                 {
-                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                    isShowCode = mr.IsShowCode;
+                                    implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
+                                }
+                                else
+                                {
+                                    implType = LoadImplementTypeByInterface(interfaceType, autoCall);
+                                }
+
+                                if (null == implType)
+                                {
+                                    implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
+                                }
+
+                                if (false == isUnSingleInstance)
+                                {
+                                    action(implType, null);
+                                }
+
+                                if (enableCompiler && null == (autoCall as ExistCall))
+                                {
+                                    if (func_IsCompile(interfaceType, implType))
+                                    {
+                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                    }
                                 }
                             }
+
 
                             if (null == impl)
                             {
@@ -642,20 +647,24 @@ namespace System.DJ.ImplementFactory
                         }
                         else
                         {
-                            implType = LoadImplementTypeByAssemblies(interfaceType);
-
-                            if (false == isUnSingleInstance)
+                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
+                            if (null == implType)
                             {
-                                action(implType, null);
-                            }
+                                implType = LoadImplementTypeByAssemblies(interfaceType);
 
-                            if (enableCompiler)
-                            {
-                                if (func_IsCompile(interfaceType, implType))
+                                if (false == isUnSingleInstance)
                                 {
-                                    implType = interfaceType;
-                                    interfaceType = typeof(IEmplyInterface);
-                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                    action(implType, null);
+                                }
+
+                                if (enableCompiler)
+                                {
+                                    if (func_IsCompile(interfaceType, implType))
+                                    {
+                                        implType = interfaceType;
+                                        interfaceType = typeof(IEmplyInterface);
+                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                    }
                                 }
                             }
 
@@ -820,8 +829,13 @@ namespace System.DJ.ImplementFactory
             return mbool;
         }
 
-        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall, Regex rg1, string fn1, bool isIgnoreCase)
+        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
         {
+            string fn1 = "";
+            Regex rg1 = null;
+            bool isIgnoreCase = false;
+            AutoCallMatch(autoCall, ref fn1, ref rg1, ref isIgnoreCase);
+
             Type[] types = null;
             Type impl_type = null;
             foreach (var item in assembliesOfTemp)
@@ -884,13 +898,9 @@ namespace System.DJ.ImplementFactory
             bool isIgnoreCase = false;
             AutoCallMatch(autoCall, ref fn1, ref rg1, ref isIgnoreCase);
 
-            Type impl_type = GetImplementTypeOfTemp(interfaceType, autoCall, rg1, fn1, isIgnoreCase);
-
-            if (null != impl_type) return impl_type;
-
             objAss = interfaceType.Assembly;
             types = objAss.GetTypes();
-            impl_type = GetImplTypeByTypes(types, interfaceType, autoCall, rg1, fn1, isIgnoreCase);
+            Type impl_type = GetImplTypeByTypes(types, interfaceType, autoCall, rg1, fn1, isIgnoreCase);
 
             return impl_type;
         }
@@ -953,8 +963,6 @@ namespace System.DJ.ImplementFactory
             }
 
             string fn1 = isIgnoreCase ? mie.ToLower() : mie;
-            impl_type = GetImplementTypeOfTemp(interfaceType, autoCall, rg1, fn1, isIgnoreCase);
-            if (null != impl_type) return impl_type;
 
             Type[] types = null;
             try
@@ -982,9 +990,6 @@ namespace System.DJ.ImplementFactory
             InstanceObj impl1 = null;
             Type type1 = null;
             Type[] types = null;
-
-            impl_type = GetImplementTypeOfTemp(interfaceType, autoCall, rg1, fn1, isIgnoreCase);
-            if (null != impl_type) return impl_type;
 
             foreach (KeyValuePair<string, InstanceObj> item in interfaceImplements)
             {
