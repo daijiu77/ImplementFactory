@@ -614,10 +614,10 @@ namespace System.DJ.ImplementFactory
                                     if (func_IsCompile(interfaceType, implType))
                                     {
                                         implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
+                                        assembliesOfTemp.Add(implNew.Assembly);
                                     }
                                 }
                             }
-
 
                             if (null == impl)
                             {
@@ -625,7 +625,7 @@ namespace System.DJ.ImplementFactory
                                 {
                                     if (null != implNew)
                                     {
-                                        impl = Activator.CreateInstance(implNew);
+                                        impl = Activator.CreateInstance(implNew);                                        
                                     }
                                     else if (null != implType)
                                     {
@@ -654,6 +654,7 @@ namespace System.DJ.ImplementFactory
                                         implType = interfaceType;
                                         interfaceType = typeof(IEmplyInterface);
                                         implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
+                                        assembliesOfTemp.Add(implNew.Assembly);
                                     }
                                 }
                             }
