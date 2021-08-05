@@ -609,16 +609,11 @@ namespace System.DJ.ImplementFactory
                                     implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
                                 }
 
-                                if (false == isUnSingleInstance)
-                                {
-                                    action(implType, null);
-                                }
-
                                 if (enableCompiler && null == (autoCall as ExistCall))
                                 {
                                     if (func_IsCompile(interfaceType, implType))
                                     {
-                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
                                     }
                                 }
                             }
@@ -652,18 +647,13 @@ namespace System.DJ.ImplementFactory
                             {
                                 implType = LoadImplementTypeByAssemblies(interfaceType);
 
-                                if (false == isUnSingleInstance)
-                                {
-                                    action(implType, null);
-                                }
-
                                 if (enableCompiler)
                                 {
                                     if (func_IsCompile(interfaceType, implType))
                                     {
                                         implType = interfaceType;
                                         interfaceType = typeof(IEmplyInterface);
-                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, isSingleCall);
+                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
                                     }
                                 }
                             }
