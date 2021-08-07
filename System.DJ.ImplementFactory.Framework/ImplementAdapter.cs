@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.DJ.Framework.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -33,6 +34,7 @@ namespace System.DJ.ImplementFactory
         private static List<Assembly> assemblies = null;
         private static List<Assembly> assembliesOfTemp = new List<Assembly>();
         private static Type UserType = null;
+        private static IMicroServiceMethod microServiceMethod = null;
 
         private static Dictionary<string, InstanceObj> interfaceImplements = new Dictionary<string, InstanceObj>();
 
@@ -265,6 +267,8 @@ namespace System.DJ.ImplementFactory
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
             DbHelper.dbConnectionState = dbConnectionState;
+
+            microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
         }
 
         static void getTempBin()
@@ -591,33 +595,50 @@ namespace System.DJ.ImplementFactory
                         isShowCode = false;
                         if (interfaceType.IsInterface)
                         {
-                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
-                            if (null == implType)
+                            Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
+                            if (null != msAtt)
                             {
-                                if (null != mr)
+                                if (null != microServiceMethod)
                                 {
-                                    isShowCode = mr.IsShowCode;
-                                    implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
+                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, interfaceType, ((MicroServiceRoute)msAtt).Uri);
                                 }
                                 else
                                 {
-                                    implType = LoadImplementTypeByInterface(interfaceType, autoCall);
-                                }
-
-                                if (null == implType)
-                                {
-                                    implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
-                                }
-
-                                if (enableCompiler && null == (autoCall as ExistCall))
-                                {
-                                    if (func_IsCompile(interfaceType, implType))
-                                    {
-                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
-                                    }
+                                    autoCall.e("未引入微服务组件", ErrorLevels.severe);
+                                    continue;
                                 }
                             }
 
+                            if (null == implType)
+                            {
+                                implType = GetImplementTypeOfTemp(interfaceType, autoCall);
+                                if (null == implType)
+                                {
+                                    if (null != mr)
+                                    {
+                                        isShowCode = mr.IsShowCode;
+                                        implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
+                                    }
+                                    else
+                                    {
+                                        implType = LoadImplementTypeByInterface(interfaceType, autoCall);
+                                    }
+
+                                    if (null == implType)
+                                    {
+                                        implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
+                                    }
+
+                                    if (enableCompiler && null == (autoCall as ExistCall))
+                                    {
+                                        if (func_IsCompile(interfaceType, implType))
+                                        {
+                                            implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
+                                        }
+                                    }
+                                }
+                            }
+                            
                             if (null == impl)
                             {
                                 try

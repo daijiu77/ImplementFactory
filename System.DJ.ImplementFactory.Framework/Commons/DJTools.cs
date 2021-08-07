@@ -146,6 +146,10 @@ namespace System.DJ.ImplementFactory.Commons
             byte[] arr = type.Assembly.GetName().GetPublicKeyToken();
             if (0 == arr.Length) return false;
             bool mbool = ((typeof(ValueType) == type.BaseType) || (typeof(string) == type));
+            if (!mbool)
+            {
+                mbool = typeof(Guid) == type || typeof(DateTime) == type;
+            }
             return mbool;
 
             //string s = type.ToString();

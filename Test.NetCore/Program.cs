@@ -1,12 +1,16 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
+using System.DJ.MicroService;
 using Test.NetCore.Entities;
+using System.Collections;
 
 namespace Test.NetCore
 {
@@ -72,9 +76,44 @@ namespace Test.NetCore
             MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
         }
 
+        public class testJson
+        {
+            public int key { get; set; }
+            public string val { get; set; }
+        }
+
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
+            //, \"arr\": [1,2,3]
+            string s = "{\"token\":\"abc\", \"arr\": [1,2,3], \"data\": [{\"key\":1, \"val\":\"a\"}, {\"key\":2, \"val\":\"b\"}]}";
+            testJson[] list1 = (testJson[])s.JsonToList<testJson[]>();
+            JObject jt = JObject.Parse(s);
+            IEnumerable<JProperty> list = jt.Properties();
+            string k = "";
+            object v = null;
+
+            object arr = new int[] { 1, 2 };
+            if (null != arr.GetType().GetInterface("System.Collections.IEnumerable"))
+            {
+                k = "1";
+            }
+
+            foreach (JProperty item in list)
+            {
+                if(item.Value.Type == JTokenType.Array)
+                {                    
+                    JArray jo = item.Value.ToObject<JArray>();
+                    int ncount = jo.Count;
+                    v = "";
+                    foreach (JToken item1 in item.Value)
+                    {
+                        v = item1.ToString();
+                    }
+                }
+                v = item.Value.ToString();
+                k = item.Name;
+            }
 
             LogicCalculate logicCalculate = new LogicCalculate();
             Console.WriteLine("result: " + logicCalculate.testCalculate());

@@ -9,6 +9,9 @@ namespace Test.Framework
     class LogicCalculate : ImplementAdapter
     {
         [MyAutoCall]
+        private IApiUserInfo apiUserInfo;
+
+        [MyAutoCall]
         private ICalculate calculate;
 
         public int testCalculate()

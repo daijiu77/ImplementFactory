@@ -595,12 +595,12 @@ namespace System.DJ.ImplementFactory
                         isShowCode = false;
                         if (interfaceType.IsInterface)
                         {
-                            Attribute att = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
-                            if (null != att)
+                            Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
+                            if (null != msAtt)
                             {
                                 if (null != microServiceMethod)
                                 {
-                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, interfaceType, ((MicroServiceRoute)att).Uri);
+                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, interfaceType, ((MicroServiceRoute)msAtt).Uri);
                                 }
                                 else
                                 {

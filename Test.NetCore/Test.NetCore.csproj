@@ -6,7 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\System.DJ.ImplementFactory.NetCore\System.DJ.ImplementFactory.NetCore.csproj" />
+    <ProjectReference Include="..\System.DJ.MicroService.NetCore\System.DJ.MicroService.NetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
