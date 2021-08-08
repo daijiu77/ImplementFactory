@@ -7,6 +7,6 @@ namespace System.DJ.ImplementFactory.Pipelines
 {
     public interface IMicroServiceMethod
     {
-        Type GetMS(IInstanceCodeCompiler instanceCodeCompiler, AutoCall autoCall, Type interfaceType, string uri);
+        Type GetMS(IInstanceCodeCompiler instanceCodeCompiler, AutoCall autoCall, MicroServiceRoute microServiceRoute, Type interfaceType);
     }
 }

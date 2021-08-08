@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory;
@@ -15,7 +17,7 @@ namespace System.DJ.MicroService
 {
     public class MicroServiceMethodImpl : IMicroServiceMethod
     {
-        Type IMicroServiceMethod.GetMS(IInstanceCodeCompiler codeCompiler, AutoCall autoCall, Type interfaceType, string uri)
+        Type IMicroServiceMethod.GetMS(IInstanceCodeCompiler codeCompiler, AutoCall autoCall, MicroServiceRoute microServiceRoute, Type interfaceType)
         {            
             string usingList = "";
             string methodList = "";
@@ -33,7 +35,9 @@ namespace System.DJ.MicroService
             EList<CKeyValue> elist = new EList<CKeyValue>();
             elist.Add(new CKeyValue() { Key = "System.DJ.MicroService" });
             elist.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons" });
+            elist.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             elist.Add(new CKeyValue() { Key = "System" });
+            elist.Add(new CKeyValue() { Key = "Newtonsoft.Json" });
 
             string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
             string clssPath = namespaceStr + "." + clssName;
@@ -42,9 +46,22 @@ namespace System.DJ.MicroService
             mi.append(ref code, "{");
             mi.append(ref code, LeftSpaceLevel.two, "public class {0}: {1}", clssName, DJTools.GetClassName(interfaceType, true));
             mi.append(ref code, LeftSpaceLevel.two, "{");
+            mi.append(ref code, LeftSpaceLevel.three, "private string _routeName = \"{0}\";", microServiceRoute.RouteName);
+            mi.append(ref code, LeftSpaceLevel.three, "private string _uri = \"\";");
+            mi.append(ref code, "");
+            mi.append(ref code, "{#structorMethod}");
+            mi.append(ref code, "");
             mi.append(ref code, "{#methodList}");
             mi.append(ref code, LeftSpaceLevel.two, "}");
             mi.append(ref code, "}");
+
+            string structorMethod = "";
+            mi.append(ref structorMethod, LeftSpaceLevel.three, "public {0}()", clssName);
+            mi.append(ref structorMethod, LeftSpaceLevel.three, "{");
+            mi.append(ref structorMethod, LeftSpaceLevel.four, "MicroServiceRoute msr = new MicroServiceRoute(_routeName);");
+            mi.append(ref structorMethod, LeftSpaceLevel.four, "_uri = msr.Uri;");
+            mi.append(ref structorMethod, LeftSpaceLevel.three, "}");
+            code = code.Replace("{#structorMethod}", structorMethod);
 
             Regex rg = new Regex(@"\`[0-9]+\[");
 
@@ -88,13 +105,14 @@ namespace System.DJ.MicroService
                     data = data.Substring(sign.Length);
                 }
                 data = "new { " + data + " }";
-                s = "";
+
+                s = "";                
                 mi.append(ref s, LeftSpaceLevel.four, "object datas = new { tokenCode = \"" + tokenCode + "\", data = " + data + "  };");
-                mi.append(ref s, LeftSpaceLevel.four, "string jsonData = datas.ToJsonUnit();");
+                mi.append(ref s, LeftSpaceLevel.four, "string jsonData = JsonConvert.SerializeObject(datas);");
                 mi.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
                 mi.append(ref s, LeftSpaceLevel.one, "");
                 mi.append(ref s, LeftSpaceLevel.four, "HttpHelper httpHelper = new HttpHelper();");
-                mi.append(ref s, LeftSpaceLevel.four, "httpHelper.SendData(\"" + uri + "\", jsonData, (responseData, err) =>");
+                mi.append(ref s, LeftSpaceLevel.four, "httpHelper.SendData(_uri + \"/" + miItem.Name + "\", jsonData, (responseData, err) =>");
                 mi.append(ref s, LeftSpaceLevel.four, "{");
                 mi.append(ref s, LeftSpaceLevel.five, "responseResult = responseData;");
                 if (!string.IsNullOrEmpty(err))

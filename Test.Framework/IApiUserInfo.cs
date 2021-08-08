@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
 using Test.Framework.Entities;
 

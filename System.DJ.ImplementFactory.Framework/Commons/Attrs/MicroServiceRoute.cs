@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
-namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
+namespace System.DJ.ImplementFactory.Commons.Attrs
 {
     public class MicroServiceRoute: Attribute
     {

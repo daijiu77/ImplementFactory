@@ -359,53 +359,6 @@ namespace System.DJ.MicroService
             string s = json.Trim();
             if (false == s.Substring(0, 1).Equals("{") || false == s.Substring(s.Length - 1).Equals("}")) return vObj;
 
-            JsonData jsonData = new JsonData();
-            JToken jToken = null;
-            JObject jo = JObject.Parse(json);
-            IEnumerable<JProperty> ps = jo.Properties();
-            foreach (JProperty item in ps)
-            {
-                if (item.Value.Type == JTokenType.Object)
-                {
-                    jToken = item.Value;
-                    if (-1 != item.Name.ToLower().IndexOf("data"))
-                    {
-                        jsonData.data = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("list"))
-                    {
-                        jsonData.list = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("arr"))
-                    {
-                        jsonData.arr = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("dts"))
-                    {
-                        jsonData.dts = item.Value;
-                    }
-                }
-            }
-
-            if (null != jsonData.data)
-            {
-                jToken = jsonData.data;
-            }
-            else if (null != jsonData.list)
-            {
-                jToken = jsonData.list;
-            }
-            else if (null != jsonData.arr)
-            {
-                jToken = jsonData.arr;
-            }
-            else if (null != jsonData.dts)
-            {
-                jToken = jsonData.dts;
-            }
-
-            if (null == jToken) return vObj;
-
             vObj = (T)Activator.CreateInstance(typeof(T));
             Dictionary<string, PropertyInfo> dic = new Dictionary<string, PropertyInfo>();
             PropertyInfo[] piArr = vObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -416,8 +369,8 @@ namespace System.DJ.MicroService
 
             object v = null;
             PropertyInfo pi = null;
-            jo = jToken.ToObject<JObject>();
-            ps = jo.Properties();
+            JObject jo = JObject.Parse(json);
+            IEnumerable<JProperty> ps = jo.Properties();
             foreach (JProperty item in ps)
             {
                 if (item.Value.Type == JTokenType.Object || item.Value.Type == JTokenType.Array || item.Value.Type == JTokenType.Property) continue;

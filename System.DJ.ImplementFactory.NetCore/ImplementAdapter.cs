@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.DJ.DotNetCore.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -600,7 +599,8 @@ namespace System.DJ.ImplementFactory
                             {
                                 if (null != microServiceMethod)
                                 {
-                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, interfaceType, ((MicroServiceRoute)msAtt).Uri);
+                                    MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
+                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
                                 }
                                 else
                                 {
