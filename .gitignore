@@ -21,20 +21,26 @@
 /System.DJ.MicroService.Framework/bin/
 /System.DJ.ImplementFactory.NetCore/bin/
 /System.DJ.MicroService.NetCore/bin/
+/MicroService.Web/bin/
 /Test.Framework/bin/
+/Test.FrameworkApi/bin/
+/Test.FrameworkApi/TempImpl/
 /Web.Framework/bin/
 /Web.Framework/TempImpl/
 /Test.NetCore/bin/
+/Test.NetCoreApi/bin/
 /Web.NetCore/bin/
-/Web.NetCore/TempImpl/
 
 # Compiled obj files
 /System.DJ.ImplementFactory.Framework/obj/
 /System.DJ.MicroService.Framework/obj/
 /System.DJ.ImplementFactory.NetCore/obj/
 /System.DJ.MicroService.NetCore/obj/
+/MicroService.Web/obj/
 /Test.Framework/obj/
+/Test.FrameworkApi/obj/
 /Test.NetCore/obj/
+/Test.NetCoreApi/obj/
 /Web.Framework/obj/
 /Web.NetCore/obj/
 
