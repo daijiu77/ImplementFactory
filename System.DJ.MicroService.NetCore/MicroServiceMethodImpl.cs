@@ -112,7 +112,7 @@ namespace System.DJ.MicroService
                 mi.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
                 mi.append(ref s, LeftSpaceLevel.one, "");
                 mi.append(ref s, LeftSpaceLevel.four, "HttpHelper httpHelper = new HttpHelper();");
-                mi.append(ref s, LeftSpaceLevel.four, "httpHelper.SendData(_uri + \"/" + miItem.Name + "\", jsonData, (responseData, err) =>");
+                mi.append(ref s, LeftSpaceLevel.four, "httpHelper.SendData(this._uri + \"/" + miItem.Name + "\", jsonData, (responseData, err) =>");
                 mi.append(ref s, LeftSpaceLevel.four, "{");
                 mi.append(ref s, LeftSpaceLevel.five, "responseResult = responseData;");
                 if (!string.IsNullOrEmpty(err))
@@ -123,6 +123,8 @@ namespace System.DJ.MicroService
 
                 if (typeof(void) != miItem.ReturnType)
                 {
+                    mi.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
+                    mi.append(ref s, LeftSpaceLevel.one, "");
                     returnType = miItem.ReturnType.TypeToString(true);
                     if (typeof(Guid) == miItem.ReturnType)
                     {
