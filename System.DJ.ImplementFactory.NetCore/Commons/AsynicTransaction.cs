@@ -243,7 +243,8 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (null != objThis)
                 {
-                    MethodInfo method = objThis.GetType().GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance);
+                    MethodInfo method = this.GetType().GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance,
+                        Type.DefaultBinder, new Type[] { typeof(CallControl) }, new ParameterModifier[] { new ParameterModifier(1) });
                     if (null != method)
                     {
                         CallControl cc = delegate ()
