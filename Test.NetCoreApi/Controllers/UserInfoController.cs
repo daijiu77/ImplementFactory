@@ -12,7 +12,7 @@ namespace Test.NetCoreApi.Controllers
     [ApiController]
     public class UserInfoController : AbsController
     {
-        [HttpGet, Route("GetUserInfo")]        
+        [HttpPost, Route("GetUserInfo")]        
         public object GetUserInfo()
         {
             return new { name = "ZS", age = 21 };
