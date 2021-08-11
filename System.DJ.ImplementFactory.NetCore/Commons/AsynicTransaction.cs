@@ -14,7 +14,8 @@ namespace System.DJ.ImplementFactory.Commons
         private static Dictionary<string, AsynicElement> dic = new Dictionary<string, AsynicElement>();
         private static int sleepNum = 100;
 
-        private static object objThis = null;
+        private static Type sourceType = null;
+        private static object sourceInstance = null;
 
         static AsynicTransaction()
         {
@@ -47,9 +48,9 @@ namespace System.DJ.ImplementFactory.Commons
             StackFrame stackFrame = trace.GetFrame(2);
             MethodBase methodBase = stackFrame.GetMethod();
             string methodName = methodBase.Name;
-            object impl = methodBase.DeclaringType;
+            Type impl = methodBase.DeclaringType;
             if (impl.GetType() == typeof(AsynicTransaction)) return;
-            objThis = impl;
+            sourceType = impl;
         }
 
         /// <summary>
@@ -76,6 +77,22 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <param name="taskName">任务名称</param>
         /// <param name="milliseconds_100">执行任务时间间隔,单位:100毫秒</param>
+        /// <param name="whileCount">执行次数, 为零时无限执行,默认值为零</param>
+        /// <param name="instanceOfControl">一个控件的实例</param>
+        /// <param name="action">执行任务</param>
+        /// <returns></returns>
+        public static AsynicData AddOfControl(string taskName, int milliseconds_100, int whileCount, object instanceOfControl, Action<AsynicData> action)
+        {
+            sourceInstance = instanceOfControl;
+            getSourceObj();
+            return Add(taskName, milliseconds_100, whileCount, action);
+        }
+
+        /// <summary>
+        /// 向计时器添加一个以100毫秒为间隔的执行任务
+        /// </summary>
+        /// <param name="taskName">任务名称</param>
+        /// <param name="milliseconds_100">执行任务时间间隔,单位:100毫秒</param>
         /// <param name="action">执行任务</param>
         public static AsynicData Add(string taskName, int milliseconds_100, Action<AsynicData> action)
         {
@@ -83,6 +100,21 @@ namespace System.DJ.ImplementFactory.Commons
             int whileCount = 0;
             AsynicData asynicData = Add(taskName, milliseconds_100, whileCount, action);
             return asynicData;
+        }
+
+        /// <summary>
+        /// 向计时器添加一个以100毫秒为间隔的执行任务
+        /// </summary>
+        /// <param name="taskName">任务名称</param>
+        /// <param name="milliseconds_100">执行任务时间间隔,单位:100毫秒</param>
+        /// <param name="instanceOfControl">一个控件的实例</param>
+        /// <param name="action">执行任务</param>
+        /// <returns></returns>
+        public static AsynicData AddOfControl(string taskName, int milliseconds_100, object instanceOfControl, Action<AsynicData> action)
+        {
+            sourceInstance = instanceOfControl;
+            getSourceObj();
+            return Add(taskName, milliseconds_100, action);
         }
 
         /// <summary>
@@ -109,6 +141,22 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <param name="taskName">任务名称</param>
         /// <param name="milliseconds_10">执行任务时间间隔,单位:10毫秒</param>
+        /// <param name="whileCount">执行次数, 为零时无限执行,默认值为零</param>
+        /// <param name="instanceOfControl">一个控件的实例</param>
+        /// <param name="action">执行任务</param>
+        /// <returns></returns>
+        public static AsynicData AddOf10msOfControl(string taskName, int milliseconds_10, int whileCount, object instanceOfControl, Action<AsynicData> action)
+        {
+            sourceInstance = instanceOfControl;
+            getSourceObj();
+            return AddOf10ms(taskName, milliseconds_10, whileCount, action);
+        }
+
+        /// <summary>
+        /// 向计时器添加一个以10毫秒为间隔的执行任务
+        /// </summary>
+        /// <param name="taskName">任务名称</param>
+        /// <param name="milliseconds_10">执行任务时间间隔,单位:10毫秒</param>
         /// <param name="action">执行任务</param>
         /// <returns></returns>
         public static AsynicData AddOf10ms(string taskName, int milliseconds_10, Action<AsynicData> action)
@@ -116,6 +164,21 @@ namespace System.DJ.ImplementFactory.Commons
             getSourceObj();
             int whileCount = 0;
             return AddOf10ms(taskName, milliseconds_10, whileCount, action);
+        }
+
+        /// <summary>
+        /// 向计时器添加一个以10毫秒为间隔的执行任务
+        /// </summary>
+        /// <param name="taskName">任务名称</param>
+        /// <param name="milliseconds_10">执行任务时间间隔,单位:10毫秒</param>
+        /// <param name="instanceOfControl">一个控件的实例</param>
+        /// <param name="action">执行任务</param>
+        /// <returns></returns>
+        public static AsynicData AddOf10msOfControl(string taskName, int milliseconds_10, object instanceOfControl, Action<AsynicData> action)
+        {
+            sourceInstance = instanceOfControl;
+            getSourceObj();
+            return AddOf10ms(taskName, milliseconds_10, action);
         }
 
         public static void Remove(string taskName)
@@ -172,7 +235,8 @@ namespace System.DJ.ImplementFactory.Commons
                     ae.WhileCount = whileCount;
                     ae.action = action;
                     ae.TaskName = taskName;
-                    ae.objThis = objThis;
+                    ae.sourceType = sourceType;
+                    ae.sourceInstance = sourceInstance;
                     dic.Add(taskName, ae);
 
                     foreach (var item in dic)
@@ -230,7 +294,9 @@ namespace System.DJ.ImplementFactory.Commons
 
         public AsynicData asynicData { get; } = new AsynicData();
 
-        public object objThis { get; set; }
+        public Type sourceType { get; set; }
+
+        public object sourceInstance { get; set; }
 
         public void exec()
         {
@@ -241,37 +307,31 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     m_SyncContext.Post(PostFunction, null);
                 }
-                else if (null != objThis)
+                else if (null != sourceInstance)
                 {
-                    if (null == (objThis as Type))
+                    MethodInfo method = sourceInstance.GetType().GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance,
+                        Type.DefaultBinder, new Type[] { typeof(CallControl) }, new ParameterModifier[] { new ParameterModifier(1) });
+                    if (null != method)
                     {
-                        PostFunction(null);
+                        CallControl cc = delegate ()
+                        {
+                            PostFunction(null);
+                        };
+
+                        try
+                        {
+                            //object vObj = sourceType.GetConstructor(Type.EmptyTypes).Invoke(null);
+                            method.Invoke(sourceInstance, new object[] { cc });
+                        }
+                        catch (Exception ex)
+                        {
+                            PostFunction(null);
+                            //throw;
+                        }
                     }
                     else
                     {
-                        MethodInfo method = ((Type)objThis).GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance,
-                        Type.DefaultBinder, new Type[] { typeof(CallControl) }, new ParameterModifier[] { new ParameterModifier(1) });
-                        if (null != method)
-                        {
-                            CallControl cc = delegate ()
-                            {
-                                PostFunction(null);
-                            };
-
-                            try
-                            {
-                                method.Invoke(objThis, new object[] { cc });
-                            }
-                            catch (Exception)
-                            {
-                                PostFunction(null);
-                                //throw;
-                            }
-                        }
-                        else
-                        {
-                            PostFunction(null);
-                        }
+                        PostFunction(null);
                     }
                 }
                 else
