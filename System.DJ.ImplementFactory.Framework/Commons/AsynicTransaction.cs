@@ -243,28 +243,35 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (null != objThis)
                 {
-                    MethodInfo method = objThis.GetType().GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance,
-                        Type.DefaultBinder, new Type[] { typeof(CallControl) }, new ParameterModifier[] { new ParameterModifier(1) });
-                    if (null != method)
+                    if (null == (objThis as Type))
                     {
-                        CallControl cc = delegate ()
-                        {
-                            PostFunction(null);
-                        };
-
-                        try
-                        {
-                            method.Invoke(objThis, new object[] { cc });
-                        }
-                        catch (Exception)
-                        {
-                            PostFunction(null);
-                            //throw;
-                        }
+                        PostFunction(null);
                     }
                     else
                     {
-                        PostFunction(null);
+                        MethodInfo method = ((Type)objThis).GetMethod("Invoke", BindingFlags.Public | BindingFlags.Instance,
+                        Type.DefaultBinder, new Type[] { typeof(CallControl) }, new ParameterModifier[] { new ParameterModifier(1) });
+                        if (null != method)
+                        {
+                            CallControl cc = delegate ()
+                            {
+                                PostFunction(null);
+                            };
+
+                            try
+                            {
+                                method.Invoke(objThis, new object[] { cc });
+                            }
+                            catch (Exception)
+                            {
+                                PostFunction(null);
+                                //throw;
+                            }
+                        }
+                        else
+                        {
+                            PostFunction(null);
+                        }
                     }
                 }
                 else
