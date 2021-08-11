@@ -28,7 +28,7 @@ namespace Test.NetCoreApi
             services.AddControllers();
             services.AddMvc(options =>
             {
-                options.Filters.Add<FilterController>();
+                options.Filters.Add<FilterMvcController>();
             });
         }
 
