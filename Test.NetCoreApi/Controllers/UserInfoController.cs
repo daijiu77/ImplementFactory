@@ -13,9 +13,9 @@ namespace Test.NetCoreApi.Controllers
     public class UserInfoController : AbsController
     {
         [HttpPost, Route("GetUserInfo")]        
-        public object GetUserInfo()
+        public object GetUserInfo(object data)
         {
-            return new { name = "ZS", age = 21 };
+            return new { success = true, message = "", data = data };
         }
     }
 }
