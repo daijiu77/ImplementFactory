@@ -12,29 +12,37 @@ namespace System.DJ.MicroService.NetCore
             int nlen = arr.Length;
             if (nlen > numberOf4Char.ToString().Length) return numberOf4Char.ToString();
             string pw = "";
-            char[] charArr = numberOf4Char.ToString().ToCharArray();            
+            char[] charArr = numberOf4Char.ToString().ToCharArray();
             Dictionary<char, int> dic = new Dictionary<char, int>();
-            
+
             for (int i = 0; i < nlen; i++)
             {
                 dic.Add(arr[i], i);
             }
-            char[] guidArr = Guid.NewGuid().ToString().ToLower().ToCharArray();
+            char[] guidArr = null;
             int[] indexArr = new int[4];
             int num = 0;
             int n = 0;
-            foreach (char c in guidArr)
+            int x1 = 0;
+            //随机抽取排序
+            while (0 < dic.Count && 3 > x1)
             {
-                if (dic.ContainsKey(c))
+                guidArr = Guid.NewGuid().ToString().ToLower().ToCharArray();
+                foreach (char c in guidArr)
                 {
-                    num = dic[c];
-                    dic.Remove(c);
-                    indexArr[n] = num;
-                    n++;
+                    if (dic.ContainsKey(c))
+                    {
+                        num = dic[c];
+                        dic.Remove(c);
+                        indexArr[n] = num;
+                        n++;
+                    }
+                    if (0 == dic.Count) break;
                 }
-                if (0 == dic.Count) break;
+                x1++;
             }
 
+            //如果字典里存在未随机的数字,侧按序获取
             if (0 < dic.Count)
             {
                 foreach (KeyValuePair<char, int> item in dic)
@@ -53,17 +61,23 @@ namespace System.DJ.MicroService.NetCore
                 n++;
                 s = charArr[item].ToString();
                 n1 = Convert.ToInt32(s);
-                pw += (item + 1).ToString() + s;
+                //序号+1 + 当前序号对应的数字按位取反
+                pw += (item + 1).ToString() + (~n1);
                 if (n % 2 == 0)
                 {
+                    //当前取值顺序为偶数时: 当前数字相加
                     num += n1;
                 }
                 else
                 {
+                    //当前取值顺序为奇数时: 当前数字相减
                     num -= n1;
                 }
             }
             if (0 > num) num = 0 - num;
+            pw = pw.Replace("-", "");
+
+            //序号+1 + 数字按位取反, 最后加上运算后的值
             pw += num.ToString("D2");
 
             num = 0;
