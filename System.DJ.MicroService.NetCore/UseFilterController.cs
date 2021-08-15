@@ -11,7 +11,33 @@ namespace System.DJ.MicroService.NetCore
 {
     public static class UseFilterController
     {
-        public static void Filter(this HttpContext context)
+        private static Func<HttpContext, Func<Task>, Task> func = (context, next) =>
+        {
+            context.Filter();
+            return next();
+        };
+
+        private static Func<RequestDelegate, RequestDelegate> middleware = (request) =>
+        {
+            RequestDelegate requestDelegate = (context) =>
+            {
+                context.Filter();
+                return request(context);
+            };
+            return requestDelegate;
+        };
+
+        public static Func<RequestDelegate, RequestDelegate> Filter()
+        {
+            return middleware;
+        }
+
+        public static Func<HttpContext, Func<Task>, Task> ExtFilter()
+        {
+            return func;
+        }
+
+        private static void Filter(this HttpContext context)
         {
             IHeaderDictionary head = context.Request.Headers;
             string token = head["token"].ToString();

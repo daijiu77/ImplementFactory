@@ -43,11 +43,7 @@ namespace Test.NetCoreApi
                 app.UseDeveloperExceptionPage();
             }
 
-            app.Use((context, next) =>
-            {
-                context.Filter();
-                return next();
-            });
+            app.Use(UseFilterController.Filter());
 
             app.UseRouting();
 
