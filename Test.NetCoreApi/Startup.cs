@@ -5,10 +5,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.DJ.MicroService.NetCore;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Test.NetCoreApi
@@ -28,7 +31,7 @@ namespace Test.NetCoreApi
             services.AddControllers();
             services.AddMvc(options =>
             {
-                options.Filters.Add<FilterMvcController>();
+                //options.Filters.Add<FilterMvcController>();
             });
         }
 
@@ -39,6 +42,12 @@ namespace Test.NetCoreApi
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.Use((context, next) =>
+            {
+                context.Filter();
+                return next();
+            });
 
             app.UseRouting();
 

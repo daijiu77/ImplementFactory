@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.DJ.MicroService;
 using System.DJ.MicroService.NetCore;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Test.NetCoreApi.Controllers
