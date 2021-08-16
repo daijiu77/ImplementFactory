@@ -40,13 +40,17 @@ namespace System.DJ.MicroService.NetCore
         private static void Filter(this HttpContext context)
         {
             IHeaderDictionary head = context.Request.Headers;
-            string token = head["token"].ToString();
+            string token = head["token"];
+            string name = head["name"];
 
-            if (string.IsNullOrEmpty(token))
+            string contentType = context.Request.ContentType;
+            if (null == contentType) contentType = "";
+
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(name))
             {
                 Illegal(context);
             }
-            else
+            else if(-1 != contentType.ToLower().IndexOf("json"))
             {
                 string txt = GetContent(context);
 
@@ -56,9 +60,8 @@ namespace System.DJ.MicroService.NetCore
                     return;
                 }
 
-                JToken jt = JToken.Parse(txt);
-                var type = jt["type"];
-
+                string type = head["type"];
+                if (string.IsNullOrEmpty(type)) type = "";
                 object vObj = new { token = token };
             }
         }
@@ -87,21 +90,16 @@ namespace System.DJ.MicroService.NetCore
 
         private static string GetContent(HttpContext context)
         {
-            string contentType = context.Request.ContentType;
-            if (null == contentType) contentType = "";
             string txt = "";
-            if (-1 != contentType.ToLower().IndexOf("json"))
-            {
-                StreamReader reader = new StreamReader(context.Request.Body);
-                Task<string> ts = reader.ReadToEndAsync();
-                ts.Wait();
-                txt = ts.Result;
-                reader.Close();
-                reader.Dispose();
+            StreamReader reader = new StreamReader(context.Request.Body);
+            Task<string> ts = reader.ReadToEndAsync();
+            ts.Wait();
+            txt = ts.Result;
+            reader.Close();
+            reader.Dispose();
 
-                byte[] dt = Encoding.Default.GetBytes(txt);
-                context.Request.Body = new MemoryStream(dt);
-            }
+            byte[] dt = Encoding.Default.GetBytes(txt);
+            context.Request.Body = new MemoryStream(dt);
             if (null == txt) txt = "";
             return txt.Trim();
         }
