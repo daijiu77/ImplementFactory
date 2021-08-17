@@ -59,11 +59,11 @@ namespace System.DJ.MicroService.NetCore
                     Illegal(context);
                     return;
                 }
-
-                string type = head["type"];
-                if (string.IsNullOrEmpty(type)) type = "";
-                object vObj = new { token = token };
             }
+
+            string type = head["type"];
+            if (string.IsNullOrEmpty(type)) type = "";
+            object vObj = new { token = token };
         }
 
         private static bool ValidateData(string txt)
