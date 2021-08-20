@@ -759,6 +759,23 @@ namespace System.DJ.ImplementFactory.Commons
             isNum = new Regex("[0-9]");
         }
 
+        public static CKeyValue KV(string key, object val)
+        {
+            CKeyValue kv = new CKeyValue();
+            kv.key = key;
+            kv.Value = val;
+            return kv;
+        }
+
+        public static CKeyValue KV(string key, object val, object other)
+        {
+            CKeyValue kv = new CKeyValue();
+            kv.key = key;
+            kv.Value = val;
+            kv.other = other;
+            return kv;
+        }
+
         public string Key
         {
             get

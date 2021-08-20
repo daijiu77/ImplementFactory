@@ -44,6 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Pipelines\IManageSvrInfo.cs" />
+    <Compile Include="DJPW.cs" />
+    <Compile Include="CreateServerInfo.cs" />
+    <Compile Include="CmdType.cs" />
     <Compile Include="MicroServiceMethodImpl.cs" />
     <Compile Include="HttpHelper.cs" />
     <Compile Include="ExtMethod.cs" />

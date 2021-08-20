@@ -26,6 +26,7 @@ namespace System.DJ.ImplementFactory
 
         private static readonly string configFile = "ImplementFactory.config";
         private static readonly string configFile_Xml = "ImplementFactory.xml";
+        private static readonly string svrFile = "svr_info.dt";
         private static string dbConnectionFreeStrategy = "";
         private static EList<CKeyValue> matchRules = null;
         private static readonly DbInfo dbInfo = new DbInfo();
@@ -279,10 +280,54 @@ namespace System.DJ.ImplementFactory
 
             if (Directory.Exists(dir))
             {
+                string svrF = Path.Combine(DJTools.RootPath, svrFile);
+                Dictionary<string, string> dic = new Dictionary<string, string>();
+                FileInfo fi = null;
+                if (File.Exists(svrF))
+                {
+                    string[] fArr = File.ReadAllLines(svrF);
+                    int len = fArr.Length - 1;
+                    List<string> list = new List<string>();                    
+                    for (int i = 0; i < len; i++)
+                    {
+                        fi = new FileInfo(fArr[i]);
+                        dic.Add(fi.Name.ToLower(), fi.FullName);
+                        try
+                        {
+                            File.Delete(fArr[i]);
+                        }
+                        catch (Exception ex)
+                        {
+                            list.Add(fArr[i]);
+                            //throw;
+                        }
+                    }
+                    list.Add(fArr[len]);
+
+                    try
+                    {
+                        File.Delete(svrF);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //throw;
+                    }
+
+                    File.WriteAllLines(svrF, list.ToArray());
+                }
+
+                bool mbool = 0 < dic.Count;
                 Assembly asse = null;
                 string[] fs = Directory.GetFiles(dir, "*.dll");
                 foreach (var item in fs)
                 {
+                    if (mbool)
+                    {
+                        fi = new FileInfo(item);
+                        if (dic.ContainsKey(fi.Name.ToLower())) continue;
+                    }
+                    
                     try
                     {
                         asse = Assembly.LoadFrom(item);
@@ -318,6 +363,8 @@ namespace System.DJ.ImplementFactory
         public static IInstanceCodeCompiler codeCompiler { get; set; }
 
         public static IDbConnectionState dbConnectionState { get; set; }
+
+        public static string ServerFile { get { return svrFile; } }
 
         private static string _connStr = "";
         public static string dbConnectionString
