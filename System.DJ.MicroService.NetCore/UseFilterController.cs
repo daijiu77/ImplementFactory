@@ -3,6 +3,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory;
+using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Pipelines;
+using System.DJ.MicroService.Pipelines;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +15,28 @@ namespace System.DJ.MicroService.NetCore
 {
     public static class UseFilterController
     {
+        private static SvrMng svrMng = null;
+        static UseFilterController()
+        {
+            svrMng = new SvrMng();
+        }
+
+        private class SvrMng: ImplementAdapter
+        {
+            [AutoCall]
+            private IManageSvrInfo manageSvrInfo;
+
+            public IManageSvrInfo GetMSI()
+            {
+                return manageSvrInfo;
+            }
+
+            public IInstanceCodeCompiler GetCodeCompiler()
+            {
+                return ImplementAdapter.codeCompiler;
+            }
+        }
+
         private static Func<HttpContext, Func<Task>, Task> func = (context, next) =>
         {
             context.Filter();
@@ -59,6 +85,9 @@ namespace System.DJ.MicroService.NetCore
                     Illegal(context);
                     return;
                 }
+
+                JToken jt = JToken.Parse(txt);
+                JToken json = jt[""];
             }
 
             string type = head["type"];
