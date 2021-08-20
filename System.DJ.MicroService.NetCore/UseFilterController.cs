@@ -26,15 +26,12 @@ namespace System.DJ.MicroService.NetCore
             [AutoCall]
             private IManageSvrInfo manageSvrInfo;
 
-            public IManageSvrInfo GetMSI()
+            public IManageSvrInfo MSI
             {
-                return manageSvrInfo;
+                get { return manageSvrInfo; }
+                set { manageSvrInfo = value; }
             }
 
-            public IInstanceCodeCompiler GetCodeCompiler()
-            {
-                return ImplementAdapter.codeCompiler;
-            }
         }
 
         private static Func<HttpContext, Func<Task>, Task> func = (context, next) =>

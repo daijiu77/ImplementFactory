@@ -110,6 +110,25 @@ namespace System.DJ.MicroService.NetCore
             codeCompiler.SetRootPath(f);
             Assembly asse = codeCompiler.TranslateCode(arr, "v4.0", code, ref err);
 
+            if (null != asse)
+            {
+                string typePath = np + "." + TempImpl.dirName + "." + TempImpl.libName + ".ManageSvrInfoImpl";
+                Type type = asse.GetType(typePath);
+                if (null != type)
+                {
+                    try
+                    {
+                        object o = Activator.CreateInstance(type);
+                        manageSvrInfo = o as IManageSvrInfo;
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //throw;
+                    }
+                }
+            }
+
             return manageSvrInfo;
         }
 
