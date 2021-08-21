@@ -63,8 +63,10 @@ namespace System.DJ.MicroService.NetCore
         private static void Filter(this HttpContext context)
         {
             IHeaderDictionary head = context.Request.Headers;
+                     
             string token = head["token"];
             string name = head["name"];
+            string type = head["type"];
 
             string contentType = context.Request.ContentType;
             if (null == contentType) contentType = "";
@@ -86,9 +88,7 @@ namespace System.DJ.MicroService.NetCore
                 JToken jt = JToken.Parse(txt);
                 JToken json = jt[""];
             }
-
-            string type = head["type"];
-            if (string.IsNullOrEmpty(type)) type = "";
+            
             object vObj = new { token = token };
         }
 
