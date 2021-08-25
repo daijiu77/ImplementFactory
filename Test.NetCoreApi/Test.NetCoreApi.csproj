@@ -4,9 +4,5 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\System.DJ.MicroService.NetCore\System.DJ.MicroService.NetCore.csproj" />
-  </ItemGroup>
-
 
 </Project>

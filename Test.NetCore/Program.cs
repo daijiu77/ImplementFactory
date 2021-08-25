@@ -1,16 +1,10 @@
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.Drawing;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.DJ.MicroService;
 using Test.NetCore.Entities;
-using System.Collections;
 
 namespace Test.NetCore
 {
@@ -87,7 +81,7 @@ namespace Test.NetCore
             SetWindowPositionCenter();
             //, \"arr\": [1,2,3]
             string s = "{\"token\":\"abc\", \"arr\": [1,2,3], \"data\": [{\"key\":1, \"val\":\"a\"}, {\"key\":2, \"val\":\"b\"}]}";
-            testJson[] list1 = (testJson[])s.JsonToList<testJson[]>();
+            //testJson[] list1 = (testJson[])s.JsonToList<testJson[]>();
             JObject jt = JObject.Parse(s);
             IEnumerable<JProperty> list = jt.Properties();
             string k = "";

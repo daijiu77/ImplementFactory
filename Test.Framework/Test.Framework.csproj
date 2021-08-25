@@ -80,10 +80,6 @@
       <Project>{b12e488f-0521-4e23-8767-a749378ae6ce}</Project>
       <Name>System.DJ.ImplementFactory.Framework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\System.DJ.MicroService.Framework\System.DJ.MicroService.Framework.csproj">
-      <Project>{6260940d-8379-45bb-a224-0b8ad6d55c10}</Project>
-      <Name>System.DJ.MicroService.Framework</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

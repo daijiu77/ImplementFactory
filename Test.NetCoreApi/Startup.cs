@@ -1,18 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.DJ.MicroService.NetCore;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Test.NetCoreApi
 {
@@ -43,7 +33,7 @@ namespace Test.NetCoreApi
                 app.UseDeveloperExceptionPage();
             }
 
-            app.Use(UseFilterController.Filter());
+            //app.Use(UseFilterController.Filter());
 
             app.UseRouting();
 

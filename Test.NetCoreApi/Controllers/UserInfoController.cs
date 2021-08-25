@@ -1,24 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.DJ.MicroService;
-using System.DJ.MicroService.NetCore;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Test.NetCoreApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserInfoController : AbsController
+    public class UserInfoController : Controller
     {
         [HttpPost, Route("GetUserInfo")]        
         public object GetUserInfo(object data)
         {
-            string pwd = DJPW.GetPW(3024);
+            //string pwd = DJPW.GetPW(3024);
             return new { success = true, message = "", data = data };
         }
     }
