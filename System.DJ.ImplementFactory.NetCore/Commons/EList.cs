@@ -764,6 +764,7 @@ namespace System.DJ.ImplementFactory.Commons
             CKeyValue kv = new CKeyValue();
             kv.key = key;
             kv.Value = val;
+            kv.createIndex(key);
             return kv;
         }
 
@@ -773,6 +774,7 @@ namespace System.DJ.ImplementFactory.Commons
             kv.key = key;
             kv.Value = val;
             kv.other = other;
+            kv.createIndex(key);
             return kv;
         }
 
