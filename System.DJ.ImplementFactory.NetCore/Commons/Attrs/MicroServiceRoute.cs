@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Xml;
 
 namespace System.DJ.ImplementFactory.Commons.Attrs
@@ -10,14 +7,26 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
     public class MicroServiceRoute: Attribute
     {
         private string _routeName = "";
+        private string _controllerName = "";
         private string _uri = "";
         private string configFile = "MicroServiceRoute.xml";
 
         private static Dictionary<string, string> dic = new Dictionary<string, string>();
 
+        public MicroServiceRoute(string RouteName, string ControllerName)
+        {
+            msr(RouteName, ControllerName);
+        }
+
         public MicroServiceRoute(string RouteName)
         {
+            msr(RouteName, null);
+        }
+
+        private void msr(string RouteName, string ControllerName)
+        {
             _routeName = RouteName;
+            _controllerName = ControllerName;
 
             if (0 < dic.Count) return;
 
@@ -88,6 +97,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         public string RouteName { get { return _routeName; } }
+
+        public string ControllerName { get { return _controllerName; } }
 
         public string Uri { get { return _uri; } }
     }
