@@ -54,12 +54,17 @@ namespace System.DJ.ImplementFactory
             if (null != stackFrame)
             {
                 UserType = stackFrame.GetMethod().DeclaringType;
-            }
-            else
-            {
-                UserType = typeof(ImplementAdapter);
+                n = 4;
+                while (null == UserType && 0 <= n)
+                {
+                    n--;
+                    stackFrame = trace.GetFrame(n);
+                    if (null == stackFrame) continue;
+                    UserType = stackFrame.GetMethod().DeclaringType;
+                }
             }
 
+            if (null == UserType) UserType = typeof(ImplementAdapter);
             loadSysInstance();
             init();
         }
@@ -287,7 +292,7 @@ namespace System.DJ.ImplementFactory
                 {
                     string[] fArr = File.ReadAllLines(svrF);
                     int len = fArr.Length - 1;
-                    List<string> list = new List<string>();                    
+                    List<string> list = new List<string>();
                     for (int i = 0; i < len; i++)
                     {
                         fi = new FileInfo(fArr[i]);
@@ -327,7 +332,7 @@ namespace System.DJ.ImplementFactory
                         fi = new FileInfo(item);
                         if (dic.ContainsKey(fi.Name.ToLower())) continue;
                     }
-                    
+
                     try
                     {
                         asse = Assembly.LoadFrom(item);
@@ -685,7 +690,7 @@ namespace System.DJ.ImplementFactory
                                     }
                                 }
                             }
-                            
+
                             if (null == impl)
                             {
                                 try
