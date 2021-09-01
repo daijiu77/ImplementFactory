@@ -42,26 +42,15 @@ namespace System.DJ.ImplementFactory
 
         static ImplementAdapter()
         {
-            int n = 2;
+            int n = 3;
             StackTrace trace = new StackTrace();
-            StackFrame stackFrame = trace.GetFrame(n);
-            while (null == stackFrame && 0 <= n)
-            {
-                n--;
+            StackFrame stackFrame = null;
+            while (null == UserType && 0 <= n)
+            {                
                 stackFrame = trace.GetFrame(n);
-            }
-
-            if (null != stackFrame)
-            {
+                n--;
+                if (null == stackFrame) continue;
                 UserType = stackFrame.GetMethod().DeclaringType;
-                n = 4;
-                while (null == UserType && 0 <= n)
-                {
-                    n--;
-                    stackFrame = trace.GetFrame(n);
-                    if (null == stackFrame) continue;
-                    UserType = stackFrame.GetMethod().DeclaringType;
-                }
             }
 
             if (null == UserType) UserType = typeof(ImplementAdapter);
