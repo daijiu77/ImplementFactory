@@ -290,6 +290,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                 }
             }
+            method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
             return code;
         }
         #endregion

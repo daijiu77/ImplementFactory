@@ -692,6 +692,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Pipelines" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Pipelines.Pojo" });
+            uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.DynamicCode" });
             uskv.Add(new CKeyValue() { Key = interfaceNamespace });
             uskv.Add(new CKeyValue() { Key = autocallImplNamespace });
             //uskv.Add(new CKeyValue() { Key = "" });
