@@ -51,21 +51,24 @@ namespace System.DJ.ImplementFactory.Commons
                 //throw ex;
             }
 
-            if (httpResponseMessage.IsSuccessStatusCode)
+            if (null != httpResponseMessage)
             {
-                var rsa = httpResponseMessage.Content.ReadAsStringAsync();
-                rsa.Wait();
-                resultData = rsa.Result;
-            }
-            else
-            {
-                object ex = httpResponseMessage.Content.ReadAsStringAsync().Exception;
-                if (null != ex)
+                if (httpResponseMessage.IsSuccessStatusCode)
                 {
-                    err = ex.ToString();
-                    //throw new Exception(err);
+                    var rsa = httpResponseMessage.Content.ReadAsStringAsync();
+                    rsa.Wait();
+                    resultData = rsa.Result;
                 }
-            }
+                else
+                {
+                    object ex = httpResponseMessage.Content.ReadAsStringAsync().Exception;
+                    if (null != ex)
+                    {
+                        err = ex.ToString();
+                        //throw new Exception(err);
+                    }
+                }
+            }            
 
             resultData = null == resultData ? "" : resultData;
             action(resultData, err);
