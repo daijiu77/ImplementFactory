@@ -38,6 +38,14 @@ namespace System.DJ.ImplementFactory.Commons
             string err = "";
 
             HttpClient httpClient = new HttpClient();
+            if (null != heads)
+            {
+                foreach (KeyValuePair<string, string> item in heads)
+                {
+                    httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
+                }
+            }
+
             HttpResponseMessage httpResponseMessage = null;
             try
             {
