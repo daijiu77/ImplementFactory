@@ -12,7 +12,7 @@ namespace System.DJ.ImplementFactory.Commons
         private static Thread thread = null;
         private static bool isRunning = true;
         private static Dictionary<string, AsynicElement> dic = new Dictionary<string, AsynicElement>();
-        private static int sleepNum = 100;
+        private static int sleepNum = 10;
 
         private static Type sourceType = null;
         private static object sourceInstance = null;
@@ -66,7 +66,6 @@ namespace System.DJ.ImplementFactory.Commons
             AsynicElement asynicElement = null;
             dic.TryGetValue(taskName, out asynicElement);
             if (null != asynicElement) return asynicElement.asynicData;
-            sleepNum = 10;
             milliseconds_100 *= 10;
             asynicElement = ExecAsynic(taskName, true, 0, milliseconds_100, sleepNum, whileCount, action);
             return asynicElement.asynicData;
@@ -130,8 +129,7 @@ namespace System.DJ.ImplementFactory.Commons
             getSourceObj();
             AsynicElement asynicElement = null;
             dic.TryGetValue(taskName, out asynicElement);
-            if (null != asynicElement) return asynicElement.asynicData;
-            sleepNum = 10;
+            if (null != asynicElement) return asynicElement.asynicData;            
             asynicElement = ExecAsynic(taskName, true, 0, milliseconds_10, sleepNum, whileCount, action);
             return asynicElement.asynicData;
         }
@@ -270,8 +268,13 @@ namespace System.DJ.ImplementFactory.Commons
     public class AsynicElement
     {
         private SynchronizationContext m_SyncContext = SynchronizationContext.Current;
-
+        private AsynicData asynicData1 = null;
         private delegate void CallControl();
+
+        public AsynicElement()
+        {
+            asynicData1 = new AsynicData(this);
+        }
 
         public string TaskName { get; set; }
 
@@ -292,7 +295,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         public int currentMS { get; set; } = 0;
 
-        public AsynicData asynicData { get; } = new AsynicData();
+        public AsynicData asynicData { get { return asynicData1; } }
 
         public Type sourceType { get; set; }
 
@@ -354,9 +357,23 @@ namespace System.DJ.ImplementFactory.Commons
 
     public class AsynicData
     {
+        private AsynicElement asynicElement = null;
+        public AsynicData(AsynicElement asynicElement)
+        {
+            this.asynicElement = asynicElement;
+        }
+
         public int currentCount { get; set; } = 0;
         public bool isStop { get; set; }
 
         public object temp { get; set; }
+
+        public void setInterval(int millisecond)
+        {
+            int n = millisecond / 10;
+            asynicElement.Milliseconds = n;
+            asynicElement.Milliseconds1 = n;
+        }
+
     }
 }
