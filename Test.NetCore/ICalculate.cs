@@ -5,8 +5,13 @@ using System.Text;
 
 namespace Test.NetCore
 {
+    public delegate void getData(object data);
     public interface ICalculate
     {
+        event getData GetData;
+
+        string PropertyTest { get; set; }
+
         int Sum(int a, int b);
 
         /// <summary>

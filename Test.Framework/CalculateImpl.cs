@@ -7,6 +7,27 @@ namespace Test.Framework
 {
     public class CalculateImpl : ICalculate
     {
+        private event getData GetData;
+
+        event getData ICalculate.GetData
+        {
+            add
+            {
+                GetData += value;
+            }
+            remove
+            {
+                GetData -= value;
+            }
+        }
+
+        private string pi = "";
+        string ICalculate.PropertyTest
+        {
+            get { return pi; }
+            set { pi = value; }
+        }
+
         int ICalculate.Division(int a, int b, AutoCall autoCall)
         {
             int c = 0;

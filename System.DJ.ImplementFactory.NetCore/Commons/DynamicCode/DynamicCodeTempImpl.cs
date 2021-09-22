@@ -717,6 +717,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             classPath = implNamespace + "." + dirName + "." + implName + "_" + dt;
             MethodInfo[] methods1 = null;
             PropertyInfo[] piArr1 = null;
+            EventInfo[] eiArr1 = null;
 
             if (interfaceType.Equals(typeof(IEmplyInterface)))
             {
@@ -1048,6 +1049,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             Action<Type, PropertyInfo[]> actionProperty = (objType, piArr) =>
             {
                 int piNum = 0;
+                string objTypeName = objType.TypeToString(true);
                 foreach (PropertyInfo item in piArr)
                 {
                     if (isNotInheritInterface)
@@ -1064,7 +1066,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     returnType = item.PropertyType.TypeToString(true);
-                    string objTypeName = objType.TypeToString(true);
                     if (0 < piNum)
                     {
                         DJTools.append(ref code, 0, "");
@@ -1108,18 +1109,56 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             };
 
-            Action<PropertyInfo, MethodInfo[], string, Action<int>> findPropertyMethod = (propertyInfo, methodInfoArr, attrOptName, propertyMethod) =>
+            Action<Type, EventInfo[]> actionEvent = (objType, eiArr) =>
+            {
+                string objTypeName = objType.TypeToString(true);
+                foreach (EventInfo item in eiArr)
+                {
+                    DJTools.append(ref code, 1, "");
+                    DJTools.append(ref code, 2, "event {0} {1}.{2}", item.EventHandlerType.TypeToString(true), objTypeName, item.Name);
+                    DJTools.append(ref code, 2, "{");
+                    DJTools.append(ref code, 3, "add");
+                    DJTools.append(ref code, 3, "{");
+                    DJTools.append(ref code, 4, "{0}.{1} += value;", impl_name, item.Name);
+                    DJTools.append(ref code, 3, "}");
+                    DJTools.append(ref code, 3, "remove");
+                    DJTools.append(ref code, 3, "{");
+                    DJTools.append(ref code, 4, "{0}.{1} -= value;", impl_name, item.Name);
+                    DJTools.append(ref code, 3, "}");
+                    DJTools.append(ref code, 2, "}");
+                }
+            };
+
+            Action<MemberInfo, MethodInfo[], string, Action<int>> findPropertyMethod = (propertyInfo, methodInfoArr, attrOptName, propertyMethod) =>
             {
                 string aName = attrOptName + "_" + propertyInfo.Name;
                 int num = 0;
+                bool isEvent = null != (propertyInfo as EventInfo);
                 foreach (var itemM in methods1)
                 {
                     if (null != itemM)
                     {
-                        if (itemM.Name.Equals(aName) && (itemM.ReturnType.Equals(typeof(void)) || itemM.ReturnType.Equals(propertyInfo.PropertyType)))
+                        if (isEvent)
                         {
-                            propertyMethod(num);
-                            break;
+                            ParameterInfo[] paraArr = itemM.GetParameters();
+                            if (0 == paraArr.Length) continue;
+                            if (1 != paraArr.Length) continue;
+                            ParameterInfo pi = paraArr[0];
+                            if (itemM.Name.Equals(aName)
+                                && itemM.ReturnType.Equals(typeof(void))
+                                && pi.ParameterType.IsSubclassOf(typeof(Delegate)))
+                            {
+                                propertyMethod(num);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (itemM.Name.Equals(aName) && (itemM.ReturnType.Equals(typeof(void)) || itemM.ReturnType.Equals(((PropertyInfo)propertyInfo).PropertyType)))
+                            {
+                                propertyMethod(num);
+                                break;
+                            }
                         }
                     }
                     num++;
@@ -1133,12 +1172,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 {
                     methods1 = typeItem.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                     piArr1 = typeItem.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                    eiArr1 = typeItem.GetEvents(BindingFlags.Public | BindingFlags.Instance);
                     impl_name = "this";
                 }
                 else
                 {
                     methods1 = typeItem.GetMethods();
                     piArr1 = typeItem.GetProperties();
+                    eiArr1 = typeItem.GetEvents();
+
                     interfaceType = typeItem;
                     interfaceName = DJTools.GetClassName(interfaceType, true);
 
@@ -1163,7 +1205,25 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     });
                 }
 
+                foreach (var itemEi in eiArr1)
+                {
+                    findPropertyMethod(itemEi, methods1, "add", methodIndex =>
+                    {
+                        methods1[methodIndex] = null;
+                    });
+
+                    findPropertyMethod(itemEi, methods1, "remove", methodIndex =>
+                    {
+                        methods1[methodIndex] = null;
+                    });
+                }
+
                 actionFunction(typeItem, methods1);
+                if (!isNotInheritInterface)
+                {
+                    actionEvent(typeItem, eiArr1);
+                }
+
                 if (0 < piArr1.Length)
                 {
                     DJTools.append(ref code, "");

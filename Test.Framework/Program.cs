@@ -79,36 +79,7 @@ namespace Test.Framework
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
-            //, \"arr\": [1,2,3]
-            string s = "{\"token\":\"abc\", \"arr\": [1,2,3], \"data\": [{\"key\":1, \"val\":\"a\"}, {\"key\":2, \"val\":\"b\"}]}";
-            //testJson[] list1 = (testJson[])s.JsonToList<testJson[]>();
-            JObject jt = JObject.Parse(s);
-            IEnumerable<JProperty> list = jt.Properties();
-            string k = "";
-            object v = null;
-
-            object arr = new int[] { 1, 2 };
-            if (null != arr.GetType().GetInterface("System.Collections.IEnumerable"))
-            {
-                k = "1";
-            }
-
-            foreach (JProperty item in list)
-            {
-                if(item.Value.Type == JTokenType.Array)
-                {                    
-                    JArray jo = item.Value.ToObject<JArray>();
-                    int ncount = jo.Count;
-                    v = "";
-                    foreach (JToken item1 in item.Value)
-                    {
-                        v = item1.ToString();
-                    }
-                }
-                v = item.Value.ToString();
-                k = item.Name;
-            }
-
+            
             LogicCalculate logicCalculate = new LogicCalculate();
             Console.WriteLine("result: " + logicCalculate.testCalculate());
             Console.WriteLine("");
