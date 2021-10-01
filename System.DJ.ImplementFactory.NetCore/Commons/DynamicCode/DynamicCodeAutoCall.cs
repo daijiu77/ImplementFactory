@@ -422,6 +422,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         }
         #endregion
 
+        /// <summary>
+        /// 替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
+        /// </summary>
+        /// <param name="method">泛型方法</param>
+        /// <param name="sqlVarName"></param>
+        /// <param name="leftSpaceLevel"></param>
+        /// <param name="code"></param>
         private void ReplaceGenericSign(MethodInformation method, string sqlVarName, LeftSpaceLevel leftSpaceLevel, ref string code)
         {
             if (string.IsNullOrEmpty(method.methodComponent.GenericityParas)) return;
