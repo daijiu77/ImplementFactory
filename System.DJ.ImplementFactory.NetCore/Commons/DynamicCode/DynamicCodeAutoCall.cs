@@ -291,6 +291,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             }
             method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
+
+            ReplaceGenericSign(method, sqlVarName, LeftSpaceLevel.one, ref code);
             return code;
         }
         #endregion
@@ -419,6 +421,29 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return code;
         }
         #endregion
+
+        private void ReplaceGenericSign(MethodInformation method, string sqlVarName, LeftSpaceLevel leftSpaceLevel, ref string code)
+        {
+            if (string.IsNullOrEmpty(method.methodComponent.GenericityParas)) return;
+            string paras = method.methodComponent.GenericityParas;
+            paras = paras.Replace("<", "");
+            paras = paras.Replace(">", "");
+            string[] arr = paras.Split(',');
+            method.append(ref code, leftSpaceLevel, "System.Attribute att = null;");
+            foreach (string item in arr)
+            {
+                method.append(ref code, leftSpaceLevel, "att = typeof({0}).GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute));", item);
+                method.append(ref code, leftSpaceLevel, "if(null == att)");
+                method.append(ref code, leftSpaceLevel, "{");
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).GetType().Name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "}");
+                method.append(ref code, leftSpaceLevel, "else");
+                method.append(ref code, leftSpaceLevel, "{");
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", ((System.ComponentModel.DataAnnotations.Schema.TableAttribute)att).Name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "}");
+                method.append(ref code, leftSpaceLevel, "");
+            }
+        }
 
         public Type GetClassTypeByClassPath(string classPath)
         {
