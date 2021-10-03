@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -85,7 +86,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             ParaName1 = para.ParaName,
                             PropertyName = key,
                             PropertyType = item.GetType(),
-                            ValueType = item.GetType().GetProperty("Value").PropertyType.FullName
+                            ValueType = item.GetType().GetProperty("Value").PropertyType.FullName,
+                            propertyInfo1 = null
                         });
                         //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}[\"{3}\"].ToString());", sqlVarName, FieldName, para.ParaName, key);
                         break;
@@ -106,7 +108,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         ParaName1 = para.ParaName,
                         PropertyName = pi.Name,
                         PropertyType = typeof(PropertyInfo),
-                        ValueType = pi.PropertyType.FullName
+                        ValueType = pi.PropertyType.FullName,
+                        propertyInfo1 = pi
                     });
                     //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}.{3}.ToString());", sqlVarName, FieldName, para.ParaName, pi.Name);
                     break;
@@ -142,20 +145,38 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string ParaName1 = funcPara.ParaName1;
             string PropertyName = funcPara.PropertyName;
             Type PropertyType = funcPara.PropertyType;
-
-            method.append(ref code2, LeftSpaceLevel.one, "");
+            
+            method.append(ref code2, LeftSpaceLevel.one, "");            
             if (PropertyType == typeof(PropertyInfo))
             {
                 //method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}.{3}.ToString());", sqlVarName1, FieldName1, ParaName1, PropertyName);
-                method.append(ref code2, LeftSpaceLevel.one, "var {1}_01 = {0}.{1};", ParaName1, PropertyName);
+                //method.append(ref code2, LeftSpaceLevel.one, "var {1}_01 = {0}.{1};", ParaName1, PropertyName);
+
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = {0}.{1};", ParaName1, PropertyName);
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = " +
+                    "System.DJ.ImplementFactory.Commons.DJTools.ConvertTo(_objVal, typeof({0}));", funcPara.ValueType);
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = null == _objVal? \"\": _objVal;");
+                method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", _objVal.ToString());", sqlVarName1, FieldName1);
+
+                string fn = FieldMapping.GetFieldMapping(funcPara.propertyInfo1);
+                if (!string.IsNullOrEmpty(fn))
+                {
+                    method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", _objVal.ToString());", sqlVarName1, fn);
+                }
             }
             else
             {
                 //Dictionary                
                 //method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}[\"{3}\"].ToString());", sqlVarName1, FieldName1, ParaName1, PropertyName);
-                method.append(ref code2, LeftSpaceLevel.one, "var {1}_01 = {0}[\"{1}\"];", ParaName1, PropertyName);
+                //method.append(ref code2, LeftSpaceLevel.one, "var {1}_01 = {0}[\"{1}\"];", ParaName1, PropertyName);
+
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = {0}[\"{1}\"];", ParaName1, PropertyName);
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = " +
+                    "System.DJ.ImplementFactory.Commons.DJTools.ConvertTo(_objVal, typeof({0}));", funcPara.ValueType);
+                method.append(ref code2, LeftSpaceLevel.one, "_objVal = null == _objVal? \"\": _objVal;");
+                method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", _objVal.ToString());", sqlVarName1, FieldName1);
             }
-            ReplaceTagForSql(method, LeftSpaceLevel.one, sqlVarName1, FieldName1, PropertyName + "_01", funcPara.ValueType, ref code2);
+            //ReplaceTagForSql(method, LeftSpaceLevel.one, sqlVarName1, FieldName1, PropertyName + "_01", funcPara.ValueType, ref code2);
             return code2;
         }
 
@@ -322,6 +343,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 string FieldName = "";
                 string fv = "";
+                string sqlVarName = "sql";
                 object v = null;
                 Para para = null;
                 PList<Para> paras = method.paraList;
@@ -378,6 +400,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
+                                ReplaceAttributeMapping(method, pi, fv, sqlVarName, ref sql1);
                             });
                         }
                     }
@@ -389,12 +412,24 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
+                                ReplaceAttributeMapping(method, pi, fv, sqlVarName, ref sql1);
                             });
                         }
                     }
                 }
             }
             sql = sql1;
+        }
+
+        private string ReplaceAttributeMapping(MethodInformation method, PropertyInfo propertyInfo, object fieldValue, string sqlVarName, ref string sql)
+        {
+            string code = "";
+            string fn = FieldMapping.GetFieldMapping(propertyInfo);
+            if (string.IsNullOrEmpty(fn)) return code;
+            sql = sql.Replace("{" + fn + "}", fieldValue.ToString());
+            method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{1}\", \"{2}\");",
+                sqlVarName, fn, fieldValue.ToString());
+            return code;
         }
         #endregion
 
@@ -1080,6 +1115,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             /// 值类型
             /// </summary>
             public string ValueType { get; set; }
+
+            public PropertyInfo propertyInfo1 { get; set; }
         }
 
     }
