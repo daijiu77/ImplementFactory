@@ -169,6 +169,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         public string ExecReplaceForSqlByFieldName(string sql, string sqlVarName, MethodInformation method)
         {
             if (string.IsNullOrEmpty(sql)) return "";
+
             string code = "";
             string sql1 = sql;
             string s = @"\{(?<FieldName>[^\{\}]*[a-z][^\{\}]*)\}";
@@ -193,11 +194,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 isDynamicEntity = true;
                 isMulti = true;
             }
-            else
-            {
-                method.append(ref code, LeftSpaceLevel.one, "string {0} = \"{1}\";", sqlVarName, sql);
-            }
-
+            
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
             {
                 string FieldName = "";
@@ -292,8 +289,112 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             }
             method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
 
-            ReplaceGenericSign(method, sqlVarName, LeftSpaceLevel.one, ref code);
             return code;
+        }
+
+        public void ExecReplaceForSqlByFieldName(MethodInformation method, ref string sql)
+        {
+            if (string.IsNullOrEmpty(sql)) return;
+                        
+            string sql1 = sql;
+            string s = @"\{(?<FieldName>[^\{\}]*[a-z][^\{\}]*)\}";
+            Regex rg = new Regex(s, RegexOptions.IgnoreCase);
+
+            Type paraType = null;
+            bool isDynamicEntity = false;
+            bool isMulti = false;
+            if (null != method.paraList)
+            {
+                if (0 < method.paraList.Count) paraType = method.paraList[0].ParaType;
+            }
+
+            if (typeof(DataEntity<DataElement>) == paraType)
+            {
+                isDynamicEntity = true;
+            }
+            else if (typeof(List<DataEntity<DataElement>>) == paraType || typeof(IList<DataEntity<DataElement>>) == paraType)
+            {
+                isDynamicEntity = true;
+                isMulti = true;
+            }
+
+            if (rg.IsMatch(sql) && 0 < method.paraList.Count)
+            {
+                string FieldName = "";
+                string fv = "";
+                object v = null;
+                Para para = null;
+                PList<Para> paras = method.paraList;
+                DataEntity<DataElement> dataElements = null;
+                DataElement dataElement = null;
+                if (isDynamicEntity)
+                {
+                    para = paras[0];
+                    if (null != para)
+                    {
+                        if (isMulti)
+                        {
+                            IList<DataEntity<DataElement>> list = (IList<DataEntity<DataElement>>)para.ParaValue;
+                            if (0 < list.Count) dataElements = list[0];
+                        }
+                        else
+                        {
+                            dataElements = (DataEntity<DataElement>)para.ParaValue;
+                        }
+                    }
+                }
+
+                MatchCollection mc = rg.Matches(sql1);
+                foreach (Match m in mc)
+                {
+                    FieldName = m.Groups["FieldName"].Value;
+                    if (isDynamicEntity)
+                    {
+                        v = "";
+                        if (null != dataElements)
+                        {
+                            if (FieldName.Equals(para.ParaName)) continue;
+                            dataElement = dataElements[FieldName];
+                            if (null == dataElement) continue;
+                            v = dataElement.value;
+                        }
+
+                        fv = null == v ? "" : v.ToString();
+                        sql1 = sql1.Replace("{" + FieldName + "}", fv);
+                        continue;
+                    }
+
+                    para = paras[FieldName];
+                    if (null != para)
+                    {
+                        if (DJTools.IsBaseType(para.ParaType))
+                        {
+                            //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2});", sqlVarName, FieldName, para.ParaName);
+                            sql1 = sql1.Replace("{" + FieldName + "}", para.ParaValue.ToString());
+                        }
+                        else
+                        {
+                            para.ForeachProperty((pi, type, fName, fVal) =>
+                            {
+                                fv = null == fVal ? "" : fVal.ToString();
+                                sql1 = sql1.Replace("{" + fName + "}", fv);
+                            });
+                        }
+                    }
+                    else
+                    {
+                        foreach (Para item in paras)
+                        {
+                            item.ForeachProperty((pi, type, fName, fVal) =>
+                            {
+                                fv = null == fVal ? "" : fVal.ToString();
+                                sql1 = sql1.Replace("{" + fName + "}", fv);
+                            });
+                        }
+                    }
+                }
+            }
+            sql = sql1;
         }
         #endregion
 
@@ -421,37 +522,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return code;
         }
         #endregion
-
-        /// <summary>
-        /// 替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
-        /// </summary>
-        /// <param name="method">泛型方法</param>
-        /// <param name="sqlVarName"></param>
-        /// <param name="leftSpaceLevel"></param>
-        /// <param name="code"></param>
-        private void ReplaceGenericSign(MethodInformation method, string sqlVarName, LeftSpaceLevel leftSpaceLevel, ref string code)
-        {
-            if (string.IsNullOrEmpty(method.methodComponent.GenericityParas)) return;
-            string paras = method.methodComponent.GenericityParas;
-            paras = paras.Replace("<", "");
-            paras = paras.Replace(">", "");
-            string[] arr = paras.Split(',');
-            method.append(ref code, leftSpaceLevel, "System.Attribute att = null;");
-            foreach (string item in arr)
-            {
-                method.append(ref code, leftSpaceLevel, "att = typeof({0}).GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute));", item);
-                method.append(ref code, leftSpaceLevel, "if(null == att)");
-                method.append(ref code, leftSpaceLevel, "{");
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).GetType().Name);", sqlVarName, item);
-                method.append(ref code, leftSpaceLevel, "}");
-                method.append(ref code, leftSpaceLevel, "else");
-                method.append(ref code, leftSpaceLevel, "{");
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", ((System.ComponentModel.DataAnnotations.Schema.TableAttribute)att).Name);", sqlVarName, item);
-                method.append(ref code, leftSpaceLevel, "}");
-                method.append(ref code, leftSpaceLevel, "");
-            }
-        }
-
+                
         public Type GetClassTypeByClassPath(string classPath)
         {
             string[] arr = classPath.Split('.');

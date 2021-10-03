@@ -289,16 +289,16 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             foreach (ParameterInfo p in paras)
             {
-                if (null == p.ParameterType.FullName)
+                if (true == p.ParameterType.IsGenericParameter)
                 {
                     uskv.Add(new CKeyValue() { Key = p.ParameterType.Namespace });
 
                     //泛型情况
-                    methodName = m.Name + "<" + p.ParameterType.Name + ">";
+                    methodName = m.Name;
                     s = p.ParameterType.TypeToString();
                     paraStr += "," + s + " " + p.Name;
-                    mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
-                    plist += "," + p.Name;
+                    mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1},IsGenericParameter=true});", s, p.Name, paraListVarName);
+                    //plist += "," + p.Name;
                 }
                 else if (typeof(DataEntity<DataElement>) == p.ParameterType)
                 {
@@ -523,6 +523,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.five, "{");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.six, "");
 
+            string paraVarName = "";
+            dynamicEntityMInfoPara.autoCall.ReplaceGenericSign(dynamicEntityMInfoPara.mInfo, LeftSpaceLevel.six, "",
+                ((AbsDataInterface)dynamicEntityMInfoPara.autoCall).sql, ref paraVarName, ref code);
+
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.six, "try");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.six, "{");
             if (null != dynamicEntityMInfoPara.actionType)
@@ -686,6 +690,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
+            uskv.Add(new CKeyValue() { Key = "System.Reflection" });
             uskv.Add(new CKeyValue() { Key = "System.Collections.Generic" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons" });
@@ -831,6 +836,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     if (!string.IsNullOrEmpty(paraStr))
                     {
                         paraStr = paraStr.Substring(1);
+                    }
+
+                    if (!string.IsNullOrEmpty(plist))
+                    {
                         plist = plist.Substring(1);
                     }
 
@@ -965,6 +974,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     #region 执行接口方法   
                     if (isDynamicEntity)
                     {
+                        mInfo.methodInfo = m;
                         DynamicEntityMInfoPara dynamicEntityMInfoPara = new DynamicEntityMInfoPara()
                         {
                             autoCall = autoCall,

@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 {
     public abstract class AbsDataInterface : AutoCall, IDataOperateAttribute
     {
-        public string sql = "";
+        private string _sql = "";        
         public string[] fields = null;
 
         public string dataProviderNamespace = "";
@@ -92,6 +92,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             method.fieldsType = fieldsType;
             method.ResultExecMethod = ResultExecMethod;
             method.sqlExecType = sqlExecType;
+
             ExecInterfaceMethodOfCodeStr_DataOpt(method, ((IDataOperateAttribute)this).dataOptType, sql, ref code);
 
             return code;
@@ -109,12 +110,13 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
             string sqlVarName = "sql";
             DynamicCodeAutoCall dynamicCodeAutoCall = new DynamicCodeAutoCall();
-            sql = dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(sql, sqlVarName, method);
+
+            _sql = dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(_sql, sqlVarName, method);
 
             DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
             try
             {
-                dynamicCodeChange.AnalyzeSql(method, dataOptType, sqlVarName, ref sql);
+                dynamicCodeChange.AnalyzeSql(method, dataOptType, sqlVarName, ref _sql);
             }
             catch (Exception ex)
             {
@@ -123,9 +125,15 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
 
             DynamicEntity dynamicEntity = new DynamicEntity();
-            T result = dynamicEntity.Exec<T>(method, dataOptType, action, sql);
+            T result = dynamicEntity.Exec<T>(method, dataOptType, action, _sql);
 
             return result;
+        }
+
+        public string sql
+        {
+            get { return _sql; }
+            set { _sql = value; }
         }
 
         DataOptType IDataOperateAttribute.dataOptType { get; set; } = DataOptType.none;

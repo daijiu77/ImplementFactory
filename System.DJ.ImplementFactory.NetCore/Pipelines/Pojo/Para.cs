@@ -11,9 +11,13 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
     {
         private Type _ParaType = null;
         private string _ParaName = null;
+        private string _IsGenericParameter = null;
         private Guid _ID = Guid.Empty;
 
-        public Para() { }
+        public Para()
+        {
+            _ID = Guid.NewGuid();
+        }
 
         public Para(Guid guid)
         {
@@ -53,6 +57,11 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
         /// 获取\设置接口方法参数值
         /// </summary>
         public object ParaValue { get; set; }
+
+        /// <summary>
+        /// 是否是泛型参数
+        /// </summary>
+        public bool IsGenericParameter { get; set; }
 
         /// <summary>
         /// 获取Para对象ID

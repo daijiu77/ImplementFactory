@@ -246,7 +246,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             {
                 if (rg.IsMatch(upperLimit))
                 {
-                    v= Enum.Parse(typeof(ErrorLevels), upperLimit);
+                    v = Enum.Parse(typeof(ErrorLevels), upperLimit);
                     min2 = min;
                     if (null != v) min2 = (ErrorLevels)v;
                 }
@@ -254,7 +254,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 {
                     bool1 = Enum.TryParse(upperLimit, out min2);
                     if (!bool1) min2 = min;
-                }                
+                }
             }
             else
             {
@@ -273,7 +273,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 {
                     bool1 = Enum.TryParse(lowerLimit, out max2);
                     if (!bool1) max2 = max;
-                }                
+                }
             }
             else
             {
@@ -465,10 +465,13 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 e(ex.ToString(), ErrorLevels.severe);
                 throw ex;
             }
-            
-            code = dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(sql, sqlVarName, method);
 
             string paraListVarName = "null";
+            method.append(ref code, LeftSpaceLevel.one, "string {0} = \"{1}\";", sqlVarName, sql);
+            ReplaceGenericSign(method, LeftSpaceLevel.one, sqlVarName, sql, ref paraListVarName, ref code);
+
+            code += dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(sql, sqlVarName, method);
+
             dynamicCodeAutoCall.DataProviderCode(sqlVarName, method, dataOptType, ref code, ref paraListVarName);
             if (string.IsNullOrEmpty(code) && string.IsNullOrEmpty(sql))
             {
@@ -477,8 +480,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
 
             string code1 = "";
-            if (dataOptType == DataOptType.select 
-                || dataOptType == DataOptType.count 
+            if (dataOptType == DataOptType.select
+                || dataOptType == DataOptType.count
                 || DataOptType.procedure == dataOptType)
             {
                 code1 = dynamicCodeAutoCall.GetParametersBySqlParameter(sql, method, ref paraListVarName);
@@ -700,6 +703,120 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
         }
 
+        /// <summary>
+        /// 替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
+        /// </summary>
+        /// <param name="method">泛型方法</param>
+        /// <param name="sqlVarName"></param>
+        /// <param name="leftSpaceLevel"></param>
+        /// <param name="code"></param>
+        public void ReplaceGenericSign(MethodInformation method, LeftSpaceLevel leftSpaceLevel, string sqlVarName, string sql, ref string paraListVarName, ref string code)
+        {
+            if (!method.methodInfo.IsGenericMethod) return;
+            Type[] types = method.methodInfo.GetGenericArguments();
+            if (string.IsNullOrEmpty(sqlVarName))
+            {
+                sqlVarName = "generic_sql";
+                method.append(ref code, leftSpaceLevel, "string {0} = \"{1}\";", sqlVarName, sql);
+            }
+            method.append(ref code, leftSpaceLevel, "System.Attribute att = null;");
+            string item = "";
+            foreach (Type type in types)
+            {
+                item = type.Name;
+                method.append(ref code, leftSpaceLevel, "att = typeof({0}).GetCustomAttribute(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute));", item);
+                method.append(ref code, leftSpaceLevel, "if(null == att)");
+                method.append(ref code, leftSpaceLevel, "{");
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).Name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "}");
+                method.append(ref code, leftSpaceLevel, "else");
+                method.append(ref code, leftSpaceLevel, "{");
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", ((System.ComponentModel.DataAnnotations.Schema.TableAttribute)att).Name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "}");
+                method.append(ref code, leftSpaceLevel, "");
+            }
+
+            if (string.IsNullOrEmpty(paraListVarName)) paraListVarName = "null";
+            if (paraListVarName.ToLower().Equals("null"))
+            {
+                paraListVarName = "dbParaList";
+                method.append(ref code, leftSpaceLevel, "DbList<System.Data.Common.DbParameter> {0} = new DbList<System.Data.Common.DbParameter>();", paraListVarName);
+            }
+            else
+            {
+                paraListVarName = "null";
+            }
+
+            if (sqlVarName.Equals("generic_sql"))
+            {
+                method.append(ref code, leftSpaceLevel, "((AutoCall)dataAutoCall).ReplaceGenericPara(method_info, \"generic_sql\", null, ref generic_sql);");
+                method.append(ref code, leftSpaceLevel, "((AbsDataInterface)dataAutoCall).sql = generic_sql;");
+            }
+            else
+            {
+                method.append(ref code, leftSpaceLevel, "MethodInformation method = new MethodInformation();");
+                method.append(ref code, leftSpaceLevel, "method.StartSpace = method.getSpace({0});", ((int)leftSpaceLevel).ToString());
+                method.append(ref code, leftSpaceLevel, "method.paraList = {0};", method.ParaListVarName);
+                method.append(ref code, leftSpaceLevel, "method.AutoCall = {0};", method.AutoCallVarName);
+                method.append(ref code, leftSpaceLevel, "((AutoCall){0}).ReplaceGenericPara(method, \"{1}\", {2}, ref {1});",
+                    method.AutoCallVarName, sqlVarName, paraListVarName);
+            }
+
+            code += "\r\n";
+        }
+
+        public void ReplaceGenericPara(MethodInformation method, string sqlVarName, DbList<DbParameter> dbParameters1, ref string sql)
+        {
+            if (0 == method.paraList.Count) return;
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = trace.GetFrame(1);
+            method.methodInfo = (MethodInfo)stackFrame.GetMethod();
+            method.AutoCall = method.methodInfo.GetCustomAttribute(typeof(AutoCall));
+
+            AbsDataInterface absDataInterface = (AbsDataInterface)method.AutoCall;
+            method.fields = absDataInterface.fields;
+            method.fieldsType = absDataInterface.fieldsType;
+
+            PList<Para> paras = new PList<Para>();
+            foreach (Para item in method.paraList)
+            {
+                if (!item.IsGenericParameter) continue;
+                paras.Add(item);
+            }
+
+            if (0 == paras.Count) return;
+            method.paraList = paras;
+            dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(method, ref sql);
+
+            DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
+            try
+            {
+                dynamicCodeChange.AnalyzeSql(method, ((IDataOperateAttribute)method.AutoCall).dataOptType, sqlVarName, ref sql);
+            }
+            catch (Exception ex)
+            {
+                e(ex.ToString(), ErrorLevels.severe);
+                throw ex;
+            }
+
+            if (null != dbParameters1)
+            {
+                DataEntity<DataElement> dataElements = new DataEntity<DataElement>();
+                object _obj = paras[0].ParaValue;
+                _obj.ForeachProperty((pi, type, fn, fv) =>
+                {
+                    dataElements.Add(fn, fv);
+                });
+
+                DbList<DbParameter> dbParameters = DynamicEntity.GetDbParameters(method, dataElements, sql);
+                foreach (var item in dbParameters)
+                {
+                    dbParameters1.Add(item);
+                }
+            }
+
+        }
+
         public static List<ErrorLevels> errorLevels1 { get; set; }
 
         /// <summary>
@@ -716,7 +833,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             AutoCall autoCall = null;
             foreach (var item in attributes)
             {
-                if(null != (item as AutoCall))
+                if (null != (item as AutoCall))
                 {
                     autoCall = (AutoCall)item;
                     break;

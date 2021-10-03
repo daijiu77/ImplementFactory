@@ -182,13 +182,12 @@ namespace System.DJ.ImplementFactory.Commons
         {
             get
             {
-                object obj = null;
-                dataDic.TryGetValue(name, out obj);
                 DataElement de = null;
-                if (null != obj)
+                if (dataDic.ContainsKey(name))
                 {
+                    object obj = dataDic[name];
                     de = new DataElement(name, obj);
-                }
+                }                
                 return (T)de;
             }
         }

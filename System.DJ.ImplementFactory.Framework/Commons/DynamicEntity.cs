@@ -260,7 +260,7 @@ namespace System.DJ.ImplementFactory.Commons
             autoCall.GetSqlByDataProvider(sqlExpressionProvider, method.paraList, dbParameters, autoCall, method.dataOptType, ref sql);
         }
 
-        DbList<DbParameter> GetDbParameters(MethodInformation method, DataEntity<DataElement> dataElements, string sql)
+        public static DbList<DbParameter> GetDbParameters(MethodInformation method, DataEntity<DataElement> dataElements, string sql)
         {
             DbList<DbParameter> dbParameters = new DbList<DbParameter>();
             if (string.IsNullOrEmpty(sql)) return dbParameters;

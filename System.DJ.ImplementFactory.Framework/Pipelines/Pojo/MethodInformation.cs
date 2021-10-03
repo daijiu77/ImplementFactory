@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.DJ.ImplementFactory.Commons;
 
 /// <summary>
 /// Author: 代久 - Allan
@@ -168,13 +169,13 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
                 _paraList.Clear();
                 foreach (Para item in dic)
                 {
-                    _paraList.Add(new Para(Guid.NewGuid())
+                    Para p = new Para();
+                    p.SetPropertyFrom(item, (pi) =>
                     {
-                        ParaName = item.ParaName,
-                        ParaType = item.ParaType,
-                        ParaTypeName = item.ParaTypeName,
-                        ParaValue = item.ParaValue
+                        if (pi.Name.ToLower().Equals("id")) return false;
+                        return true;
                     });
+                    _paraList.Add(p);
                 }
             }
         }
