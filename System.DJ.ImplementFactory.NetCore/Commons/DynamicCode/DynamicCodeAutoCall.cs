@@ -394,9 +394,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2});", sqlVarName, FieldName, para.ParaName);
                             sql1 = sql1.Replace("{" + FieldName + "}", para.ParaValue.ToString());
                         }
-                        else
+                        else if(null != para.ParaValue)
                         {
-                            para.ForeachProperty((pi, type, fName, fVal) =>
+                            para.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
@@ -408,7 +408,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     {
                         foreach (Para item in paras)
                         {
-                            item.ForeachProperty((pi, type, fName, fVal) =>
+                            if (null == item.ParaValue) continue;
+                            if (DJTools.IsBaseType(item.ParaValue.GetType())) continue;
+                            item.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
