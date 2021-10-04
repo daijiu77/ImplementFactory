@@ -669,14 +669,30 @@ namespace System.DJ.ImplementFactory.Commons
             Regex rg = new Regex(@"(?<TypeName>[a-z0-9_\.]+)[^a-z0-9_\.]", RegexOptions.IgnoreCase);
             Type[] types = type.GetGenericArguments();
 
-            if (null == type.FullName)
+            Func<Type[], string> func = (_types) =>
             {
-                //泛型
-                s = type.Name;
-            }
-            else if (typeof(IEnumerable) == type.GetInterface("IEnumerable") && typeof(string) != type.BaseType)
+                string _s1 = "";
+                foreach (Type item in _types)
+                {
+                    if (item.IsGenericType || null == types[0].FullName)
+                    {
+                        _s1 += ", " + item.Name;
+                    }
+                    else
+                    {
+                        _s1 += ", " + item.TypeToString(isFullName);
+                    }
+                }
+                _s1 = _s1.Substring(2);
+                string _tn = "<" + _s1 + ">";
+                return _tn;
+            };
+
+            if (typeof(IEnumerable) == type.GetInterface("IEnumerable") && typeof(string) != type.BaseType)
             {
                 tn = isFullName ? type.FullName : type.Name;
+                if (string.IsNullOrEmpty(tn)) tn = type.Name;
+
                 if (rg.IsMatch(tn))
                 {
                     tn = rg.Match(tn).Groups["TypeName"].Value;
@@ -692,20 +708,25 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (typeof(IList) == type.GetInterface("IList"))
                 {
-                    tn += "<" + types[0].TypeToString(isFullName) + ">";
+                    if (types[0].IsGenericType || null == types[0].FullName)
+                    {
+                        tn += "<" + types[0].Name + ">";
+                    }
+                    else
+                    {
+                        tn += "<" + types[0].TypeToString(isFullName) + ">";
+                    }                    
                 }
                 else if (0 < types.Length)
                 {
-                    tn += "<";
-                    string s1 = "";
-                    foreach (Type item in types)
-                    {
-                        s1 += ", " + item.TypeToString(isFullName);
-                    }
-                    s1 = s1.Substring(2);
-                    tn += s1 + ">";
+                    tn += func(types);                    
                 }
                 s = tn;
+            }
+            else if (type.IsGenericType || null == type.FullName)
+            {
+                //泛型
+                s = type.Name;
             }
             else if (IsBaseType(type))
             {
@@ -719,15 +740,8 @@ namespace System.DJ.ImplementFactory.Commons
                     if (rg.IsMatch(tn))
                     {
                         tn = rg.Match(tn).Groups["TypeName"].Value;
-                    }
-                    tn += "<";
-                    string s1 = "";
-                    foreach (Type item in types)
-                    {
-                        s1 += ", " + item.TypeToString(isFullName);
-                    }
-                    s1 = s1.Substring(2);
-                    tn += s1 + ">";
+                    }                    
+                    tn += func(types); ;
                     s = tn;
                 }
                 else

@@ -298,7 +298,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     s = p.ParameterType.TypeToString();
                     paraStr += "," + s + " " + p.Name;
                     mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1},IsGenericParameter=true});", s, p.Name, paraListVarName);
-                    //plist += "," + p.Name;
+                    plist += "," + p.Name;
                 }
                 else if (typeof(DataEntity<DataElement>) == p.ParameterType)
                 {
