@@ -48,6 +48,66 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return mbool;
         }
 
+        /// <summary>
+        /// 获取 sql 表达式所包含的参数
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="func"></param>
+        /// <param name="action">fiald, dbTag</param>
+        public static void GetSqlParameter(ref string sql, Func<Match, bool> func, Action<string, string> action)
+        {
+            Regex rg = rgParaField;
+            string sql1 = sql;
+            if (rg.IsMatch(sql))
+            {
+                string LeftSign = "";
+                string EndSign = "";
+                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string _dbTag = "";
+                string FieldName = "";
+                string unit = "";
+                string unit1 = "";
+                Match match = null;
+                int n = 0;
+                while(rg.IsMatch(sql1) && paraMaxQuantity > n)
+                {
+                    match = rg.Match(sql1);                    
+                    if (func(match))
+                    {
+                        FieldName = match.Groups["FieldName"].Value;                                                
+                        action(FieldName, DbTag);
+
+                        _dbTag = match.Groups["DbTag"].Value;
+                        if (!DbTag.Equals(_dbTag))
+                        {
+                            LeftSign = match.Groups["LeftSign"].Value;
+                            EndSign = match.Groups["EndSign"].Value;
+
+                            unit = match.Groups[0].Value;
+                            unit1 = LeftSign + DbTag + FieldName + EndSign;
+                            sql = sql.Replace(unit, unit1);
+                        }                        
+                    }
+                    sql1 = sql1.Replace(match.Groups[0].Value, "");
+                    sql1 = EndSign + sql1;
+                    n++;
+                }
+            }
+        }
+
+        public static void GetSqlParameter(ref string sql, Action<string, string> action)
+        {
+            GetSqlParameter(ref sql, m =>
+            {
+                string LeftSign = m.Groups["LeftSign"].Value;
+                return isEnabledField(LeftSign);
+            },
+            (field, db_tag) =>
+            {
+                action(field, db_tag);
+            });
+        }
+
         public string GetParametersBySqlParameter(string sqlVarName, MethodInformation method, DataOptType dataOptType, ref string sql, ref string dbParaListVarName)
         {
             string code = "";
@@ -77,46 +137,19 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, LeftSpaceLevel.one, "IDbHelper {0} = ImplementAdapter.DbHelper;", dbHelperVarName);
 
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
-            {
-                string LeftSign = "";
-                string EndSign = "";
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
-                string _dbTag = "";
-                string FieldName = "";
-                string unit = "";
-                string unit1 = "";
+            {                
+                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);                
                 string autoCallName = method.AutoCallVarName;
-                Match match = null;
 
                 EList<CKeyValue> sqlParaList1 = new EList<CKeyValue>();
                 string sqlParasVarName = "sqlParaList";
                 method.append(ref code, LeftSpaceLevel.one, "EList<CKeyValue> {0} = new EList<CKeyValue>();", sqlParasVarName);
-                int n = 0;
-                while (rg.IsMatch(sql1) && paraMaxQuantity > n)
+                GetSqlParameter(ref sql, (field, db_tag) =>
                 {
-                    match = rg.Match(sql1);
-                    LeftSign = match.Groups["LeftSign"].Value;
-                    EndSign = match.Groups["EndSign"].Value;
-                    if (isEnabledField(LeftSign))
-                    {
-                        _dbTag = match.Groups["DbTag"].Value;
-                        FieldName = match.Groups["FieldName"].Value;
-                        method.append(ref code, LeftSpaceLevel.one, "{0}.Add(new CKeyValue(){ Key = \"{1}\", Value = \"{2}\", other = \"{3}\" });", sqlParasVarName, FieldName.ToLower(), FieldName, DbTag);
-                        sqlParaList1.Add(new CKeyValue() { Key = FieldName.ToLower(), Value = FieldName, other = DbTag });
-
-                        if (!DbTag.Equals(_dbTag))
-                        {
-                            unit = match.Groups[0].Value;
-                            unit1 = LeftSign + DbTag + FieldName + EndSign;
-                            sql = sql.Replace(unit, unit1);
-                        }                        
-                    }
-                    
-                    sql1 = sql1.Replace(match.Groups[0].Value, "");
-                    sql1 = EndSign + sql1;
-                    n++;
-                }
-
+                    method.append(ref code, LeftSpaceLevel.one, "{0}.Add(new CKeyValue(){ Key = \"{1}\", Value = \"{2}\", other = \"{3}\" });", sqlParasVarName, field.ToLower(), field, db_tag);
+                    sqlParaList1.Add(new CKeyValue() { Key = field.ToLower(), Value = field, other = db_tag });
+                });
+                
                 Regex rg1 = new Regex(@"\`[0-9]+\[");
                 CKeyValue kv = null;
                 PList<Para> paraList = method.paraList;

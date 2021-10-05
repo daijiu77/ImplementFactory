@@ -278,48 +278,18 @@ namespace System.DJ.ImplementFactory.Commons
                     throw new Exception(msg);
                 }
 
-                string LeftSign = "";
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
-                string _dbTag = "";
-                string unit = "";
-                string unit1 = "";
-                string FieldName = "";
-                string EndSign = "";
-                object v = null;
-                string sql1 = sql;
-                Match m = null;
-                int num = 0;
-
-                //DataEntity<DataElement> dataElements = (DataEntity<DataElement>)method.paraList[0].ParaValue;
-                MatchCollection mc = rg.Matches(sql);                
-                while (rg.IsMatch(sql1) && 1000 > num)
+                string code = "";
+                DynamicCodeChange.GetSqlParameter(ref sql, m =>
                 {
-
-                    if ((method.methodComponent.IsAsync || method.methodComponent.EnabledBuffer)
-                      && 0 < method.methodComponent.Interval) Thread.Sleep(method.methodComponent.Interval);
-                    m = rg.Match(sql1);
-                    LeftSign = m.Groups["LeftSign"].Value;
-                    if (!DynamicCodeChange.isEnabledField(LeftSign)) continue;
-                    _dbTag = m.Groups["DbTag"].Value;
-                    FieldName = m.Groups["FieldName"].Value;
-                    EndSign = m.Groups["EndSign"].Value;
-
-                    if (dataElements.ContainsKey(FieldName))
-                    {
-                        v = dataElements[FieldName].value;
-                        dbParameters.Add(FieldName, v);
-                        sql1 = sql1.Replace(m.Groups[0].Value, "");
-                        sql1 = EndSign + sql1;
-
-                        if (!DbTag.Equals(_dbTag))
-                        {
-                            unit = m.Groups[0].Value;
-                            unit1 = LeftSign + DbTag + FieldName + EndSign;
-                            sql = sql.Replace(unit, unit1);
-                        }                        
-                    }                    
-                    num++;
-                }
+                    string FieldName = m.Groups["FieldName"].Value;
+                    string LeftSign = m.Groups["LeftSign"].Value;
+                    return dataElements.ContainsKey(FieldName) && DynamicCodeChange.isEnabledField(LeftSign);
+                },
+                (field, db_tag) =>
+                {
+                    object v = dataElements[field].value;
+                    dbParameters.Add(field, v);
+                });
             }
 
             return dbParameters;

@@ -454,11 +454,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <summary>
         /// 从复杂对象获取元素添加到参数集合DbList<DbParamert>
         /// </summary>
-        /// <param name="paraClassName">不同数据源参数类名称</param>
         /// <param name="funcPara"></param>
         /// <param name="method"></param>
         /// <returns></returns>
-        string AddElementToParamerCollectionFromMixed(string paraClassName, FuncPara funcPara, MethodInformation method)
+        string AddElementToParamerCollectionFromMixed(FuncPara funcPara, MethodInformation method)
         {
             string code2 = "";
             string sqlVarName1 = funcPara.sqlVarName1;
@@ -468,12 +467,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             Type PropertyType = funcPara.PropertyType;
             if (PropertyType == typeof(PropertyInfo))
             {
-                method.append(ref code2, LeftSpaceLevel.one, "{0}.Add(\"{2}\",{3}.{4});", sqlVarName1, paraClassName, FieldName1, ParaName1, PropertyName);
+                method.append(ref code2, LeftSpaceLevel.one, "{0}.Add(\"{1}\",{2}.{3});", sqlVarName1, FieldName1, ParaName1, PropertyName);
             }
             else
             {
                 //Dictionary
-                method.append(ref code2, LeftSpaceLevel.one, "{0}.Add(\"{2}\",{3}[\"{4}\"]);", sqlVarName1, paraClassName, FieldName1, ParaName1, PropertyName);
+                method.append(ref code2, LeftSpaceLevel.one, "{0}.Add(\"{1}\",{2}[\"{3}\"]);", sqlVarName1, FieldName1, ParaName1, PropertyName);
             }
             return code2;
         }
@@ -493,7 +492,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             //oracle :ParameterName
             //mysql ?ParameterName
             Regex rg = DynamicCodeChange.rgParaField;
-            Match mc = null;
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
             {
                 if (string.IsNullOrEmpty(paraListVarName) || paraListVarName.ToLower().Equals("null"))
@@ -501,81 +499,51 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     paraListVarName = "dbParaList";
                     method.append(ref code, LeftSpaceLevel.one, "DbList<System.Data.Common.DbParameter> {0} = new DbList<System.Data.Common.DbParameter>();", paraListVarName);
                 }
-
-                //string parameterName = "";
-                //object parameterValue = null;
-                //var a = new Data.OracleClient.OracleParameter(parameterName, parameterValue);
-                //var b = new MySql.Data.MySqlClient.MySqlParameter(parameterName, parameterValue);
-                //var c = new System.Data.SqlClient.SqlParameter(parameterName, parameterValue);     
-                string LeftSign = "";
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
-                string _dbTag = "";
-                string unit = "";
-                string unit1 = "";
-                string FieldName = "";
-                string EndSign = "";
+                string paraListVarName1 = paraListVarName;
+                
                 string code1 = "";
-                string paraClassName = "";
-                int n = 0;
                 Para para = null;
                 PList<Para> paras = method.paraList;
-                while (rg.IsMatch(sql1) && DynamicCodeChange.paraMaxQuantity > n)
-                {
-                    mc = rg.Match(sql1);
-                    LeftSign = mc.Groups["LeftSign"].Value;
-                    _dbTag = mc.Groups["DbTag"].Value;
-                    FieldName = mc.Groups["FieldName"].Value;
-                    EndSign = mc.Groups["EndSign"].Value;
-                    sql1 = sql1.Replace(mc.Groups[0].Value, "" + EndSign);
-                    if (!DynamicCodeChange.isEnabledField(LeftSign))
-                    {
-                        continue;
-                    }
+                DynamicCodeChange.GetSqlParameter(ref sql, (field, db_tag) =>
+                 {
+                     para = paras[field];
+                     if (null != para)
+                     {
+                         if (DJTools.IsBaseType(para.ParaType))
+                         {
+                             method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{1}\",{2});", paraListVarName1, field, para.ParaName);
+                         }
+                         else
+                         {
+                             code1 = ExecReplaceForSqlByFieldName_Mixed(paraListVarName1, field, para, method, (funcPara) =>
+                             {
+                                 string code2 = AddElementToParamerCollectionFromMixed(funcPara, method);
+                                 return code2;
+                             });
 
-                    unit = mc.Groups[0].Value;
-                    unit1 = LeftSign + DbTag + FieldName + EndSign;
-                    sql = sql.Replace(unit, unit1);
+                             if (!string.IsNullOrEmpty(code1))
+                             {
+                                 code += "\r\n" + code1;
+                             }
+                         }
+                     }
+                     else
+                     {
+                         foreach (Para item in paras)
+                         {
+                             code1 = ExecReplaceForSqlByFieldName_Mixed(paraListVarName1, field, item, method, (funcPara) =>
+                             {
+                                 string code2 = AddElementToParamerCollectionFromMixed(funcPara, method);
+                                 return code2;
+                             });
 
-                    //paraClassName = DJTools.GetParamertClassNameByDbTag(DbTag);
-                    para = paras[FieldName];
-                    if (null != para)
-                    {
-                        if (DJTools.IsBaseType(para.ParaType))
-                        {
-                            method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\",{3});", paraListVarName, paraClassName, FieldName, para.ParaName);
-                        }
-                        else
-                        {
-                            code1 = ExecReplaceForSqlByFieldName_Mixed(paraListVarName, FieldName, para, method, (funcPara) =>
-                            {
-                                string code2 = AddElementToParamerCollectionFromMixed(paraClassName, funcPara, method);
-                                return code2;
-                            });
-
-                            if (!string.IsNullOrEmpty(code1))
-                            {
-                                code += "\r\n" + code1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach (Para item in paras)
-                        {
-                            code1 = ExecReplaceForSqlByFieldName_Mixed(paraListVarName, FieldName, item, method, (funcPara) =>
-                            {
-                                string code2 = AddElementToParamerCollectionFromMixed(paraClassName, funcPara, method);
-                                return code2;
-                            });
-
-                            if (!string.IsNullOrEmpty(code1))
-                            {
-                                code += "\r\n" + code1;
-                            }
-                        }
-                    }
-                    n++;
-                }
+                             if (!string.IsNullOrEmpty(code1))
+                             {
+                                 code += "\r\n" + code1;
+                             }
+                         }
+                     }
+                 });               
 
             }
             return code;
