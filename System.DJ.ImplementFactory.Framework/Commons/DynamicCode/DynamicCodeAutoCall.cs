@@ -281,6 +281,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                         else
                         {
+                            if (para.ParaType.IsGenericParameter || null == para.ParaType.FullName) continue;
+
                             code1 = ExecReplaceForSqlByFieldName_Mixed(sqlVarName, FieldName, para, method, (funcPara) =>
                             {
                                 string code2 = GetReplaceByMixed(funcPara, method);
@@ -297,6 +299,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     {
                         foreach (Para item in paras)
                         {
+                            if (item.ParaType.IsGenericParameter || null == item.ParaType.FullName) continue;
+                            if (DJTools.IsBaseType(item.ParaType)) continue;
+
                             code1 = ExecReplaceForSqlByFieldName_Mixed(sqlVarName, FieldName, item, method, (funcPara) =>
                             {
                                 string code2 = GetReplaceByMixed(funcPara, method);
@@ -316,6 +321,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return code;
         }
 
+        /// <summary>
+        /// 泛型参数,当执行接口方法时,已经有值的情况做替换
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="sql"></param>
         public void ExecReplaceForSqlByFieldName(MethodInformation method, ref string sql)
         {
             if (string.IsNullOrEmpty(sql)) return;
@@ -413,6 +423,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         {
                             if (null == item.ParaValue) continue;
                             if (DJTools.IsBaseType(item.ParaValue.GetType())) continue;
+
                             item.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
@@ -474,7 +485,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <param name="method"></param>
         /// <param name="paraListVarName">List<DbParameter> 的变量名称</param>
         /// <returns></returns>
-        public string GetParametersBySqlParameter(string sql, MethodInformation method, ref string paraListVarName)
+        public string GetParametersBySqlParameter(MethodInformation method,ref string sql, ref string paraListVarName)
         {
             string code = "";
             string sql1 = sql;
@@ -497,7 +508,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 //var b = new MySql.Data.MySqlClient.MySqlParameter(parameterName, parameterValue);
                 //var c = new System.Data.SqlClient.SqlParameter(parameterName, parameterValue);     
                 string LeftSign = "";
-                string DbTag = "";
+                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string _dbTag = "";
+                string unit = "";
+                string unit1 = "";
                 string FieldName = "";
                 string EndSign = "";
                 string code1 = "";
@@ -505,11 +519,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 int n = 0;
                 Para para = null;
                 PList<Para> paras = method.paraList;
-                while (rg.IsMatch(sql1) && 1000 > n)
+                while (rg.IsMatch(sql1) && DynamicCodeChange.paraMaxQuantity > n)
                 {
                     mc = rg.Match(sql1);
                     LeftSign = mc.Groups["LeftSign"].Value;
-                    DbTag = mc.Groups["DbTag"].Value;
+                    _dbTag = mc.Groups["DbTag"].Value;
                     FieldName = mc.Groups["FieldName"].Value;
                     EndSign = mc.Groups["EndSign"].Value;
                     sql1 = sql1.Replace(mc.Groups[0].Value, "" + EndSign);
@@ -517,6 +531,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     {
                         continue;
                     }
+
+                    unit = mc.Groups[0].Value;
+                    unit1 = LeftSign + DbTag + FieldName + EndSign;
+                    sql = sql.Replace(unit, unit1);
+
                     //paraClassName = DJTools.GetParamertClassNameByDbTag(DbTag);
                     para = paras[FieldName];
                     if (null != para)

@@ -467,7 +467,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
 
             string paraListVarName = "null";
-            method.append(ref code, LeftSpaceLevel.one, "string {0} = \"{1}\";", sqlVarName, sql);
+            string sqlExpression = "{___sql_expression_}";
+            method.append(ref code, LeftSpaceLevel.one, "string {0} = \"{1}\";", sqlVarName, sqlExpression);
             ReplaceGenericSign(method, LeftSpaceLevel.one, sqlVarName, sql, ref paraListVarName, ref code);
 
             code += dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(sql, sqlVarName, method);
@@ -484,17 +485,17 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 || dataOptType == DataOptType.count
                 || DataOptType.procedure == dataOptType)
             {
-                code1 = dynamicCodeAutoCall.GetParametersBySqlParameter(sql, method, ref paraListVarName);
+                code1 = dynamicCodeAutoCall.GetParametersBySqlParameter(method, ref sql, ref paraListVarName);
                 appendCode(method, code1, ref code);
 
                 dynamicCodeAutoCall.MadeExecuteSql(sqlVarName, paraListVarName, method, dataOptType, ref code);
             }
             else
             {
-                code1 = dynamicCodeChange.GetParametersBySqlParameter(sql, sqlVarName, method, dataOptType, ref paraListVarName);
-                appendCode(method, code1, ref code);
+                code1 = dynamicCodeChange.GetParametersBySqlParameter(sqlVarName, method, dataOptType, ref sql, ref paraListVarName);
+                appendCode(method, code1, ref code);                
             }
-
+            code = code.Replace(sqlExpression, sql);
         }
 
         void appendCode(MethodInformation method, string code1, ref string code)
@@ -704,7 +705,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
+        /// 当为泛型方法时,替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
         /// </summary>
         /// <param name="method">泛型方法</param>
         /// <param name="sqlVarName"></param>
@@ -765,6 +766,13 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             code += "\r\n";
         }
 
+        /// <summary>
+        /// 当为泛型参数时, 编译时被引用, 替换 sql 表达式中的 {field} 标识及 @field/?field/:field 等标识
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="sqlVarName"></param>
+        /// <param name="dbParameters1"></param>
+        /// <param name="sql"></param>
         public void ReplaceGenericPara(MethodInformation method, string sqlVarName, DbList<DbParameter> dbParameters1, ref string sql)
         {
             if (0 == method.paraList.Count) return;
@@ -808,7 +816,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                     dataElements.Add(fn, fv);
                 });
 
-                DbList<DbParameter> dbParameters = DynamicEntity.GetDbParameters(method, dataElements, sql);
+                DbList<DbParameter> dbParameters = DynamicEntity.GetDbParameters(method, dataElements, ref sql);
                 foreach (var item in dbParameters)
                 {
                     dbParameters1.Add(item);

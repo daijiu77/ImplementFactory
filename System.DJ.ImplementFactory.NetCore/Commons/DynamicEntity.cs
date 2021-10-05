@@ -60,7 +60,7 @@ namespace System.DJ.ImplementFactory.Commons
                 || DataOptType.procedure == dataOptType)
             {
                 if (0 < dataElements.Count) dataElements1 = dataElements[0];
-                dbParameters = GetDbParameters(method, dataElements1, sql);
+                dbParameters = GetDbParameters(method, dataElements1, ref sql);
                 GetSqlByProvider(method, dbParameters, ref sql);                
                 dbHelper.query(autoCall, sql, dbParameters, EnabledBuffer, (dt) =>
                 {
@@ -129,7 +129,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                 foreach (DataEntity<DataElement> item in dataElements)
                 {
-                    dbParameters = GetDbParameters(method, item, sql);
+                    dbParameters = GetDbParameters(method, item, ref sql);
                     switch (dataOptType)
                     {
                         case DataOptType.insert:
@@ -260,7 +260,7 @@ namespace System.DJ.ImplementFactory.Commons
             autoCall.GetSqlByDataProvider(sqlExpressionProvider, method.paraList, dbParameters, autoCall, method.dataOptType, ref sql);
         }
 
-        public static DbList<DbParameter> GetDbParameters(MethodInformation method, DataEntity<DataElement> dataElements, string sql)
+        public static DbList<DbParameter> GetDbParameters(MethodInformation method, DataEntity<DataElement> dataElements, ref string sql)
         {
             DbList<DbParameter> dbParameters = new DbList<DbParameter>();
             if (string.IsNullOrEmpty(sql)) return dbParameters;
@@ -279,7 +279,10 @@ namespace System.DJ.ImplementFactory.Commons
                 }
 
                 string LeftSign = "";
-                string DbTag = "";
+                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string _dbTag = "";
+                string unit = "";
+                string unit1 = "";
                 string FieldName = "";
                 string EndSign = "";
                 object v = null;
@@ -297,14 +300,24 @@ namespace System.DJ.ImplementFactory.Commons
                     m = rg.Match(sql1);
                     LeftSign = m.Groups["LeftSign"].Value;
                     if (!DynamicCodeChange.isEnabledField(LeftSign)) continue;
-                    DbTag = m.Groups["DbTag"].Value;
+                    _dbTag = m.Groups["DbTag"].Value;
                     FieldName = m.Groups["FieldName"].Value;
                     EndSign = m.Groups["EndSign"].Value;
 
-                    v = dataElements[FieldName].value;
-                    dbParameters.Add(FieldName, v);
-                    sql1 = sql1.Replace(m.Groups[0].Value, "");
-                    sql1 = EndSign + sql1;
+                    if (dataElements.ContainsKey(FieldName))
+                    {
+                        v = dataElements[FieldName].value;
+                        dbParameters.Add(FieldName, v);
+                        sql1 = sql1.Replace(m.Groups[0].Value, "");
+                        sql1 = EndSign + sql1;
+
+                        if (!DbTag.Equals(_dbTag))
+                        {
+                            unit = m.Groups[0].Value;
+                            unit1 = LeftSign + DbTag + FieldName + EndSign;
+                            sql = sql.Replace(unit, unit1);
+                        }                        
+                    }                    
                     num++;
                 }
             }

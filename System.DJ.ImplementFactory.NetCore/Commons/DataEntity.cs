@@ -192,6 +192,11 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public bool ContainsKey(string key)
+        {
+            return dataDic.ContainsKey(key);
+        }
+
         public bool Add(string name, object value)
         {
             object obj = null;
