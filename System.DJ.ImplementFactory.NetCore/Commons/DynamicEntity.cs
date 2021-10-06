@@ -278,7 +278,6 @@ namespace System.DJ.ImplementFactory.Commons
                     throw new Exception(msg);
                 }
 
-                string code = "";
                 DynamicCodeChange.GetSqlParameter(ref sql, m =>
                 {
                     string FieldName = m.Groups["FieldName"].Value;

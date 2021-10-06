@@ -21,7 +21,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <summary>
         /// 最大参数数量
         /// </summary>
-        public static int paraMaxQuantity = 1000;
+        private static int paraMaxQuantity = 1000;
 
         /// <summary>
         /// (?<LeftSign>.)?(?<DbTag>[\@\:\?])(?<FieldName>[a-z0-9_]+)(?<EndSign>[^a-z0-9_])?

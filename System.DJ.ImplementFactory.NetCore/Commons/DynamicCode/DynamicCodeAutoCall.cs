@@ -94,7 +94,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                 }
             }
-            else
+            else if (null != para.ParaType.FullName)
             {
                 PropertyInfo[] piArr = para.ParaType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
                 foreach (PropertyInfo pi in piArr)
@@ -148,8 +148,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string ParaName1 = funcPara.ParaName1;
             string PropertyName = funcPara.PropertyName;
             Type PropertyType = funcPara.PropertyType;
-            
-            method.append(ref code2, LeftSpaceLevel.one, "");            
+
+            method.append(ref code2, LeftSpaceLevel.one, "");
             if (PropertyType == typeof(PropertyInfo))
             {
                 //method.append(ref code2, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}.{3}.ToString());", sqlVarName1, FieldName1, ParaName1, PropertyName);
@@ -212,13 +212,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 code = sql;
                 isDynamicEntity = true;
             }
-            else if(typeof(List<DataEntity<DataElement>>) == paraType || typeof(IList<DataEntity<DataElement>>) == paraType)
+            else if (typeof(List<DataEntity<DataElement>>) == paraType || typeof(IList<DataEntity<DataElement>>) == paraType)
             {
                 code = sql;
                 isDynamicEntity = true;
                 isMulti = true;
             }
-            
+
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
             {
                 string FieldName = "";
@@ -232,7 +232,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 if (isDynamicEntity)
                 {
                     para = paras[0];
-                    if(null != para)
+                    if (null != para)
                     {
                         if (isMulti)
                         {
@@ -243,7 +243,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         {
                             dataElements = (DataEntity<DataElement>)para.ParaValue;
                         }
-                    }                                      
+                    }
                 }
                 else
                 {
@@ -264,7 +264,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             if (null == dataElement) continue;
                             v = dataElement.value;
                         }
-                        
+
                         fv = null == v ? "" : v.ToString();
                         code = code.Replace("{" + FieldName + "}", fv);
                         continue;
@@ -329,7 +329,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         public void ExecReplaceForSqlByFieldName(MethodInformation method, ref string sql)
         {
             if (string.IsNullOrEmpty(sql)) return;
-                        
+
             string sql1 = sql;
             string s = @"\{(?<FieldName>[^\{\}]*[a-z][^\{\}]*)\}";
             Regex rg = new Regex(s, RegexOptions.IgnoreCase);
@@ -407,7 +407,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2});", sqlVarName, FieldName, para.ParaName);
                             sql1 = sql1.Replace("{" + FieldName + "}", para.ParaValue.ToString());
                         }
-                        else if(null != para.ParaValue)
+                        else if (null != para.ParaValue)
                         {
                             para.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
                             {
@@ -484,7 +484,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <param name="method"></param>
         /// <param name="paraListVarName">List<DbParameter> 的变量名称</param>
         /// <returns></returns>
-        public string GetParametersBySqlParameter(MethodInformation method,ref string sql, ref string paraListVarName)
+        public string GetParametersBySqlParameter(MethodInformation method, ref string sql, ref string paraListVarName)
         {
             string code = "";
             string sql1 = sql;
@@ -500,7 +500,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     method.append(ref code, LeftSpaceLevel.one, "DbList<System.Data.Common.DbParameter> {0} = new DbList<System.Data.Common.DbParameter>();", paraListVarName);
                 }
                 string paraListVarName1 = paraListVarName;
-                
+
                 string code1 = "";
                 Para para = null;
                 PList<Para> paras = method.paraList;
@@ -509,7 +509,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                      para = paras[field];
                      if (null != para)
                      {
-                         if (DJTools.IsBaseType(para.ParaType))
+                         if (para.ParaType.IsGenericParameter || null == para.ParaType.FullName)
+                         {
+                             return;
+                         }
+                         else if (DJTools.IsBaseType(para.ParaType))
                          {
                              method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{1}\",{2});", paraListVarName1, field, para.ParaName);
                          }
@@ -531,6 +535,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                      {
                          foreach (Para item in paras)
                          {
+                             if (item.ParaType.IsGenericParameter || null == item.ParaType.FullName) continue;
+
                              code1 = ExecReplaceForSqlByFieldName_Mixed(paraListVarName1, field, item, method, (funcPara) =>
                              {
                                  string code2 = AddElementToParamerCollectionFromMixed(funcPara, method);
@@ -543,13 +549,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                              }
                          }
                      }
-                 });               
+                 });
 
             }
             return code;
         }
         #endregion
-                
+
         public Type GetClassTypeByClassPath(string classPath)
         {
             string[] arr = classPath.Split('.');
@@ -728,7 +734,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                 if (paraExsit)
                 {
-                    string paraTypeName = DJTools.TypeToString(returnType);                    
+                    string paraTypeName = DJTools.TypeToString(returnType);
                     method.append(ref code, LeftSpaceLevel.two + 1, "");
                     method.append(ref code, LeftSpaceLevel.two + 1, "{0} resultExecM = new {0}();", execClassPath);
                     method.append(ref code, LeftSpaceLevel.two + 1, "if(null == resultObj)");
@@ -901,7 +907,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             || typeof(Array) == returnType.BaseType)
                         {
                             //接口方法返回值为 List<T> 集合 或 复杂对象数组  
-                            Type[] types = returnType.GetGenericArguments();                            
+                            Type[] types = returnType.GetGenericArguments();
                             if (0 < types.Length)
                             {
                                 typeName = types[0].TypeToString();
