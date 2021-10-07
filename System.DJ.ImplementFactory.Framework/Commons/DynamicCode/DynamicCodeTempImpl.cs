@@ -658,15 +658,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string interfaceNamespace = interfaceType.Namespace;
             string interfaceName = DJTools.GetClassName(interfaceType, true);
 
-            string implNamespace = null;
-            string implName = null;
-            string implName1 = null;
+            string implNamespace = null, implName = null, implName1 = null, GenericArr = null;
 
             if (null != implementType)
             {
                 implNamespace = implementType.Namespace;
                 implName = DJTools.GetClassName(implementType);
-                implName1 = implementType.Name;
+                implName1 = implementType.Name;                
             }
             else
             {
@@ -763,21 +761,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             ParameterInfo[] paras = null;
             PList<Para> paraList = new PList<Para>();
-            string paraStr = "";
-            string lists = "";
-            string plist = "";
-            string returnType = "";
-            string outParas = "";
-            string defaultV = "";
-            string methodName = "";
-            string return_type = "";
-            string genericity = "";
+            string paraStr = "", lists = "", plist = "", returnType = "", outParas = "";
+            string defaultV = "", methodName = "", return_type = "", genericity = "";
             string paraListVarName = "paraList";
-            string methodAttr = "";
-            string actionParaName = "";
-            string err = "";
-            string autoCallPara = "";
-            string autoCallParaName = "";
+            string methodAttr = "", actionParaName = "", err = "", autoCallPara = "", autoCallParaName = "";
             AutoCall autoCall = null;
             bool EnabledBuffer = true;
             bool isDynamicEntity = false;
@@ -878,6 +865,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         mInfo.append(ref code, LeftSpaceLevel.three, "{0} {1}.{2}{3}({4})", returnType, interfaceName, methodName, genericity, paraStr);
                     }
                     mInfo.append(ref code, LeftSpaceLevel.three, "{");//method start
+
+                    if (!string.IsNullOrEmpty(GenericArr))
+                        mInfo.append(ref code, LeftSpaceLevel.four, GenericArr);
 
                     if (!string.IsNullOrEmpty(outParas))
                     {
@@ -1178,6 +1168,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string privateVarNameCode = "";
             foreach (Type typeItem in typeList)
             {
+                GenericArr = null;
                 if (isNotInheritInterface)
                 {
                     methods1 = typeItem.GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -1193,6 +1184,26 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     interfaceType = typeItem;
                     interfaceName = DJTools.GetClassName(interfaceType, true);
+
+                    if (interfaceType.IsGenericType)
+                    {
+                        Type[] types1 = interfaceType.GetGenericArguments();
+                        string ts = "", tt = "";
+                        int tn = 0;
+                        foreach (Type item in types1)
+                        {
+                            //ts += ",\"" + item.Name + "\"";
+                            tt = "T";
+                            for (int i = 0; i < tn; i++)
+                            {
+                                tt += "T";
+                            }
+                            ts += ",\"" + tt + "\"";
+                            tn++;
+                        }
+                        ts = ts.Substring(1);
+                        GenericArr = "string[] GenericArr = new string[] {" + ts + "};";
+                    }
 
                     impl_name = "null";
                     if (false == impl_name1.Equals("null"))

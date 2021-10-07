@@ -726,8 +726,22 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// <param name="code"></param>
         public void ReplaceGenericSign(MethodInformation method, LeftSpaceLevel leftSpaceLevel, string sqlVarName, string sql, ref string paraListVarName, ref string code)
         {
-            if (!method.methodInfo.IsGenericMethod) return;
-            Type[] types = method.methodInfo.GetGenericArguments();
+            Type baseType = method.methodInfo.DeclaringType;
+            Type[] types = new Type[] { };
+            bool isGeneric = false;
+            if (null != baseType)
+            {
+                isGeneric = baseType.IsGenericType;
+                if(isGeneric) types = baseType.GetGenericArguments();
+            }
+
+            if (method.methodInfo.IsGenericMethod)
+            {
+                types = method.methodInfo.GetGenericArguments();
+            }
+
+            if (0 == types.Length) return;
+            
             if (string.IsNullOrEmpty(sqlVarName))
             {
                 sqlVarName = "generic_sql";
@@ -736,20 +750,36 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             method.append(ref code, leftSpaceLevel, "object[] atts = null;");
             method.append(ref code, leftSpaceLevel, "string tb_name = \"\";");
             string item = "";
+            int n = 0;
             foreach (Type type in types)
             {
-                item = type.Name;
+                item = type.Name;                
                 method.append(ref code, leftSpaceLevel, "atts = typeof({0}).GetCustomAttributes(true);", item);
                 method.append(ref code, leftSpaceLevel, "tb_name = {0}.GetTableName(atts);", method.AutoCallVarName);
                 method.append(ref code, leftSpaceLevel, "if(string.IsNullOrEmpty(tb_name))");
                 method.append(ref code, leftSpaceLevel, "{");
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).Name);", sqlVarName, item);
+                if (isGeneric)
+                {
+                    method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{\" + GenericArr[{1}]+ \"}\", typeof({2}).Name);", sqlVarName, n.ToString(), item);
+                }
+                else
+                {
+                    method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).Name);", sqlVarName, item);
+                }                
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "else");
-                method.append(ref code, leftSpaceLevel, "{");                
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", tb_name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "{");
+                if (isGeneric)
+                {
+                    method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{\" + GenericArr[{1}]+ \"}\", tb_name);", sqlVarName, n.ToString());
+                }
+                else
+                {
+                    method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", tb_name);", sqlVarName, item);
+                }                
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "");
+                n++;
             }
 
             if (string.IsNullOrEmpty(paraListVarName)) paraListVarName = "null";
