@@ -674,14 +674,7 @@ namespace System.DJ.ImplementFactory.Commons
                 string _s1 = "";
                 foreach (Type item in _types)
                 {
-                    if (item.IsGenericType || null == types[0].FullName)
-                    {
-                        _s1 += ", " + item.Name;
-                    }
-                    else
-                    {
-                        _s1 += ", " + item.TypeToString(isFullName);
-                    }
+                    _s1 += ", " + item.TypeToString(isFullName);
                 }
                 _s1 = _s1.Substring(2);
                 string _tn = "<" + _s1 + ">";

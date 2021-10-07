@@ -704,6 +704,19 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
         }
 
+        public string GetTableName(object[] attributes)
+        {
+            string tbName = "";
+            if (null == attributes) return tbName;
+            if (0 == attributes.Length) return tbName;
+            foreach (var item in attributes)
+            {
+                tbName = item.GetPropertyValue<string>("Name");
+                if (!string.IsNullOrEmpty(tbName)) break;
+            }
+            return tbName;
+        }
+
         /// <summary>
         /// 当为泛型方法时,替换 sql 表达式中的泛型标识, 例: select * from {T} order by id asc
         /// </summary>
@@ -720,19 +733,21 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 sqlVarName = "generic_sql";
                 method.append(ref code, leftSpaceLevel, "string {0} = \"{1}\";", sqlVarName, sql);
             }
-            method.append(ref code, leftSpaceLevel, "System.Attribute att = null;");
+            method.append(ref code, leftSpaceLevel, "object[] atts = null;");
+            method.append(ref code, leftSpaceLevel, "string tb_name = \"\";");
             string item = "";
             foreach (Type type in types)
             {
                 item = type.Name;
-                method.append(ref code, leftSpaceLevel, "att = typeof({0}).GetCustomAttribute(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute));", item);
-                method.append(ref code, leftSpaceLevel, "if(null == att)");
+                method.append(ref code, leftSpaceLevel, "atts = typeof({0}).GetCustomAttributes(true);", item);
+                method.append(ref code, leftSpaceLevel, "tb_name = {0}.GetTableName(atts);", method.AutoCallVarName);
+                method.append(ref code, leftSpaceLevel, "if(string.IsNullOrEmpty(tb_name))");
                 method.append(ref code, leftSpaceLevel, "{");
                 method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).Name);", sqlVarName, item);
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "else");
-                method.append(ref code, leftSpaceLevel, "{");
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", ((System.ComponentModel.DataAnnotations.Schema.TableAttribute)att).Name);", sqlVarName, item);
+                method.append(ref code, leftSpaceLevel, "{");                
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", tb_name);", sqlVarName, item);
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "");
             }

@@ -29,8 +29,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 paraListVarName = "dbParaList";
                 method.append(ref code, LeftSpaceLevel.one, "DbList<System.Data.Common.DbParameter> {0} = new DbList<System.Data.Common.DbParameter>();", paraListVarName);
             }
-
-            method.append(ref code, LeftSpaceLevel.one, "string {0} = \"\";", sqlVarName);
+            
             method.append(ref code, LeftSpaceLevel.one, "ISqlExpressionProvider dataProvider = {0}.GetDataProvider(\"{1}\",\"{2}\",{0});", method.AutoCallVarName, dataProviderNamespace, dataProviderClassName);
             method.append(ref code, LeftSpaceLevel.one, "{0}.GetSqlByDataProvider(dataProvider,{1},{2},{3},(DataOptType){4}, ref {5});", method.AutoCallVarName, method.ParaListVarName, paraListVarName, method.AutoCallVarName, ((int)dataOptType).ToString(), sqlVarName);
         }
