@@ -723,16 +723,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 s = tn;
             }
-            else if (type.IsGenericType || null == type.FullName)
-            {
-                //泛型
-                s = type.Name;
-            }
-            else if (IsBaseType(type))
-            {
-                s = isFullName ? type.FullName : type.Name;
-            }
-            else if(type.BaseType== typeof(System.MulticastDelegate))
+            else if (type.BaseType == typeof(System.MulticastDelegate))
             {
                 tn = isFullName ? type.FullName : type.Name;
                 if (rg.IsMatch(tn))
@@ -741,10 +732,19 @@ namespace System.DJ.ImplementFactory.Commons
                 }
 
                 if (0 < types.Length)
-                {                    
-                    tn += func(types); ;                    
+                {
+                    tn += func(types); ;
                 }
                 s = tn;
+            }
+            else if (type.IsGenericType || null == type.FullName)
+            {
+                //泛型
+                s = type.Name;
+            }
+            else if (IsBaseType(type))
+            {
+                s = isFullName ? type.FullName : type.Name;
             }
             else
             {
