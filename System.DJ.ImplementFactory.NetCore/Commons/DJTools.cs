@@ -732,6 +732,20 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 s = isFullName ? type.FullName : type.Name;
             }
+            else if(type.BaseType== typeof(System.MulticastDelegate))
+            {
+                tn = isFullName ? type.FullName : type.Name;
+                if (rg.IsMatch(tn))
+                {
+                    tn = rg.Match(tn).Groups["TypeName"].Value;
+                }
+
+                if (0 < types.Length)
+                {                    
+                    tn += func(types); ;                    
+                }
+                s = tn;
+            }
             else
             {
                 if (0 < types.Length)
