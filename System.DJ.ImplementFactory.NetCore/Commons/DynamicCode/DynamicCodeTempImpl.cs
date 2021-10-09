@@ -945,7 +945,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     };
 
                     #region ExecuteBeforeFilter -- 执行接口方法之前
-                    mInfo.append(ref code, LeftSpaceLevel.four, "if(!{0}.ExecuteBeforeFilter(typeof({1}),{2},\"{3}\",{4}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
+                    mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace1 = new StackTrace();");
+                    mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame1 = trace1.GetFrame(1);");
+                    mInfo.append(ref code, LeftSpaceLevel.four, "MethodBase methodBase1 = stackFrame1.GetMethod();");
+                    mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteBeforeFilter(typeof({1}),{2},\"{3}\",{4}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
+                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "|| false == {0}.ExecuteBeforeFilter(typeof({1}),methodBase1,{2},\"{3}\",{4}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
                     defaultV = m.ReturnType != typeof(void) ? (" " + funcResultStr("result1")) : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
@@ -1027,7 +1031,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     #region ExecuteAfterFilter -- 执行接口方法之后
                     defaultV = m.ReturnType != typeof(void) ? "result" : "null";
-                    mInfo.append(ref code, LeftSpaceLevel.four, "if(!{0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
+                    mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5})", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
+                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "|| false == {0}.ExecuteAfterFilter(typeof({1}),methodBase1,{2},\"{3}\",{4},{5})", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
                     defaultV = m.ReturnType != typeof(void) ? " " + funcResultStr("result1") : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);

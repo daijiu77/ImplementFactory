@@ -82,11 +82,40 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// AOP机制，执行接口方法前被调用
         /// </summary>
         /// <param name="interfaceType">接口类型</param>
+        /// <param name="sourceMethod">调用接口方法的源方法</param>
+        /// <param name="implement">接口实例</param>
+        /// <param name="methodName">当前执行的接口方法</param>
+        /// <param name="paras">接口参数</param>
+        /// <returns>Bool类型，返回true时允许继续执行接口方法，反之异然</returns>
+        public virtual bool ExecuteBeforeFilter(Type interfaceType, MethodBase sourceMethod, object implement, string methodName, PList<Para> paras)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// AOP机制，执行接口方法前被调用
+        /// </summary>
+        /// <param name="interfaceType">接口类型</param>
         /// <param name="implement">接口实例</param>
         /// <param name="methodName">当前执行的接口方法</param>
         /// <param name="paras">接口参数</param>
         /// <returns>Bool类型，返回true时允许继续执行接口方法，反之异然</returns>
         public virtual bool ExecuteBeforeFilter(Type interfaceType, object implement, string methodName, PList<Para> paras)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// AOP机制，执行接口方法后被调用
+        /// </summary>
+        /// <param name="interfaceType">接口类型</param>
+        /// <param name="sourceMethod">调用接口方法的源方法</param>
+        /// <param name="implement">接口实例</param>
+        /// <param name="methodName">当前执行的接口方法</param>
+        /// <param name="paras">接口参数</param>
+        /// <param name="result">接口方法返回值</param>
+        /// <returns>Bool类型，返回true时允许把执行接口方法后的结果返回给调用者，反之异然</returns>
+        public virtual bool ExecuteAfterFilter(Type interfaceType, MethodBase sourceMethod, object implement, string methodName, PList<Para> paras, object result)
         {
             return true;
         }
