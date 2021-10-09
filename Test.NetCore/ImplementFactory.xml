@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configurations>
 	<database>
-		<ConnectionString>Data Source=(local);Initial Catalog=DbTest;User Id=sa;Password=sa;</ConnectionString>
+		<ConnectionString>Data Source=(local);Initial Catalog=DbTest;User Id=sa;Password=admin;</ConnectionString>
 		<DatabaseType>sqlserver</DatabaseType>
 		<optByBatchMaxNumber description="insert/update/delete 批量操作最大数量, 默认100条数据">100</optByBatchMaxNumber>
 		<optByBatchWaitSecond description="insert/update/delete 执行最后的批量操作等待时间(秒), 默认3秒">3</optByBatchWaitSecond>

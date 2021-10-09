@@ -830,15 +830,6 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             method.fields = absDataInterface.fields;
             method.fieldsType = absDataInterface.fieldsType;
 
-            PList<Para> paras = new PList<Para>();
-            foreach (Para item in method.paraList)
-            {
-                if (!item.IsGenericParameter) continue;
-                paras.Add(item);
-            }
-
-            if (0 == paras.Count) return;
-            method.paraList = paras;
             dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(method, ref sql);
 
             DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
@@ -855,12 +846,18 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             if (null != dbParameters1)
             {
                 DataEntity<DataElement> dataElements = new DataEntity<DataElement>();
-                object _obj = paras[0].ParaValue;
-                _obj.ForeachProperty((pi, type, fn, fv) =>
+                object _obj = null;
+                foreach (Para item in method.paraList)
                 {
-                    dataElements.Add(fn, fv);
-                });
-
+                    if (DJTools.IsBaseType(item.ParaType)) continue;
+                    _obj = item.ParaValue;
+                    _obj.ForeachProperty((pi, type, fn, fv) =>
+                    {
+                        dataElements.Add(fn, fv);
+                    });
+                    break;
+                }
+                
                 DbList<DbParameter> dbParameters = DynamicEntity.GetDbParameters(method, dataElements, ref sql);
                 foreach (var item in dbParameters)
                 {

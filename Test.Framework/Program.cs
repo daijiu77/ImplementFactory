@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Test.Framework.Entities;
 
@@ -74,17 +75,35 @@ namespace Test.Framework
         {
             public int key { get; set; }
             public string val { get; set; }
+            public T Generic<T>(List<T> data, T[] arr,  int n)
+            {
+                return data[n];
+            }
         }
 
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
-            
+
+            MethodInfo[] ms = typeof(testJson).GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            foreach (MethodInfo item in ms)
+            {
+                if (!item.IsGenericMethod) continue;
+                ParameterInfo[] ps = item.GetParameters();
+                ParameterInfo pi = ps[0];
+                Type tp = pi.ParameterType;
+                Type[] ts = tp.GetGenericArguments();
+                string ns = pi.ParameterType.Namespace;
+                bool mbool = item.ReturnType.IsGenericType;
+                string name = pi.Name;
+            }
+                        
             LogicCalculate logicCalculate = new LogicCalculate();
             Console.WriteLine("result: " + logicCalculate.testCalculate());
             Console.WriteLine("");
 
             UserInfoLogic userInfoLogic = new UserInfoLogic();
+            List<UserInfo> userInfos = userInfoLogic.userInfos("53");
             UserInfo userInfo = userInfoLogic.GetLastUserInfo();
             Console.WriteLine("");
             userInfo.ForeachProperty((propertyInfo, propertyType, propertyName, propertyValue) =>

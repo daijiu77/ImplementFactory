@@ -11,10 +11,10 @@ namespace Test.NetCore.DataInterface
     public interface IUserInfo
     {
         [AutoSelect("select * from UserInfo where name like '%{name}%'")]
-        List<UserInfo> query(string name);
+        List<T> query<T>(T data, string name);
 
         [AutoSelect("select top 1 * from UserInfo order by cdatetime desc")]
-        UserInfo query();
+        T query<T>();
 
         /// <summary>
         /// 当表字段不确定的情况，采用动态数据集合获取数据
