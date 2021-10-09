@@ -688,6 +688,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
+            uskv.Add(new CKeyValue() { Key = "System.Diagnostics" }); ;
             uskv.Add(new CKeyValue() { Key = "System.Reflection" });
             uskv.Add(new CKeyValue() { Key = "System.Collections.Generic" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory" });
@@ -1031,8 +1032,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     #region ExecuteAfterFilter -- 执行接口方法之后
                     defaultV = m.ReturnType != typeof(void) ? "result" : "null";
-                    mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5})", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
-                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "|| false == {0}.ExecuteAfterFilter(typeof({1}),methodBase1,{2},\"{3}\",{4},{5})", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
+                    mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
+                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "|| false == {0}.ExecuteAfterFilter(typeof({1}),methodBase1,{2},\"{3}\",{4},{5}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
                     defaultV = m.ReturnType != typeof(void) ? " " + funcResultStr("result1") : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
