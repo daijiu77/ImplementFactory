@@ -682,8 +682,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             string code = "";
             string References = "#_References_#";
-            bool isNotInheritInterface = false;
-            bool isDataOpt = false;
+            bool isNotInheritInterface = false, _isDataOpt = false;
             List<Type> typeList = new List<Type>();
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
@@ -748,7 +747,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string autocall_name = autocallImplName1 + "_01";
             if (null != implementType && false == isNotInheritInterface)
             {
-                mInfo.append(ref code, LeftSpaceLevel.three, "private static {0} {1} = new {0}();", implName, impl_name1);
+                mInfo.append(ref code, LeftSpaceLevel.three, "private static {0} {1} = ({0})ImplementAdapter.Register(new {0}());", implName, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
                 mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get { return {2}; } }", DJTools.GetClassName(implementType, true), InterfaceInstanceType, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
@@ -793,12 +792,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     EnabledBuffer = false;
                     isDynamicEntity = false;
-                    isDataOpt = false;
+                    bool isDataOpt = false;
                     isAsync = false;
                     methodAttr = "";
                     msInterval = 0;
 
                     autoCall = getAutoCall(m, ref isDataOpt, ref absData, ref methodAttr, ref isAsync, ref msInterval, ref EnabledBuffer);
+                    if (false == _isDataOpt) _isDataOpt = isDataOpt;
 
                     methodName = m.Name;
                     paras = m.GetParameters();
@@ -862,7 +862,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                     else
                     {
-                        mInfo.append(ref code, LeftSpaceLevel.three, "[Method_Attribute]");
+                        if (isDataOpt) mInfo.append(ref code, LeftSpaceLevel.three, "[Method_Attribute]");
                         mInfo.append(ref code, LeftSpaceLevel.three, "{0} {1}.{2}{3}({4})", returnType, interfaceName, methodName, genericity, paraStr);
                     }
                     mInfo.append(ref code, LeftSpaceLevel.three, "{");//method start
@@ -1048,7 +1048,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     mInfo.append(ref code, LeftSpaceLevel.three, "}");//method end
-                    code = code.Replace("[Method_Attribute]", methodAttr);
+                    if (isDataOpt) code = code.Replace("[Method_Attribute]", methodAttr);
                 }
             };
 
@@ -1268,8 +1268,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 mInfo.append(ref referencesCode, LeftSpaceLevel.one, "using {0};", item.Key);
             }
 
-            if (isDataOpt && (-1 == implInterfaces.IndexOf("IUnSingleInstance"))) implInterfaces += ", IUnSingleInstance";
-            if (isDataOpt && (-1 == implInterfaces.IndexOf("IDataInterface"))) implInterfaces += ", IDataInterface";
+            if (_isDataOpt && (-1 == implInterfaces.IndexOf("IUnSingleInstance"))) implInterfaces += ", IUnSingleInstance";
+            if (_isDataOpt && (-1 == implInterfaces.IndexOf("IDataInterface"))) implInterfaces += ", IDataInterface";
 
             code = code.Replace(References, referencesCode);
             code = code.Replace(privateVarName, privateVarNameCode);

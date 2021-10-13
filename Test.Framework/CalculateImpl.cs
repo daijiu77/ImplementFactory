@@ -7,6 +7,9 @@ namespace Test.Framework
 {
     public class CalculateImpl : ICalculate
     {
+        [MyAutoCall]
+        private IApiUserInfo apiUserInfo;
+
         private event getData GetData;
 
         event getData ICalculate.GetData

@@ -10,10 +10,18 @@ namespace Test.Framework.DataInterface
 {
     public interface IUserInfo
     {
-        [AutoSelect("select * from UserInfo where name like '%{name}%'")]
+        /// <summary>
+        /// {T} 泛型实体类名作为表名,
+        /// 如果实体类加有 [Table("")] 属性，侧采用该属性值替换 {T} 标识
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        [AutoSelect("select * from {T} where name like '%{name}%'")]
         List<T> query<T>(T data, string name);
 
-        [AutoSelect("select top 1 * from UserInfo order by cdatetime desc")]
+        [AutoSelect("select top 1 * from {T} order by cdatetime desc")]
         T query<T>();
 
         /// <summary>

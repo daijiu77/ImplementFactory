@@ -62,9 +62,11 @@ namespace System.DJ.ImplementFactory
         /// 多继承的情况, 可以考虑使用此方法注册当前类
         /// </summary>
         /// <param name="currentObj"></param>
-        public static void Register(object currentObj)
+        public static object Register(object currentObj)
         {
+            if (null != currentObj as ImplementAdapter) return currentObj;
             new ImplAdapter(currentObj);
+            return currentObj;
         }
 
         static void init()
@@ -581,6 +583,9 @@ namespace System.DJ.ImplementFactory
                     arr = p.GetCustomAttributes(typeof(AutoCall), true);
                     if (0 == arr.Length) continue;
 
+                    object pv = p.GetValue(currentObj);
+                    if (null != pv) continue;
+
                     autoCall = null;
                     foreach (var item in arr)
                     {
@@ -645,7 +650,9 @@ namespace System.DJ.ImplementFactory
                                 }
                                 else
                                 {
-                                    autoCall.e("未引入微服务组件", ErrorLevels.severe);
+                                    string err = "成员变量 {0} -> {1} 注入失败, 未引入微服务组件";
+                                    err = err.ExtFormat(currentObj.GetType().TypeToString(true), p.Name);
+                                    autoCall.e(err, ErrorLevels.severe);
                                     continue;
                                 }
                             }

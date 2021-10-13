@@ -3,13 +3,6 @@
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
-		<source rootPath="">System.DJ.MicroService.NetCore</source>
-		<target rootPath="" type="framework">System.DJ.MicroService.Framework</target>
-		<exclude>\bin\,\obj\,AbsController.cs,JsonResult.cs,FilterController.cs</exclude>
-	</copy>
-	<copy ext="cs">
-		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
-		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\ImplementAdapter.cs</source>
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework</target>
 		<exclude></exclude>
