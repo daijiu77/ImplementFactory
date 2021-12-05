@@ -2,10 +2,12 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Test.NetCore.Entities;
+using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace Test.NetCore
 {
@@ -73,6 +75,7 @@ namespace Test.NetCore
 
         public class testJson
         {
+            [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
             public int key { get; set; }
             public string val { get; set; }
             public T Generic<T>(List<T> data, T[] arr,  int n)
