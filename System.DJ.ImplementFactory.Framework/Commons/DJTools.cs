@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting;
 using System.Text.RegularExpressions;
+using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace System.DJ.ImplementFactory.Commons
 {
@@ -1188,6 +1190,169 @@ namespace System.DJ.ImplementFactory.Commons
         public static bool IsDebug(Type type)
         {
             return _IsDebug(type);
+        }
+
+        /// <summary>
+        /// 创建人:代久
+        /// 日  期:2021-12-02
+        /// 根据实体对象获取 where 条件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="startChar">条件开始字符</param>
+        /// <param name="enableFun">有效性判断,true为有效的条件,false无效的条件</param>
+        /// <returns></returns>
+        public static string GetWhere(this object entity, string startChar, Func<PropertyInfoExt, Condition, bool> enableFun)
+        {
+            string whereStr = "";
+            if (null == entity) return whereStr;
+            if (false == entity.GetType().IsClass) return whereStr;
+            if (entity.GetType().IsAbstract) return whereStr;
+
+            Func<object, PropertyInfo, PropertyInfoExt> PropFunc = (_obj, _pi) =>
+            {
+                object v = _pi.GetValue(_obj);
+                return new PropertyInfoExt()
+                {
+                    PropertyType = _pi.PropertyType,
+                    DeclaringType = _pi.DeclaringType,
+                    Name = _pi.Name,
+                    Value = v
+                };
+            };
+
+            Action<PropertyInfoExt, Condition> initCondition = (_pi, _cond) =>
+            {
+                Type _t = _pi.PropertyType;
+                if (_t == typeof(string) || _t == typeof(Guid))
+                {
+                    _cond.where_igrones = WhereIgrons.igroneEmptyNull;
+                }
+                else if (_t == typeof(bool))
+                {
+                    _cond.where_igrones = WhereIgrons.igroneFalse;
+                }
+                else if (_t == typeof(DateTime))
+                {
+                    _cond.where_igrones = WhereIgrons.igroneMinMaxDate;
+                }
+                else if (_t == typeof(int)
+                           || _t == typeof(Int16)
+                           || _t == typeof(Int64)
+                           || _t == typeof(double)
+                           || _t == typeof(float)
+                           || _t == typeof(decimal))
+                {
+                    _cond.where_igrones = WhereIgrons.igroneZero;
+                }
+                else
+                {
+                    _cond.where_igrones = WhereIgrons.igroneNull;
+                }
+            };
+
+            bool mbool = null != enableFun;
+            if (null == enableFun) enableFun = (pi, cond) => { return true; };
+            Condition condition = new Condition();
+            Type type = entity.GetType();
+            bool isCollect = false;
+            Type attType = typeof(Condition);
+            Attribute attr = type.GetCustomAttribute(attType);
+            Attribute at = null;
+            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfoExt propertyExt = null;
+            foreach (PropertyInfo pi in piArr)
+            {
+                at = pi.GetCustomAttribute(attType);
+                isCollect = (null != pi.PropertyType.GetInterface("System.Collections.ICollection"));
+                if (null != at && false == isCollect)
+                {
+                    propertyExt = PropFunc(entity, pi);
+                    if (!enableFun(propertyExt, (Condition)at)) continue;
+                    whereStr += " " + ((Condition)at).Unit(propertyExt);
+                }
+                else if (null != attr && false == isCollect)
+                {
+                    propertyExt = PropFunc(entity, pi);
+                    if (!enableFun(propertyExt, (Condition)attr)) continue;
+                    whereStr += " " + ((Condition)attr).Unit(propertyExt);
+                }
+                else if (mbool)
+                {
+                    if (isCollect)
+                    {
+                        if (null == pi.PropertyType.GetInterface("System.Collections.IDictionary")) continue;
+                        object vObj = pi.GetValue(entity);
+                        if (null == vObj) continue;
+                        ICollection collection = (ICollection)vObj;
+                        Type[] ts = vObj.GetType().GenericTypeArguments;
+                        foreach (var item in collection)
+                        {
+                            string key = item.GetType().GetProperty("Key").GetValue(item).ToString();
+                            object val = item.GetType().GetProperty("Value").GetValue(item);
+                            propertyExt = new PropertyInfoExt()
+                            {
+                                Name = key,
+                                Value = val,
+                                PropertyType = ts[1],
+                                DeclaringType = pi.PropertyType
+                            };
+                            condition.FieldMapping = propertyExt.Name;
+                            initCondition(propertyExt, condition);
+                            if (!enableFun(propertyExt, condition)) continue;
+                            whereStr += " " + condition.Unit(propertyExt);
+                        }
+                    }
+                    else
+                    {
+                        propertyExt = PropFunc(entity, pi);
+                        condition.FieldMapping = propertyExt.Name;
+                        initCondition(propertyExt, condition);
+                        if (!enableFun(propertyExt, condition)) continue;
+                        whereStr += " " + condition.Unit(propertyExt);
+                    }
+                }
+            }
+
+            whereStr = startChar + whereStr;
+            return whereStr;
+        }
+
+        /// <summary>
+        /// 创建人:代久
+        /// 日  期:2021-12-02
+        /// 根据实体对象获取 where 条件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static string GetWhere(this object entity)
+        {
+            return entity.GetWhere("", (pi, condition) => { return true; });
+        }
+
+        /// <summary>
+        /// 创建人:代久
+        /// 日  期:2021-12-02
+        /// 根据实体对象获取 where 条件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="startChar">条件开始字符</param>
+        /// <returns></returns>
+        public static string GetWhere(this object entity, string startChar)
+        {
+            return entity.GetWhere(startChar, null);
+        }
+
+        /// <summary>
+        /// 创建人:代久
+        /// 日  期:2021-12-02
+        /// 根据实体对象获取 where 条件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="enableFun"></param>
+        /// <returns></returns>
+        public static string GetWhere(this object entity, Func<PropertyInfoExt, Condition, bool> enableFun)
+        {
+            return entity.GetWhere("", enableFun);
         }
 
         public static T GetSourceInstance<T>(this object newInstance)
