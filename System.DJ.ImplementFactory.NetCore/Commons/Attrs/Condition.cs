@@ -79,7 +79,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
 
             if (pi.PropertyType == typeof(DateTime) || pi.PropertyType == typeof(DateTime?))
             {
-                if (null == val) return unitStr;
+                if (null == val) val = DateTime.MinValue;
                 DateTime dt = Convert.ToDateTime(val);
                 if (DateTime.MinValue == dt
                     && ((WhereIgrons.igroneMinDate == (whereIgrons & WhereIgrons.igroneMinDate))
@@ -102,17 +102,24 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
                 string s = val.ToString();
                 if (0 == s.Length
                     && ((WhereIgrons.igroneNull == (whereIgrons & WhereIgrons.igroneNull))
+                    || (WhereIgrons.igroneEmpty == (whereIgrons & WhereIgrons.igroneEmpty))
                     || (WhereIgrons.igroneEmptyNull == (whereIgrons & WhereIgrons.igroneEmptyNull)))) return unitStr;
             }
             else if (pi.PropertyType == typeof(bool) || pi.PropertyType == typeof(bool?))
             {
-                if (null == val) return unitStr;
+                if (null == val) val = "false";
                 bool mbool = Convert.ToBoolean(val);
                 if (false == mbool && (WhereIgrons.igroneFalse == (whereIgrons & WhereIgrons.igroneFalse))) return unitStr;
             }
-            else if (typeof(ValueType) == pi.PropertyType.BaseType)
+            else if (typeof(ValueType) == pi.PropertyType.BaseType
+                || pi.PropertyType == typeof(int?)
+                || pi.PropertyType == typeof(Int16?)
+                || pi.PropertyType == typeof(Int64?)
+                || pi.PropertyType == typeof(float?)
+                || pi.PropertyType == typeof(double?)
+                || pi.PropertyType == typeof(decimal?))
             {
-                if (null == val) return unitStr;
+                if (null == val) val = "0";
                 double db = Convert.ToDouble(val);
                 if (0 == db && (WhereIgrons.igroneZero == (whereIgrons & WhereIgrons.igroneZero))) return unitStr;
             }

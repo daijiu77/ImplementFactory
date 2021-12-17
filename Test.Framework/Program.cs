@@ -107,8 +107,9 @@ namespace Test.Framework
 
             UserInfoLogic userInfoLogic = new UserInfoLogic();
             UserInfo userInfo1 = new UserInfo();
-            userInfo1.name = "X";
+            userInfo1.name = "X"; //根据属性值动态生成 where 条件获取数据
             List<UserInfo> ls = userInfoLogic.userInfos(userInfo1);
+
             List<UserInfo> userInfos = userInfoLogic.userInfos("53");
             UserInfo userInfo = userInfoLogic.GetLastUserInfo();
             Console.WriteLine("");
