@@ -189,11 +189,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <param name="sqlVarName">在sql2 = sql2.Replace("{id}",id) 中 sqlVarName = sql2</param>
         /// <param name="method"></param>
         /// <returns></returns>
-        public string ExecReplaceForSqlByFieldName(string sql, string sqlVarName, MethodInformation method)
+        public void ExecReplaceForSqlByFieldName(ref string code, string sql, string sqlVarName, MethodInformation method)
         {
-            if (string.IsNullOrEmpty(sql)) return "";
+            if (string.IsNullOrEmpty(sql)) return;
 
-            string code = "";
             string sql1 = sql;
             string s = @"\{(?<FieldName>[^\{\}]*[a-z][^\{\}]*)\}";
             Regex rg = new Regex(s, RegexOptions.IgnoreCase);
@@ -246,10 +245,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
                 else
                 {
-                    method.append(ref code, LeftSpaceLevel.one, "object _objVal = null;");
+                    method.append(ref code, LeftSpaceLevel.one, "{$_objVal}"); //object _objVal = null;
                 }
 
                 MatchCollection mc = rg.Matches(sql1);
+                bool mbool = false;
                 foreach (Match m in mc)
                 {
                     FieldName = m.Groups["FieldName"].Value;
@@ -275,6 +275,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         if (DJTools.IsBaseType(para.ParaType))
                         {
                             //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2});", sqlVarName, FieldName, para.ParaName);
+                            mbool = true;
                             method.append(ref code, LeftSpaceLevel.one, "");
                             ReplaceTagForSql(method, LeftSpaceLevel.one, sqlVarName, FieldName, para.ParaName, para.ParaType.FullName, ref code);
                         }
@@ -290,6 +291,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             if (!string.IsNullOrEmpty(code1))
                             {
+                                mbool = true;
                                 code += "\r\n" + code1;
                             }
                         }
@@ -309,15 +311,27 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             if (!string.IsNullOrEmpty(code1))
                             {
+                                mbool = true;
                                 code += "\r\n" + code1;
                             }
                         }
                     }
                 }
-            }
-            method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
 
-            return code;
+                if (mbool)
+                {
+                    code = code.Replace("{$_objVal}", "object _objVal = null;");
+                }
+                else
+                {
+                    code = code.Replace("{$_objVal}", "");
+                }
+            }
+            
+            if(false == isDynamicEntity)
+            {
+                method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
+            }            
         }
 
         /// <summary>

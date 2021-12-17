@@ -22,6 +22,7 @@ namespace System.DJ.ImplementFactory.Commons
             T result = default(T);
             AutoCall autoCall = (AutoCall)method.AutoCall;
             dynamicWhere(method, ref sql);
+            dynamicWhere1(method, ref sql);
 
             IList<DataEntity<DataElement>> dataElements = null;
             DataEntity<DataElement> dataElements1 = null;
@@ -46,7 +47,7 @@ namespace System.DJ.ImplementFactory.Commons
                             break;
                         }
                     }
-                }                
+                }
             }
 
             if (null == dataElements) dataElements = new List<DataEntity<DataElement>>();
@@ -54,14 +55,14 @@ namespace System.DJ.ImplementFactory.Commons
             string err = "";
             bool EnabledBuffer = method.methodComponent.EnabledBuffer;
             EnabledBuffer = method.methodComponent.IsAsync ? true : EnabledBuffer;
-            
+
             if (DataOptType.select == dataOptType
                 || DataOptType.count == dataOptType
                 || DataOptType.procedure == dataOptType)
             {
                 if (0 < dataElements.Count) dataElements1 = dataElements[0];
                 dbParameters = GetDbParameters(method, dataElements1, ref sql);
-                GetSqlByProvider(method, dbParameters, ref sql);                
+                GetSqlByProvider(method, dbParameters, ref sql);
                 dbHelper.query(autoCall, sql, dbParameters, EnabledBuffer, (dt) =>
                 {
                     DynamicCodeAutoCall dynamicCodeAutoCall = new DynamicCodeAutoCall();
@@ -158,7 +159,7 @@ namespace System.DJ.ImplementFactory.Commons
                             break;
                     }
                 }
-                
+
                 result = funcResult(n);
             }
             return result;
@@ -181,6 +182,61 @@ namespace System.DJ.ImplementFactory.Commons
             whereStr = string.IsNullOrEmpty(whereStr) ? "1=1" : whereStr;
             whereStr = " where " + whereStr;
             sql = sql.Replace(rg.Match(sql).Groups[0].Value, whereStr);
+        }
+
+        void dynamicWhere1(MethodInformation method, ref string sql)
+        {
+            string s = @"\s((and)|(or))\s*\{para\}";
+            string s1 = @"\swhere\s+\{para\}";
+            string s2 = @"\swhere\s+(((?!where)(?!and)(?!or)).)+\s*\{para\}";
+            string s3 = @"\swhere\s+.*\(\s*\{para\}";
+            string ss = "";
+            string strWhere = "";
+            Regex rg = null, rg1 = null, rg2 = null, rg3 = null;
+            foreach (Para item in method.paraList)
+            {
+                if (null == item.ParaType) continue;
+                if (DJTools.IsBaseType(item.ParaType)) continue;
+                if ((false == item.ParaType.IsClass) || (true == item.ParaType.IsInterface)) continue;
+                if (item.ParaType == typeof(DataEntity<DataElement>)) continue;
+                ss = s.Replace("para", item.ParaName);
+                rg = new Regex(ss, RegexOptions.IgnoreCase);
+
+                ss = s1.Replace("para", item.ParaName);
+                rg1 = new Regex(ss, RegexOptions.IgnoreCase);
+
+                ss = s2.Replace("para", item.ParaName);
+                rg2 = new Regex(ss, RegexOptions.IgnoreCase);
+
+                ss = s3.Replace("para", item.ParaName);
+                rg3 = new Regex(ss, RegexOptions.IgnoreCase);
+                if (rg.IsMatch(sql) || rg1.IsMatch(sql) || rg3.IsMatch(sql))
+                {
+                    if (null != item.ParaValue)
+                    {
+                        strWhere = item.ParaValue.GetWhere("1=1");
+                        strWhere = " " + strWhere;
+                        sql = sql.Replace("{" + item.ParaName + "}", strWhere);
+                    }
+                    else
+                    {
+                        sql = sql.Replace("{" + item.ParaName + "}", "1=1");
+                    }
+                }
+                else if (rg2.IsMatch(sql))
+                {
+                    if(null != item.ParaValue)
+                    {
+                        strWhere = item.ParaValue.GetWhere();
+                        if (!string.IsNullOrEmpty(strWhere)) strWhere = " " + strWhere;
+                        sql = sql.Replace("{" + item.ParaName + "}", strWhere);
+                    }
+                    else
+                    {
+                        sql = sql.Replace("{" + item.ParaName + "}", " ");
+                    }
+                }
+            }
         }
 
         string getDynamicWhere(MethodInformation method, DataEntity<DataElement> dataElements)

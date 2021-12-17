@@ -1204,9 +1204,13 @@ namespace System.DJ.ImplementFactory.Commons
         public static string GetWhere(this object entity, string startChar, Func<PropertyInfoExt, Condition, bool> enableFun)
         {
             string whereStr = "";
-            if (null == entity) return whereStr;
-            if (false == entity.GetType().IsClass) return whereStr;
-            if (entity.GetType().IsAbstract) return whereStr;
+            Func<string> resultFn = () =>
+              {
+                  return startChar + whereStr;
+              };
+            if (null == entity) return resultFn();
+            if (false == entity.GetType().IsClass) return resultFn();
+            if (entity.GetType().IsAbstract) return resultFn();
 
             Func<object, PropertyInfo, PropertyInfoExt> PropFunc = (_obj, _pi) =>
             {
@@ -1260,6 +1264,7 @@ namespace System.DJ.ImplementFactory.Commons
             Attribute at = null;
             PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             PropertyInfoExt propertyExt = null;
+            string sw = "";
             foreach (PropertyInfo pi in piArr)
             {
                 at = pi.GetCustomAttribute(attType);
@@ -1268,13 +1273,17 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     propertyExt = PropFunc(entity, pi);
                     if (!enableFun(propertyExt, (Condition)at)) continue;
-                    whereStr += " " + ((Condition)at).Unit(propertyExt);
+                    sw = ((Condition)at).Unit(propertyExt);
+                    if (string.IsNullOrEmpty(sw)) continue;
+                    whereStr += " " + sw;
                 }
                 else if (null != attr && false == isCollect)
                 {
                     propertyExt = PropFunc(entity, pi);
                     if (!enableFun(propertyExt, (Condition)attr)) continue;
-                    whereStr += " " + ((Condition)attr).Unit(propertyExt);
+                    sw = ((Condition)attr).Unit(propertyExt);
+                    if (string.IsNullOrEmpty(sw)) continue;
+                    whereStr += " " + sw;
                 }
                 else if (mbool)
                 {
@@ -1299,7 +1308,9 @@ namespace System.DJ.ImplementFactory.Commons
                             condition.FieldMapping = propertyExt.Name;
                             initCondition(propertyExt, condition);
                             if (!enableFun(propertyExt, condition)) continue;
-                            whereStr += " " + condition.Unit(propertyExt);
+                            sw = condition.Unit(propertyExt);
+                            if (string.IsNullOrEmpty(sw)) continue;
+                            whereStr += " " + sw;
                         }
                     }
                     else
@@ -1308,13 +1319,14 @@ namespace System.DJ.ImplementFactory.Commons
                         condition.FieldMapping = propertyExt.Name;
                         initCondition(propertyExt, condition);
                         if (!enableFun(propertyExt, condition)) continue;
-                        whereStr += " " + condition.Unit(propertyExt);
+                        sw = condition.Unit(propertyExt);
+                        if (string.IsNullOrEmpty(sw)) continue;
+                        whereStr += " " + sw;
                     }
                 }
             }
 
-            whereStr = startChar + whereStr;
-            return whereStr;
+            return resultFn();
         }
 
         /// <summary>

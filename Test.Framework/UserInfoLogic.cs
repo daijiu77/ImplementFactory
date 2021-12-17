@@ -25,5 +25,10 @@ namespace Test.Framework
         {
             return userInfo.query(new UserInfo(), name);
         }
+
+        public List<UserInfo> userInfos(UserInfo userInfo1)
+        {
+            return userInfo.query(userInfo1);
+        }
     }
 }

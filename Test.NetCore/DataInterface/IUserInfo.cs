@@ -25,6 +25,14 @@ namespace Test.NetCore.DataInterface
         T query<T>();
 
         /// <summary>
+        /// 根据 UserInfo 对象的属性动态生成 where 条件
+        /// </summary>
+        /// <param name="userInfo"></param>
+        /// <returns></returns>
+        [AutoSelect("select * from UserInfo where {userInfo}")]
+        List<UserInfo> query(UserInfo userInfo);
+
+        /// <summary>
         /// 当表字段不确定的情况，采用动态数据集合获取数据
         /// </summary>
         /// <returns></returns>

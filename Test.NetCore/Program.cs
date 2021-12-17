@@ -106,6 +106,9 @@ namespace Test.NetCore
             Console.WriteLine("");
 
             UserInfoLogic userInfoLogic = new UserInfoLogic();
+            UserInfo userInfo1 = new UserInfo();
+            userInfo1.name = "X";
+            List<UserInfo> ls = userInfoLogic.userInfos(userInfo1);
             List<UserInfo> userInfos = userInfoLogic.userInfos("53");
             UserInfo userInfo = userInfoLogic.GetLastUserInfo();
             Console.WriteLine("");

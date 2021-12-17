@@ -111,7 +111,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             string sqlVarName = "sql";
             DynamicCodeAutoCall dynamicCodeAutoCall = new DynamicCodeAutoCall();
 
-            _sql = dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(_sql, sqlVarName, method);
+            dynamicCodeAutoCall.ExecReplaceForSqlByFieldName(ref _sql, _sql, sqlVarName, method);
+            _sql = DynamicCodeExec.Calculate(_sql);
 
             DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
             try
