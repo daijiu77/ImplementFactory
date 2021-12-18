@@ -582,7 +582,7 @@ namespace System.DJ.ImplementFactory.Commons
                                 return false;
                             }
                         }
-                        
+
                         return true;
                     });
 
@@ -597,8 +597,8 @@ namespace System.DJ.ImplementFactory.Commons
                         {
 
                             //throw;
-                        }                        
-                                            
+                        }
+
                     }
                     //rootPath = null.Request.MapPath("~/");
                     if ("\\" == rootPath.Substring(rootPath.Length - 1))
@@ -710,11 +710,11 @@ namespace System.DJ.ImplementFactory.Commons
                     else
                     {
                         tn += "<" + types[0].TypeToString(isFullName) + ">";
-                    }                    
+                    }
                 }
                 else if (0 < types.Length)
                 {
-                    tn += func(types);                    
+                    tn += func(types);
                 }
                 s = tn;
             }
@@ -749,7 +749,7 @@ namespace System.DJ.ImplementFactory.Commons
                     if (rg.IsMatch(tn))
                     {
                         tn = rg.Match(tn).Groups["TypeName"].Value;
-                    }                    
+                    }
                     tn += func(types); ;
                     s = tn;
                 }
@@ -1007,7 +1007,7 @@ namespace System.DJ.ImplementFactory.Commons
             initPropertyDic(entity);
             T v = default(T);
             PropertyInfo pi = null;
-            string fn1 = propertyName.ToLower();            
+            string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
             if (null == pi) return v;
             object _obj = pi.GetValue(entity, null);
@@ -1037,7 +1037,7 @@ namespace System.DJ.ImplementFactory.Commons
         public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
         {
             initPropertyDic(entity);
-            PropertyInfo pi = null;   
+            PropertyInfo pi = null;
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
             if (null == pi) return;
@@ -1220,7 +1220,8 @@ namespace System.DJ.ImplementFactory.Commons
                     PropertyType = _pi.PropertyType,
                     DeclaringType = _pi.DeclaringType,
                     Name = _pi.Name,
-                    Value = v
+                    Value = v,
+                    Property = _pi
                 };
             };
 

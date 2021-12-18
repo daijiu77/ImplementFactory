@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons.Attrs;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -61,6 +63,8 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
             public Type PropertyType { get; set; }
 
             public Type DeclaringType { get; set; }
+
+            public PropertyInfo Property { get; set; }
         }
 
         /// <summary>
@@ -212,12 +216,18 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
 
             if (string.IsNullOrEmpty(fieldMapping))
             {
-                comp = tb + pi.Name + comp;
+                fieldMapping = pi.Name;
+                if (null != pi.Property)
+                {
+                    Attribute attr = pi.Property.GetCustomAttribute(typeof(FieldMapping), true);
+                    if (null != attr)
+                    {
+                        fieldMapping = ((FieldMapping)attr).FieldName;
+                    }
+                }                
             }
-            else
-            {
-                comp = tb + fieldMapping + comp;
-            }
+
+            comp = tb + fieldMapping + comp;
 
             unitStr = And_Or + " " + comp;
 
