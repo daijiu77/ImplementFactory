@@ -216,15 +216,16 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
 
             if (string.IsNullOrEmpty(fieldMapping))
             {
-                fieldMapping = pi.Name;
-                if (null != pi.Property)
+                fieldMapping = pi.Name;                             
+            }
+
+            if (null != pi.Property)
+            {
+                Attribute attr = pi.Property.GetCustomAttribute(typeof(FieldMapping), true);
+                if (null != attr)
                 {
-                    Attribute attr = pi.Property.GetCustomAttribute(typeof(FieldMapping), true);
-                    if (null != attr)
-                    {
-                        fieldMapping = ((FieldMapping)attr).FieldName;
-                    }
-                }                
+                    fieldMapping = ((FieldMapping)attr).FieldName;
+                }
             }
 
             comp = tb + fieldMapping + comp;
@@ -276,7 +277,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
         /// where 条件解析属性
         /// </summary>
         /// <param name="fieldMapping">映射的数据表字段名称,为空时等同于属性名称</param>
-        /// <param name="compareSign">比较符号,可为: like, left_like(llike), right_like(rlike), 大于等于, 小于等于, 不等于</param>
+        /// <param name="compareSign">比较符号,可为: like, left_like(llike), right_like(rlike), 大于, 大于等于, 小于, 小于等于, 等于, 不等于</param>
         /// <param name="logicSign">逻辑连接符</param>
         /// <param name="whereIgrons">设置忽视属性值</param>
         public Condition(string fieldMapping, string compareSign, LogicSign logicSign, WhereIgrons whereIgrons)
