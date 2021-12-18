@@ -22,7 +22,6 @@ namespace System.DJ.ImplementFactory.Commons
             T result = default(T);
             AutoCall autoCall = (AutoCall)method.AutoCall;
             dynamicWhere(method, ref sql);
-            dynamicWhere1(method, ref sql);
 
             IList<DataEntity<DataElement>> dataElements = null;
             DataEntity<DataElement> dataElements1 = null;
@@ -61,6 +60,7 @@ namespace System.DJ.ImplementFactory.Commons
                 || DataOptType.procedure == dataOptType)
             {
                 if (0 < dataElements.Count) dataElements1 = dataElements[0];
+                dynamicWhere1(method, ref sql);
                 dbParameters = GetDbParameters(method, dataElements1, ref sql);
                 GetSqlByProvider(method, dbParameters, ref sql);
                 dbHelper.query(autoCall, sql, dbParameters, EnabledBuffer, (dt) =>
@@ -190,9 +190,10 @@ namespace System.DJ.ImplementFactory.Commons
             string s1 = @"\swhere\s+\{para\}";
             string s2 = @"\swhere\s+(((?!where)(?!and)(?!or)).)+\s*\{para\}";
             string s3 = @"\swhere\s+.*\(\s*\{para\}";
+            string s4 = @"\sfrom\s+[a-z0-9_]+\s*\{para\}";
             string ss = "";
             string strWhere = "";
-            Regex rg = null, rg1 = null, rg2 = null, rg3 = null;
+            Regex rg = null, rg1 = null, rg2 = null, rg3 = null, rg4 = null;
             foreach (Para item in method.paraList)
             {
                 if (null == item.ParaType) continue;
@@ -210,6 +211,9 @@ namespace System.DJ.ImplementFactory.Commons
 
                 ss = s3.Replace("para", item.ParaName);
                 rg3 = new Regex(ss, RegexOptions.IgnoreCase);
+
+                ss = s4.Replace("para", item.ParaName);
+                rg4 = new Regex(ss, RegexOptions.IgnoreCase);
                 if (rg.IsMatch(sql) || rg1.IsMatch(sql) || rg3.IsMatch(sql))
                 {
                     if (null != item.ParaValue)
@@ -223,9 +227,22 @@ namespace System.DJ.ImplementFactory.Commons
                         sql = sql.Replace("{" + item.ParaName + "}", "1=1");
                     }
                 }
+                else if (rg4.IsMatch(sql))
+                {
+                    if (null != item.ParaValue)
+                    {
+                        strWhere = item.ParaValue.GetWhere("where 1=1");
+                        if (!string.IsNullOrEmpty(strWhere)) strWhere = " " + strWhere;
+                        sql = sql.Replace("{" + item.ParaName + "}", strWhere);
+                    }
+                    else
+                    {
+                        sql = sql.Replace("{" + item.ParaName + "}", " ");
+                    }
+                }
                 else if (rg2.IsMatch(sql))
                 {
-                    if(null != item.ParaValue)
+                    if (null != item.ParaValue)
                     {
                         strWhere = item.ParaValue.GetWhere();
                         if (!string.IsNullOrEmpty(strWhere)) strWhere = " " + strWhere;

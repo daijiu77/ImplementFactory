@@ -547,8 +547,9 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             string s1 = @"\swhere\s+\{para\}";
             string s2 = @"\swhere\s+(((?!where)(?!and)(?!or)).)+\s*\{para\}";
             string s3 = @"\swhere\s+.*\(\s*\{para\}";
+            string s4 = @"\sfrom\s+[a-z0-9_]+\s*\{para\}";
             string ss = "";
-            Regex rg = null, rg1 = null, rg2 = null, rg3 = null;
+            Regex rg = null, rg1 = null, rg2 = null, rg3 = null, rg4 = null;
             string sw = "string strWhere = \"\";";
             bool mbool = false;
             method.append(ref code, LeftSpaceLevel.one, "{$StrWhere$}");
@@ -572,6 +573,9 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
                 ss = s3.Replace("para", item.ParaName);
                 rg3 = new Regex(ss, RegexOptions.IgnoreCase);
+
+                ss = s4.Replace("para", item.ParaName);
+                rg4 = new Regex(ss, RegexOptions.IgnoreCase);
                 if (rg.IsMatch(sql) || rg1.IsMatch(sql) || rg3.IsMatch(sql))
                 {
                     mbool = true;
@@ -583,7 +587,21 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                     method.append(ref code, LeftSpaceLevel.one, "}");
                     method.append(ref code, LeftSpaceLevel.one, "else");
                     method.append(ref code, LeftSpaceLevel.one, "{");
-                    method.append(ref code, LeftSpaceLevel.one + 1, "{0} = {0}.Replace(\"{{1}}\", \"1=1\");", sqlVarName, item.ParaName);
+                    method.append(ref code, LeftSpaceLevel.one + 1, "{0} = {0}.Replace(\"{{1}}\", \" 1=1\");", sqlVarName, item.ParaName);
+                    method.append(ref code, LeftSpaceLevel.one, "}");
+                }
+                else if (rg4.IsMatch(sql))
+                {
+                    mbool = true;
+                    method.append(ref code, LeftSpaceLevel.one, "if(null != {0})", item.ParaName);
+                    method.append(ref code, LeftSpaceLevel.one, "{");
+                    method.append(ref code, LeftSpaceLevel.one + 1, "strWhere = {0}.GetWhere(\"where 1=1\");", item.ParaName);
+                    method.append(ref code, LeftSpaceLevel.one + 1, "strWhere = \" \" + strWhere;");
+                    method.append(ref code, LeftSpaceLevel.one + 1, "{0} = {0}.Replace(\"{{1}}\", strWhere);", sqlVarName, item.ParaName);
+                    method.append(ref code, LeftSpaceLevel.one, "}");
+                    method.append(ref code, LeftSpaceLevel.one, "else");
+                    method.append(ref code, LeftSpaceLevel.one, "{");
+                    method.append(ref code, LeftSpaceLevel.one + 1, "{0} = {0}.Replace(\"{{1}}\", \" \");", sqlVarName, item.ParaName);
                     method.append(ref code, LeftSpaceLevel.one, "}");
                 }
                 else if (rg2.IsMatch(sql))
