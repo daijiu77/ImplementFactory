@@ -554,8 +554,13 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             method.append(ref code, LeftSpaceLevel.one, "{$StrWhere$}");
             foreach (Para item in method.paraList)
             {
-                if (DJTools.IsBaseType(item.ParaType)) continue;
-                if ((false == item.ParaType.IsClass) || (true == item.ParaType.IsInterface)) continue;
+                if (null == item.ParaType) continue;
+                if (!item.ParaType.IsGenericType)
+                {
+                    if (DJTools.IsBaseType(item.ParaType)) continue;
+                    if ((false == item.ParaType.IsClass) || (true == item.ParaType.IsInterface)) continue;
+                }
+                
                 ss = s.Replace("para", item.ParaName);
                 rg = new Regex(ss, RegexOptions.IgnoreCase);
 

@@ -78,6 +78,10 @@ namespace Test.NetCore
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
             public int key { get; set; }
             public string val { get; set; }
+            public void sum<T>(T t)
+            {
+                //
+            }
             public T Generic<T>(List<T> data, T[] arr,  int n)
             {
                 return data[n];
@@ -136,6 +140,5 @@ namespace Test.NetCore
             Console.ReadKey(true);
         }
 
-        
     }
 }
