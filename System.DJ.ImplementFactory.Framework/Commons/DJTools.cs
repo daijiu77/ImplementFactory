@@ -1193,7 +1193,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         /// <summary>
-        /// 创建人:代久
+        /// 创建人:DJ
         /// 日  期:2021-12-02
         /// 根据实体对象获取 where 条件
         /// </summary>
@@ -1331,7 +1331,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         /// <summary>
-        /// 创建人:代久
+        /// 创建人:DJ
         /// 日  期:2021-12-02
         /// 根据实体对象获取 where 条件
         /// </summary>
@@ -1343,7 +1343,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         /// <summary>
-        /// 创建人:代久
+        /// 创建人:DJ
         /// 日  期:2021-12-02
         /// 根据实体对象获取 where 条件
         /// </summary>
@@ -1356,7 +1356,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         /// <summary>
-        /// 创建人:代久
+        /// 创建人:DJ
         /// 日  期:2021-12-02
         /// 根据实体对象获取 where 条件
         /// </summary>
