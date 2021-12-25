@@ -10,8 +10,9 @@ namespace System.DJ.ImplementFactory.Commons
 
     /// <summary>
     /// 维护及变更： 
-    /// 1. 2020-04-27 [查询速度及add速度优化]数据存储机制由单体集合变更为多个集合体,多任务查询,以提高查询速度,由于是多个集合体模式,所以必须重构循环体,重新实现 IEnumerable<T> 接口
-    /// Author: 代久 - Allan
+    /// 1. 2020-04-27 [查询速度及add速度优化]数据存储机制由单体集合变更为多个集合体,多任务查询,
+    /// 以提高查询速度,由于是多个集合体模式,所以必须重构循环体,重新实现 IEnumerable<T> 接口
+    /// Author: DJ - Allan
     /// QQ: 564343162
     /// Email: 564343162@qq.com
     /// CreateDate: 2020-03-05
