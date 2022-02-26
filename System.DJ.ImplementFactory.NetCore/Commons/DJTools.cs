@@ -1034,6 +1034,15 @@ namespace System.DJ.ImplementFactory.Commons
             return v;
         }
 
+        public static PropertyInfo GetPropertyInfo(this object entity, string propertyName)
+        {
+            initPropertyDic(entity);
+            PropertyInfo pi = null;
+            string fn1 = propertyName.ToLower();
+            _entityPropertyDic.TryGetValue(fn1, out pi);
+            return pi;
+        }
+
         public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
         {
             initPropertyDic(entity);

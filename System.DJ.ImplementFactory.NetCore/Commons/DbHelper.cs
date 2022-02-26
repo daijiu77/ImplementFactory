@@ -72,6 +72,10 @@ namespace System.DJ.ImplementFactory.Commons
 
         bool IDbHelper.isNormalBatchInsert { get; set; } = true;
 
+        string IDbHelper.splitTablesRule { get; set; }
+
+        long IDbHelper.splitTablesRecordQuantity { get; set; }
+
         static object _bufferData = new object();
         static void bufferDatas(IDbHelper dbHelper, AutoCall autoCall, DataOptType dataOptType, string sql, List<DbParameter> parameters, Action<object> action, Func<DbCommand, object> func)
         {
