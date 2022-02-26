@@ -106,13 +106,12 @@ namespace System.DJ.ImplementFactory
                 DbHelper.splitTablesRule = dbInfo.splitTable.Rule;
                 DbHelper.splitTablesRecordQuantity = dbInfo.splitTable.RecordQuantity;
 
-                new MultiTablesExec(dbInfo);
-
                 if (!string.IsNullOrEmpty(dbConnectionFreeStrategy))
                 {
                     DbHelper.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
                 }
                 DbHelper.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
+                new MultiTablesExec(dbInfo, DbHelper);
             }
         }
 

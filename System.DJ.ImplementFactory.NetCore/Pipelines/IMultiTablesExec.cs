@@ -9,7 +9,6 @@ namespace System.DJ.ImplementFactory.NetCore.Pipelines
 {
     public interface IMultiTablesExec: ISingleInstance
     {
-        IDbHelper dbHelper { get; set; }
         /// <summary>
         /// 是存在多表
         /// </summary>
