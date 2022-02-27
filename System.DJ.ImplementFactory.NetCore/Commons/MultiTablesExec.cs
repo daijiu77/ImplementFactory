@@ -182,9 +182,12 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         DataTable IMultiTablesExec.Query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
             if (0 == tbDic.Count) return null;
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-            List<string> list = null;
+            //dic key:Lower, value:self
+            Dictionary<string, string> dic = new Dictionary<string, string>();
+            string newSql = sql;
             string _sql = sql;
+            string leftStr = "|#";
+            string rightStr = "#|";
 
             string s1 = "";
             foreach (KeyValuePair<string, object> item in tbDic)
@@ -200,36 +203,35 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 if (_rg.IsMatch(_sql))
                 {
                     string s = null;
+                    string ss = "";
                     string tb = "";
+                    string tbn = "";
                     MatchCollection mc1 = _rg.Matches(_sql);
                     MatchCollection mc2 = null;
                     foreach (Match m1 in mc1)
                     {
                         s = m1.Groups[0].Value;
+                        ss = s;
                         _sql = _sql.Replace(s, "");
                         if (!rg1.IsMatch(s)) continue;
                         mc2 = rg1.Matches(s);
                         foreach (Match m2 in mc2)
                         {
                             tb = m2.Groups["TbName"].Value.Trim();
-                            rg1 = new Regex(@"\s" + tb + @"\s", RegexOptions.IgnoreCase);
-                            if (!rg1.IsMatch(s)) continue;
-                            if (dic.ContainsKey(tb))
-                            {
-                                list = dic[tb] as List<string>;
-                            }
-                            else
-                            {
-                                list = new List<string>();
-                                dic.Add(tb, list);
-                            }
-                            list.Add(s);
+                            tbn = tb.ToLower();
+                            ss = ss.Replace(m2.Groups["TbName"].Value, " " + leftStr + tbn + rightStr + " ");
+                            if (dic.ContainsKey(tbn)) continue;
+                            dic.Add(tbn, tb);
                         }
+                        newSql = newSql.Replace(s, ss);
                     }
                 }
             };
 
             Regex rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+\s((where)|(group)|(order))\s", RegexOptions.IgnoreCase);
+            action(rg2);
+
+            rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\()(?!\))).)+\)", RegexOptions.IgnoreCase);
             action(rg2);
 
             rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
