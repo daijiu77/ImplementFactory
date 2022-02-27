@@ -156,6 +156,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 else
                 {
                     list = new List<string>();
+                    list.Add(srcTableName);
                     tbDic.Add(tbn, list);
                 }
                 list.Add(tbName);
@@ -175,6 +176,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         }
 
         int IMultiTablesExec.Insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        {
+            throw new NotImplementedException();
+        }
+
+        int IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             throw new NotImplementedException();
         }
@@ -236,12 +242,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
             action(rg2);
-            return null;
-        }
 
-        int IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
-        {
-            throw new NotImplementedException();
+            string[] arr = new string[dic.Count];
+            int n = 0;
+            foreach (var item in dic)
+            {
+                arr[n] = item.Key;
+                n++;
+            }
+            return null;
         }
 
         private object _QueryResult = new object();
