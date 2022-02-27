@@ -15,9 +15,14 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
     public class MultiTablesExec : IMultiTablesExec
     {
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
+        private Dictionary<string, object> threadDic = new Dictionary<string, object>();
         private AutoCall autoCall = new AutoCall();
         private DbInfo dbInfo = null;
+        private DataTable queryDatas = new DataTable();
         private IDbHelper dbHelper = null;
+        private int OptDatas = 0;
+
+        private delegate void ExecResult(ThreadOpt threadOpt, object data);
 
         public MultiTablesExec(IDbHelper dbHelper)
         {
@@ -176,7 +181,60 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         DataTable IMultiTablesExec.Query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
-            throw new NotImplementedException();
+            if (0 == tbDic.Count) return null;
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            List<string> list = null;
+            string _sql = sql;
+
+            string s1 = "";
+            foreach (KeyValuePair<string, object> item in tbDic)
+            {
+                s1 += @"|(\s" + item.Key + @"\s)";
+            }
+            s1 = s1.Substring(1);
+            s1 = "(?<TbName>(" + s1 + "))";
+
+            Regex rg1 = new Regex(s1, RegexOptions.IgnoreCase);
+            Action<Regex> action = _rg =>
+            {
+                if (_rg.IsMatch(_sql))
+                {
+                    string s = null;
+                    string tb = "";
+                    MatchCollection mc1 = _rg.Matches(_sql);
+                    MatchCollection mc2 = null;
+                    foreach (Match m1 in mc1)
+                    {
+                        s = m1.Groups[0].Value;
+                        _sql = _sql.Replace(s, "");
+                        if (!rg1.IsMatch(s)) continue;
+                        mc2 = rg1.Matches(s);
+                        foreach (Match m2 in mc2)
+                        {
+                            tb = m2.Groups["TbName"].Value.Trim();
+                            rg1 = new Regex(@"\s" + tb + @"\s", RegexOptions.IgnoreCase);
+                            if (!rg1.IsMatch(s)) continue;
+                            if (dic.ContainsKey(tb))
+                            {
+                                list = dic[tb] as List<string>;
+                            }
+                            else
+                            {
+                                list = new List<string>();
+                                dic.Add(tb, list);
+                            }
+                            list.Add(s);
+                        }
+                    }
+                }
+            };
+
+            Regex rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+\s((where)|(group)|(order))\s", RegexOptions.IgnoreCase);
+            action(rg2);
+
+            rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
+            action(rg2);
+            return null;
         }
 
         int IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
@@ -184,9 +242,65 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             throw new NotImplementedException();
         }
 
-        class ThreadOpt
+        private object _QueryResult = new object();
+        private void QueryResult(ThreadOpt threadOpt, object data)
         {
+            lock (_QueryResult)
+            {
+                if (null != data)
+                {
+                    DataTable dt = data as DataTable;
+                    foreach (DataRow item in dt.Rows)
+                    {
+                        queryDatas.Rows.Add(item);
+                    }
+                }
 
+                string id = threadOpt.ID;
+                ((IDisposable)threadOpt).Dispose();
+                threadDic.Remove(id);
+            }
+        }
+
+        private object _OperateResult = new object();
+        private void OperateResult(ThreadOpt threadOpt, object data)
+        {
+            lock (_OperateResult)
+            {
+                if (null != data)
+                {
+                    int n = (int)data;
+                    OptDatas += n;
+                }
+                string id = threadOpt.ID;
+                ((IDisposable)threadOpt).Dispose();
+                threadDic.Remove(id);
+            }
+        }
+
+        class ThreadOpt : IDisposable
+        {
+            private BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
+            private string _ID = null;
+
+            public ThreadOpt(MultiTablesExec multiTablesExec)
+            {
+                _ID = Guid.NewGuid().ToString();
+                multiTablesExec.initBasicExecForSQL(basicExecForSQL1, multiTablesExec.dbHelper);
+            }
+
+            public string ID { get { return _ID; } }
+
+            void IDisposable.Dispose()
+            {
+                if (null == basicExecForSQL1) return;
+                ((IDisposable)basicExecForSQL1).Dispose();
+            }
+
+            ~ThreadOpt()
+            {
+                ((IDisposable)this).Dispose();
+            }
         }
     }
 }
