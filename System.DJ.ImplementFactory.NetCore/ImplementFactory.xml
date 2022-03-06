@@ -9,7 +9,7 @@
 		<dbConnectionFreeStrategy description="数据库连接释放策略，onlyDispose(仅释放资源)/disposeAndClose(释放资源且关闭连接) 或整数值: 0/1, 默认 onlyDispose">onlyDispose</dbConnectionFreeStrategy>
 		<insertBatchStrategy description="缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入">normalBatch</insertBatchStrategy>
 		<IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
-		<SplitTable>
+		<SplitTable enabled="true" description="分表存储，分表查询">
 			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$-SP-#</Rule>
 			<RecordQuantity description="单表最大记录数量">20000000</RecordQuantity>
 		</SplitTable>
