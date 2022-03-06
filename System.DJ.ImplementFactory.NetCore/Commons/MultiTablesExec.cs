@@ -9,13 +9,18 @@ using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.NetCore.Commons
 {
     public class MultiTablesExec : IMultiTablesExec
     {
+        /// <summary>
+        /// key: tableName_lower, value: List<string>
+        /// </summary>
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
-        private Dictionary<string, object> threadDic = new Dictionary<string, object>();
+        private Dictionary<string, ThreadOpt> threadDic = new Dictionary<string, ThreadOpt>();
         private AutoCall autoCall = new AutoCall();
         private DbInfo dbInfo = null;
         private DataTable queryDatas = new DataTable();
@@ -165,7 +170,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         object ISingleInstance.Instance { get; set; }
 
-        int IMultiTablesExec.Delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             throw new NotImplementedException();
         }
@@ -175,21 +180,22 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             throw new NotImplementedException();
         }
 
-        int IMultiTablesExec.Insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             throw new NotImplementedException();
         }
 
-        int IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             throw new NotImplementedException();
         }
 
-        DataTable IMultiTablesExec.Query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        void IMultiTablesExec.Query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
-            if (0 == tbDic.Count) return null;
-            //dic key:Lower, value:self
+            if (0 == tbDic.Count) return;
+            //dic tableName key:Lower, value:self
             Dictionary<string, string> dic = new Dictionary<string, string>();
+            //newSql 
             string newSql = sql;
             string _sql = sql;
             string leftStr = "|#";
@@ -250,7 +256,74 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 arr[n] = item.Key;
                 n++;
             }
-            return null;
+
+            List<string> sqlList = new List<string>();
+            Action<string, string> action1 = (tbn1, tbn2) =>
+             {
+                 string sql1 = "", sql2;
+                 string k1 = "";
+                 List<string> list1 = tbDic[tbn1] as List<string>;
+                 List<string> list2 = null;
+                 if (!string.IsNullOrEmpty(tbn2))
+                 {
+                     list2 = tbDic[tbn2] as List<string>;
+                 }
+
+                 foreach (string item1 in list1)
+                 {
+                     k1 = leftStr + tbn1 + rightStr;
+                     sql1 = newSql.Replace(k1, item1);
+                     if (null != list2)
+                     {
+                         foreach (string item2 in list2)
+                         {
+                             k1 = leftStr + tbn2 + rightStr;
+                             sql2 = sql1.Replace(k1, item2);
+                             sqlList.Add(sql2);
+                         }
+                     }
+                     else
+                     {
+                         sqlList.Add(sql1);
+                     }
+                 }
+            };
+
+            int nlen = arr.Length;
+            string key1 = "";
+            string key2 = "";
+            for (int i = 0; i < nlen; i++)
+            {
+                key1 = arr[i];
+                if ((i + 1) < nlen)
+                {
+                    for (int ii = i + 1; ii < nlen; ii++)
+                    {
+                        key2 = arr[ii];
+                        action1(key1, key2);
+                    }
+                }
+                else if(0 == i)
+                {
+                    action1(key1, null);
+                }
+            }
+
+            ThreadOpt threadOpt = null;
+            foreach (string item in sqlList)
+            {
+                threadOpt = new ThreadOpt(this);
+                threadDic.Add(threadOpt.ID, threadOpt);
+                threadOpt.query(autoCall, sql, parameters);
+            }
+
+            Task.Run(() => {
+                while (0 < threadDic.Count)
+                {
+                    Thread.Sleep(100);
+                }
+                resultAction(queryDatas);
+            });
         }
 
         private object _QueryResult = new object();
@@ -291,16 +364,63 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         class ThreadOpt : IDisposable
         {
+            private MultiTablesExec multiTablesExec = null;
             private BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
             private string _ID = null;
 
             public ThreadOpt(MultiTablesExec multiTablesExec)
             {
                 _ID = Guid.NewGuid().ToString();
+                this.multiTablesExec = multiTablesExec;
                 multiTablesExec.initBasicExecForSQL(basicExecForSQL1, multiTablesExec.dbHelper);
             }
 
             public string ID { get { return _ID; } }
+
+            public void query(object autoCall, string sql, List<DbParameter> parameters)
+            {
+                Task.Run(() =>
+                {
+                    DataTable dt = null;
+                    AutoCall autoCall1 = autoCall as AutoCall;
+                    string _err = "";
+                    basicExecForSQL1.Exec(autoCall1, sql, parameters, ref _err, val =>
+                    {
+                        dt = val as DataTable;
+                    }, cmd =>
+                    {
+                        DataTable dataTable = null;
+                        DataSet ds = new DataSet();
+                        Data.Common.DataAdapter da = multiTablesExec.dbHelper.dataServerProvider.CreateDataAdapter(cmd);
+                        da.Fill(ds);
+                        if (0 < ds.Tables.Count) dataTable = ds.Tables[0];
+                        return dataTable;
+                    });
+                    err = _err;
+                    this.multiTablesExec.QueryResult(this, dt);
+                });
+            }
+
+            public void oparete(object autoCall, string sql, List<DbParameter> parameters)
+            {
+                Task.Run(() =>
+                {
+                    int num = 0;
+                    AutoCall autoCall1 = autoCall as AutoCall;
+                    string _err = "";
+                    basicExecForSQL1.Exec(autoCall1, sql, parameters, ref _err, val =>
+                       {
+                           num = Convert.ToInt32(val);
+                    }, cmd =>
+                     {
+                         return cmd.ExecuteNonQuery();
+                     });
+                    err = _err;
+                    multiTablesExec.OperateResult(this, num);
+                });
+            }
+
+            public string err { get; set; }
 
             void IDisposable.Dispose()
             {
