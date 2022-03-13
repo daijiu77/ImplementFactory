@@ -349,6 +349,29 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             initBasicExecForSQL(dbAdapter, dbHelper);
             if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, dbHelper);
             createNewTable.SplitTable(sql);
+            if (false == string.IsNullOrEmpty(createNewTable.SrcTableName) 
+                && false == string.IsNullOrEmpty(createNewTable.NewTableName))
+            {
+                string tb = createNewTable.SrcTableName.ToLower();
+                List<TableInfo> list = null;
+                if (tbDic.ContainsKey(tb))
+                {
+                    list = (List<TableInfo>)tbDic[tb];
+                }
+                else
+                {
+                    list = new List<TableInfo>();
+                    list.Add(new TableInfo()
+                    {
+                        tbName = createNewTable.SrcTableName
+                    });
+                    tbDic.Add(tb, list);
+                }
+                list.Add(new TableInfo()
+                {
+                    tbName = createNewTable.NewTableName
+                });
+            }
             string err1 = "";
             dbAdapter.ExecSql((AutoCall)autoCall, sql, parameters, ref err1, val =>
                 {

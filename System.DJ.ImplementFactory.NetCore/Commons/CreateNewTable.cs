@@ -56,8 +56,8 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
         private string getTableNameWithSql(string sql)
         {
             Regex rg = new Regex(@"(^insert\s+(into\s+)?(?<tbName>[a-z0-9_\-]+))|(\sinsert\s+(into\s+)?(?<tbName>[a-z0-9_\-]+))", RegexOptions.IgnoreCase);
-            string tbName = rg.Match(sql).Groups["tbName"].Value;
-            return tbName;
+            SrcTableName = rg.Match(sql).Groups["tbName"].Value;            
+            return SrcTableName;
         }
 
         private string getTableNameByRule(string tableName)
@@ -95,6 +95,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             s = DateTime.Now.ToString("yyyyMMddHHmmss");
             tbn = tbn.Replace("#", s);
 
+            NewTableName = tbn;
             return tbn;
         }
 
@@ -344,6 +345,8 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
 
         public void SplitTable(string sql)
         {
+            SrcTableName = null;
+            NewTableName = null;
             if (false == dbInfo.splitTable.Enabled) return;
 
             string dbType = dbInfo.DatabaseType.ToLower();
@@ -360,5 +363,9 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
                 oracle(sql);
             }
         }
+
+        public string SrcTableName { get; set; }
+
+        public string NewTableName { get; set; }
     }
 }
