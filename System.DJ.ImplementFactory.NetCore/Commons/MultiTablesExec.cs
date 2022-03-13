@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.NetCore.Entities;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.DJ.ImplementFactory.NetCore.Commons
+namespace System.DJ.ImplementFactory.Commons
 {
     public class MultiTablesExec : IMultiTablesExec, IDisposable
     {
@@ -128,20 +126,20 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 dt = vObj as DataTable;
             }, cmd =>
             {
-                DataTable dt = new DataTable();
+                DataTable dt1 = new DataTable();
                 try
                 {
                     Data.Common.DataAdapter da = dbHelper.dataServerProvider.CreateDataAdapter(cmd);
                     DataSet ds = new DataSet();
                     da.Fill(ds);
-                    if (0 < ds.Tables.Count) dt = ds.Tables[0];
+                    if (0 < ds.Tables.Count) dt1 = ds.Tables[0];
                 }
                 catch (Exception ex)
                 {
                     autoCall.e(ex.ToString(), ErrorLevels.severe);
                     //throw;
                 }
-                return dt;
+                return dt1;
             });
             return dt;
         }

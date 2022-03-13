@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.NetCore.Entities;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
-using System.Text;
 using System.Text.RegularExpressions;
 
-namespace System.DJ.ImplementFactory.NetCore.Commons
+namespace System.DJ.ImplementFactory.Commons
 {
     class CreateNewTable
     {

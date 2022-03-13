@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Text;
-using System.Text.RegularExpressions;
 
-namespace System.DJ.ImplementFactory.NetCore.Commons
+namespace System.DJ.ImplementFactory.Commons
 {
     class DbAdapter: IDisposable
     {

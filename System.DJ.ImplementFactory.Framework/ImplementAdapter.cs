@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.DJ.Framework.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.NetCore.Commons;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
