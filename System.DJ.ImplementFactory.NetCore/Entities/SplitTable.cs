@@ -11,5 +11,8 @@ namespace System.DJ.ImplementFactory.NetCore.Entities
 
         private string _RecordQuantity = "单表最大记录数量";
         public long RecordQuantity { get; set; } = 10000000;
+
+        private string _Enabled = "分表存储，分表查询";
+        public bool Enabled { get; set; } = false;
     }
 }

@@ -134,8 +134,16 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
 
         private string replaceBracket(string s)
         {
-            s = s.Replace("(", "");
-            s = s.Replace(")", "");
+            Regex rg = new Regex(@"[a-z0-9_]+\(\)", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(s))
+            {
+                s = rg.Match(s).Groups[0].Value;
+            }
+            else
+            {
+                s = s.Replace("(", "");
+                s = s.Replace(")", "");
+            }
             return s;
         }
 
@@ -149,39 +157,28 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             string is_null = dr["is_null"].ToString();
             string pk = dr["primary_key"].ToString();
             string ft = ftype.ToLower();
+
             if (-1 != ft.IndexOf("char"))
             {
                 field += " " + ftype + "(" + fLen + ")";
-                if (!string.IsNullOrEmpty(defVal))
-                {
-                    field += " default" + defVal;
-                }
             }
             else if (-1 != ft.IndexOf("numeric")|| -1 != ft.IndexOf("decimal"))
             {
                 field += " " + ftype + "(" + fLen + ", "+ dotLen + ")";
-                if (!string.IsNullOrEmpty(defVal))
-                {
-                    defVal = replaceBracket(defVal);
-                    field += " default(" + defVal+")";
-                }
             }
             else if (-1 != ft.IndexOf("int"))
             {
                 field += " " + ftype;
-                if (!string.IsNullOrEmpty(defVal))
-                {
-                    defVal = replaceBracket(defVal);
-                    field += " default(" + defVal + ")";
-                }
             }
             else
             {
                 field += " " + ftype;
-                if (!string.IsNullOrEmpty(defVal))
-                {
-                    field += " default" + defVal;
-                }
+            }
+
+            if (!string.IsNullOrEmpty(defVal))
+            {
+                defVal = replaceBracket(defVal);
+                field += " default(" + defVal + ")";
             }
 
             if (!string.IsNullOrEmpty(pk))
@@ -347,6 +344,8 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
 
         public void SplitTable(string sql)
         {
+            if (false == dbInfo.splitTable.Enabled) return;
+
             string dbType = dbInfo.DatabaseType.ToLower();
             if (dbType.Equals("sqlserver"))
             {
