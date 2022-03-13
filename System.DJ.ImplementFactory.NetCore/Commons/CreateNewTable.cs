@@ -268,7 +268,26 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
 
         private string getSqlOfMysqlToCreateTable(string tableName)
         {
-            string sql = "";
+            string sql = "SELECT COLUMN_NAME AS 'field_name',";
+            mi.append(ref sql, "ORDINAL_POSITION AS 'field_order',");
+            mi.append(ref sql, "COLUMN_DEFAULT AS 'default_value',");
+            mi.append(ref sql, "(case UPPER(IS_NULLABLE) when 'NO' then 0 else 1 end) AS 'is_null',");
+            mi.append(ref sql, "DATA_TYPE AS 'field_type',");
+            mi.append(ref sql, "CHARACTER_MAXIMUM_LENGTH AS 'field_length',");
+            mi.append(ref sql, "NUMERIC_PRECISION,"); //数值精度(最大位数)
+            mi.append(ref sql, "NUMERIC_SCALE AS 'dot_length',");
+            mi.append(ref sql, "COLUMN_TYPE AS 'columnType',");
+            mi.append(ref sql, "(case UPPER(COLUMN_KEY) when 'PRI' then 'pk' else '' END) As 'primary_key',");
+            mi.append(ref sql, "EXTRA AS 'descr',");
+            mi.append(ref sql, "COLUMN_COMMENT AS 'annotation'");
+            mi.append(ref sql, LeftSpaceLevel.one, "FROM information_schema.`COLUMNS` WHERE TABLE_NAME = '{0}'", tableName);
+            mi.append(ref sql, "ORDER BY ORDINAL_POSITION;");
+
+            DataTable dt = dt_exec_sql(sql);
+            sql = "";
+            if (null == dt) return sql;
+            sql = getSqlStructure(dt, tableName);
+            mi.append(ref sql, " default character set = 'utf8';");
             return sql;
         }
 
@@ -278,11 +297,14 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             int records = getRecordCount(tbName);
             if (records < dbInfo.splitTable.RecordQuantity) return;
 
-            string sql0 = getSqlOfMysqlToCreateTable(tbName);
+            string sql0 = "CREATE TABLE {0} LIKE {1};"; //getSqlOfMysqlToCreateTable(tbName)
             string newTbName = getTableNameByRule(tbName);
-            string sql1 = "exec sp_rename '{0}', '{1}';";
-            sql1 = string.Format(sql1, tbName, newTbName);
+
+            string sql1 = "ALTER TABLE {0} RENAME TO {1};";
+            sql1 = string.Format(sql1, tbName, newTbName); //把原表名更改为新表名
             exec_sql(sql1);
+
+            sql0 = string.Format(sql0, tbName, newTbName); //根据新表名来创建原表名
             exec_sql(sql0);
         }
 
@@ -298,11 +320,14 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             int records = getRecordCount(tbName);
             if (records < dbInfo.splitTable.RecordQuantity) return;
 
-            string sql0 = getSqlOfOracleToCreateTable(tbName);
+            string sql0 = "CREATE TABLE {0} AS SELECT * FROM {1} WHERE ROWNUM=0;"; // getSqlOfOracleToCreateTable(tbName);
             string newTbName = getTableNameByRule(tbName);
-            string sql1 = "exec sp_rename '{0}', '{1}';";
-            sql1 = string.Format(sql1, tbName, newTbName);
+
+            string sql1 = "ALTER TABLE {0} RENAME TO {1};";
+            sql1 = string.Format(sql1, tbName, newTbName); //把原表名改为新表名
             exec_sql(sql1);
+
+            sql0 = string.Format(sql0, tbName, newTbName); //根据新表名创建原名
             exec_sql(sql0);
         }
 
