@@ -1034,6 +1034,15 @@ namespace System.DJ.ImplementFactory.Commons
             return v;
         }
 
+        public static PropertyInfo GetPropertyInfo(this object entity, string propertyName)
+        {
+            initPropertyDic(entity);
+            PropertyInfo pi = null;
+            string fn1 = propertyName.ToLower();
+            _entityPropertyDic.TryGetValue(fn1, out pi);
+            return pi;
+        }
+
         public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
         {
             initPropertyDic(entity);
@@ -1281,6 +1290,7 @@ namespace System.DJ.ImplementFactory.Commons
                 else if (null != attr && false == isCollect)
                 {
                     propertyExt = PropFunc(entity, pi);
+                    if (null == at) initCondition(propertyExt, (Condition)attr);
                     if (!enableFun(propertyExt, (Condition)attr)) continue;
                     sw = ((Condition)attr).Unit(propertyExt);
                     if (string.IsNullOrEmpty(sw)) continue;

@@ -1,11 +1,13 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Test.Framework.DataInterface;
 using Test.Framework.Entities;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
@@ -92,56 +94,97 @@ namespace Test.Framework
         {
             SetWindowPositionCenter();
 
-            MethodInfo[] ms = typeof(testJson).GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            foreach (MethodInfo item in ms)
-            {
-                if (!item.IsGenericMethod) continue;
-                ParameterInfo[] ps = item.GetParameters();
-                ParameterInfo pi = ps[0];
-                Type tp = pi.ParameterType;
-                Type[] ts = tp.GetGenericArguments();
-                string ns = pi.ParameterType.Namespace;
-                bool mbool = item.ReturnType.IsGenericType;
-                string name = pi.Name;
-            }
-                        
-            LogicCalculate logicCalculate = new LogicCalculate();
-            Console.WriteLine("result: " + logicCalculate.testCalculate());
-            Console.WriteLine("");
-
-            UserInfoLogic userInfoLogic = new UserInfoLogic();
-            UserInfo userInfo1 = new UserInfo();
-            userInfo1.name = "X"; 
-            userInfo1.age = 23;
-            /**
-             * 根据属性值动态生成 where 条件获取数据
-             * where name like '%X%' and age=23
-             * **/
-            List<UserInfo> ls = userInfoLogic.userInfos(userInfo1);
-
-            List<UserInfo> userInfos = userInfoLogic.userInfos("53");
-            UserInfo userInfo = userInfoLogic.GetLastUserInfo();
-            Console.WriteLine("");
-            userInfo.ForeachProperty((propertyInfo, propertyType, propertyName, propertyValue) =>
-            {
-                propertyValue = null == propertyValue ? "" : propertyValue;
-                Console.WriteLine(propertyName + ": " + propertyValue.ToString());
-            });
-            Console.WriteLine("");
-
-            Console.WriteLine("Dynamic field:");
-            DataEntity<DataElement> dataElements = userInfoLogic.GetDynamicFieldData();
-            object val = null;
-            foreach (DataElement item in dataElements)
-            {
-                val = item.value;
-                val = null == val ? "" : val;
-                Console.WriteLine(item.name + ": " + val.ToString());
-            }
-            Console.WriteLine("");
+            TestObj testObj = new TestObj();
+            testObj.test232();
 
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
+        }
+
+        class TestObj: ImplementAdapter
+        {
+            [MyAutoCall]
+            private IEquipmentInfoMapper equipmentInfoMapper;
+
+            public void test20220313_1()
+            {
+
+                for (int i = 0; i < 50; i++)
+                {
+                    equipmentInfoMapper.insert(new EquipmentInfo()
+                    {
+                        height = i + 3,
+                        width = i + 1,
+                        code = Guid.NewGuid().ToString(),
+                        equipmentName = Guid.NewGuid().ToString().Substring(0, 5)
+                    });
+                }
+            }
+
+            public void test232()
+            {
+                List<EquipmentInfo> list = equipmentInfoMapper.query(new EquipmentInfo()
+                {
+                    equipmentName = "868b5"
+                });
+                int n = list.Count;
+            }
+
+            public void test20220313()
+            {
+                MethodInfo[] ms = typeof(testJson).GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                foreach (MethodInfo item in ms)
+                {
+                    if (!item.IsGenericMethod) continue;
+                    ParameterInfo[] ps = item.GetParameters();
+                    ParameterInfo pi = ps[0];
+                    Type tp = pi.ParameterType;
+                    Type[] ts = tp.GetGenericArguments();
+                    string ns = pi.ParameterType.Namespace;
+                    bool mbool = item.ReturnType.IsGenericType;
+                    string name = pi.Name;
+                }
+
+                LogicCalculate logicCalculate = new LogicCalculate();
+                Console.WriteLine("result: " + logicCalculate.testCalculate());
+                Console.WriteLine("");
+
+                UserInfoLogic userInfoLogic = new UserInfoLogic();
+                UserInfo userInfo1 = new UserInfo();
+                userInfo1.name = "X";
+                userInfo1.age = 23;
+                /**
+                 * 根据属性值动态生成 where 条件获取数据
+                 * where name like '%X%' and age=23
+                 * **/
+                List<UserInfo> ls = userInfoLogic.userInfos(userInfo1);
+
+                List<UserInfo> userInfos = userInfoLogic.userInfos("53");
+                UserInfo userInfo = userInfoLogic.GetLastUserInfo();
+                Console.WriteLine("");
+                userInfo.ForeachProperty((propertyInfo, propertyType, propertyName, propertyValue) =>
+                {
+                    propertyValue = null == propertyValue ? "" : propertyValue;
+                    Console.WriteLine(propertyName + ": " + propertyValue.ToString());
+                });
+                Console.WriteLine("");
+
+                Console.WriteLine("Dynamic field:");
+                DataEntity<DataElement> dataElements = userInfoLogic.GetDynamicFieldData();
+                object val = null;
+                foreach (DataElement item in dataElements)
+                {
+                    val = item.value;
+                    val = null == val ? "" : val;
+                    Console.WriteLine(item.name + ": " + val.ToString());
+                }
+                Console.WriteLine("");
+            }
+
+            ~TestObj()
+            {
+                Trace.WriteLine("TestObj distory");
+            }
         }
 
     }

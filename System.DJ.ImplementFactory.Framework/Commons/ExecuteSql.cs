@@ -184,6 +184,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             isExecData = false;
             isRun = false;
+            ((IDisposable)basicExecForSQL).Dispose();
         }
 
     }

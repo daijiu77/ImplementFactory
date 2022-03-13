@@ -62,6 +62,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\MultiTablesExec.cs" />
+    <Compile Include="Commons\DbAdapter.cs" />
+    <Compile Include="Commons\CreateNewTable.cs" />
+    <Compile Include="Pipelines\IMultiTablesExec.cs" />
     <Compile Include="Commons\Attrs\Condition.cs" />
     <Compile Include="Commons\HttpHelper.cs" />
     <Compile Include="Pipelines\IHttpHelper.cs" />

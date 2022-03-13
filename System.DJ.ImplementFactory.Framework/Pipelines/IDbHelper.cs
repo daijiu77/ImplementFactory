@@ -43,6 +43,16 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// </summary>
         bool isNormalBatchInsert { get; set; }
 
+        /// <summary>
+        /// 分表匹配规则
+        /// </summary>
+        string splitTablesRule { get; set; }
+
+        /// <summary>
+        /// 分表时单表最大记录量
+        /// </summary>
+        long splitTablesRecordQuantity { get; set; }
+
         DataTable query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         int insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err);

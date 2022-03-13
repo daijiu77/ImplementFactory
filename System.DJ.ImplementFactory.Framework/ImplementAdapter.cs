@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.DJ.Framework.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.Commons;
+using System.DJ.ImplementFactory.NetCore.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -101,11 +103,15 @@ namespace System.DJ.ImplementFactory
                 DbHelper.optByBatchWaitSecond = dbInfo.optByBatchWaitSecond;
                 DbHelper.sqlMaxLengthForBatch = dbInfo.sqlMaxLengthForBatch;
                 DbHelper.disposableAndClose = dbInfo.close;
+                DbHelper.splitTablesRule = dbInfo.splitTable.Rule;
+                DbHelper.splitTablesRecordQuantity = dbInfo.splitTable.RecordQuantity;
+
                 if (!string.IsNullOrEmpty(dbConnectionFreeStrategy))
                 {
                     DbHelper.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
                 }
                 DbHelper.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
+                new MultiTablesExec(dbInfo, DbHelper);
             }
         }
 
@@ -1321,6 +1327,47 @@ namespace System.DJ.ImplementFactory
             return list;
         }
 
+        private static void setPropertyVal(XmlNode _node, object _obj)
+        {
+            string node_name = "";
+            string v = null;
+            string Recomplie = "Recomplie".ToLower();
+            PropertyInfo pi = null;
+            foreach (XmlNode item in _node.ChildNodes)
+            {
+                node_name = item.Name.ToLower();
+                pi = _obj.GetPropertyInfo(node_name);
+                if (null != pi)
+                {
+                    if (false == DJTools.IsBaseType(pi.PropertyType) && pi.PropertyType.IsClass)
+                    {
+                        object childObj = pi.GetValue(_obj);
+                        if (null == childObj)
+                        {
+                            try
+                            {
+                                childObj = Activator.CreateInstance(pi.PropertyType);
+                            }
+                            catch (Exception)
+                            {
+                                continue;
+                                //throw;
+                            }
+                        }
+                        setPropertyVal(item, childObj);
+                        continue;
+                    }
+                }
+                v = item.InnerText.Trim();
+                _obj.SetPropertyValue(node_name, v);
+
+                if (node_name.Equals(Recomplie))
+                {
+                    item.InnerText = "false";
+                }
+            }
+        }
+
         private static EList<CKeyValue> MatchRulesOfXml()
         {
             EList<CKeyValue> list = new EList<CKeyValue>();
@@ -1340,23 +1387,6 @@ namespace System.DJ.ImplementFactory
             string SysConfig = "SysConfig".ToLower();
             string MatchRules = "MatchRules".ToLower();
             string Recomplie = "Recomplie".ToLower();
-
-            Action<XmlNode, object> action = (_node, _obj) =>
-             {
-                 string node_name = "";
-                 string v = null;
-                 foreach (XmlNode item in _node.ChildNodes)
-                 {
-                     node_name = item.Name.ToLower();
-                     v = item.InnerText.Trim();
-                     _obj.SetPropertyValue(node_name, v);
-
-                     if (node_name.Equals(Recomplie))
-                     {
-                         item.InnerText = "false";
-                     }
-                 }
-             };
 
             foreach (XmlNode item in node.ChildNodes)
             {
@@ -1379,7 +1409,7 @@ namespace System.DJ.ImplementFactory
                     foreach (XmlNode item1 in item.ChildNodes)
                     {
                         entity = new MatchRule();
-                        action(item1, entity);
+                        setPropertyVal(item1, entity);
                         if (!string.IsNullOrEmpty(((MatchRule)entity).InterFaceName))
                         {
                             list.Add(new CKeyValue()
@@ -1392,7 +1422,7 @@ namespace System.DJ.ImplementFactory
                 }
                 else
                 {
-                    action(item, entity);
+                    setPropertyVal(item, entity);
                 }
             }
 
@@ -1581,6 +1611,56 @@ namespace System.DJ.ImplementFactory
             return valStr;
         }
 
+        private static Dictionary<string, FieldInfo> getPrivateDic(object _obj)
+        {
+            Dictionary<string, FieldInfo> dic = new Dictionary<string, FieldInfo>();
+            FieldInfo[] fields = _obj.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (FieldInfo item in fields)
+            {
+                dic.Add(item.Name, item);
+            }
+            return dic;
+        }
+
+        private static void createChildrenNode(object _obj, XmlDocument doc, XmlElement parentNode)
+        {
+            Dictionary<string, FieldInfo> dic = getPrivateDic(_obj);
+            XmlElement child = null;
+            XmlAttribute att = null;
+            FieldInfo fi = null;
+            object v = null;
+            string sv = "";
+            string des = "description";
+            _obj.ForeachProperty((propertyInfo, type, fieldName, fieldValue) =>
+            {
+                if (false == DJTools.IsBaseType(type))
+                {
+                    if (!type.IsClass) return;
+                    child = doc.CreateElement(fieldName);
+                    if (null != fieldValue) createChildrenNode(fieldValue, doc, child);
+                    parentNode.AppendChild(child);
+                    return;
+                }
+                v = null == fieldValue ? "" : fieldValue;
+                sv = v.ToString();
+                sv = sv.ToLower().Trim().Equals("true") ? "true" : sv;
+                sv = sv.ToLower().Trim().Equals("false") ? "false" : sv;
+                child = doc.CreateElement(fieldName);
+                child.InnerText = sv;
+                fi = null;
+                dic.TryGetValue("_" + fieldName, out fi);
+                if (null != fi)
+                {
+                    v = fi.GetValue(_obj);
+                    v = null == v ? "" : v;
+                    att = doc.CreateAttribute(des);
+                    att.Value = v.ToString();
+                    child.Attributes.Append(att);
+                }
+                parentNode.AppendChild(child);
+            });
+        }
+
         private static void createXmlConfig()
         {
             string des = "description";
@@ -1591,47 +1671,9 @@ namespace System.DJ.ImplementFactory
             XmlElement XMLroot = doc.CreateElement("configurations");
             doc.AppendChild(XMLroot);
 
-            Dictionary<string, FieldInfo> dic = new Dictionary<string, FieldInfo>();
-
-            Action<object, XmlElement> createChildrenNode = (_obj, parentNode) =>
-            {
-                dic.Clear();
-                FieldInfo[] fields = _obj.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-                foreach (FieldInfo item in fields)
-                {
-                    dic.Add(item.Name, item);
-                }
-
-                XmlElement child = null;
-                XmlAttribute att = null;
-                FieldInfo fi = null;
-                object v = null;
-                string sv = "";
-                _obj.ForeachProperty((propertyInfo, type, fieldName, fieldValue) =>
-                {
-                    v = null == fieldValue ? "" : fieldValue;
-                    sv = v.ToString();
-                    sv = sv.ToLower().Trim().Equals("true") ? "true" : sv;
-                    sv = sv.ToLower().Trim().Equals("false") ? "false" : sv;
-                    child = doc.CreateElement(fieldName);
-                    child.InnerText = sv;
-                    fi = null;
-                    dic.TryGetValue("_" + fieldName, out fi);
-                    if (null != fi)
-                    {
-                        v = fi.GetValue(_obj);
-                        v = null == v ? "" : v;
-                        att = doc.CreateAttribute(des);
-                        att.Value = v.ToString();
-                        child.Attributes.Append(att);
-                    }
-                    parentNode.AppendChild(child);
-                });
-            };
-
             XmlElement ele = doc.CreateElement("database");
             DbInfo dbInfo = new DbInfo();
-            createChildrenNode(dbInfo, ele);
+            createChildrenNode(dbInfo, doc, ele);
             XMLroot.AppendChild(ele);
 
             LogsRange logsRange = new LogsRange();
@@ -1639,12 +1681,12 @@ namespace System.DJ.ImplementFactory
             XmlAttribute attribute = doc.CreateAttribute(des);
             attribute.Value = "日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)";
             ele.Attributes.Append(attribute);
-            createChildrenNode(logsRange, ele);
+            createChildrenNode(logsRange, doc, ele);
             XMLroot.AppendChild(ele);
 
             SysConfig sysConfig = new SysConfig();
             ele = doc.CreateElement("SysConfig");
-            createChildrenNode(sysConfig, ele);
+            createChildrenNode(sysConfig, doc, ele);
             XMLroot.AppendChild(ele);
 
             MatchRule rules = new MatchRule();
@@ -1656,7 +1698,7 @@ namespace System.DJ.ImplementFactory
 
             XmlElement ele1 = doc.CreateElement("item");
             ele.AppendChild(ele1);
-            createChildrenNode(rules, ele1);
+            createChildrenNode(rules, doc, ele1);
 
             string f = Path.Combine(rootPath, configFile_Xml);
             try
@@ -1668,166 +1710,6 @@ namespace System.DJ.ImplementFactory
 
                 //throw;
             }
-        }
-
-        enum RuleType
-        {
-            none,
-            DbInfo,
-            MatchRule,
-            LogsRange,
-            SysConfig
-        }
-
-        enum DbConnectionFreeStrategy
-        {
-            onlyDispose,
-            disposeAndClose
-        }
-
-        enum InsertBatchStrategy
-        {
-            /// <summary>
-            /// 正常的批量 insert into tablename(fieldList) values(valueList1),(valueList2),(valueList3)
-            /// </summary>
-            normalBatch,
-            /// <summary>
-            /// 独立的列表 insert into tablename(fieldList) values(valueList1);insert into tablename(fieldList) values(valueList2)
-            /// </summary>
-            singleList
-        }
-
-        class DbInfo
-        {
-            private string _ConnectionString = "数据库连接字符串";
-            public string ConnectionString { get; set; } = "Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;";
-
-            private string _DatabaseType = "数据库类型:sqlserver,oracle,mysql,access";
-            public string DatabaseType { get; set; } = "sqlserver";
-
-            private string _SqlProviderRelativePathOfDll = "动态 sql 提供者所在的dll文件程序集的相对路径,注：该提供者必须继承 System.DJ.ImplementFactory.Pipelines.ISqlExpressionProvider 接口";
-            public string SqlProviderRelativePathOfDll { get; set; }
-
-            private string _optByBatchMaxNumber = "insert/update/delete 批量操作最大数量, 默认100条数据";
-            /// <summary>
-            /// insert/update/delete 批量操作最大数量, 默认100条数据
-            /// </summary>
-            public int optByBatchMaxNumber { get; set; } = 100;
-
-            private string _optByBatchWaitSecond = "insert/update/delete 执行最后的批量操作等待时间(秒), 默认3秒";
-            /// <summary>
-            /// insert/update/delete 执行最后的批量操作等待时间(秒), 默认3秒
-            /// </summary>
-            public int optByBatchWaitSecond { get; set; } = 3;
-
-            private string _sqlMaxLengthForBatch = "insert/update/delete 批量操作 sql 表达式最大长度, 默认 50000";
-            /// <summary>
-            /// insert/update/delete 批量操作 sql 表达式最大长度, 默认 50000
-            /// </summary>
-            public int sqlMaxLengthForBatch { get; set; } = 50000;
-
-            private string _close = "释放资源并关闭连接, true/false, 默认 false(释放资源但不关闭连接)";
-            /// <summary>
-            /// 释放资源并关闭连接, true/false, 默认 false(释放资源但不关闭连接)
-            /// </summary>
-            public bool close { get; set; } = false;
-
-            private string _dbConnectionFreeStrategy = "数据库连接释放策略，onlyDispose/disposeAndClose 或整数值: 0/1, close 属性的补充，此属性优先级高于 close 属性";
-            /// <summary>
-            /// 数据库连接释放策略
-            /// </summary>
-            public DbConnectionFreeStrategy dbConnectionFreeStrategy { get; set; } = DbConnectionFreeStrategy.onlyDispose;
-
-            private string _insertBatchStrategy = "缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入";
-            /// <summary>
-            /// 批量插入策略
-            /// </summary>
-            public InsertBatchStrategy insertBatchStrategy { get; set; } = InsertBatchStrategy.normalBatch;
-
-            private string _IsShowCode = "是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]";
-            /// <summary>
-            /// 是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]
-            /// </summary>
-            public bool IsShowCode { get; set; }
-        }
-
-        class MatchRule
-        {
-            private string _DllRelativePathOfImpl = "[可选] - 实例类所在dll文件的相对路径,如果为空,表示实例类和exe文件属同一dll文件";
-            /// <summary>
-            /// [可选] - 实例类所在dll文件的相对路径,
-            /// 如果为空,表示实例类和exe文件属同一dll文件
-            /// </summary>
-            public string DllRelativePathOfImpl { get; set; }
-
-            private string _ImplementNameSpace = "[可选] - 指定实现interface类的实例所在的namespace";
-            /// <summary>
-            /// [可选] - 指定实现interface类的实例所在的namespace
-            /// </summary>
-            public string ImplementNameSpace { get; set; }
-
-            private string _MatchImplExpression = "[*必选*] - 匹配实现 interface 类的实例名称,可以是一个完整的类名称, 但不包含namespace。也可以是一个正则表达式";
-            /// <summary>
-            /// [*必选*] - 匹配实现 interface 类的实例名称,可以是一个完整的类名称, 但不包含namespace.
-            /// 也可以是一个正则表达式
-            /// </summary>
-            public string MatchImplExpression { get; set; }
-
-            private string _InterFaceName = "[*必选*] - 接口名称, 可以是一个 namespace.interfaceClassName 完整的接口名称, 也可是interfaceClassName";
-            /// <summary>
-            /// [*必选*] - 接口名称, 可以是一个 namespace.interfaceClassName 完整的接口名称, 
-            /// 也可是interfaceClassName
-            /// </summary>
-            public string InterFaceName { get; set; }
-
-            private string _IgnoreCase = "[可选] - 匹配 MatchImplExpression 时是否忽略大小写, 默认true[忽略大小写], false[区分大小写]";
-
-            /// <summary>
-            /// [可选] - 匹配 MatchImplExpression 时是否忽略大小写, 默认true[忽略大小写], false[区分大小写]
-            /// </summary>
-            public bool IgnoreCase { get; set; } = true;
-
-            private string _IsShowCode = "是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]";
-            /// <summary>
-            /// 是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]
-            /// </summary>
-            public bool IsShowCode { get; set; }
-        }
-
-        class LogsRange
-        {
-            private string _upperLimit = "可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit";
-            /// <summary>
-            /// 上限值
-            /// </summary>
-            public string upperLimit { get; set; } = "severe";
-
-            private string _lowerLimit = "可以是数字或英文名称, 为数字时 lowerLimit 应大于 upperLimit";
-            /// <summary>
-            /// 下限值
-            /// </summary>
-            public string lowerLimit { get; set; } = "debug";
-        }
-
-        public class SysConfig
-        {
-            private string _Recomplie = "是否启用重新编译机制, false(不启用), true(启用), 默认为 false";
-            /// <summary>
-            /// 是否启用重新编译机制
-            /// </summary>
-            public bool Recomplie { get; set; } = false;
-
-            private string _IsShowCode = "显示所有参与编译的代码, false(不显示), true(显示)";
-            /// <summary>
-            /// 显示所有参与编译的代码
-            /// </summary>
-            public bool IsShowCode { get; set; } = false;
-        }
-
-        class InstanceObj
-        {
-            public object newInstance { get; set; }
-            public Type oldInstanceType { get; set; }
         }
 
     }
