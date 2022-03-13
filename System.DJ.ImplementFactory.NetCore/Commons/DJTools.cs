@@ -1290,6 +1290,7 @@ namespace System.DJ.ImplementFactory.Commons
                 else if (null != attr && false == isCollect)
                 {
                     propertyExt = PropFunc(entity, pi);
+                    if (null == at) initCondition(propertyExt, (Condition)attr);
                     if (!enableFun(propertyExt, (Condition)attr)) continue;
                     sw = ((Condition)attr).Unit(propertyExt);
                     if (string.IsNullOrEmpty(sw)) continue;

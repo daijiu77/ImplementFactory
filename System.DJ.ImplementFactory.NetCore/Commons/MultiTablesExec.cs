@@ -22,41 +22,41 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
         private Dictionary<string, ThreadOpt> threadDic = new Dictionary<string, ThreadOpt>();
         private AutoCall autoCall = new AutoCall();
-        private DbInfo dbInfo = null;
+        private static DbInfo dbInfo = null;
+        private static IDbHelper dbHelper = null;
         private DataTable queryDatas = new DataTable();
-        private BasicExecForSQL basicExecForSQL = BasicExecForSQL.Instance;
+        private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
-        private IDbHelper dbHelper = null;
         private int OptDatas = 0;
 
         private string leftStr = "|#";
         private string rightStr = "#|";
 
+        public MultiTablesExec() { }
+
         public MultiTablesExec(IDbHelper dbHelper)
         {
-            this.dbHelper = dbHelper;
+            MultiTablesExec.dbHelper = dbHelper;
         }
 
         public MultiTablesExec(DbInfo dbInfo, IDbHelper dbHelper)
         {
             if (0 < tbDic.Count) return;
-            initBasicExecForSQL(basicExecForSQL, dbHelper);
-
-            createNewTable = new CreateNewTable(autoCall, dbInfo, basicExecForSQL, dbHelper);
-            this.dbInfo = dbInfo;
-            this.dbHelper = dbHelper;
+            
+            MultiTablesExec.dbInfo = dbInfo;
+            MultiTablesExec.dbHelper = dbHelper;
 
             string rule = getRule(dbInfo);
             string sql = "";
             if (dbInfo.DatabaseType.Equals("sqlserver"))
             {
                 //select TABLE_NAME from {0}.dbo.sysobjects where type='U'
-                sql = "select TABLE_NAME from {0}.dbo.sysobjects where type='U'";
+                sql = "select name as TABLE_NAME from sysobjects where type='U'";
             }
             else if (dbInfo.DatabaseType.Equals("sqlserver"))
             {
                 //select TABLE_NAME from information_schema.tables where table_schema='{0}';
-                sql = "select TABLE_NAME from information_schema.tables;";
+                sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)<>'information_schema' and LOWER(TABLE_SCHEMA)<>'mysql';";
             }
             else if (dbInfo.DatabaseType.Equals("sqlserver"))
             {
@@ -76,12 +76,12 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             initDictionary(rule, sql);
         }
 
-        private void initBasicExecForSQL(BasicExecForSQL basicExecForSQL, IDbHelper dbHelper)
+        private void initBasicExecForSQL(DbAdapter dbAdapter, IDbHelper dbHelper)
         {
-            basicExecForSQL.dbConnectionString = dbHelper.connectString;
-            basicExecForSQL.dbConnectionState = dbHelper.dbConnectionState;
-            basicExecForSQL.disposableAndClose = dbHelper.disposableAndClose;
-            basicExecForSQL.dataServerProvider = dbHelper.dataServerProvider;
+            dbAdapter.dbConnectionString = dbHelper.connectString;
+            dbAdapter.dbConnectionState = dbHelper.dbConnectionState;
+            dbAdapter.disposableAndClose = dbHelper.disposableAndClose;
+            dbAdapter.dataServerProvider = dbHelper.dataServerProvider;
         }
 
         private string getRule(DbInfo dbInfo)
@@ -121,7 +121,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataTable dt = null;
             string err = "";
 
-            basicExecForSQL.Exec(autoCall, sql, null, ref err, vObj =>
+            initBasicExecForSQL(dbAdapter, dbHelper);
+            dbAdapter.ExecSql(autoCall, sql, null, ref err, vObj =>
             {
                 if (null == vObj) return;
                 dt = vObj as DataTable;
@@ -185,8 +186,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, ref string new_sql)
         {
             //dic tableName key:Lower, value:self
-            Dictionary<string, string> dic = new Dictionary<string, string>();
-            string[] arr = null;
+            Dictionary<string, string> dic = new Dictionary<string, string>();            
             string s1 = "";
             string newSql = sql;
             string _sql = sql;
@@ -238,6 +238,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             action(rg2);
 
             new_sql = newSql;
+            string[] arr = new string[dic.Count];
             int n = 0;
             foreach (var item in dic)
             {
@@ -307,7 +308,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return sqlList;
         }
 
-        private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<int> resultAction, ref string err)
+        private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
             OptDatas = 0;
             threadDic.Clear();
@@ -333,9 +334,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             });
         }
 
-        void IMultiTablesExec.Delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Delete(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            DataOpt(autoCall, sql, parameters, resultAction, ref err);
+            DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
         bool IMultiTablesExec.ExistMultiTables(string sql)
@@ -343,14 +344,16 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             throw new NotImplementedException();
         }
 
-        void IMultiTablesExec.Insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
+            initBasicExecForSQL(dbAdapter, dbHelper);
+            if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, dbHelper);
             createNewTable.SplitTable(sql);
             string err1 = "";
-            basicExecForSQL.Exec((AutoCall)autoCall, sql, parameters, ref err1, val =>
+            dbAdapter.ExecSql((AutoCall)autoCall, sql, parameters, ref err1, val =>
                 {
                     int n = Convert.ToInt32(val);
-                    resultAction(n);
+                    action(n);
                 }, cmd =>
              {
                  return cmd.ExecuteNonQuery();
@@ -358,14 +361,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             err = err1;
         }
 
-        void IMultiTablesExec.Update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void IMultiTablesExec.Update(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            DataOpt(autoCall, sql, parameters, resultAction, ref err);
+            DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
-        void IMultiTablesExec.Query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        void IMultiTablesExec.Query(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             queryDatas.Rows.Clear();
+            queryDatas.Columns.Clear();
             threadDic.Clear();
             if (0 == tbDic.Count) return;
 
@@ -376,17 +380,14 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.query(autoCall, sql, parameters);
+                threadOpt.query(autoCall, item, parameters);
             }
 
-            Task.Run(() =>
+            while (0 < threadDic.Count)
             {
-                while (0 < threadDic.Count)
-                {
-                    Thread.Sleep(100);
-                }
-                resultAction(queryDatas);
-            });
+                Thread.Sleep(100);
+            }
+            action(queryDatas);
         }
 
         private object _QueryResult = new object();
@@ -399,7 +400,19 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     DataTable dt = data as DataTable;
                     foreach (DataRow item in dt.Rows)
                     {
-                        queryDatas.Rows.Add(item);
+                        if (0 == queryDatas.Columns.Count)
+                        {
+                            foreach (DataColumn dc in dt.Columns)
+                            {
+                                queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
+                            }
+                        }
+                        DataRow dr = queryDatas.NewRow();
+                        foreach (DataColumn dc in dt.Columns)
+                        {
+                            dr[dc.ColumnName] = item[dc.ColumnName];
+                        }
+                        queryDatas.Rows.Add(dr);
                     }
                 }
 
@@ -427,8 +440,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IDisposable.Dispose()
         {
-            if (null == basicExecForSQL) return;
-            ((IDisposable)basicExecForSQL).Dispose();
+            if (null == dbAdapter) return;
+            ((IDisposable)dbAdapter).Dispose();
         }
 
         ~MultiTablesExec()
@@ -439,14 +452,14 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         class ThreadOpt : IDisposable
         {
             private MultiTablesExec multiTablesExec = null;
-            private BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
+            private DbAdapter dbAdapter = DbAdapter.Instance;
             private string _ID = null;
 
             public ThreadOpt(MultiTablesExec multiTablesExec)
             {
                 _ID = Guid.NewGuid().ToString();
                 this.multiTablesExec = multiTablesExec;
-                multiTablesExec.initBasicExecForSQL(basicExecForSQL1, multiTablesExec.dbHelper);
+                multiTablesExec.initBasicExecForSQL(dbAdapter, MultiTablesExec.dbHelper);
             }
 
             public string ID { get { return _ID; } }
@@ -458,14 +471,14 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     DataTable dt = null;
                     AutoCall autoCall1 = autoCall as AutoCall;
                     string _err = "";
-                    basicExecForSQL1.Exec(autoCall1, sql, parameters, ref _err, val =>
+                    dbAdapter.ExecSql(autoCall1, sql, parameters, ref _err, val =>
                     {
                         dt = val as DataTable;
                     }, cmd =>
                     {
                         DataTable dataTable = null;
                         DataSet ds = new DataSet();
-                        Data.Common.DataAdapter da = multiTablesExec.dbHelper.dataServerProvider.CreateDataAdapter(cmd);
+                        Data.Common.DataAdapter da = MultiTablesExec.dbHelper.dataServerProvider.CreateDataAdapter(cmd);
                         da.Fill(ds);
                         if (0 < ds.Tables.Count) dataTable = ds.Tables[0];
                         return dataTable;
@@ -482,7 +495,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     int num = 0;
                     AutoCall autoCall1 = autoCall as AutoCall;
                     string _err = "";
-                    basicExecForSQL1.Exec(autoCall1, sql, parameters, ref _err, val =>
+                    dbAdapter.ExecSql(autoCall1, sql, parameters, ref _err, val =>
                        {
                            num = Convert.ToInt32(val);
                        }, cmd =>
@@ -498,8 +511,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             void IDisposable.Dispose()
             {
-                if (null == basicExecForSQL1) return;
-                ((IDisposable)basicExecForSQL1).Dispose();
+                if (null == dbAdapter) return;
+                ((IDisposable)dbAdapter).Dispose();
             }
 
             ~ThreadOpt()

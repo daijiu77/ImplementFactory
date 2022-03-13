@@ -10,8 +10,9 @@
 		<insertBatchStrategy description="缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入">normalBatch</insertBatchStrategy>
 		<IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
 		<SplitTable>
-			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$-#</Rule>
-			<RecordQuantity description="单表最大记录数量">20000000</RecordQuantity>
+			<Enabled description="分表存储，分表查询">true</Enabled>
+			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#{6}</Rule>
+			<RecordQuantity description="单表最大记录数量">5</RecordQuantity>
 		</SplitTable>
 	</database>
 	<LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">

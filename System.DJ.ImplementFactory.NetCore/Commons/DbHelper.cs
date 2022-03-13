@@ -170,7 +170,21 @@ namespace System.DJ.ImplementFactory.Commons
             AutoCall autoCall_1 = autoCall as AutoCall;
             if (EnabledBuffer)
             {
-                bufferDatas(this, autoCall_1, DataOptType.delete, sql, parameters, result => { }, cmd =>
+                bufferDatas(this, autoCall_1, DataOptType.delete, sql, parameters, result => {
+                    if (null == result) return;
+                    int.TryParse(result.ToString(), out num);
+                    if (null != resultAction)
+                    {
+                        if (null != m_SyncContext)
+                        {
+                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
+                        }
+                        else
+                        {
+                            resultAction(num);
+                        }
+                    }
+                }, cmd =>
                 {
                     try
                     {
@@ -228,7 +242,21 @@ namespace System.DJ.ImplementFactory.Commons
 
             if (EnabledBuffer)
             {
-                bufferDatas(this, autoCall_1, DataOptType.insert, sql, parameters, result => { }, cmd =>
+                bufferDatas(this, autoCall_1, DataOptType.insert, sql, parameters, result => {
+                    if (null == result) return;
+                    int.TryParse(result.ToString(), out num);
+                    if (null != resultAction)
+                    {
+                        if (null != m_SyncContext)
+                        {
+                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
+                        }
+                        else
+                        {
+                            resultAction(num);
+                        }
+                    }
+                }, cmd =>
                 {
                     try
                     {
@@ -288,7 +316,27 @@ namespace System.DJ.ImplementFactory.Commons
 
             Action action = () =>
             {
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref msg, result => { }, cmd =>
+                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref msg, result => {
+                    dt = result as DataTable;
+                    if (null != resultAction)
+                    {
+                        if (EnabledBuffer)
+                        {
+                            if (null != m_SyncContext)
+                            {
+                                m_SyncContext.Post(PostDataTable, new object[] { resultAction, dt });
+                            }
+                            else
+                            {
+                                resultAction(dt);
+                            }
+                        }
+                        else
+                        {
+                            resultAction(dt);
+                        }
+                    }
+                }, cmd =>
                 {
                     IDataServerProvider dataServerProvider = ((IDbHelper)this).dataServerProvider;
                     Data.Common.DataAdapter da = dataServerProvider.CreateDataAdapter(cmd);
@@ -355,7 +403,21 @@ namespace System.DJ.ImplementFactory.Commons
             AutoCall autoCall_1 = autoCall as AutoCall;
             if (EnabledBuffer)
             {
-                bufferDatas(this, autoCall_1, DataOptType.update, sql, parameters, result => { }, cmd =>
+                bufferDatas(this, autoCall_1, DataOptType.update, sql, parameters, result => {
+                    if (null == result) return;
+                    int.TryParse(result.ToString(), out num);
+                    if (null != resultAction)
+                    {
+                        if (null != m_SyncContext)
+                        {
+                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
+                        }
+                        else
+                        {
+                            resultAction(num);
+                        }
+                    }
+                }, cmd =>
                 {
                     try
                     {

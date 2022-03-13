@@ -15,14 +15,14 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
     {
         private AutoCall autoCall = null;
         private DbInfo dbInfo = null;
-        private BasicExecForSQL basicExecForSQL = null;
+        private DbAdapter dbAdapter = null;
         private MethodInformation mi = new MethodInformation();
         private IDbHelper dbHelper = null;
-        public CreateNewTable(AutoCall autoCall, DbInfo dbInfo, BasicExecForSQL basicExecForSQL, IDbHelper dbHelper)
+        public CreateNewTable(AutoCall autoCall, DbInfo dbInfo, DbAdapter dbAdapter, IDbHelper dbHelper)
         {
             this.autoCall = autoCall;
             this.dbInfo = dbInfo;
-            this.basicExecForSQL = basicExecForSQL;
+            this.dbAdapter = dbAdapter;
             this.dbHelper = dbHelper;
         }
 
@@ -32,7 +32,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             string sql = "select count(*) ncount from {0};";
             sql = string.Format(sql, tableName);
             string err = "";
-            basicExecForSQL.Exec(autoCall, sql, null, ref err, val =>
+            dbAdapter.ExecSql(autoCall, sql, null, ref err, val =>
             {
                 ncount = Convert.ToInt32(val);
             }, cmd =>
@@ -105,7 +105,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
         private void exec_sql(string sql)
         {
             string err = "";
-            basicExecForSQL.Exec(autoCall, sql, null, ref err, val =>
+            dbAdapter.ExecSql(autoCall, sql, null, ref err, val =>
                 {
                     //
                 }, cmd =>
@@ -118,7 +118,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
         {
             DataTable dt = null;
             string err = "";
-            basicExecForSQL.Exec(autoCall, sql, null, ref err, val =>
+            dbAdapter.ExecSql(autoCall, sql, null, ref err, val =>
             {
                 //
             }, cmd =>
