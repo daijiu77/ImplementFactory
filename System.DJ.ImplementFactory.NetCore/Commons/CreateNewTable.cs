@@ -219,7 +219,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             return sql;
         }
 
-        private string getCreateSql(string tableName)
+        private string getSqlOfMSToCreateTable(string tableName)
         {
             string sql = "SELECT a.colorder field_order,a.name field_name,";
             mi.append(ref sql, "(case when COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 then 'identity'else '' end) sign_name,");
@@ -258,7 +258,7 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             int records = getRecordCount(tbName);
             if (records < dbInfo.splitTable.RecordQuantity) return;
 
-            string sql0 = getCreateSql(tbName);
+            string sql0 = getSqlOfMSToCreateTable(tbName);
             string newTbName = getTableNameByRule(tbName);
             string sql1 = "exec sp_rename '{0}', '{1}';";
             sql1 = string.Format(sql1, tbName, newTbName);
@@ -266,14 +266,44 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
             exec_sql(sql0);
         }
 
+        private string getSqlOfMysqlToCreateTable(string tableName)
+        {
+            string sql = "";
+            return sql;
+        }
+
         private void mysql(string sql)
         {
-            throw new NotImplementedException();
+            string tbName = getTableNameWithSql(sql);
+            int records = getRecordCount(tbName);
+            if (records < dbInfo.splitTable.RecordQuantity) return;
+
+            string sql0 = getSqlOfMysqlToCreateTable(tbName);
+            string newTbName = getTableNameByRule(tbName);
+            string sql1 = "exec sp_rename '{0}', '{1}';";
+            sql1 = string.Format(sql1, tbName, newTbName);
+            exec_sql(sql1);
+            exec_sql(sql0);
+        }
+
+        private string getSqlOfOracleToCreateTable(string tableName)
+        {
+            string sql = "";
+            return sql;
         }
 
         private void oracle(string sql)
         {
-            throw new NotImplementedException();
+            string tbName = getTableNameWithSql(sql);
+            int records = getRecordCount(tbName);
+            if (records < dbInfo.splitTable.RecordQuantity) return;
+
+            string sql0 = getSqlOfOracleToCreateTable(tbName);
+            string newTbName = getTableNameByRule(tbName);
+            string sql1 = "exec sp_rename '{0}', '{1}';";
+            sql1 = string.Format(sql1, tbName, newTbName);
+            exec_sql(sql1);
+            exec_sql(sql0);
         }
 
         public void SplitTable(string sql)
