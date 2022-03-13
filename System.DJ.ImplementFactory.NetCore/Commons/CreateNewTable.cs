@@ -310,7 +310,21 @@ namespace System.DJ.ImplementFactory.NetCore.Commons
 
         private string getSqlOfOracleToCreateTable(string tableName)
         {
-            string sql = "";
+            string sql = "SELECT A.COLUMN_NAME 'field_name',";
+            mi.append(ref sql, "A.DATA_TYPE 'field_type',A.DATA_LENGTH 'field_length',");
+            mi.append(ref sql, "A.DATA_PRECISION"); //整数位
+            mi.append(ref sql, "A.DATA_SCALE 'dot_length',");
+            mi.append(ref sql, "A.NULLABLE 'is_null',");
+            mi.append(ref sql, "A.DATA_DEFAULT 'default_value',B.COMMENTS 'descr'");
+            mi.append(ref sql, "FROM  USER_TAB_COLUMNS A,USER_COL_COMMENTS B");
+            mi.append(ref sql, "WHERE A.COLUMN_NAME=B.COLUMN_NAME AND ");
+            mi.append(ref sql, "A.TABLE_NAME = B.TABLE_NAME AND ");
+            mi.append(ref sql, LeftSpaceLevel.one, "A.TABLE_NAME='{0}'", tableName);
+
+            DataTable dt = dt_exec_sql(sql);
+            sql = "";
+            if (null == dt) return sql;
+            sql = getSqlStructure(dt, tableName);
             return sql;
         }
 
