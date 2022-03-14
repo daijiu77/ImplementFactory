@@ -384,6 +384,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             if (0 == tbDic.Count) return;
 
             List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
+            if (0 == sqlList.Count)
+            {
+                sqlList.Add(sql);
+            }
 
             ThreadOpt threadOpt = null;
             foreach (string item in sqlList)
