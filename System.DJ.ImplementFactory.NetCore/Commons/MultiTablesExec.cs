@@ -40,7 +40,7 @@ namespace System.DJ.ImplementFactory.Commons
         public MultiTablesExec(DbInfo dbInfo, IDbHelper dbHelper)
         {
             if (0 < tbDic.Count) return;
-            
+
             MultiTablesExec.dbInfo = dbInfo;
             MultiTablesExec.dbHelper = dbHelper;
 
@@ -158,7 +158,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 //tableInfo.recordQuantity = RecordCount(srcTableName);
                 list.Add(new TableInfo()
                 {
-                    tbName=srcTableName
+                    tbName = srcTableName
                 });
                 tbDic.Add(tbn, list);
             }
@@ -191,7 +191,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, ref string new_sql)
         {
             //dic tableName key:Lower, value:self
-            Dictionary<string, string> dic = new Dictionary<string, string>();            
+            Dictionary<string, string> dic = new Dictionary<string, string>();
             string s1 = "";
             string newSql = sql;
             string _sql = sql;
@@ -354,10 +354,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             initBasicExecForSQL(dbAdapter, dbHelper);
             if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, dbHelper);
             createNewTable.SplitTable(sql);
-            if (false == string.IsNullOrEmpty(createNewTable.SrcTableName) 
+            if (false == string.IsNullOrEmpty(createNewTable.SrcTableName)
                 && false == string.IsNullOrEmpty(createNewTable.NewTableName))
             {
-                set_tbDic(createNewTable.SrcTableName, createNewTable.NewTableName);                
+                set_tbDic(createNewTable.SrcTableName, createNewTable.NewTableName);
             }
             string err1 = "";
             dbAdapter.ExecSql((AutoCall)autoCall, sql, parameters, ref err1, val =>
@@ -393,9 +393,18 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt.query(autoCall, item, parameters);
             }
 
-            while (0 < threadDic.Count)
+            const int sleepNum = 100;
+            int maxNum = 100;
+            int num = 0;
+            if (0 < dbInfo.splitTable.MaxWaitIntervalOfS)
             {
-                Thread.Sleep(100);
+                maxNum = dbInfo.splitTable.MaxWaitIntervalOfS * 1000 / sleepNum;
+            }
+
+            while (0 < threadDic.Count && num <= maxNum)
+            {
+                num++;
+                Thread.Sleep(sleepNum);
             }
             action(queryDatas);
         }

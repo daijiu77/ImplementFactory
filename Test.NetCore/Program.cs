@@ -128,6 +128,7 @@ namespace Test.NetCore
                     equipmentName = "868b5"
                 });
                 int n = list.Count;
+                Console.WriteLine("RecordCount: " + n);
             }
 
             public void test20220313()

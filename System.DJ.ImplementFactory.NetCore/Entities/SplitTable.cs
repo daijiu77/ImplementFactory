@@ -14,5 +14,8 @@ namespace System.DJ.ImplementFactory.Entities
 
         private string _Enabled = "分表存储，分表查询";
         public bool Enabled { get; set; } = false;
+
+        private string _MaxWaitIntervalOfS = "最大等待间隔_秒";
+        public int MaxWaitIntervalOfS { get; set; }
     }
 }
