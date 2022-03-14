@@ -144,6 +144,30 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return dt;
         }
 
+        private void set_tbDic(string srcTableName, string newTableName)
+        {
+            string tbn = srcTableName.ToLower();
+            List<TableInfo> list = null;
+            if (tbDic.ContainsKey(tbn))
+            {
+                list = (List<TableInfo>)tbDic[tbn];
+            }
+            else
+            {
+                list = new List<TableInfo>();
+                //tableInfo.recordQuantity = RecordCount(srcTableName);
+                list.Add(new TableInfo()
+                {
+                    tbName=srcTableName
+                });
+                tbDic.Add(tbn, list);
+            }
+            list.Add(new TableInfo()
+            {
+                tbName = newTableName
+            });
+        }
+
         private void initDictionary(string rule, string sql)
         {
             DataTable dt = GetDataTable(sql);
@@ -158,24 +182,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 tbName = item["TABLE_NAME"].ToString();
                 if (!isSplitTable(rule, tbName, ref srcTableName)) continue;
-                tbn = srcTableName.ToLower();
-                if (tbDic.ContainsKey(tbn))
-                {
-                    list = (List<TableInfo>)tbDic[tbn];
-                }
-                else
-                {
-                    list = new List<TableInfo>();
-                    tableInfo = new TableInfo();
-                    tableInfo.tbName = srcTableName;
-                    //tableInfo.recordQuantity = RecordCount(srcTableName);
-                    list.Add(tableInfo);
-                    tbDic.Add(tbn, list);
-                }
-                tableInfo = new TableInfo();
-                tableInfo.tbName = tbName;
-                //tableInfo.recordQuantity = RecordCount(tbName);
-                list.Add(tableInfo);
+                set_tbDic(srcTableName, tbName);
             }
         }
 
@@ -350,25 +357,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             if (false == string.IsNullOrEmpty(createNewTable.SrcTableName) 
                 && false == string.IsNullOrEmpty(createNewTable.NewTableName))
             {
-                string tb = createNewTable.SrcTableName.ToLower();
-                List<TableInfo> list = null;
-                if (tbDic.ContainsKey(tb))
-                {
-                    list = (List<TableInfo>)tbDic[tb];
-                }
-                else
-                {
-                    list = new List<TableInfo>();
-                    list.Add(new TableInfo()
-                    {
-                        tbName = createNewTable.SrcTableName
-                    });
-                    tbDic.Add(tb, list);
-                }
-                list.Add(new TableInfo()
-                {
-                    tbName = createNewTable.NewTableName
-                });
+                set_tbDic(createNewTable.SrcTableName, createNewTable.NewTableName);                
             }
             string err1 = "";
             dbAdapter.ExecSql((AutoCall)autoCall, sql, parameters, ref err1, val =>
