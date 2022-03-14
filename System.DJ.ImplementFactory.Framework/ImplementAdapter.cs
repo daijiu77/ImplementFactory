@@ -368,6 +368,8 @@ namespace System.DJ.ImplementFactory
 
         public static string ServerFile { get { return svrFile; } }
 
+        public static DbInfo dbInfo1 { get { return dbInfo; } }
+
         private static string _connStr = "";
         public static string dbConnectionString
         {

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -95,6 +97,21 @@ namespace System.DJ.ImplementFactory.Commons
             dbConnectionState.DbConnection_Disposed(conn, e);
         }
 
+        private void printSql(AutoCall autoCall, string sql)
+        {
+            DbInfo dbInfo = ImplementAdapter.dbInfo1;
+            if (dbInfo.IsPrintSQLToTrace)
+            {
+                Trace.WriteLine(sql);
+                Trace.WriteLine("++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++");
+            }
+
+            if (dbInfo.IsPrintSqlToLog)
+            {
+                autoCall.e(sql, ErrorLevels.debug);
+            }
+        }
+
         public IDbConnectionState dbConnectionState { get; set; }
 
         public bool disposableAndClose { get; set; }
@@ -108,6 +125,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_execObj)
             {
+                printSql(autoCall, sql);
                 if (DbConnct(ref err))
                 {
                     DbCommand cmd = dataServerProvider.CreateDbCommand(sql, conn);

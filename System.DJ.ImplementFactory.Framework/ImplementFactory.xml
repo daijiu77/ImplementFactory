@@ -2,13 +2,15 @@
 <configurations>
 	<database>
 		<ConnectionString>Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;</ConnectionString>
-		<DatabaseType>sqlserver</DatabaseType>
+		<DatabaseType description="数据库类型:sqlserver,oracle,mysql">sqlserver</DatabaseType>
 		<optByBatchMaxNumber description="insert/update/delete 批量操作最大数量, 默认100条数据">100</optByBatchMaxNumber>
 		<optByBatchWaitSecond description="insert/update/delete 执行最后的批量操作等待时间(秒), 默认3秒">3</optByBatchWaitSecond>
 		<sqlMaxLengthForBatch description="insert/update/delete 批量操作 sql 表达式最大长度, 默认 50000">50000</sqlMaxLengthForBatch>
 		<dbConnectionFreeStrategy description="数据库连接释放策略，onlyDispose(仅释放资源)/disposeAndClose(释放资源且关闭连接) 或整数值: 0/1, 默认 onlyDispose">onlyDispose</dbConnectionFreeStrategy>
 		<insertBatchStrategy description="缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入">normalBatch</insertBatchStrategy>
 		<IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
+		<IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">false</IsPrintSQLToTrace>
+		<IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
 		<SplitTable>
 			<Enabled description="分表存储，分表查询">true</Enabled>
 			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#</Rule>

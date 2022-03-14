@@ -32,7 +32,7 @@
         private string _ConnectionString = "数据库连接字符串";
         public string ConnectionString { get; set; } = "Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;";
 
-        private string _DatabaseType = "数据库类型:sqlserver,oracle,mysql,access";
+        private string _DatabaseType = "数据库类型:sqlserver,oracle,mysql";
         public string DatabaseType { get; set; } = "sqlserver";
 
         private string _SqlProviderRelativePathOfDll = "动态 sql 提供者所在的dll文件程序集的相对路径,注：该提供者必须继承 System.DJ.ImplementFactory.Pipelines.ISqlExpressionProvider 接口";
@@ -79,6 +79,18 @@
         /// 是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]
         /// </summary>
         public bool IsShowCode { get; set; }
+
+        private string _IsPrintSQLToTrace = "输出sql语句到Visual Studio输出台";
+        /// <summary>
+        /// 输出sql语句到Visual Studio输出台
+        /// </summary>
+        public bool IsPrintSQLToTrace { get; set; }
+
+        private string _IsPrintSqlToLog = "输出sql语句到日志";
+        /// <summary>
+        /// 输出sql语句到日志
+        /// </summary>
+        public bool IsPrintSqlToLog { get; set; }
 
         /// <summary>
         /// 分表存储及查询
