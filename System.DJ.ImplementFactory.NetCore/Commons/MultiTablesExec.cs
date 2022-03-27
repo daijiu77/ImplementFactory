@@ -329,7 +329,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.oparete(autoCall, sql, parameters);
+                threadOpt.oparete(autoCall, item, parameters);
             }
 
             Task.Run(() =>
