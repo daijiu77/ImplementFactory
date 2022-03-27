@@ -11,6 +11,9 @@ namespace Test.NetCore.DataInterface
         [AutoSelect("select * from EquipmentInfo where {equipmentInfo} order by cdatetime desc")]
         List<EquipmentInfo> query(EquipmentInfo equipmentInfo);
 
+        [AutoSelect("select * from EquipmentInfo where id=@id")]
+        EquipmentInfo query(string id);
+
         /// <summary>
         /// The return value is a dynamic data collection type
         /// </summary>

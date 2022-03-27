@@ -123,6 +123,7 @@ namespace Test.NetCore
 
             public void test232()
             {
+                EquipmentInfo equipmentInfo = equipmentInfoMapper.query("5fb92c40-f815-464a-95b0-003740b225ad");
                 List<EquipmentInfo> list = equipmentInfoMapper.query(new EquipmentInfo()
                 {
                     equipmentName = "868b5"

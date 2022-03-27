@@ -162,6 +162,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 });
                 tbDic.Add(tbn, list);
             }
+            if (newTableName.ToLower().Equals(tbn)) return;
             list.Add(new TableInfo()
             {
                 tbName = newTableName
@@ -173,15 +174,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataTable dt = GetDataTable(sql);
 
             if (null == dt) return;
-            List<TableInfo> list = null;
-            TableInfo tableInfo = null;
             string tbName = "";
-            string tbn = "";
             string srcTableName = "";
             foreach (DataRow item in dt.Rows)
             {
                 tbName = item["TABLE_NAME"].ToString();
-                if (!isSplitTable(rule, tbName, ref srcTableName)) continue;
+                //if (!isSplitTable(rule, tbName, ref srcTableName)) continue;
+                if (!isSplitTable(rule, tbName, ref srcTableName)) srcTableName = tbName;
                 set_tbDic(srcTableName, tbName);
             }
         }
