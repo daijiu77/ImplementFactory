@@ -163,18 +163,20 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
-        int IDbHelper.delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        void DataOpt(bool EnabledBuffer, AutoCall autoCall_1, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
-            int num = 1;
+            bool isExec = true;
+            int num = 0;
             string msg = "";
-            AutoCall autoCall_1 = autoCall as AutoCall;
             if (EnabledBuffer)
             {
-                bufferDatas(this, autoCall_1, DataOptType.delete, sql, parameters, result => {
-                    if (null == result) return;
+                bufferDatas(this, autoCall_1, DataOptType.delete, sql, parameters, result =>
+                {
+                    if (null == result) result = 0;
                     int.TryParse(result.ToString(), out num);
-                    if (null != resultAction)
+                    if (null != resultAction && isExec)
                     {
+                        isExec = false;
                         if (null != m_SyncContext)
                         {
                             m_SyncContext.Post(PostInt, new object[] { resultAction, num });
@@ -196,8 +198,9 @@ namespace System.DJ.ImplementFactory.Commons
                         msg = ex.ToString();
                     }
 
-                    if (null != resultAction)
+                    if (null != resultAction && isExec)
                     {
+                        isExec = false;
                         if (null != m_SyncContext)
                         {
                             m_SyncContext.Post(PostInt, new object[] { resultAction, num });
@@ -215,7 +218,16 @@ namespace System.DJ.ImplementFactory.Commons
             else
             {
                 num = 0;
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref err, result => { }, cmd =>
+                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref err, result =>
+                {
+                    if (null == result) result = 0;
+                    int.TryParse(result.ToString(), out num);
+                    if (null != resultAction && isExec)
+                    {
+                        isExec = false;
+                        resultAction(num);
+                    }
+                }, cmd =>
                 {
                     try
                     {
@@ -225,86 +237,38 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         msg = ex.ToString();
                     }
-                    if (null != resultAction) resultAction(num);
+
+                    if (null != resultAction && isExec)
+                    {
+                        isExec = false;
+                        resultAction(num);
+                    }
                     if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
                     return num;
                 });
             }
             err = msg;
+        }
+
+        int IDbHelper.delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
+        {
+            int num = 1;
+            AutoCall autoCall_1 = autoCall as AutoCall;
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data=> {
+                num = Convert.ToInt32(data);
+                resultAction(num);
+            }, ref err);
             return num;
         }
 
         int IDbHelper.insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             int num = 1;
-            string msg = "";
             AutoCall autoCall_1 = autoCall as AutoCall;
-
-            if (EnabledBuffer)
-            {
-                bufferDatas(this, autoCall_1, DataOptType.insert, sql, parameters, result => {
-                    if (null == result) return;
-                    int.TryParse(result.ToString(), out num);
-                    if (null != resultAction)
-                    {
-                        if (null != m_SyncContext)
-                        {
-                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
-                        }
-                        else
-                        {
-                            resultAction(num);
-                        }
-                    }
-                }, cmd =>
-                {
-                    try
-                    {
-                        num = cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        num = 0;
-                        msg = ex.ToString();
-                        //throw;
-                    }
-
-                    if (null != resultAction)
-                    {
-                        if (null != m_SyncContext)
-                        {
-                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
-                        }
-                        else
-                        {
-                            resultAction(num);
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
-                    return num;
-                });
-            }
-            else
-            {
-                num = 0;
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref err, result => { }, cmd =>
-                {
-                    try
-                    {
-                        num = cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = ex.ToString();
-                        //throw;
-                    }
-                    if (null != resultAction) resultAction(num);
-                    if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
-                    return num;
-                });
-            }
-            err = msg;
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data => {
+                num = Convert.ToInt32(data);
+                resultAction(num);
+            }, ref err);
             return num;
         }
 
@@ -313,13 +277,16 @@ namespace System.DJ.ImplementFactory.Commons
             DataTable dt = new DataTable();
             string msg = "";
             AutoCall autoCall_1 = autoCall as AutoCall;
-
+            
             Action action = () =>
             {
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref msg, result => {
+                bool isExec = true;
+                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref msg, result =>
+                {
                     dt = result as DataTable;
-                    if (null != resultAction)
+                    if (null != resultAction && isExec)
                     {
+                        isExec = false;
                         if (EnabledBuffer)
                         {
                             if (null != m_SyncContext)
@@ -351,8 +318,9 @@ namespace System.DJ.ImplementFactory.Commons
                         msg = ex.ToString();
                         //throw;
                     }
-                    if (null != resultAction)
+                    if (null != resultAction && isExec)
                     {
+                        isExec = false;
                         if (EnabledBuffer)
                         {
                             if (null != m_SyncContext)
@@ -399,72 +367,11 @@ namespace System.DJ.ImplementFactory.Commons
         int IDbHelper.update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
             int num = 1;
-            string msg = "";
             AutoCall autoCall_1 = autoCall as AutoCall;
-            if (EnabledBuffer)
-            {
-                bufferDatas(this, autoCall_1, DataOptType.update, sql, parameters, result => {
-                    if (null == result) return;
-                    int.TryParse(result.ToString(), out num);
-                    if (null != resultAction)
-                    {
-                        if (null != m_SyncContext)
-                        {
-                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
-                        }
-                        else
-                        {
-                            resultAction(num);
-                        }
-                    }
-                }, cmd =>
-                {
-                    try
-                    {
-                        num = cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        num = 0;
-                        msg = ex.ToString();
-                        //throw;
-                    }
-
-                    if (null != resultAction)
-                    {
-                        if(null!= m_SyncContext)
-                        {
-                            m_SyncContext.Post(PostInt, new object[] { resultAction, num });
-                        }
-                        else
-                        {
-                            resultAction(num);
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
-                    return num;
-                });
-            }
-            else
-            {
-                num = 0;
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref err, result => { }, cmd =>
-                {
-                    try
-                    {
-                        num = cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = ex.ToString();
-                        //throw;
-                    }
-                    if (null != resultAction) resultAction(num);
-                    if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
-                    return num;
-                });
-            }
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data => {
+                num = Convert.ToInt32(data);
+                resultAction(num);
+            }, ref err);
             return num;
         }
 

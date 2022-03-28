@@ -312,6 +312,24 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return sqlList;
         }
 
+        private void WaitExecResult(Action resultAction)
+        {
+            const int sleepNum = 100;
+            int maxNum = 100;
+            int num = 0;
+            if (0 < dbInfo.splitTable.MaxWaitIntervalOfS)
+            {
+                maxNum = dbInfo.splitTable.MaxWaitIntervalOfS * 1000 / sleepNum;
+            }
+
+            while (0 < threadDic.Count && num <= maxNum)
+            {
+                num++;
+                Thread.Sleep(sleepNum);
+            }
+            resultAction();
+        }
+
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
             OptDatas = 0;
@@ -332,12 +350,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt.oparete(autoCall, item, parameters);
             }
 
-            Task.Run(() =>
+            WaitExecResult(() =>
             {
-                while (0 < threadDic.Count)
-                {
-                    Thread.Sleep(100);
-                }
                 resultAction(OptDatas);
             });
         }
@@ -400,20 +414,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt.query(autoCall, item, parameters);
             }
 
-            const int sleepNum = 100;
-            int maxNum = 100;
-            int num = 0;
-            if (0 < dbInfo.splitTable.MaxWaitIntervalOfS)
+            WaitExecResult(() =>
             {
-                maxNum = dbInfo.splitTable.MaxWaitIntervalOfS * 1000 / sleepNum;
-            }
-
-            while (0 < threadDic.Count && num <= maxNum)
-            {
-                num++;
-                Thread.Sleep(sleepNum);
-            }
-            action(queryDatas);
+                action(queryDatas);
+            });
         }
 
         private object _QueryResult = new object();
