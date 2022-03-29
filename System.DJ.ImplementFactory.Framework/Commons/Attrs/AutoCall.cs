@@ -761,7 +761,6 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// <param name="paraNameList">带参数的sql包含的参数集合</param>
         public void GetDbParaListByEntity(object entity, DbList<DbParameter> dbParas, EList<CKeyValue> sqlParaNameList)
         {
-            dbParas.Clear();
             if (null == entity) return;
             CKeyValue kv = null;
             object vObj = null;
