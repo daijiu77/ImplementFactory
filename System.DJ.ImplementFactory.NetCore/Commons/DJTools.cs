@@ -1292,6 +1292,7 @@ namespace System.DJ.ImplementFactory.Commons
                     propertyExt = PropFunc(entity, pi);
                     if (null == at) initCondition(propertyExt, (Condition)attr);
                     if (!enableFun(propertyExt, (Condition)attr)) continue;
+                    ((Condition)attr).FieldMapping = "";
                     sw = ((Condition)attr).Unit(propertyExt);
                     if (string.IsNullOrEmpty(sw)) continue;
                     whereStr += " " + sw;
