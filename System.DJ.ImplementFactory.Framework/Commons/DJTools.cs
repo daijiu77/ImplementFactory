@@ -1386,5 +1386,41 @@ namespace System.DJ.ImplementFactory.Commons
             v = newInstance.GetPropertyValue<T>(TempImpl.InterfaceInstanceType);
             return v;
         }
+
+        /// <summary>
+        /// 拆解按位或
+        /// </summary>
+        /// <param name="bitwiseOR">按位或的值</param>
+        /// <returns></returns>
+        public static int[] UnBitwiseOR(this int bitwiseOR)
+        {
+            List<int> list = new List<int>();
+            int n = bitwiseOR;
+            int num = 100;
+            int x = 0;
+            while (2 <= n && x < num)
+            {
+                int a = n / 2;
+                int b = n % (2 * a);
+                n = a;
+                list.Add(b);
+                x++;
+            }
+
+            if (1 == n) list.Add(n);
+
+            List<int> list1 = new List<int>();
+            n = list.Count;
+            n--;
+            x = 0;
+            for (int i = n; i >= 0; i--)
+            {
+                num = list[i] * (int)Math.Pow(2, i);
+                if (0 < num) list1.Add(num);
+                x++;
+            }
+
+            return list1.ToArray();
+        }
     }
 }
