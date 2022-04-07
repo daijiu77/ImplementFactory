@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.Reflection;
@@ -605,7 +606,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             FieldsType fieldsType = method.fieldsType;
             _fields = null == _fields ? new string[] { } : _fields;
 
-            Action<string, string, string> action = (fn1, fn2, fn_lower) =>
+            Action<string, string, string, PropertyInfo> action = (fn1, fn2, fn_lower, pi) =>
             {
                 mbool = true;
                 foreach (string e in _fields)
@@ -624,11 +625,29 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                 if (mbool)
                 {
+                    IgnoreField.IgnoreType ignoreType = IgnoreField.IgnoreType.none;
+                    if (null != pi)
+                    {
+                        Attribute att = pi.GetCustomAttribute(typeof(IgnoreField));
+                        if (null != att) ignoreType = ((IgnoreField)att).ignoreType;
+                    }
+
                     fn2 = string.IsNullOrEmpty(fn2) ? fn1 : fn2;
-                    insertFields1 += "," + fn2;
-                    insertParas1 += "," + dbTag + fn1;
-                    updateSets1 += "," + fn2 + "=" + dbTag + fn1;
-                    procParas1 += "," + procParaSign + fn2 + "=" + dbTag + fn1;
+                    if (IgnoreField.IgnoreType.Insert != (ignoreType & IgnoreField.IgnoreType.Insert))
+                    {
+                        insertFields1 += "," + fn2;
+                        insertParas1 += "," + dbTag + fn1;
+                    }
+                    
+                    if(IgnoreField.IgnoreType.Update != (ignoreType & IgnoreField.IgnoreType.Update))
+                    {
+                        updateSets1 += "," + fn2 + "=" + dbTag + fn1;
+                    }
+
+                    if(IgnoreField.IgnoreType.Procedure != (ignoreType & IgnoreField.IgnoreType.Procedure))
+                    {
+                        procParas1 += "," + procParaSign + fn2 + "=" + dbTag + fn1;
+                    }
                 }
 
             };
@@ -660,7 +679,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 {
                     if (!string.IsNullOrEmpty(item.fieldNameOfSourceTable)) continue;
                     fn = item.name.ToLower();
-                    action(item.name, fn_2, fn);
+                    action(item.name, fn_2, fn, null);
                 }
             }
             else if(null != dataType.GetInterface("IDictionary"))
@@ -687,7 +706,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 {
                     fn_2 = FieldMapping.GetFieldMapping(item);
                     fn = item.Name.ToLower();
-                    action(item.Name, fn_2, fn);
+                    action(item.Name, fn_2, fn, item);
                 }
             }
 
@@ -695,7 +714,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 insertFields1 = insertFields1.Substring(1);
                 insertParas1 = insertParas1.Substring(1);
+            }
+
+            if (!string.IsNullOrEmpty(updateSets1))
+            {
                 updateSets1 = updateSets1.Substring(1);
+            }
+
+            if (!string.IsNullOrEmpty(procParas1))
+            {
                 procParas1 = procParas1.Substring(1);
             }
 

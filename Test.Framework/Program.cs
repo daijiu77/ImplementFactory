@@ -95,7 +95,7 @@ namespace Test.Framework
             SetWindowPositionCenter();
 
             TestObj testObj = new TestObj();
-            testObj.test232();
+            testObj.test123();
 
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
@@ -119,6 +119,20 @@ namespace Test.Framework
                         equipmentName = Guid.NewGuid().ToString().Substring(0, 5)
                     });
                 }
+            }
+
+            public void test123()
+            {
+                //数据实体属性加 IgnoreField 属性
+                EquipmentInfo equipmentInfo = new EquipmentInfo()
+                {
+                    id = new Guid("5fb92c40-f815-464a-95b0-003740b225ad"),
+                    height = 32,
+                    width = 20,
+                    equipmentName = "text",
+                    code = "code123"
+                };
+                int num = equipmentInfoMapper.update(equipmentInfo);
             }
 
             public void test232()

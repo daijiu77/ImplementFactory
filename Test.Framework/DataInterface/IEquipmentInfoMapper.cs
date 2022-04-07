@@ -32,8 +32,13 @@ namespace Test.Framework.DataInterface
         [EquipInsert("insert into EquipmentInfo values {equipmentInfo}")]
         int insert(DataEntity<DataElement> dataElements);
 
-        [AutoUpdate(updateExpression: "update EquipmentInfo set {equipmentInfo} where id=@id",
-            fields: new string[] { "id", "cdatetime" }, fieldsType:FieldsType.Exclude, EnabledBuffer: true)]
+        /// <summary>
+        /// 数据实体属性加 IgnoreField 属性，所以可以省略如下参数: 
+        /// fields: new string[] { "id", "cdatetime" }, fieldsType:FieldsType.Exclude
+        /// </summary>
+        /// <param name="equipmentInfo"></param>
+        /// <returns></returns>
+        [AutoUpdate(updateExpression: "update EquipmentInfo set {equipmentInfo} where id=@id", EnabledBuffer: true)]
         int update(EquipmentInfo equipmentInfo);
     }
 
