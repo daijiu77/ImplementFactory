@@ -12,6 +12,7 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <FileVersion>1.0.0.1</FileVersion>
     <Version>1.0.0.1</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
+    <Authors>DJ</Authors>
   </PropertyGroup>
 
   <ItemGroup>
