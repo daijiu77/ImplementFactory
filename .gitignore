@@ -20,6 +20,7 @@
 /System.DJ.ImplementFactory.Framework/bin/
 /System.DJ.MicroService.Framework/bin/
 /System.DJ.ImplementFactory.NetCore/bin/
+/System.DJ.ImplementFactory.Standard/bin/
 /System.DJ.MicroService.NetCore/bin/
 /MicroService.Web/bin/
 /Test.Framework/bin/
@@ -28,6 +29,7 @@
 /Web.Framework/bin/
 /Web.Framework/TempImpl/
 /Test.NetCore/bin/
+/Test.Standard/bin/
 /Test.NetCoreApi/bin/
 /Web.NetCore/bin/
 
@@ -35,11 +37,14 @@
 /System.DJ.ImplementFactory.Framework/obj/
 /System.DJ.MicroService.Framework/obj/
 /System.DJ.ImplementFactory.NetCore/obj/
+/System.DJ.ImplementFactory.Standard/obj/
 /System.DJ.MicroService.NetCore/obj/
+/System.DJ.MicroService.Standard/obj/
 /MicroService.Web/obj/
 /Test.Framework/obj/
 /Test.FrameworkApi/obj/
 /Test.NetCore/obj/
+/Test.Standard/obj/
 /Test.NetCoreApi/obj/
 /Web.Framework/obj/
 /Web.NetCore/obj/

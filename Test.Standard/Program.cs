@@ -1,78 +1,25 @@
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
-using System.Drawing;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Test.Framework.DataInterface;
-using Test.Framework.Entities;
+using Test.Standard.DataInterface;
+using Test.Standard.Entities;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
-namespace Test.Framework
+namespace Test.Standard
 {
     class Program
     {
-        #region 居中显示
-        private struct RECT { public int left, top, right, bottom; }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr GetConsoleWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
-
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetDC(IntPtr ptr);
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(
-        IntPtr hdc, // handle to DC  
-        int nIndex // index of capability  
-        );
-        [DllImport("user32.dll", EntryPoint = "ReleaseDC")]
-        static extern IntPtr ReleaseDC(IntPtr hWnd, IntPtr hDc);
-
-        const int HORZRES = 8;
-        const int VERTRES = 10;
-        const int LOGPIXELSX = 88;
-        const int LOGPIXELSY = 90;
-        const int DESKTOPVERTRES = 117;
-        const int DESKTOPHORZRES = 118;
-        #endregion
-
-        static Size WorkingArea
+        static void Main(string[] args)
         {
-            get
-            {
-                IntPtr hdc = GetDC(IntPtr.Zero);
-                Size size = new Size();
-                size.Width = GetDeviceCaps(hdc, HORZRES);
-                size.Height = GetDeviceCaps(hdc, VERTRES);
-                ReleaseDC(IntPtr.Zero, hdc);
-                return size;
-            }
-        }
-
-        /// <summary>
-        /// 控制台窗体居中
-        /// </summary>
-        static void SetWindowPositionCenter()
-        {
-            IntPtr hWin = GetConsoleWindow();
-            RECT rc;
-            GetWindowRect(hWin, out rc);
-
-            Size size = WorkingArea;
-            Size winSize = new Size(rc.right - rc.left, rc.bottom - rc.top);
-            
-            int x = (size.Width - winSize.Width) / 2;
-            int y = (size.Height - winSize.Height) / 2;
-
-            MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
+            TestObj testObj = new TestObj();
+            testObj.test20220313();
+            Console.WriteLine("Hello World!");
+            Console.ReadKey();
         }
 
         public class testJson
@@ -84,24 +31,13 @@ namespace Test.Framework
             {
                 //
             }
-            public T Generic<T>(List<T> data, T[] arr,  int n)
+            public T Generic<T>(List<T> data, T[] arr, int n)
             {
                 return data[n];
             }
         }
 
-        static void Main(string[] args)
-        {
-            SetWindowPositionCenter();
-
-            TestObj testObj = new TestObj();
-            testObj.test123();
-
-            Console.WriteLine("Hello World!");
-            Console.ReadKey(true);
-        }
-
-        class TestObj: ImplementAdapter
+        class TestObj : ImplementAdapter
         {
             [MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
@@ -207,6 +143,5 @@ namespace Test.Framework
                 Trace.WriteLine("TestObj distory");
             }
         }
-
     }
 }

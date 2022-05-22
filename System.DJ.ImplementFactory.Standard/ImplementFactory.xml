@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configurations>
+	<database>
+		<ConnectionString>Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;</ConnectionString>
+		<DatabaseType description="数据库类型:sqlserver,oracle,mysql">sqlserver</DatabaseType>
+		<optByBatchMaxNumber description="insert/update/delete 批量操作最大数量, 默认100条数据">100</optByBatchMaxNumber>
+		<optByBatchWaitSecond description="insert/update/delete 执行最后的批量操作等待时间(秒), 默认3秒">3</optByBatchWaitSecond>
+		<sqlMaxLengthForBatch description="insert/update/delete 批量操作 sql 表达式最大长度, 默认 50000">50000</sqlMaxLengthForBatch>
+		<dbConnectionFreeStrategy description="数据库连接释放策略，onlyDispose(仅释放资源)/disposeAndClose(释放资源且关闭连接) 或整数值: 0/1, 默认 onlyDispose">onlyDispose</dbConnectionFreeStrategy>
+		<insertBatchStrategy description="缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入">normalBatch</insertBatchStrategy>
+		<IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
+		<IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">false</IsPrintSQLToTrace>
+		<IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
+		<SplitTable>
+			<Enabled description="分表存储，分表查询">true</Enabled>
+			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#</Rule>
+			<RecordQuantity description="单表最大记录数量">20000000</RecordQuantity>
+			<MaxWaitIntervalOfS description="最大等待间隔_秒">10</MaxWaitIntervalOfS>
+		</SplitTable>
+	</database>
+	<LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">
+		<upperLimit description="可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit">severe</upperLimit>
+		<lowerLimit description="可以是数字或英文名称, 为数字时 lowerLimit 应大于 upperLimit">debug</lowerLimit>
+	</LogsRange>
+	<SysConfig>
+		<Recomplie description="是否启用重新编译机制, false(不启用), true(启用), 默认为 false">false</Recomplie>
+		<IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">false</IsShowCode>
+	</SysConfig>
+	
+	<MatchRules description="可以不需要配置匹配规则，由组件自动适配, 但配置后可提高组件加载速度">
+		<item>
+			<DllRelativePathOfImpl description="[可选] - 实例类所在dll文件的相对路径,如果为空,表示实例类和exe文件属同一dll文件"></DllRelativePathOfImpl>
+			<ImplementNameSpace description="[可选] - 指定实现interface类的实例所在的namespace"></ImplementNameSpace>
+			<MatchImplExpression description="[*必选*] - 匹配实现 interface 类的实例名称,可以是一个完整的类名称, 但不包含namespace.也可以是一个正则表达式"></MatchImplExpression>
+			<InterFaceName description="[*必选*] - 接口名称, 可以是一个 namespace.interfaceClassName 完整的接口名称, 也可是interfaceClassName"></InterFaceName>
+			<IgnoreCase description="[可选] - 匹配 MatchImplExpression 时是否忽略大小写, 默认true[忽略大小写], false[区分大小写]"></IgnoreCase>
+			<IsShowCode description="[可选] - 是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]"></IsShowCode>
+		</item>
+	</MatchRules>
+</configurations>

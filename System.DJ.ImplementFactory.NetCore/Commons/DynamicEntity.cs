@@ -436,12 +436,12 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     if (paraType.BaseType == typeof(Array))
                     {
-                        v = createArrayByType(paraType, dt.Rows.Count);
+                        v = DJTools.createArrayByType(paraType, dt.Rows.Count);
                         arrayAdd(method, v, dt);
                     }
                     else
                     {
-                        v = createListByType(paraType);
+                        v = DJTools.createListByType(paraType);
                         listAdd(method, v, dt);
                     }
                 }
@@ -457,60 +457,6 @@ namespace System.DJ.ImplementFactory.Commons
             }
             if (null != v) result = v;
             return result;
-        }
-
-        object createArrayByType(Type type, int length)
-        {
-            object arr = null;
-            if (false == type.IsArray) return arr;
-
-            try
-            {
-                arr = type.InvokeMember("Set", BindingFlags.CreateInstance, null, arr, new object[] { length });
-            }
-            catch { }
-
-            return arr;
-        }
-
-        object createListByType(Type type)
-        {
-            object list = null;
-            if (null == type.GetInterface("IList")) return list;
-
-            Type[] types = type.GetGenericArguments();
-            Type listType = typeof(List<string>);
-            string asseName = listType.Assembly.GetName().Name;
-            string dicTypeName = listType.FullName;
-            string s = @"\[[^\[\]]+\]";
-            Regex rg = new Regex(s, RegexOptions.IgnoreCase);
-            if (rg.IsMatch(dicTypeName))
-            {
-                int n = 0;
-                int len = types.Length;
-                string txt = "";
-                Type ele = null;
-                MatchCollection mc = rg.Matches(dicTypeName);
-                foreach (Match item in mc)
-                {
-                    if (n == len) break;
-                    ele = types[n];
-                    s = ele.FullName;
-                    s += ", " + ele.Assembly.GetName().Name;
-                    s += ", Version=" + ele.Assembly.GetName().Version.ToString();
-                    s += ", Culture=neutral";
-                    s += ", PublicKeyToken=null";
-                    s = "[" + s + "]";
-                    txt = item.Groups[0].Value;
-                    dicTypeName = dicTypeName.Replace(txt, s);
-                    n++;
-                }
-            }
-
-            object v = Activator.CreateInstance(asseName, dicTypeName) as ObjectHandle;
-            if (null == v) return list;
-            list = ((ObjectHandle)v).Unwrap();
-            return list;
         }
 
         void listAdd(MethodInformation method, object list, DataTable dt)

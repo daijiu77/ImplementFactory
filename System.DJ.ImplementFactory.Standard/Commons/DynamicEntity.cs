@@ -7,7 +7,6 @@ using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -458,6 +457,7 @@ namespace System.DJ.ImplementFactory.Commons
             if (null != v) result = v;
             return result;
         }
+
 
         void listAdd(MethodInformation method, object list, DataTable dt)
         {

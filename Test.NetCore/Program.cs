@@ -174,6 +174,11 @@ namespace Test.NetCore
                  * where name like '%X%' and age=23
                  * **/
                 List<UserInfo> ls = userInfoLogic.userInfos(userInfo1);
+                Console.WriteLine("Create where of SQL:");
+                foreach (UserInfo item in ls)
+                {
+                    Console.WriteLine("name: " + item.name + ", age: " + item.age + ", address: " + item.address);
+                }
 
                 List<UserInfo> userInfos = userInfoLogic.userInfos("53");
                 UserInfo userInfo = userInfoLogic.GetLastUserInfo();
