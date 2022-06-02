@@ -721,6 +721,7 @@ namespace System.DJ.ImplementFactory.Commons
             else if (type.BaseType == typeof(System.MulticastDelegate))
             {
                 tn = isFullName ? type.FullName : type.Name;
+                if (null == tn) tn = type.Name;
                 if (rg.IsMatch(tn))
                 {
                     tn = rg.Match(tn).Groups["TypeName"].Value;

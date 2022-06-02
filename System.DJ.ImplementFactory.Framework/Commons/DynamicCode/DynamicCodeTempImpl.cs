@@ -320,6 +320,22 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     plist += "," + p.Name;
                     break;
                 }
+                else if (p.ParameterType.BaseType == typeof(System.MulticastDelegate) && rg.IsMatch(p.ParameterType.ToString()))
+                {
+                    //Action<>, Func<> 情况
+                    s = p.ParameterType.TypeToString();
+                    paraStr += "," + s + " " + p.Name;
+                    actionParaName = p.Name;
+                    mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
+                    plist += "," + p.Name;
+
+                    Type[] types = p.ParameterType.GetGenericArguments();
+                    foreach (Type item in types)
+                    {
+                        actionType = item;
+                        uskv.Add(new CKeyValue() { Key = item.Namespace });
+                    }
+                }
                 else if (-1 != p.ParameterType.FullName.IndexOf("&"))
                 {
                     uskv.Add(new CKeyValue() { Key = p.ParameterType.Namespace });
@@ -340,22 +356,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         plist += ",ref " + p.Name;
                     }
                     mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
-                }
-                else if (p.ParameterType.BaseType == typeof(System.MulticastDelegate) && rg.IsMatch(p.ParameterType.ToString()))
-                {
-                    //Action<>, Func<> 情况
-                    s = p.ParameterType.TypeToString();
-                    paraStr += "," + s + " " + p.Name;
-                    actionParaName = p.Name;
-                    mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
-                    plist += "," + p.Name;
-
-                    Type[] types = p.ParameterType.GetGenericArguments();
-                    foreach (Type item in types)
-                    {
-                        actionType = item;
-                        uskv.Add(new CKeyValue() { Key = item.Namespace });
-                    }
                 }
                 else if (p.ParameterType.GetInterface("IEnumerable") == typeof(IEnumerable) && typeof(string) != p.ParameterType)
                 {
