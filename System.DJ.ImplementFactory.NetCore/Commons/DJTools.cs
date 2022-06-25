@@ -795,6 +795,11 @@ namespace System.DJ.ImplementFactory.Commons
             return classType;
         }
 
+        public static Type GetTypeByFullName(this string fullName)
+        {
+            return fullName.GetClassTypeByPath();
+        }
+
         public static DataEntity<DataElement> GetDynamicEntityBy(this DataRow dataRow)
         {
             DataEntity<DataElement> dataElements = new DataEntity<DataElement>();
@@ -1172,7 +1177,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         private static int headSize = 1024;
         private static string CollectSign = "IEnumerable";
-        public static byte[] ExtObjectToByteArray(this object dataObj)
+        public static byte[] ObjectToByteArray(this object dataObj)
         {
             byte[] result = null;
             if (null == dataObj) return result;
@@ -1191,7 +1196,7 @@ namespace System.DJ.ImplementFactory.Commons
                 string prop = "";
                 foreach (var item in enumerable)
                 {
-                    buffer = item.ExtObjectToByteArray();
+                    buffer = item.ObjectToByteArray();
                     size += buffer.Length;
                     prop += "," + buffer.Length;
                     list.Add(buffer);
@@ -1256,7 +1261,7 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     else
                     {
-                        buffer = fv.ExtObjectToByteArray();
+                        buffer = fv.ObjectToByteArray();
                     }
                 }
 
@@ -1301,13 +1306,13 @@ namespace System.DJ.ImplementFactory.Commons
             return (T)data.ByteArrayToEntity(type);
         }
 
-        public static T ExtByteArrayToObject<T>(this byte[] data)
+        public static T ByteArrayToObject<T>(this byte[] data)
         {
             Type type = typeof(T);
-            return (T)data.ExtByteArrayToObject(type);
+            return (T)data.ByteArrayToObject(type);
         }
 
-        public static object ExtByteArrayToObject(this byte[] data, Type type)
+        public static object ByteArrayToObject(this byte[] data, Type type)
         {
             object result = null;
             if (null == data) return result;
@@ -1365,7 +1370,7 @@ namespace System.DJ.ImplementFactory.Commons
                     buffer = new byte[size];
                     Array.Copy(data, pos, buffer, 0, size);
                     pos += size;
-                    vObj = buffer.ExtByteArrayToObject(paraType);
+                    vObj = buffer.ByteArrayToObject(paraType);
                     if (isArr)
                     {
                         DJTools.arrayAdd(result, vObj, i);
@@ -1469,7 +1474,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else
                 {
-                    fv = buffer.ExtByteArrayToObject(pi.PropertyType);
+                    fv = buffer.ByteArrayToObject(pi.PropertyType);
                     if (null != fv) pi.SetValue(dt, fv);
                 }
             }
