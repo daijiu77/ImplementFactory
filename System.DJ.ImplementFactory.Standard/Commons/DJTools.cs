@@ -1109,7 +1109,8 @@ namespace System.DJ.ImplementFactory.Commons
             return Encoding.UTF8.GetBytes(s);
         }
 
-        private static int headSize = 1024;
+        private static int headSize = 6;
+        private static string headFlag = "@";
         private static string CollectSign = "IEnumerable";
         public static byte[] ObjectToByteArray(this object dataObj)
         {
@@ -1140,15 +1141,22 @@ namespace System.DJ.ImplementFactory.Commons
                 prop = prop.Substring(1);
                 byte[] propertyData = prop.StrToByte();
 
-                int AllSize = headSize + propertyData.Length + size;
+                int AllSize = propertyData.Length + size;
                 string typeName = type.TypeToString(true);
                 typeName += ":" + CollectSign + ":" + AllSize + ":" + propertyData.Length;
-                buffer = typeName.StrToByte();
+                byte[] headBuffer = typeName.StrToByte();
+
+                string headStr = headFlag + headBuffer.Length;
+                buffer = headStr.StrToByte();
+                AllSize += (headSize + headBuffer.Length);
 
                 int pos = 0;
                 result = new byte[AllSize];
                 Array.Copy(buffer, 0, result, pos, buffer.Length);
                 pos += headSize;
+
+                Array.Copy(headBuffer, 0, result, pos, headBuffer.Length);
+                pos += headBuffer.Length;
 
                 Array.Copy(propertyData, 0, result, pos, propertyData.Length);
                 pos += propertyData.Length;
@@ -1212,15 +1220,22 @@ namespace System.DJ.ImplementFactory.Commons
 
             paras = entity.GetType().TypeToString(true) + "#" + paras;
             byte[] infoDatas = paras.StrToByte();
-            int AllSize = infoDatas.Length + dataSize + headSize;
+            int AllSize = infoDatas.Length + dataSize;
 
             string sizeInfo = "object:" + AllSize + ",property:" + infoDatas.Length;
             byte[] hdData = sizeInfo.StrToByte();
 
+            string headStr = headFlag + hdData.Length;
+            byte[] headBuffer = headStr.StrToByte();
+            AllSize += (headSize + hdData.Length);
+
             int pos = 0;
             dt = new byte[AllSize];
-            Array.Copy(hdData, 0, dt, 0, hdData.Length);
+            Array.Copy(headBuffer, 0, dt, pos, headBuffer.Length);
             pos += headSize;
+
+            Array.Copy(hdData, 0, dt, pos, hdData.Length);
+            pos += hdData.Length;
 
             Array.Copy(infoDatas, 0, dt, pos, infoDatas.Length);
             pos += infoDatas.Length;
@@ -1264,20 +1279,29 @@ namespace System.DJ.ImplementFactory.Commons
             byte[] buffer = new byte[headSize];
             Array.Copy(data, 0, buffer, 0, headSize);
             s = buffer.ByteToStr();
+            if (string.IsNullOrEmpty(s)) return result;
+            if (!s.Substring(0, 1).Equals(headFlag)) return result;
+
+            s = s.Substring(1);
+            int len = Convert.ToInt32(s);
+            buffer = new byte[len];
+            Array.Copy(data, headSize, buffer, 0, len);
+            s = buffer.ByteToStr();
+
             string sign = ":" + CollectSign + ":";
             if (-1 != s.IndexOf(sign))
             {
                 string[] arr = s.Split(':');
                 int propSize = Convert.ToInt32(arr[3]);
 
-                int pos = headSize;
+                int pos = headSize + len;
                 buffer = new byte[propSize];
                 Array.Copy(data, pos, buffer, 0, propSize);
                 pos += propSize;
 
                 s = buffer.ByteToStr();
                 arr = s.Split(',');
-                int len = arr.Length;
+                len = arr.Length;
                 Type[] types = type.GenericTypeArguments;
                 Type paraType = null;
                 bool isArr = false;
@@ -1342,6 +1366,14 @@ namespace System.DJ.ImplementFactory.Commons
             Array.Copy(data, 0, buffer, 0, headSize);
             string headStr = buffer.ByteToStr();
             if (string.IsNullOrEmpty(headStr)) return dt;
+            if (!headStr.Substring(0, 1).Equals(headFlag)) return dt;
+
+            headStr = headStr.Substring(1);
+            int len = Convert.ToInt32(headStr);
+            buffer = new byte[len];
+            Array.Copy(data, headSize, buffer, 0, len);
+            headStr = buffer.ByteToStr();
+            if (string.IsNullOrEmpty(headStr)) return dt;
 
             Regex rg = new Regex(@"object\s*\:\s*(?<ObjectSize>[0-9]+)\s*\,\s*property\s*\:\s*(?<PropertySize>[0-9]+)", RegexOptions.IgnoreCase);
             if (!rg.IsMatch(headStr))
@@ -1360,9 +1392,9 @@ namespace System.DJ.ImplementFactory.Commons
             sv = match.Groups["PropertySize"].Value;
             int.TryParse(sv, out PropertySize);
 
-            int pos = headSize;
+            int pos = headSize + len;
             buffer = new byte[PropertySize];
-            Array.Copy(data, headSize, buffer, 0, PropertySize);
+            Array.Copy(data, pos, buffer, 0, PropertySize);
             string prop = buffer.ByteToStr();
 
             pos = prop.IndexOf("#");
@@ -1380,8 +1412,8 @@ namespace System.DJ.ImplementFactory.Commons
             string[] arr1 = null;
             string fn = "";
             object fv = null;
-            Type ft = null;
-            pos = headSize + PropertySize;
+            //Type ft = null;
+            pos = headSize + len + PropertySize;
             foreach (var item in arr)
             {
                 size = 0;
