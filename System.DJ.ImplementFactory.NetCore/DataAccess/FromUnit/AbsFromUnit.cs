@@ -6,5 +6,6 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 {
     public abstract class AbsFromUnit
     {
+
     }
 }

@@ -5,31 +5,43 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 {
-    public class LeftJoin : AbsFromUnit
+    public class LeftJoin
     {
-        public void From(IDataModel dataModel)
+        Func<AbsDataModel, bool> func1 = null;
+        public static SqlFromUnit From(AbsDataModel dataModel)
         {
-            //
+            return new SqlFromUnit(dataModel);
+            //throw new NotImplementedException();
         }
 
-        public void From<T>(T dataModel, Func<T, bool> condition) where T : IDataModel
+        public static SqlFromUnit From(AbsDataModel dataModel, Func<AbsDataModel, bool> condition)
         {
-            //
+            return new SqlFromUnit(dataModel, null, null, condition);
+            //throw new NotImplementedException();
         }
 
-        public void From(IDataModel dataModel, string alias)
+        public static SqlFromUnit From(AbsDataModel dataModel, string alias)
         {
-            //
+            return new SqlFromUnit(dataModel, alias);
+            //throw new NotImplementedException();
         }
 
-        public void From(IDataModel dataModel, string alias, string condition)
+        public static SqlFromUnit From(AbsDataModel dataModel, string alias, string condition)
         {
-            //
+            return new SqlFromUnit(dataModel, alias, condition);
+            //throw new NotImplementedException();
         }
 
-        public void From<T>(T dataModel, string alias, Func<T, bool> condition) where T : IDataModel
+        public static SqlFromUnit From(AbsDataModel dataModel, string alias, string condition, Func<AbsDataModel, bool> funcCondition)
         {
-            //
+            return new SqlFromUnit(dataModel, alias, condition, funcCondition);
+            //throw new NotImplementedException();
+        }
+
+        public static SqlFromUnit From(AbsDataModel dataModel, string alias, Func<AbsDataModel, bool> condition)
+        {
+            return new SqlFromUnit(dataModel, alias, null, condition);
+            //throw new NotImplementedException();
         }
     }
 }
