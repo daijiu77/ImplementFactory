@@ -23,5 +23,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             return default(T);
         }
 
+        public int Update()
+        {
+            return 0;
+        }
+
+        public int Insert()
+        {
+            return 0;
+        }
+
+        public int Delete()
+        {
+            return 0;
+        }
     }
 }

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
-using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.Reflection;
@@ -78,6 +78,7 @@ namespace Test.NetCore
             MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
         }
 
+        [Table("")]
         public class testJson : AbsDataModel
         {
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
@@ -101,7 +102,7 @@ namespace Test.NetCore
             testObj.test123();
 
             testJson tt = new testJson();
-            LeftJoin.From(tt, "t", t => { return true; });
+            LeftJoin.Me.From(tt, "t", t => { return true; });
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }

@@ -4,9 +4,13 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
-    public enum Relation
+    public enum ConditionRelation
     {
         Equals,
+        /// <summary>
+        /// 不等于
+        /// </summary>
+        NoEquals,
         /// <summary>
         /// 大于
         /// </summary>
@@ -55,19 +59,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             get { return new ConditionItem(); }
         }
 
-        public void And(string fieldName, Relation logicRelation, object fieldValue)
+        public void And(string fieldName, ConditionRelation relation, object fieldValue)
         {
             IsOr = false;
             FieldName = fieldName;
-            LogicRelation = logicRelation;
+            Relation = relation;
             FieldValue = fieldValue;
         }
 
-        public void AndUnit(string fieldName, Relation logicRelation, DbBody dbBody)
+        public void AndUnit(string fieldName, ConditionRelation relation, DbBody dbBody)
         {
             IsOr = false;
             FieldName = fieldName;
-            LogicRelation = logicRelation;
+            Relation = relation;
             this.dbBody = dbBody;
         }
 
@@ -77,19 +81,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             this.conditionItem = conditionItem;
         }
 
-        public void Or(string fieldName, Relation logicRelation, object fieldValue)
+        public void Or(string fieldName, ConditionRelation relation, object fieldValue)
         {
             IsOr = true;
             FieldName = fieldName;
-            LogicRelation = logicRelation;
+            Relation = relation;
             FieldValue = fieldValue;
         }
 
-        public void OrUnit(string fieldName, Relation logicRelation, DbBody dbBody)
+        public void OrUnit(string fieldName, ConditionRelation relation, DbBody dbBody)
         {
             IsOr = true;
             FieldName = fieldName;
-            LogicRelation = logicRelation;
+            Relation = relation;
             this.dbBody = dbBody;
         }
 
@@ -101,9 +105,10 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         public bool IsOr { get; set; }
         public string FieldName { get; set; }
-        public Relation LogicRelation { get; set; }
+        public ConditionRelation Relation { get; set; }
         public object FieldValue { get; set; }
         public ConditionItem conditionItem { get; set; }
         public DbBody dbBody { get; set; }
+
     }
 }

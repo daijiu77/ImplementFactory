@@ -1,46 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.DJ.ImplementFactory.DataAccess.Pipelines;
-using System.Text;
-
-namespace System.DJ.ImplementFactory.DataAccess.FromUnit
+﻿namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 {
-    public class LeftJoin
+    public class LeftJoin : SqlFromUnit
     {
         Func<AbsDataModel, bool> func1 = null;
-        public static SqlFromUnit From(AbsDataModel dataModel)
+
+        private LeftJoin() { }
+
+        public static LeftJoin Me
         {
-            return new SqlFromUnit(dataModel);
+            get { return new LeftJoin(); }
+        }
+
+        public static LeftJoin Instance
+        {
+            get { return new LeftJoin(); }
+        }
+
+        public SqlFromUnit From(AbsDataModel dataModel)
+        {
+            return Set(dataModel);
             //throw new NotImplementedException();
         }
 
-        public static SqlFromUnit From(AbsDataModel dataModel, Func<AbsDataModel, bool> condition)
+        public SqlFromUnit From(AbsDataModel dataModel, Func<AbsDataModel, bool> condition)
         {
-            return new SqlFromUnit(dataModel, null, null, condition);
+            return Set(dataModel, null, condition);
             //throw new NotImplementedException();
         }
 
-        public static SqlFromUnit From(AbsDataModel dataModel, string alias)
+        public SqlFromUnit From(AbsDataModel dataModel, string alias)
         {
-            return new SqlFromUnit(dataModel, alias);
+            return Set(dataModel, alias);
             //throw new NotImplementedException();
         }
 
-        public static SqlFromUnit From(AbsDataModel dataModel, string alias, string condition)
+        public SqlFromUnit From(AbsDataModel dataModel, string alias, params ConditionItem[] conditions)
         {
-            return new SqlFromUnit(dataModel, alias, condition);
+            return Set(dataModel, alias, conditions);
             //throw new NotImplementedException();
         }
 
-        public static SqlFromUnit From(AbsDataModel dataModel, string alias, string condition, Func<AbsDataModel, bool> funcCondition)
+        public SqlFromUnit From(AbsDataModel dataModel, string alias, Func<AbsDataModel, bool> funcCondition, params ConditionItem[] conditions)
         {
-            return new SqlFromUnit(dataModel, alias, condition, funcCondition);
+            return Set(dataModel, alias, funcCondition, conditions);
             //throw new NotImplementedException();
         }
 
-        public static SqlFromUnit From(AbsDataModel dataModel, string alias, Func<AbsDataModel, bool> condition)
+        public SqlFromUnit From(AbsDataModel dataModel, string alias, Func<AbsDataModel, bool> condition)
         {
-            return new SqlFromUnit(dataModel, alias, null, condition);
+            return Set(dataModel, alias, condition);
             //throw new NotImplementedException();
         }
     }

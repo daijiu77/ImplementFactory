@@ -6,33 +6,47 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 {
     public class SqlFromUnit
     {
-        private SqlFromUnit() { }
+        protected SqlFromUnit() { }
 
-        public SqlFromUnit(AbsDataModel dataModel)
+        public static SqlFromUnit Me
+        {
+            get { return new SqlFromUnit(); }
+        }
+
+        public static SqlFromUnit Instance
+        {
+            get { return new SqlFromUnit(); }
+        }
+
+        protected SqlFromUnit Set(AbsDataModel dataModel)
         {
             this.dateModel = dateModel;
+            return this;
         }
-        public SqlFromUnit(AbsDataModel dataModel, string alias)
+        protected SqlFromUnit Set(AbsDataModel dataModel, string alias)
         {
             this.dateModel = dateModel;
             this.alias = alias;
+            return this;
         }
-        public SqlFromUnit(AbsDataModel dataModel, string alias, string condition)
+        protected SqlFromUnit Set(AbsDataModel dataModel, string alias, params ConditionItem[] conditions)
         {
             this.dateModel = dateModel;
             this.alias = alias;
-            this.condition = condition;
+            this.conditions = conditions;
+            return this;
         }
-        public SqlFromUnit(AbsDataModel dataModel, string alias, string condition, Func<AbsDataModel, bool> funcCondition)
+        protected SqlFromUnit Set(AbsDataModel dataModel, string alias, Func<AbsDataModel, bool> funcCondition, params ConditionItem[] conditions)
         {
             this.dateModel = dateModel;
             this.alias = alias;
-            this.condition = condition;
+            this.conditions = conditions;
             this.funcCondition = funcCondition;
+            return this;
         }
         public AbsDataModel dateModel { get; set; }
         public string alias { get; set; }
-        public string condition { get; set; }
+        public ConditionItem[] conditions { get; set; }
         public Func<AbsDataModel, bool> funcCondition { get; set; }
     }
 }
