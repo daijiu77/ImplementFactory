@@ -204,10 +204,23 @@ namespace System.DJ.ImplementFactory.DataAccess
             string cdt = "";
             string cnts = "";
             if (null == conditions) return cdt;
-            foreach (var item in conditions)
+            string s = "";
+            Regex rg = new Regex(@"^\s*((and)|or)\s+(?<wherePart>.+)", RegexOptions.IgnoreCase);
+            foreach (ConditionItem item in conditions)
             {
                 cnts = " and ";
                 if (item.IsOr) cnts = " or ";
+                if (null != item.conditionItems)
+                {
+                    if (0 < item.conditionItems.Length)
+                    {
+                        s = GetConditionUnit(item.conditionItems);
+                        s = rg.Match(s).Groups["wherePart"].Value;
+                        s = "(" + s + ")";
+                        cdt += cnts + s;
+                        continue;
+                    }
+                }
                 if (null != (item.FieldValue as ICollection))
                 {
                     cdt += cnts + sqlAnalysis.GetConditionOfCollection(item.FieldName, item.Relation, (ICollection)item.FieldValue);

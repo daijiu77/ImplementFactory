@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
@@ -7,6 +8,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.NetCore.Entities;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess
@@ -204,10 +206,23 @@ namespace System.DJ.ImplementFactory.DataAccess
             string cdt = "";
             string cnts = "";
             if (null == conditions) return cdt;
-            foreach (var item in conditions)
+            string s = "";
+            Regex rg = new Regex(@"^\s*((and)|or)\s+(?<wherePart>.+)", RegexOptions.IgnoreCase);
+            foreach (ConditionItem item in conditions)
             {
                 cnts = " and ";
                 if (item.IsOr) cnts = " or ";
+                if(null != item.conditionItems)
+                {
+                    if (0 < item.conditionItems.Length)
+                    {
+                        s = GetConditionUnit(item.conditionItems);
+                        s = rg.Match(s).Groups["wherePart"].Value;
+                        s = "(" + s + ")";
+                        cdt += cnts + s;
+                        continue;
+                    }
+                }
                 if (null != (item.FieldValue as ICollection))
                 {
                     cdt += cnts + sqlAnalysis.GetConditionOfCollection(item.FieldName, item.Relation, (ICollection)item.FieldValue);

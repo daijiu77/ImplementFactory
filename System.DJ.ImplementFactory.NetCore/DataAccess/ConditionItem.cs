@@ -59,6 +59,13 @@ namespace System.DJ.ImplementFactory.DataAccess
             get { return new ConditionItem(); }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="relation"></param>
+        /// <param name="fieldValue">当为 数组 或 List 时采用in 例: and fieldName in (v1,v2)</param>
+        /// <returns></returns>
         public ConditionItem And(string fieldName, ConditionRelation relation, object fieldValue)
         {
             IsOr = false;
@@ -68,6 +75,13 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="relation"></param>
+        /// <param name="dbBody">例 and fieldName=(select top 1 userName from UserInfo)</param>
+        /// <returns></returns>
         public ConditionItem AndUnit(string fieldName, ConditionRelation relation, DbBody dbBody)
         {
             IsOr = false;
@@ -77,10 +91,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        public ConditionItem And(ConditionItem conditionItem)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="conditionItems">例 and (fieldName1=fieldValue1 or fieldName2=fieldValue2 or fieldName3=fieldValue3)</param>
+        /// <returns></returns>
+        public ConditionItem And(params ConditionItem[] conditionItems)
         {
             IsOr = false;
-            this.conditionItem = conditionItem;
+            this.conditionItems = conditionItems;
             return this;
         }
 
@@ -102,10 +121,10 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        public ConditionItem Or(ConditionItem conditionItem)
+        public ConditionItem Or(params ConditionItem[] conditionItems)
         {
             IsOr = true;
-            this.conditionItem = conditionItem;
+            this.conditionItems = conditionItems;
             return this;
         }
 
@@ -113,7 +132,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         public string FieldName { get; set; }
         public ConditionRelation Relation { get; set; }
         public object FieldValue { get; set; }
-        public ConditionItem conditionItem { get; set; }
+        public ConditionItem[] conditionItems { get; set; }
         public DbBody dbBody { get; set; }
 
     }
