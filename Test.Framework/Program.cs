@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.DataAccess;
+using System.DJ.ImplementFactory.DataAccess.FromUnit;
+using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -75,7 +80,8 @@ namespace Test.Framework
             MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
         }
 
-        public class testJson
+        [Table("TestJson")]
+        public class testJson : AbsDataModel
         {
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
             public int key { get; set; }
@@ -90,12 +96,35 @@ namespace Test.Framework
             }
         }
 
+        static Func<AbsDataModel, bool> funcCondition = null;
+        static void test(AbsDataModel data, Func<AbsDataModel, bool> funcCondition)
+        {
+            
+        }
+
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
 
-            TestObj testObj = new TestObj();
-            testObj.test123();
+            //TestObj testObj = new TestObj();
+            //testObj.test123();
+            
+            DbVisitor.sqlAnalysis = new SqlServerAnalysis();
+            
+            testJson tt = new testJson();
+            test(tt, dm =>
+            {
+                Type[] types = dm.GetType().GetGenericArguments();
+                Type t = types[0];
+                int n = 0;
+                return true;
+            });
+            DbVisitor db = new DbVisitor();
+            IDbSqlScheme scheme = db.CreateSqlFrom(LeftJoin.Me.From(tt, "t",
+            ConditionItem.Me.And("t.key", ConditionRelation.Equals, new string[] { "a", "b" }),
+            ConditionItem.Me.And("t.val",ConditionRelation.Contain,"abc")),
+            RightJoin.Me.From(tt, "t1", ConditionItem.Me.And("t.key", ConditionRelation.Equals, "t1.key")));
+            string sql = scheme.dbBody.GetSql();
 
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);

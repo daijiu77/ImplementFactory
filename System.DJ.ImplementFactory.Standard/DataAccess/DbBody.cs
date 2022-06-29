@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
@@ -8,7 +7,6 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.NetCore.Entities;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess

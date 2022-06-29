@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.DJ.DotNetCore.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Entities;
 using System.DJ.ImplementFactory.Pipelines;
@@ -22,7 +23,7 @@ namespace System.DJ.ImplementFactory
     /// Email: 564343162@qq.com
     /// CreateDate: 2020-03-05
     /// </summary>
-    public abstract class ImplementAdapter
+    public abstract class ImplementAdapter: AbsDataModel
     {
         object currentObj = null;
 

@@ -61,7 +61,7 @@ namespace System.DJ.ImplementFactory.Commons
             append(ref srcStr, 0, newstr, "\r\n".ToCharArray(), arr);
         }
 
-        public static object ConvertTo(object value, Type type, ref bool isSuccess)
+        public static object ConvertTo(this object value, Type type, ref bool isSuccess)
         {
             isSuccess = true;
             if (null == value) return value;
@@ -129,13 +129,13 @@ namespace System.DJ.ImplementFactory.Commons
             return obj;
         }
 
-        public static object ConvertTo(object value, Type type)
+        public static object ConvertTo(this object value, Type type)
         {
             bool isSuccess = false;
             return ConvertTo(value, type, ref isSuccess);
         }
 
-        public static T ConvertTo<T>(object value)
+        public static T ConvertTo<T>(this object value)
         {
             bool isSuccess = false;
             T t = default(T);
@@ -145,7 +145,7 @@ namespace System.DJ.ImplementFactory.Commons
             return t;
         }
 
-        public static bool IsBaseType(Type type)
+        public static bool IsBaseType(this Type type)
         {
             byte[] arr = type.Assembly.GetName().GetPublicKeyToken();
             if (0 == arr.Length) return false;
