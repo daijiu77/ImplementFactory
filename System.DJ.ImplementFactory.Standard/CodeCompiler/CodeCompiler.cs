@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace System.DJ.DotNetCore.CodeCompiler
+namespace System.DJ.Standard.CodeCompiler
 {
     public class CodeCompiler : IInstanceCodeCompiler
     {

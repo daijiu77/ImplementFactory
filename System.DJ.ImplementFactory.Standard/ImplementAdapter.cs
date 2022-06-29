@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.DJ.DotNetCore.CodeCompiler;
+using System.DJ.Standard.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess;

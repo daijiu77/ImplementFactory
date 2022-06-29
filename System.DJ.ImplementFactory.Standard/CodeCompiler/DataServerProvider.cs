@@ -2,7 +2,7 @@
 using System.Data.Common;
 using System.DJ.ImplementFactory.Pipelines;
 
-namespace System.DJ.DotNetCore.CodeCompiler
+namespace System.DJ.Standard.CodeCompiler
 {
     public class DataServerProvider : IDataServerProvider
     {

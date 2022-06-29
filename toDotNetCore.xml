@@ -82,4 +82,55 @@
 			</item>
 		</replaces>
 	</copy>
+
+               <!--以下替换 Standard 模块-->
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\ImplementAdapter.cs</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard</target>
+		<exclude></exclude>
+		<replaces>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>using System.DJ.DotNetCore.CodeCompiler</source>
+				<target>using System.DJ.Standard.CodeCompiler</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="xml">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\ImplementFactory.xml</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Pipelines</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Pipelines</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Commons</target>
+		<exclude>DJTools.cs</exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Entities</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Entities</target>
+		<exclude>DJTools.cs</exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\DataAccess</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\DataAccess</target>
+		<exclude>DJTools.cs</exclude>
+	</copy>
 </files>
