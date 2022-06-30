@@ -263,7 +263,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (!string.IsNullOrEmpty(wherePart))
             {
                 wherePart = GetWhere(wherePart, true);
-                sql += " on " + wherePart;
+                sql += " on " + wherePart.TrimStart();
             }
             return sql;
         }

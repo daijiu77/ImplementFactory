@@ -127,7 +127,10 @@ namespace Test.NetCore
             scheme.dbSqlBody.Where(ConditionItem.Me.And(ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a1'"),
                 ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a2'")));
             string sql = scheme.dbSqlBody.GetSql();
-
+            /**
+             * select * from TestJson, Right join TestJson t1 on t.key = t1.key where t.key in ('a', 'b')
+             * and t.val like '%abc%' and (t1.key = 'a1' or t1.key = 'a2')
+             * **/
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }
