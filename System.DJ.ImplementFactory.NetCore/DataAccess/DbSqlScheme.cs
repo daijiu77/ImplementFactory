@@ -74,7 +74,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     pi.SetValue(ele, _vObj);
                 });
             };
-
+                        
             List<SqlFromUnit> sfList = new List<SqlFromUnit>();
             foreach (SqlFromUnit item in fromUnits)
             {
@@ -83,17 +83,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
 
             foreach (DataRow dr in dt.Rows)
-            {
-                mbool = true;
-                foreach (SqlFromUnit item in sfList)
+            {                
+                if (0 < sfList.Count)
                 {
-                    if (null == item.funcCondition) continue;
-                    ele = Activator.CreateInstance(item.modelType);
-                    funcProp(ele, dr);
-                    mbool = item.funcCondition((AbsDataModel)ele);
-                    if (!mbool) break;
-                }
-                if (!mbool) continue;
+                    mbool = true;
+                    foreach (SqlFromUnit item in sfList)
+                    {
+                        ele = Activator.CreateInstance(item.modelType);
+                        funcProp(ele, dr);
+                        mbool = item.funcCondition((AbsDataModel)ele);
+                        if (!mbool) break;
+                    }
+                    if (!mbool) continue;
+                }                
                 ele = Activator.CreateInstance(typeof(T));
                 funcProp(ele, dr);
                 list.Add((T)ele);
