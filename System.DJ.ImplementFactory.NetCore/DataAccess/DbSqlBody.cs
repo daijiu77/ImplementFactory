@@ -192,7 +192,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else
                 {
-                    selectPart += ", " + s + " " + item.Key;
+                    selectPart += ", " + sqlAnalysis.GetFieldAlias(s, item.Key);
                 }
             }
             if (!string.IsNullOrEmpty(selectPart)) selectPart = selectPart.Substring(1);
@@ -207,6 +207,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string cnts = "";
             if (null == conditions) return cdt;
             string s = "";
+            string sql = "";
             Regex rg = new Regex(@"^\s*((and)|or)\s+(?<wherePart>.+)", RegexOptions.IgnoreCase);
             foreach (ConditionItem item in conditions)
             {
@@ -229,7 +230,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else if (null != (item.FieldValue as DbSqlBody))
                 {
-                    cdt += cnts + sqlAnalysis.GetConditionOfDbBody(item.FieldName, item.Relation, (DbSqlBody)item.FieldValue);
+                    sql = ((DbSqlBody)item.FieldValue).GetSql();
+                    cdt += cnts + sqlAnalysis.GetConditionOfDbSqlBody(item.FieldName, item.Relation, sql);
                 }
                 else
                 {
@@ -310,6 +312,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                     else if (null != item.conditions)
                     {
                         wherePart += GetConditionUnit(item.conditions);
+                    }
+
+                    if (!mbool)
+                    {
+                        s = sqlAnalysis.GetTableAilas(s, item.alias);
                     }
                 }
                 fromPart += ", " + s;
@@ -413,7 +420,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
-        public List<SqlDataItem> GetUpdate()
+        protected List<SqlDataItem> GetUpdate()
         {
             List<SqlDataItem> list = new List<SqlDataItem>();
             SqlDataItem dataItem = null;
@@ -448,7 +455,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return list;
         }
 
-        public List<SqlDataItem> GetInsert()
+        protected List<SqlDataItem> GetInsert()
         {
             List<SqlDataItem> list = new List<SqlDataItem>();
             SqlDataItem dataItem = null;
@@ -483,7 +490,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return list;
         }
 
-        public List<SqlDataItem> GetDelete()
+        protected List<SqlDataItem> GetDelete()
         {
             List<SqlDataItem> list = new List<SqlDataItem>();
             string sql = "";
@@ -501,7 +508,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return list;
         }
 
-        public string GetCountSql()
+        protected string GetCountSql()
         {
             string wherePart = "";
 
@@ -514,7 +521,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return sql;
         }
 
-        public string GetSql()
+        protected string GetSql()
         {
             string wherePart = "";
 

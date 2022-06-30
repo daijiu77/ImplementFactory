@@ -55,41 +55,40 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 dic.Add(item.ColumnName.ToLower(), item.ColumnName);
             }
-            object vObj = null;
             object ele = null;
-            string field = "";
+            
             bool mbool = false;
+            Action<object, DataRow> funcProp = (_ele, _dr) =>
+            {
+                if (null == _ele) return;
+                string _field = "";
+                object _vObj = null;
+                _ele.ForeachProperty((pi, t, fn, fv) =>
+                {
+                    _field = fn.ToLower();
+                    if (!dic.ContainsKey(_field)) return;
+                    _vObj = _dr[dic[_field]];
+                    if (null == _vObj) return;
+                    _vObj = _vObj.ConvertTo(pi.PropertyType);
+                    if (null == _vObj) return;
+                    pi.SetValue(ele, _vObj);
+                });
+            };
+
             foreach (DataRow dr in dt.Rows)
             {
+                mbool = true;
                 foreach (SqlFromUnit item in fromUnits)
                 {
                     if (null == item.funcCondition) continue;
                     ele = Activator.CreateInstance(item.modelType);
-                    ele.ForeachProperty((pi, t, fn, fv) =>
-                    {
-                        field = fn.ToLower();
-                        if (!dic.ContainsKey(field)) return;
-                        vObj = dr[dic[field]];
-                        if (null == vObj) return;
-                        vObj = vObj.ConvertTo(pi.PropertyType);
-                        if (null == vObj) return;
-                        pi.SetValue(ele, vObj);
-                    });
+                    funcProp(ele, dr);
                     mbool = item.funcCondition((AbsDataModel)ele);
                     if (!mbool) break;
                 }
                 if (!mbool) continue;
                 ele = Activator.CreateInstance(typeof(T));
-                ele.ForeachProperty((pi, t, fn, fv) =>
-                {
-                    field = fn.ToLower();
-                    if (!dic.ContainsKey(field)) return;
-                    vObj = dr[dic[field]];
-                    if (null == vObj) return;
-                    vObj = vObj.ConvertTo(pi.PropertyType);
-                    if (null == vObj) return;
-                    pi.SetValue(ele, vObj);
-                });
+                funcProp(ele, dr);
                 list.Add((T)ele);
             }
 

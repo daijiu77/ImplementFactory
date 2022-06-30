@@ -8,9 +8,9 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
 {
     public interface ISqlAnalysis
     {
-        string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValue);
-        string GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValue);
-        string GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbSqlBody fieldValue);
+        string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue);
+        string GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection);
+        string GetConditionOfDbSqlBody(string fieldName, ConditionRelation relation, string fieldValueOfSql);
         string GetOrderByItem(string fieldName, OrderByRule orderByRule);
         string GetOrderBy(string orderByItems);
         string GetGroupBy(string groupByFields);
@@ -21,5 +21,8 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
         string GetLeftJoin(string tableName, string alias, string wherePart);
         string GetRightJoin(string tableName, string alias, string wherePart);
         string GetInnerJoin(string tableName, string alias, string wherePart);
+
+        string GetTableAilas(string tableName, string alias);
+        string GetFieldAlias(string fieldName, string alias);
     }
 }

@@ -61,22 +61,22 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return mbool;
         }
 
-        string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValue)
+        string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
             string wherePart = "";
-            if (null == fieldValue) return wherePart;
+            if (null == fieldValueOfBaseValue) return wherePart;
 
             string s = "";
             string sign = GetRuleSign(relation);
-            if (IsChar(fieldValue))
+            if (IsChar(fieldValueOfBaseValue))
             {
                 if (-1 != sign.ToLower().IndexOf("like"))
                 {
-                    sign = string.Format(sign, fieldValue.ToString());
+                    sign = string.Format(sign, fieldValueOfBaseValue.ToString());
                 }
                 else if (-1 != sign.ToLower().IndexOf("in"))
                 {
-                    s = fieldValue.ToString();
+                    s = fieldValueOfBaseValue.ToString();
                     if (2 <= s.Length)
                     {
                         if (s.Substring(0, 1).Equals("(") && s.Substring(s.Length - 1).Equals(")"))
@@ -84,19 +84,19 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                             s = s.Substring(1);
                             s = s.Substring(0, s.Length - 1);
                         }
-                        fieldValue = s;
+                        fieldValueOfBaseValue = s;
                     }
 
-                    sign = string.Format(sign, "(" + fieldValue.ToString() + ")");
+                    sign = string.Format(sign, "(" + fieldValueOfBaseValue.ToString() + ")");
                 }
                 else
                 {
-                    sign = string.Format(sign, fieldValue.ToString());
+                    sign = string.Format(sign, fieldValueOfBaseValue.ToString());
                 }
             }
             else
             {
-                sign = string.Format(sign, fieldValue.ToString());
+                sign = string.Format(sign, fieldValueOfBaseValue.ToString());
             }
 
             if (string.IsNullOrEmpty(wherePart)) wherePart = fieldName + " " + sign;
@@ -104,13 +104,13 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             //throw new NotImplementedException();
         }
 
-        string ISqlAnalysis.GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValue)
+        string ISqlAnalysis.GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection)
         {
             string wherePart = "";
-            if (null == fieldValue) return wherePart;
+            if (null == fieldValueOfCollection) return wherePart;
             bool? isChar = null;
             string s = "";
-            foreach (var item in fieldValue)
+            foreach (var item in fieldValueOfCollection)
             {
                 if (null == item) continue;
                 if (null == isChar) isChar = IsChar(item);
@@ -128,13 +128,12 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return wherePart;
         }
 
-        string ISqlAnalysis.GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbSqlBody fieldValue)
+        string ISqlAnalysis.GetConditionOfDbSqlBody(string fieldName, ConditionRelation relation, string fieldValueOfSql)
         {
             string wherePart = "";
-            if (null == fieldValue) return wherePart;
+            if (null == fieldValueOfSql) return wherePart;
             string sign = GetRuleSign(relation);
-            string sql = fieldValue.GetSql();
-            sql = "(" + sql + ")";
+            string sql = "(" + fieldValueOfSql + ")";
             sign = string.Format(sign, sql);
             if (string.IsNullOrEmpty(wherePart)) wherePart = fieldName + " " + sign;
             return wherePart;
@@ -258,8 +257,8 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         private string GetJoin(string flag, string tableName, string alias, string wherePart)
         {
-            string sql = flag + " " + tableName;
-            if (!string.IsNullOrEmpty(alias)) sql += " " + alias;
+            string sql = flag + " " + tableName;            
+            sql = ((ISqlAnalysis)this).GetTableAilas(sql, alias);
             if (!string.IsNullOrEmpty(wherePart))
             {
                 wherePart = GetWhere(wherePart, true);
@@ -286,5 +285,22 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             //throw new NotImplementedException();
         }
 
+        string ISqlAnalysis.GetTableAilas(string tableName, string alias)
+        {
+            string sql = tableName;
+            string s = null == alias ? "" : alias;
+            s = s.Trim();
+            if (!string.IsNullOrEmpty(s)) sql += " " + s;
+            return sql;
+        }
+
+        string ISqlAnalysis.GetFieldAlias(string fieldName, string alias)
+        {
+            string sql = fieldName;
+            string s = null == alias ? "" : alias;
+            s = s.Trim();
+            if (!string.IsNullOrEmpty(s)) sql += " " + s;
+            return sql;
+        }
     }
 }

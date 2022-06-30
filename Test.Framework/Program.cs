@@ -73,7 +73,7 @@ namespace Test.Framework
 
             Size size = WorkingArea;
             Size winSize = new Size(rc.right - rc.left, rc.bottom - rc.top);
-            
+
             int x = (size.Width - winSize.Width) / 2;
             int y = (size.Height - winSize.Height) / 2;
 
@@ -84,22 +84,16 @@ namespace Test.Framework
         public class testJson : AbsDataModel
         {
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
-            public int key { get; set; }
+            public string key { get; set; }
             public string val { get; set; }
             public void sum<T>(T t)
             {
                 //
             }
-            public T Generic<T>(List<T> data, T[] arr,  int n)
+            public T Generic<T>(List<T> data, T[] arr, int n)
             {
                 return data[n];
             }
-        }
-
-        static Func<AbsDataModel, bool> funcCondition = null;
-        static void test(AbsDataModel data, Func<AbsDataModel, bool> funcCondition)
-        {
-            
         }
 
         static void Main(string[] args)
@@ -108,25 +102,19 @@ namespace Test.Framework
 
             //TestObj testObj = new TestObj();
             //testObj.test123();
-            
+
             DbVisitor.sqlAnalysis = new SqlServerAnalysis();
-            
+
             testJson tt = new testJson();
-            test(tt, dm =>
-            {
-                Type[] types = dm.GetType().GetGenericArguments();
-                Type t = types[0];
-                int n = 0;
-                return true;
-            });
             DbVisitor db = new DbVisitor();
-            IDbSqlScheme scheme = db.CreateSqlFrom(LeftJoin.Me.From(tt, "t",
+            IDbSqlScheme scheme = db.CreateSqlFrom(LeftJoin.Me.From(tt, "t", m => m.key.Equals("k1"),
             ConditionItem.Me.And("t.key", ConditionRelation.Equals, new string[] { "a", "b" }),
-            ConditionItem.Me.And("t.val",ConditionRelation.Contain,"abc")),
+            ConditionItem.Me.And("t.val", ConditionRelation.Contain, "abc")),
             RightJoin.Me.From(tt, "t1", ConditionItem.Me.And("t.key", ConditionRelation.Equals, "t1.key")));
             scheme.dbSqlBody.Where(ConditionItem.Me.And(ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a1'"),
                 ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a2'")));
-            string sql = scheme.dbSqlBody.GetSql();
+            IList<testJson> list = scheme.ToList<testJson>();
+            //string sql = scheme.dbSqlBody.GetSql();
             /**
              * select * from TestJson, Right join TestJson t1 on t.key = t1.key where t.key in ('a', 'b')
              * and t.val like '%abc%' and (t1.key = 'a1' or t1.key = 'a2')
@@ -135,7 +123,7 @@ namespace Test.Framework
             Console.ReadKey(true);
         }
 
-        class TestObj: ImplementAdapter
+        class TestObj : ImplementAdapter
         {
             [MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
