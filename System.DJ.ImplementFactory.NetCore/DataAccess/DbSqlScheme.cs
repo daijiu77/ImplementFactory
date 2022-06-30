@@ -75,10 +75,17 @@ namespace System.DJ.ImplementFactory.DataAccess
                 });
             };
 
+            List<SqlFromUnit> sfList = new List<SqlFromUnit>();
+            foreach (SqlFromUnit item in fromUnits)
+            {
+                if (null == item.funcCondition) continue;
+                sfList.Add(item);
+            }
+
             foreach (DataRow dr in dt.Rows)
             {
                 mbool = true;
-                foreach (SqlFromUnit item in fromUnits)
+                foreach (SqlFromUnit item in sfList)
                 {
                     if (null == item.funcCondition) continue;
                     ele = Activator.CreateInstance(item.modelType);
