@@ -124,6 +124,8 @@ namespace Test.NetCore
             ConditionItem.Me.And("t.key", ConditionRelation.Equals, new string[] { "a", "b" }),
             ConditionItem.Me.And("t.val",ConditionRelation.Contain,"abc")),
             RightJoin.Me.From(tt, "t1", ConditionItem.Me.And("t.key", ConditionRelation.Equals, "t1.key")));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And(ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a1'"),
+                ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a2'")));
             string sql = scheme.dbSqlBody.GetSql();
 
             Console.WriteLine("Hello World!");
