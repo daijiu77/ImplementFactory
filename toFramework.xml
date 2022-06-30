@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <files>
+                <!--复制 ImplementAdapter.cs 文件到Framework项目-->
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -14,6 +15,7 @@
 			</item>
 		</replaces>
 	</copy>
+                <!--复制 ImplementFactory.xml 文件到Framework项目-->
 	<copy ext="xml">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -21,6 +23,7 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework</target>
 		<exclude></exclude>
 	</copy>
+                <!--复制 Pipelines 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -28,6 +31,7 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Pipelines</target>
 		<exclude></exclude>
 	</copy>
+                <!--复制 Commons 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -35,6 +39,7 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Commons</target>
 		<exclude>DJTools.cs</exclude>
 	</copy>
+                <!--复制 Entities 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -42,6 +47,7 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Entities</target>
 		<exclude>DJTools.cs</exclude>
 	</copy>
+                <!--复制 DataAccess 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -49,6 +55,7 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\DataAccess</target>
 		<exclude>DJTools.cs</exclude>
 	</copy>
+                <!--复制 DJTools.cs 文件到Framework项目-->
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -63,6 +70,7 @@
 			</item>
 		</replaces>
 	</copy>
+                <!--复制 Test.NetCore 目录下的所有文件到Test.Framework项目-->
 	<copy ext="cs,sql,config,xml">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
@@ -117,7 +125,21 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Commons</target>
-		<exclude>DJTools.cs</exclude>
+		<exclude>DJTools.cs,DynamicEntity.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\DynamicEntity.cs</source>
+		<target rootPath="" type="framework">System.DJ.ImplementFactory.Standard\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Runtime.Remoting;</source>
+				<target></target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
 	</copy>
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
