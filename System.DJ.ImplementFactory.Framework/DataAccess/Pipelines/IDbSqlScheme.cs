@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
         int Update();
         int Insert();
         int Delete();
-        DbBody dbBody { get; }
+        DbSqlBody dbSqlBody { get; }
         string error { get; }
     }
 }

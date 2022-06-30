@@ -15,14 +15,14 @@ namespace System.DJ.ImplementFactory.DataAccess
 {
 
 
-    public class DbBody : DbVisitor
+    public class DbSqlBody : DbVisitor
     {
         private List<ConditionItem> conditionItems = new List<ConditionItem>();
         private Dictionary<string, object> dicPara = new Dictionary<string, object>();
 
-        public DbBody() { }
+        public DbSqlBody() { }
 
-        public DbBody Where(params ConditionItem[] conditionItems)
+        public DbSqlBody Where(params ConditionItem[] conditionItems)
         {
             if (null != conditionItems)
             {
@@ -34,21 +34,21 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        public DbBody Skip(int pageNumber, int pageSize)
+        public DbSqlBody Skip(int pageNumber, int pageSize)
         {
             this.pageSize = pageSize;
             this.pageNumber = pageNumber;
             return this;
         }
 
-        public DbBody Top(int top)
+        public DbSqlBody Top(int top)
         {
             this.top = top;
             return this;
         }
 
         private List<OrderbyItem> orderbyItems = new List<OrderbyItem>();
-        public DbBody Orderby(params OrderbyItem[] orderbyItems)
+        public DbSqlBody Orderby(params OrderbyItem[] orderbyItems)
         {
             if (null != orderbyItems)
             {
@@ -61,7 +61,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private Dictionary<string, string> dicSlt = new Dictionary<string, string>();
-        public DbBody Select(object field, string alias)
+        public DbSqlBody Select(object field, string alias)
         {
             if (string.IsNullOrEmpty(alias))
             {
@@ -73,7 +73,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        public DbBody Group(string field)
+        public DbSqlBody Group(string field)
         {
             groupFields.Remove(field);
             groupFields.Add(field);
@@ -81,7 +81,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private Dictionary<string, string> dicExcludes = new Dictionary<string, string>();
-        public DbBody DataOperateExcludes(params string[] fields)
+        public DbSqlBody DataOperateExcludes(params string[] fields)
         {
             if (null != fields)
             {
@@ -94,7 +94,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private Dictionary<string, string> dicContains = new Dictionary<string, string>();
-        public DbBody DataOperateContains(params string[] fields)
+        public DbSqlBody DataOperateContains(params string[] fields)
         {
             if (null != fields)
             {
@@ -161,9 +161,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (KeyValuePair<string, object> item in dicSelect)
             {
                 if (null == item.Value) continue;
-                if (null != (item.Value as DbBody))
+                if (null != (item.Value as DbSqlBody))
                 {
-                    s = ((DbBody)item.Value).GetSql();
+                    s = ((DbSqlBody)item.Value).GetSql();
                     s = "(" + s + ")";
                 }
                 else if ((false == item.Value.GetType().IsBaseType()) && item.Value.GetType().IsClass)
@@ -227,9 +227,9 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     cdt += cnts + sqlAnalysis.GetConditionOfCollection(item.FieldName, item.Relation, (ICollection)item.FieldValue);
                 }
-                else if (null != (item.FieldValue as DbBody))
+                else if (null != (item.FieldValue as DbSqlBody))
                 {
-                    cdt += cnts + sqlAnalysis.GetConditionOfDbBody(item.FieldName, item.Relation, (DbBody)item.FieldValue);
+                    cdt += cnts + sqlAnalysis.GetConditionOfDbBody(item.FieldName, item.Relation, (DbSqlBody)item.FieldValue);
                 }
                 else
                 {
@@ -253,9 +253,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (SqlFromUnit item in fromUnits)
             {
                 if (null == item.dataModel) continue;
-                if (null != (item.dataModel as DbBody))
+                if (null != (item.dataModel as DbSqlBody))
                 {
-                    s = ((DbBody)item.dataModel).GetSql();
+                    s = ((DbSqlBody)item.dataModel).GetSql();
                     s = "(" + s + ")";
                     if (!string.IsNullOrEmpty(item.alias)) s += " " + item.alias;
                     if (null != item.conditions)
@@ -371,7 +371,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (SqlFromUnit item in fromUnits)
             {
                 if (null == item.dataModel) continue;
-                if (null != (item.dataModel as DbBody)) continue;
+                if (null != (item.dataModel as DbSqlBody)) continue;
                 wherePart = "";
                 att = item.dataModel.GetType().GetCustomAttribute(typeof(TableAttribute));
                 if (null != att)

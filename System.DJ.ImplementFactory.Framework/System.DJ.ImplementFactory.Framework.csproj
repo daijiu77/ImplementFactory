@@ -63,9 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\DbSqlBody.cs" />
     <Compile Include="DataAccess\AbsDataModel.cs" />
     <Compile Include="DataAccess\ConditionItem.cs" />
-    <Compile Include="DataAccess\DbBody.cs" />
     <Compile Include="DataAccess\DbSqlScheme.cs" />
     <Compile Include="DataAccess\DbVisitor.cs" />
     <Compile Include="DataAccess\FromUnit\InnerJoin.cs" />

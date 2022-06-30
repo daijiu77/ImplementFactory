@@ -80,14 +80,14 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="relation"></param>
-        /// <param name="dbBody">例 and fieldName=(select top 1 userName from UserInfo)</param>
+        /// <param name="dbSqlBody">例 and fieldName=(select top 1 userName from UserInfo)</param>
         /// <returns></returns>
-        public ConditionItem AndUnit(string fieldName, ConditionRelation relation, DbBody dbBody)
+        public ConditionItem AndUnit(string fieldName, ConditionRelation relation, DbSqlBody dbSqlBody)
         {
             IsOr = false;
             FieldName = fieldName;
             Relation = relation;
-            this.dbBody = dbBody;
+            this.dbSqlBody = dbSqlBody;
             return this;
         }
 
@@ -112,12 +112,12 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        public ConditionItem OrUnit(string fieldName, ConditionRelation relation, DbBody dbBody)
+        public ConditionItem OrUnit(string fieldName, ConditionRelation relation, DbSqlBody dbSqlBody)
         {
             IsOr = true;
             FieldName = fieldName;
             Relation = relation;
-            this.dbBody = dbBody;
+            this.dbSqlBody = dbSqlBody;
             return this;
         }
 
@@ -133,7 +133,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         public ConditionRelation Relation { get; set; }
         public object FieldValue { get; set; }
         public ConditionItem[] conditionItems { get; set; }
-        public DbBody dbBody { get; set; }
+        public DbSqlBody dbSqlBody { get; set; }
 
     }
 }

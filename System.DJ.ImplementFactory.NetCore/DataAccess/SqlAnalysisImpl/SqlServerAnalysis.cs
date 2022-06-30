@@ -128,7 +128,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return wherePart;
         }
 
-        string ISqlAnalysis.GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbBody fieldValue)
+        string ISqlAnalysis.GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbSqlBody fieldValue)
         {
             string wherePart = "";
             if (null == fieldValue) return wherePart;

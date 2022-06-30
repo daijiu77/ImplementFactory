@@ -10,7 +10,7 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
     {
         string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValue);
         string GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValue);
-        string GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbBody fieldValue);
+        string GetConditionOfDbBody(string fieldName, ConditionRelation relation, DbSqlBody fieldValue);
         string GetOrderByItem(string fieldName, OrderByRule orderByRule);
         string GetOrderBy(string orderByItems);
         string GetGroupBy(string groupByFields);

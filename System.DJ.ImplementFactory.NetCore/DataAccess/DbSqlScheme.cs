@@ -11,11 +11,11 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
-    public class DbSqlScheme : DbBody, IDbSqlScheme
+    public class DbSqlScheme : DbSqlBody, IDbSqlScheme
     {
         private AutoCall autoCall = new AutoCall();
         private string err = "";
-        DbBody IDbSqlScheme.dbBody => this;
+        DbSqlBody IDbSqlScheme.dbSqlBody => this;
 
         string IDbSqlScheme.error => err;
 
