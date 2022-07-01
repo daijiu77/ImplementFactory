@@ -81,18 +81,28 @@ namespace Test.Framework
         }
 
         [Table("TestJson")]
-        public class testJson : AbsDataModel
+        class testJson : AbsDataModel
         {
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
-            public string key { get; set; }
-            public string val { get; set; }
-            public void sum<T>(T t)
+            public virtual string key { get; set; }
+            public virtual string val { get; set; }     
+            public virtual List<string> children { get; set; }
+        }
+
+        class TTJson: testJson
+        {
+            public override string key { get => base.key; set => base.key = value; }
+            public override string val { get => base.val; set => base.val = value; }
+            public override List<string> children
             {
-                //
-            }
-            public T Generic<T>(List<T> data, T[] arr, int n)
-            {
-                return data[n];
+                get
+                {
+                    return base.children;
+                }
+                set
+                {
+                    base.children = value;
+                }
             }
         }
 

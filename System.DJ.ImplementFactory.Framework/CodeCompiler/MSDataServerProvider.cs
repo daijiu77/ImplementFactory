@@ -4,7 +4,7 @@ using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.Framework.CodeCompiler
 {
-    public class DataServerProvider : IDataServerProvider
+    public class MSDataServerProvider : IDataServerProvider
     {
         DataAdapter IDataServerProvider.CreateDataAdapter(DbCommand dbCommand)
         {

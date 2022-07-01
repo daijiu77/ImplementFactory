@@ -57,7 +57,7 @@ namespace System.DJ.ImplementFactory
             }
 
             if (null == UserType) UserType = typeof(ImplementAdapter);
-            loadSysInstance();
+            //loadSysInstance();
             init();
         }
 
@@ -94,6 +94,83 @@ namespace System.DJ.ImplementFactory
             AutoCall.SetDataProviderAssemble(dbInfo.SqlProviderRelativePathOfDll);
             AutoCall.RootPath = rootPath;
             AutoCall.GetDllAbsolutePathByRelativePath = GetDllAbsolutePathByRelativePath;
+
+            #region Load assemblies
+            Func<string, Type, Type> getInstanceTypeByInterfaceType = (filePath, interfaceType) =>
+            {
+                if (!File.Exists(filePath)) return null;
+                Type type2 = null;
+                Assembly assembly1 = Assembly.LoadFrom(filePath);
+                Type[] ts = null;
+                try
+                {
+                    ts = assembly1.GetTypes();
+                }
+                catch { }
+                if (null == ts) return type2;
+                string fName = interfaceType.FullName;
+                foreach (Type item in ts)
+                {
+                    if (null != item.GetInterface(fName))
+                    {
+                        type2 = item;
+                        break;
+                    }
+                }
+                return type2;
+            };
+
+            Assembly asse = null;
+            IDataServerProvider dsp = null;
+            Type dspType = null;
+
+            string f = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+            if (DJTools.isWeb) f = "bin\\" + f;
+            f = Path.Combine(rootPath, f);
+            Type type1 = getInstanceTypeByInterfaceType(f, typeof(IInstanceCodeCompiler));
+
+            codeCompiler = loadInterfaceInstance<IInstanceCodeCompiler>("CodeCompiler", new Type[] { type1 }, ref asse);
+            if (null == codeCompiler) codeCompiler = new CodeCompiler();
+            codeCompiler.SetRootPath(rootPath);
+
+            dspType = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
+            try
+            {
+                dsp = (IDataServerProvider)Activator.CreateInstance(dspType);
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
+            type1 = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
+            Type[] dsTypes = new Type[] { dspType, type1 };
+
+            Assembly asse1 = null;
+            DbHelper = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbHelper) }, ref asse1);
+            if (null == DbHelper) DbHelper = new DbHelper();
+
+            string dsFlag = "ms";
+            if(db_dialect.mysql== DataAdapter.dbDialect)
+            {
+                dsFlag = "mysql";
+            }
+            else if (db_dialect.oracle == DataAdapter.dbDialect)
+            {
+                dsFlag = "oracle";
+            }
+            Assembly asse2 = null;
+            dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
+            if (null == dataServerProvider) dataServerProvider = dsp;
+            DbHelper.dataServerProvider = dataServerProvider;
+
+            Assembly asse3 = null;
+            dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
+            DbHelper.dbConnectionState = dbConnectionState;
+
+            microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
+            #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
 

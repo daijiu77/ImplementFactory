@@ -36,10 +36,10 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string sql = GetSql();
             DataTable dt = null; ;
-            DbHelper.query(autoCall, sql, false, data =>
-            {
-                dt = data;
-            }, ref err);
+            //DbHelper.query(autoCall, sql, false, data =>
+            //{
+            //    dt = data;
+            //}, ref err);
             if (null == dt) dt = new DataTable();
             return dt;
             //throw new NotImplementedException();

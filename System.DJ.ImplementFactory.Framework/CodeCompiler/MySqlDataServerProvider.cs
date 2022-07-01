@@ -1,34 +1,34 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using MySql.Data.MySqlClient;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Pipelines;
 
-namespace System.DJ.DotNetCore.CodeCompiler
+namespace System.DJ.Framework.CodeCompiler
 {
-    public class DataServerProvider : IDataServerProvider
+    public class MySqlDataServerProvider : IDataServerProvider
     {
         DataAdapter IDataServerProvider.CreateDataAdapter(DbCommand dbCommand)
         {
-            return new SqlDataAdapter((SqlCommand)dbCommand);
+            return new MySqlDataAdapter((MySqlCommand)dbCommand);
         }
 
         DbCommand IDataServerProvider.CreateDbCommand(string sql, DbConnection connection)
         {
-            return new SqlCommand(sql, (SqlConnection)connection);
+            return new MySqlCommand(sql, (MySqlConnection)connection);
         }
 
         DbCommand IDataServerProvider.CreateDbCommand()
         {
-            return new SqlCommand();
+            return new MySqlCommand();
         }
 
         DbConnection IDataServerProvider.CreateDbConnection(string connectString)
         {
-            return new SqlConnection(connectString);
+            return new MySqlConnection(connectString);
         }
 
         DbParameter IDataServerProvider.CreateDbParameter(string fieldName, object fieldValue)
         {
-            return new SqlParameter(fieldName, fieldValue);
+            return new MySqlParameter(fieldName, fieldValue);
         }
     }
 }

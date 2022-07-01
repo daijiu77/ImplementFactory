@@ -81,18 +81,30 @@ namespace Test.NetCore
         }
 
         [Table("TestJson")]
-        public class testJson : AbsDataModel
+        class testJson : AbsDataModel
         {
+            public string key1 { get; set; }
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
-            public string key { get; set; }
-            public string val { get; set; }
-            public void sum<T>(T t)
+            public virtual string key { get; set; }
+            public virtual string val { get; set; }     
+            public virtual List<string> children { get; set; }
+        }
+
+        class TTJson: testJson
+        {
+            
+            public override string key { get => base.key; set => base.key = value; }
+            public override string val { get => base.val; set => base.val = value; }
+            public override List<string> children
             {
-                //
-            }
-            public T Generic<T>(List<T> data, T[] arr, int n)
-            {
-                return data[n];
+                get
+                {
+                    return base.children;
+                }
+                set
+                {
+                    base.children = value;
+                }
             }
         }
 
@@ -106,6 +118,11 @@ namespace Test.NetCore
             DbVisitor.sqlAnalysis = new SqlServerAnalysis();
 
             testJson tt = new testJson();
+            tt.ForeachProperty((pi, t, fn, fv) =>
+            {
+                bool mbool1 = t.IsAbstract;
+                string f = fn;
+            });
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(LeftJoin.Me.From(tt, "t", m => m.key.Equals("k1"),
             ConditionItem.Me.And("t.key", ConditionRelation.Equals, new string[] { "a", "b" }),
