@@ -6,9 +6,8 @@ using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
-using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
-using System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -115,27 +114,14 @@ namespace Test.NetCore
             //TestObj testObj = new TestObj();
             //testObj.test123();
 
-            DbVisitor.sqlAnalysis = new SqlServerAnalysis();
-
-            testJson tt = new testJson();
-            tt.ForeachProperty((pi, t, fn, fv) =>
-            {
-                bool mbool1 = t.IsAbstract;
-                string f = fn;
-            });
+            WorkInfo workInfo = new WorkInfo();
+            WorkInfo[] workInfos = new WorkInfo[] { };
+            
             DbVisitor db = new DbVisitor();
-            IDbSqlScheme scheme = db.CreateSqlFrom(LeftJoin.Me.From(tt, "t", m => m.key.Equals("k1"),
-            ConditionItem.Me.And("t.key", ConditionRelation.Equals, new string[] { "a", "b" }),
-            ConditionItem.Me.And("t.val", ConditionRelation.Contain, "abc")),
-            RightJoin.Me.From(tt, "t1", ConditionItem.Me.And("t.key", ConditionRelation.Equals, "t1.key")));
-            scheme.dbSqlBody.Where(ConditionItem.Me.And(ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a1'"),
-                ConditionItem.Me.Or("t1.key", ConditionRelation.Equals, "'a2'")));
-            IList<testJson> list = scheme.ToList<testJson>();
-            //string sql = scheme.dbSqlBody.GetSql();
-            /**
-             * select * from TestJson, Right join TestJson t1 on t.key = t1.key where t.key in ('a', 'b')
-             * and t.val like '%abc%' and (t1.key = 'a1' or t1.key = 'a2')
-             * **/
+            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From(workInfo, dm => dm.CompanyName.Equals("HG")));
+            IList<WorkInfo> list = scheme.ToList<WorkInfo>();
+            List<EmployeeInfo> employeeInfos = list[0].EmployeeInfos;
+            workInfos = ((List<WorkInfo>)list).ToArray();
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }

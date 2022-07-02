@@ -43,6 +43,16 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             }
             return this;
         }
+        public SqlFromUnit From<T>(T dataModel, Func<T, bool> funcCondition) where T : AbsDataModel
+        {
+            this.dataModel = dataModel;
+            modelType = typeof(T);
+            if (null != funcCondition)
+            {
+                this.funcCondition = dm => { return funcCondition((T)dm); };
+            }
+            return this;
+        }
         public AbsDataModel dataModel { get; set; }
         public string alias { get; set; }
         public ConditionItem[] conditions { get; set; }

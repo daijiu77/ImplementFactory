@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
-using System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Entities;
-using System.Text;
+using System.Reflection;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -36,13 +36,58 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string sql = GetSql();
             DataTable dt = null; ;
-            //DbHelper.query(autoCall, sql, false, data =>
-            //{
-            //    dt = data;
-            //}, ref err);
+            DbHelper.query(autoCall, sql, false, data =>
+            {
+                dt = data;
+            }, ref err);
             if (null == dt) dt = new DataTable();
             return dt;
             //throw new NotImplementedException();
+        }
+
+        private List<SqlFromUnit> GetSqlFromUnits()
+        {
+            List<SqlFromUnit> sfList = new List<SqlFromUnit>();
+            foreach (SqlFromUnit item in fromUnits)
+            {
+                if (null == item.funcCondition) continue;
+                sfList.Add(item);
+            }
+            return sfList;
+        }
+
+        private object DataRowToObj(DataRow dr, object ele, Dictionary<string, string> dic)
+        {
+            object _vObj = null;
+            if (null == ele) return _vObj;
+            string _field = "";
+            PropertyInfo[] piArr = ele.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (PropertyInfo pi in piArr)
+            {
+                _field = pi.Name.ToLower();
+                if (!dic.ContainsKey(_field)) continue;
+                _vObj = dr[dic[_field]];
+                if (null == _vObj) continue;
+                _vObj = _vObj.ConvertTo(pi.PropertyType);
+                if (null == _vObj) continue;
+                pi.SetValue(ele, _vObj);
+            }
+            return _vObj;
+        }
+
+        private bool FuncResult(DataRow dr, List<SqlFromUnit> sfList, Dictionary<string, string> dic)
+        {
+            bool mbool = true;
+            if (0 == sfList.Count) return mbool;
+            object ele = null;
+            foreach (SqlFromUnit item in sfList)
+            {
+                ele = Activator.CreateInstance(item.modelType);
+                DataRowToObj(dr, ele, dic);
+                mbool = item.funcCondition((AbsDataModel)ele);
+                if (!mbool) break;
+            }
+            return mbool;
         }
 
         private IList<T> GetList<T>(DataTable dt)
@@ -55,49 +100,18 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 dic.Add(item.ColumnName.ToLower(), item.ColumnName);
             }
-            object ele = null;
-            
-            bool mbool = false;
-            Action<object, DataRow> funcProp = (_ele, _dr) =>
-            {
-                if (null == _ele) return;
-                string _field = "";
-                object _vObj = null;
-                _ele.ForeachProperty((pi, t, fn, fv) =>
-                {
-                    _field = fn.ToLower();
-                    if (!dic.ContainsKey(_field)) return;
-                    _vObj = _dr[dic[_field]];
-                    if (null == _vObj) return;
-                    _vObj = _vObj.ConvertTo(pi.PropertyType);
-                    if (null == _vObj) return;
-                    pi.SetValue(ele, _vObj);
-                });
-            };
-                        
-            List<SqlFromUnit> sfList = new List<SqlFromUnit>();
-            foreach (SqlFromUnit item in fromUnits)
-            {
-                if (null == item.funcCondition) continue;
-                sfList.Add(item);
-            }
 
+            List<SqlFromUnit> sfList = GetSqlFromUnits();
+            object ele = null;
+            bool mbool = false;
+            OverrideModel overrideModel = new OverrideModel();
             foreach (DataRow dr in dt.Rows)
-            {                
-                if (0 < sfList.Count)
-                {
-                    mbool = true;
-                    foreach (SqlFromUnit item in sfList)
-                    {
-                        ele = Activator.CreateInstance(item.modelType);
-                        funcProp(ele, dr);
-                        mbool = item.funcCondition((AbsDataModel)ele);
-                        if (!mbool) break;
-                    }
-                    if (!mbool) continue;
-                }                
-                ele = Activator.CreateInstance(typeof(T));
-                funcProp(ele, dr);
+            {
+                mbool = FuncResult(dr, sfList, dic);
+                if (!mbool) continue;
+                ele = overrideModel.CreateDataModel(typeof(T));
+                if (null == ele) ele = Activator.CreateInstance(typeof(T));
+                DataRowToObj(dr, ele, dic);
                 list.Add((T)ele);
             }
 
@@ -106,6 +120,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         IList<T> IDbSqlScheme.ToList<T>()
         {
+            List<SqlFromUnit> sfList = GetSqlFromUnits();
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
             IList<T> list = GetList<T>(dt);
             return list;

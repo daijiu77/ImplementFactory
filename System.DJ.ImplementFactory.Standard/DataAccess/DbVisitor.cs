@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
-using System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines;
-using System.Text;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -11,9 +8,11 @@ namespace System.DJ.ImplementFactory.DataAccess
     {
         public static ISqlAnalysis sqlAnalysis = null;
 
+        protected int startNumber = 0;
         protected List<SqlFromUnit> fromUnits = new List<SqlFromUnit>();
         public IDbSqlScheme CreateSqlFrom(params SqlFromUnit[] sqlFromUnits)
         {
+            startNumber = 0;
             DbSqlScheme dbSqlStructure = new DbSqlScheme();
             if (null != sqlFromUnits)
             {

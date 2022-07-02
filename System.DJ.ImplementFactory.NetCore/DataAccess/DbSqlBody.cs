@@ -521,6 +521,25 @@ namespace System.DJ.ImplementFactory.DataAccess
             return sql;
         }
 
+        private string GetTop(int start, int top)
+        {
+            string wherePart = "";
+
+            string selectPart = GetSelectPart();
+            string fromPart = GetFromPart(ref wherePart);
+            wherePart = GetWherePart(wherePart);
+            string groupPart = GetGroupPart();
+            string orderbyPart = GetOrderbyPart();
+
+            orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
+            groupPart = sqlAnalysis.GetGroupBy(groupPart);
+
+            wherePart = wherePart.Trim();
+            groupPart = groupPart.Trim();
+            orderbyPart = orderbyPart.Trim();
+            return sqlAnalysis.GetTop(selectPart, fromPart, wherePart, groupPart, orderbyPart, start, top);
+        }
+
         protected string GetSql()
         {
             string wherePart = "";

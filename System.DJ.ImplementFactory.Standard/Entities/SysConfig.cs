@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace System.DJ.ImplementFactory.NetCore.Entities
+namespace System.DJ.ImplementFactory.Entities
 {
     public class SysConfig
     {

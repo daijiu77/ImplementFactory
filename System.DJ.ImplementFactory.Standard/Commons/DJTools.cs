@@ -541,6 +541,44 @@ namespace System.DJ.ImplementFactory.Commons
             return name;
         }
 
+        public static T GetInstanceByType<T>(string likeName)
+        {
+            if (null != likeName) likeName = likeName.ToLower();
+            object tObj = null;
+            Type type = typeof(T);
+            Type[] types = null;
+            List<Assembly> assemblies = GetAssemblyCollection(RootPath);
+            foreach (Assembly asse in assemblies)
+            {
+                types = asse.GetTypes();
+                foreach (Type t in types)
+                {
+                    if (t.IsAbstract || t.IsInterface) continue;
+                    if (!t.IsClass) continue;
+                    if (!string.IsNullOrEmpty(likeName))
+                    {
+                        if (-1 == t.Name.ToLower().IndexOf(likeName)) continue;
+                    }
+                    if (type.IsAssignableFrom(t))
+                    {
+                        try
+                        {
+                            tObj = (T)Activator.CreateInstance(t);
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+
+                            //throw;
+                        }
+                    }
+                }
+                if (null != tObj) break;
+            }
+            if (null == tObj) return default(T);
+            return (T)tObj;
+        }
+
         public static bool IsImplementInterface(this Type instanceType, Type interfaceType)
         {
             bool mbool = false;

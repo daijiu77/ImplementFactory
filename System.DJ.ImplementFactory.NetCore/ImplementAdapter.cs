@@ -4,8 +4,9 @@ using System.DJ.DotNetCore.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.NetCore.Entities;
+
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -164,6 +165,8 @@ namespace System.DJ.ImplementFactory
             dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
             if (null == dataServerProvider) dataServerProvider = dsp;
             DbHelper.dataServerProvider = dataServerProvider;
+
+            DbVisitor.sqlAnalysis = DJTools.GetInstanceByType<ISqlAnalysis>(dsFlag);
 
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);

@@ -4,7 +4,7 @@ using System.Data;
 using System.DJ.ImplementFactory.DataAccess;
 using System.Text;
 
-namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
+namespace System.DJ.ImplementFactory.DataAccess.Pipelines
 {
     public interface IDbSqlScheme
     {

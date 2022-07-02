@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.DataAccess;
 using System.Text;
 
-namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
+namespace System.DJ.ImplementFactory.DataAccess.Pipelines
 {
     public interface ISqlAnalysis
     {
@@ -16,6 +16,7 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines
         string GetGroupBy(string groupByFields);
         string GetPageChange(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber);
         string GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top);
+        string GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length);
         string GetCount(string fromPart, string wherePart, string groupPart);
         
         string GetLeftJoin(string tableName, string alias, string wherePart);

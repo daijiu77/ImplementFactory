@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.DJ.ImplementFactory.Commons;
-using System.DJ.ImplementFactory.NetCore.DataAccess.Pipelines;
-using System.Text;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
-    public class SqlServerAnalysis : ISqlAnalysis
+    public class MSqlAnalysis : ISqlAnalysis
     {
         private string GetRuleSign(ConditionRelation relation)
         {
@@ -241,6 +238,26 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             //throw new NotImplementedException();
         }
 
+        string ISqlAnalysis.GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
+        {
+            if (null == wherePart) wherePart = "";
+            if (null == groupPart) groupPart = "";
+            if (null == orderByPart) orderByPart = "";
+
+            wherePart = GetWhere(wherePart);
+
+            groupPart = groupPart.Trim();
+            if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
+
+            orderByPart = orderByPart.Trim();
+            if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
+            int end = startNumber + length;
+            string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
+            sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart,startNumber.ToString(),end.ToString());
+            return sql;
+            //throw new NotImplementedException();
+        }
+
         string ISqlAnalysis.GetCount(string fromPart, string wherePart, string groupPart)
         {
             if (null == wherePart) wherePart = "";
@@ -302,5 +319,6 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (!string.IsNullOrEmpty(s)) sql += " " + s;
             return sql;
         }
+
     }
 }

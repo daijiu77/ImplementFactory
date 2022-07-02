@@ -687,7 +687,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
-            uskv.Add(new CKeyValue() { Key = "System.Diagnostics" }); ;
+            uskv.Add(new CKeyValue() { Key = "System.Diagnostics" });
             uskv.Add(new CKeyValue() { Key = "System.Reflection" });
             uskv.Add(new CKeyValue() { Key = "System.Collections.Generic" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory" });

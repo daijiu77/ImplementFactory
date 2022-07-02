@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
@@ -8,7 +7,6 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.NetCore.Entities;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess
@@ -519,6 +517,25 @@ namespace System.DJ.ImplementFactory.DataAccess
 
             string sql = sqlAnalysis.GetCount(fromPart, wherePart, groupPart);
             return sql;
+        }
+
+        private string GetTop(int start, int top)
+        {
+            string wherePart = "";
+
+            string selectPart = GetSelectPart();
+            string fromPart = GetFromPart(ref wherePart);
+            wherePart = GetWherePart(wherePart);
+            string groupPart = GetGroupPart();
+            string orderbyPart = GetOrderbyPart();
+
+            orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
+            groupPart = sqlAnalysis.GetGroupBy(groupPart);
+
+            wherePart = wherePart.Trim();
+            groupPart = groupPart.Trim();
+            orderbyPart = orderbyPart.Trim();
+            return sqlAnalysis.GetTop(selectPart, fromPart, wherePart, groupPart, orderbyPart, start, top);
         }
 
         protected string GetSql()

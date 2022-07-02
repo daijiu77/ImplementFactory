@@ -106,6 +106,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\SqlAnalysisImpl\MSqlAnalysis.cs" />
+    <Compile Include="DataAccess\AnalysisDataModel\OverrideModel.cs" />
+    <Compile Include="Commons\Attrs\Constraint.cs" />
     <Compile Include="CodeCompiler\MSDataServerProvider.cs" />
     <Compile Include="CodeCompiler\MySqlDataServerProvider.cs" />
     <Compile Include="CodeCompiler\OracleDataServerProvider.cs" />
@@ -121,7 +124,6 @@
     <Compile Include="DataAccess\OrderbyItem.cs" />
     <Compile Include="DataAccess\Pipelines\IDbSqlScheme.cs" />
     <Compile Include="DataAccess\Pipelines\ISqlAnalysis.cs" />
-    <Compile Include="DataAccess\SqlAnalysisImpl\SqlServerAnalysis.cs" />
     <Compile Include="Entities\SqlDataItem.cs" />
     <Compile Include="Commons\Attrs\IgnoreField.cs" />
     <Compile Include="Commons\MultiTablesExec.cs" />
