@@ -13,8 +13,6 @@ using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
-
-
     public class DbSqlBody : DbVisitor
     {
         private List<ConditionItem> conditionItems = new List<ConditionItem>();
@@ -119,7 +117,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         public int pageSize { get; set; }
-        public int pageNumber { get; set; }
+        public int pageNumber { get; set; } = -1;
         public int top { get; set; }
 
         public void SetParameter(string parameterName, object parameterValue)
@@ -201,6 +199,23 @@ namespace System.DJ.ImplementFactory.DataAccess
             return selectPart;
         }
 
+        private object GetValueByType(ConditionItem conditionItem)
+        {
+            if (null == conditionItem.ValueType) return conditionItem.FieldValue;
+            object fv = conditionItem.FieldValue;
+            fv = fv ?? "";
+            Type type = conditionItem.ValueType;
+            if ((typeof(DateTime) == type)
+                || (typeof(DateTime?) == type)
+                || (typeof(string) == type)
+                || (typeof(Guid) == type)
+                || (typeof(Guid?) == type))
+            {
+                fv = "'" + fv + "'";
+            }
+            return fv;
+        }
+
         private string GetConditionUnit(ConditionItem[] conditions)
         {
             string cdt = "";
@@ -208,6 +223,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (null == conditions) return cdt;
             string s = "";
             string sql = "";
+            object fv = null;
             Regex rg = new Regex(@"^\s*((and)|or)\s+(?<wherePart>.+)", RegexOptions.IgnoreCase);
             foreach (ConditionItem item in conditions)
             {
@@ -235,7 +251,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else
                 {
-                    cdt += cnts + sqlAnalysis.GetConditionOfBaseValue(item.FieldName, item.Relation, item.FieldValue);
+                    fv = GetValueByType(item);
+                    cdt += cnts + sqlAnalysis.GetConditionOfBaseValue(item.FieldName, item.Relation, fv);
                 }
             }
             return cdt;
@@ -558,7 +575,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             orderbyPart = orderbyPart.Trim();
 
             string sql = "";
-            if (0 < pageSize && 0 < pageNumber)
+            if (0 < pageSize && -1 < pageNumber)
             {
                 sql = sqlAnalysis.GetPageChange(selectPart, fromPart, wherePart, groupPart, orderbyPart, pageSize, pageNumber);
             }

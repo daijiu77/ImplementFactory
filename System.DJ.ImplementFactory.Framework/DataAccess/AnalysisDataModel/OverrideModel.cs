@@ -18,13 +18,39 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             isClass
         }
 
+        private Type GetPropertyType(Type modelType, string fieldName)
+        {
+            Type pt = null;
+            fieldName = fieldName.ToLower().Trim();
+            Attribute att = null;
+            FieldMapping fm = null;
+            modelType.ForeachProperty((pi, type, fn) =>
+            {
+                if (fn.ToLower().Equals(fieldName))
+                {
+                    pt = type;
+                    return false;
+                }
+                att = pi.GetCustomAttribute(typeof(FieldMapping));
+                if (null != att) fm = (FieldMapping)att;
+                if (null == fm) return true;
+                if (fm.FieldName.Trim().ToLower().Equals(fieldName))
+                {
+                    pt = type;
+                    return false;
+                }
+                return true;
+            });
+            return pt;
+        }
+
         private object NewDataModel(Type dataModelType)
         {
             object dtModel = null;
             if (null == dataModelType) return null;
             if (!typeof(AbsDataModel).IsAssignableFrom(dataModelType)) return null;
-            string newNamespace = dataModelType.Namespace + "." + dataModelType.Name + "_override";
-            string newClassName = dataModelType.Name + "Override";
+            string newNamespace = dataModelType.Namespace + ".ModelMirror";
+            string newClassName = dataModelType.Name + "Copy";
             string typeName = newNamespace + "." + newClassName;
             Type type1 = null;
             if (dic.ContainsKey(dataModelType))
@@ -33,7 +59,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 dtModel = Activator.CreateInstance(type1);
                 return dtModel;
             }
-            object[] atts = null;
+            Attribute att = null;
             Constraint constraint = null;
             string code = "";
             string codeBody = "";
@@ -41,6 +67,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string s = "";
             string GetBody = "";
             const string getFlag = "{#GetBody}";
+            Type pt = null;
             Type[] types = null;
             PropType propType = PropType.none;
             int level = 0;
@@ -56,8 +83,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
 
-            object dataModel = Activator.CreateInstance(dataModelType);
-            dataModel.ForeachProperty((pi, type, fn, fv) =>
+            dataModelType.ForeachProperty((pi, type, fn) =>
             {
                 pro = "";
                 level = 2;
@@ -93,10 +119,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
                     constraint = null;
                     GetBody = "";
-                    atts = pi.GetCustomAttributes(typeof(Constraint), false);
-                    if (0 < atts.Length)
+                    att = pi.GetCustomAttribute(typeof(Constraint));
+                    if (null != att)
                     {
-                        constraint = (Constraint)atts[0];
+                        constraint = (Constraint)att;
                     }
 
                     if (null != constraint)
@@ -141,7 +167,30 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             DJTools.append(ref GetBody, level, "Type type = DJTools.GetTypeByFullName(\"{0}\");", typeName);
                             DJTools.append(ref GetBody, level, "AbsDataModel dataModel = (AbsDataModel)Activator.CreateInstance(type);");
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From(dataModel));");
-                            DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Where(ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}));", constraint.RefrenceKey, constraint.ForeignKey);
+                            pt = GetPropertyType(dataModelType, constraint.ForeignKey);
+                            s = DJTools.ExtFormat("ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))", constraint.RefrenceKey, constraint.ForeignKey, pt.TypeToString(true));
+                            if (null != constraint.Foreign_refrenceKeys)
+                            {
+                                int x = 0;
+                                foreach (string k in constraint.Foreign_refrenceKeys)
+                                {
+                                    if (0 == x)
+                                    {
+                                        pt = GetPropertyType(dataModelType, k);
+                                        if (null == pt) break;
+                                        s += ", ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))";
+                                        s = s.Replace("{1}", k);
+                                        s = s.Replace("{2}", pt.TypeToString(true));
+                                        x = 1;
+                                    }
+                                    else
+                                    {
+                                        s = s.Replace("{0}", k);
+                                        x = 0;
+                                    }
+                                }
+                            }
+                            DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Where({0});", s);
                             if (PropType.isArray == propType)
                             {
                                 DJTools.append(ref GetBody, level, "IList<{0}> results = scheme.ToList<{0}>();", typeName);
@@ -153,12 +202,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             }
                             else
                             {
-                                DJTools.append(ref GetBody, level, "base.{0} = scheme.DefaultFrist<{1}>();", fn, typeName);
+                                DJTools.append(ref GetBody, level, "base.{0} = scheme.DefaultFirst<{1}>();", fn, typeName);
                             }
                             level -= 2;
                         }
                     }
                     pro = pro.Replace(getFlag, GetBody);
+                    s = "";
                     DJTools.append(ref s, level, "");
                     DJTools.append(ref s, level, "public override {0} {1}", type.TypeToString(true), fn);
                     DJTools.append(ref s, level, "{");

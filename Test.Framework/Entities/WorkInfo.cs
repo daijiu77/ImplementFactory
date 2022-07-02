@@ -12,7 +12,7 @@ namespace Test.Framework.Entities
         public virtual int EmployeeInfoID { get; set; }
         public virtual string CompanyName { get; set; }
         public virtual string CompanyNameEn { get; set; }
-        [Constraint(foreignKey: "EmployeeInfoID", refrenceKey: "id")]
-        public virtual List<EmployeeInfo> EmployeeInfos { get; set; }
+        [Constraint(foreignKey: "EmployeeInfoID", refrenceKey: "id", "EmployeeInfoID", "id")]
+        public virtual EmployeeInfo employeeInfo { get; set; }
     }
 }

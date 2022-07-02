@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         string GetOrderBy(string orderByItems);
         string GetGroupBy(string groupByFields);
         string GetPageChange(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber);
-        string GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top);
+        string GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int length);
         string GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length);
         string GetCount(string fromPart, string wherePart, string groupPart);
         

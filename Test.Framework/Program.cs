@@ -120,8 +120,9 @@ namespace Test.Framework
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From(workInfo, dm => dm.CompanyName.Equals("HG")));
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
-            List<EmployeeInfo> employeeInfos = list[0].EmployeeInfos;
-            workInfos = ((List<WorkInfo>)list).ToArray();
+            EmployeeInfo employeeInfo1 = list[0].employeeInfo;
+            IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
+            EmployeeInfo employeeInfo2 = workInfos1[1].employeeInfo;
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }

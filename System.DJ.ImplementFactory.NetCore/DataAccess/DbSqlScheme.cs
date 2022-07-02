@@ -13,6 +13,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 {
     public class DbSqlScheme : DbSqlBody, IDbSqlScheme
     {
+        private OverrideModel overrideModel = new OverrideModel();
         private AutoCall autoCall = new AutoCall();
         private string err = "";
         DbSqlBody IDbSqlScheme.dbSqlBody => this;
@@ -104,7 +105,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             object ele = null;
             bool mbool = false;
-            OverrideModel overrideModel = new OverrideModel();
             foreach (DataRow dr in dt.Rows)
             {
                 mbool = FuncResult(dr, sfList, dic);
@@ -126,7 +126,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return list;
         }
 
-        T IDbSqlScheme.DefaultFrist<T>()
+        T IDbSqlScheme.DefaultFirst<T>()
         {
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
             IList<T> list = GetList<T>(dt);

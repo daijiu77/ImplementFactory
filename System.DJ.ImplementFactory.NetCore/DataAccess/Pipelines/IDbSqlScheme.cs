@@ -11,7 +11,7 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         int Count();
         DataTable ToDataTable();
         IList<T> ToList<T>();
-        T DefaultFrist<T>();
+        T DefaultFirst<T>();
         int Update();
         int Insert();
         int Delete();

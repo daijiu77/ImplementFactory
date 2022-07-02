@@ -75,6 +75,16 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        public ConditionItem And(string fieldName, ConditionRelation relation, object fieldValue, Type valueType)
+        {
+            IsOr = false;
+            FieldName = fieldName;
+            Relation = relation;
+            FieldValue = fieldValue;
+            ValueType = valueType;
+            return this;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -112,6 +122,16 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        public ConditionItem Or(string fieldName, ConditionRelation relation, object fieldValue, Type valueType)
+        {
+            IsOr = true;
+            FieldName = fieldName;
+            Relation = relation;
+            FieldValue = fieldValue;
+            ValueType = valueType;
+            return this;
+        }
+
         public ConditionItem OrUnit(string fieldName, ConditionRelation relation, DbSqlBody dbSqlBody)
         {
             IsOr = true;
@@ -134,6 +154,6 @@ namespace System.DJ.ImplementFactory.DataAccess
         public object FieldValue { get; set; }
         public ConditionItem[] conditionItems { get; set; }
         public DbSqlBody dbSqlBody { get; set; }
-
+        public Type ValueType { get; set; }
     }
 }
