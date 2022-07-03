@@ -118,7 +118,7 @@ namespace Test.NetCore
             WorkInfo[] workInfos = new WorkInfo[] { };
             
             DbVisitor db = new DbVisitor();
-            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From(workInfo, dm => dm.CompanyName.Equals("HG")));
+            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
