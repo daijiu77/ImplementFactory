@@ -135,7 +135,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     {
                         propType = PropType.none;
                         typeName = "";
-                        if (typeof(System.Collections.ICollection).IsAssignableFrom(type) && (typeof(string) != type))
+                        if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && (typeof(string) != type))
                         {
                             if (type.IsArray)
                             {
