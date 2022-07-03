@@ -110,6 +110,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 mbool = FuncResult(dr, sfList, dic);
                 if (!mbool) continue;
                 ele = overrideModel.CreateDataModel(typeof(T));
+                if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
                 if (null == ele) ele = Activator.CreateInstance(typeof(T));
                 DataRowToObj(dr, ele, dic);
                 list.Add((T)ele);

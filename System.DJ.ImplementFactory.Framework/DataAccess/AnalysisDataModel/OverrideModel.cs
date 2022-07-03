@@ -254,9 +254,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 try
                 {
                     Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
-                    Type t = assembly.GetType(typeName);
-                    dic.Add(dataModelType, t);
-                    dtModel = Activator.CreateInstance(t);
+                    if(!string.IsNullOrEmpty(err)) error = err;
+                    if (null != assembly && string.IsNullOrEmpty(err))
+                    {
+                        Type t = assembly.GetType(typeName);
+                        dic.Add(dataModelType, t);
+                        dtModel = Activator.CreateInstance(t);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -272,5 +276,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             object dm = NewDataModel(dataModelType);
             return dm;
         }
+
+        public string error { get; set; }
     }
 }
