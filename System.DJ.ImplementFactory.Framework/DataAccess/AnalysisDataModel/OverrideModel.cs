@@ -44,6 +44,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return pt;
         }
 
+        private bool IsInheritAbsDataModel(Type modelType)
+        {
+            if (null == modelType) return false;
+            return typeof(AbsDataModel).IsAssignableFrom(modelType);
+        }
+
         private object NewDataModel(Type dataModelType)
         {
             object dtModel = null;
@@ -153,7 +159,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         {
                             propType = PropType.isClass;
                             typeName = type.TypeToString(true);
+                            uskv.Add(new CKeyValue() { Key = type.Namespace });
                         }
+
+                        pt = DJTools.GetTypeByFullName(typeName);
+                        if (!IsInheritAbsDataModel(pt)) typeName = "";
 
                         if (!string.IsNullOrEmpty(typeName))
                         {
@@ -164,9 +174,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionItem).Namespace });
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionRelation).Namespace });
                             DJTools.append(ref GetBody, level, "DbVisitor db = new DbVisitor();");
-                            DJTools.append(ref GetBody, level, "Type type = DJTools.GetTypeByFullName(\"{0}\");", typeName);
-                            DJTools.append(ref GetBody, level, "AbsDataModel dataModel = (AbsDataModel)Activator.CreateInstance(type);");
-                            DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From(dataModel));");
+                            DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
                             s = DJTools.ExtFormat("ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))", constraint.RefrenceKey, constraint.ForeignKey, pt.TypeToString(true));
                             if (null != constraint.Foreign_refrenceKeys)

@@ -16,6 +16,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             modelType = typeof(T);
             return this;
         }
+
+        public SqlFromUnit From<T>() where T : AbsDataModel
+        {
+            modelType = typeof(T);
+            return this;
+        }
+
         public SqlFromUnit From<T>(T dataModel, string alias) where T : AbsDataModel
         {
             this.dataModel = dataModel;
@@ -23,6 +30,14 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             modelType = typeof(T);
             return this;
         }
+
+        public SqlFromUnit From<T>(string alias) where T : AbsDataModel
+        {
+            this.alias = alias;
+            modelType = typeof(T);
+            return this;
+        }
+
         public SqlFromUnit From<T>(T dataModel, string alias, params ConditionItem[] conditions) where T : AbsDataModel
         {
             this.dataModel = dataModel;
@@ -31,6 +46,15 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             modelType = typeof(T);
             return this;
         }
+
+        public SqlFromUnit From<T>(string alias, params ConditionItem[] conditions) where T : AbsDataModel
+        {
+            this.alias = alias;
+            this.conditions = conditions;
+            modelType = typeof(T);
+            return this;
+        }
+
         public SqlFromUnit From<T>(T dataModel, string alias, Func<T, bool> funcCondition, params ConditionItem[] conditions) where T : AbsDataModel
         {
             this.dataModel = dataModel;
@@ -43,6 +67,19 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             }
             return this;
         }
+
+        public SqlFromUnit From<T>(string alias, Func<T, bool> funcCondition, params ConditionItem[] conditions) where T : AbsDataModel
+        {
+            this.alias = alias;
+            this.conditions = conditions;
+            modelType = typeof(T);
+            if (null != funcCondition)
+            {
+                this.funcCondition = dm => { return funcCondition((T)dm); };
+            }
+            return this;
+        }
+
         public SqlFromUnit From<T>(T dataModel, Func<T, bool> funcCondition) where T : AbsDataModel
         {
             this.dataModel = dataModel;
@@ -53,6 +90,17 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             }
             return this;
         }
+
+        public SqlFromUnit From<T>(Func<T, bool> funcCondition) where T : AbsDataModel
+        {
+            modelType = typeof(T);
+            if (null != funcCondition)
+            {
+                this.funcCondition = dm => { return funcCondition((T)dm); };
+            }
+            return this;
+        }
+
         public AbsDataModel dataModel { get; set; }
         public string alias { get; set; }
         public ConditionItem[] conditions { get; set; }

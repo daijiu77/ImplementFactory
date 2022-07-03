@@ -229,7 +229,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 cnts = " and ";
                 if (item.IsOr) cnts = " or ";
-                if(null != item.conditionItems)
+                if (null != item.conditionItems)
                 {
                     if (0 < item.conditionItems.Length)
                     {
@@ -265,14 +265,20 @@ namespace System.DJ.ImplementFactory.DataAccess
             string s1 = "";
             string ConditionBody = "";
             bool mbool = false;
-            bool isFrist = true;
+            bool isFirst = true;
+            bool isSqlBody = false;
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
             Attribute att = null;
-            
+
             foreach (SqlFromUnit item in fromUnits)
             {
-                if (null == item.dataModel) continue;
-                if (null != (item.dataModel as DbSqlBody))
+                isSqlBody = false;
+                if (null != item.dataModel)
+                {
+                    isSqlBody = null != (item.dataModel as DbSqlBody);
+                }
+
+                if (isSqlBody)
                 {
                     s = ((DbSqlBody)item.dataModel).GetSql();
                     s = "(" + s + ")";
@@ -284,22 +290,22 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else
                 {
-                    att = item.dataModel.GetType().GetCustomAttribute(typeof(TableAttribute));
+                    att = item.modelType.GetCustomAttribute(typeof(TableAttribute));
                     if (null != att)
                     {
                         s = ((TableAttribute)att).Name;
                     }
                     else
                     {
-                        s = item.dataModel.GetType().Name;
+                        s = item.modelType.Name;
                     }
 
                     mbool = false;
-                    if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)) && false == isFrist)
+                    if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)) && false == isFirst)
                     {
                         mbool = true;
-                    }                    
-                    isFrist = false;
+                    }
+                    isFirst = false;
 
                     if (mbool)
                     {
@@ -313,7 +319,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                             }
                         }
 
-                        if(null != (item as LeftJoin))
+                        if (null != (item as LeftJoin))
                         {
                             s = sqlAnalysis.GetLeftJoin(s, item.alias, ConditionBody);
                         }
@@ -433,7 +439,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (string.IsNullOrEmpty(field)) return;
                     propertyAction(fn, fv);
                 });
-                if(null!= propEndAction) propEndAction();
+                if (null != propEndAction) propEndAction();
             }
         }
 
@@ -484,7 +490,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             CreateDataOpt((tb, whereStr) =>
             {
                 dataItem = new SqlDataItem();
-                sql = "insert into " + tb +"({0}) values({1})";
+                sql = "insert into " + tb + "({0}) values({1})";
                 fields = "";
                 vals = "";
             }, (fn, fv) =>
