@@ -766,7 +766,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
                 method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, procParaSign, dbTag);                
-                method.append(ref code, leftSpaceLevel + 1, "dbHelper.query({0}, {1}, {2}, {3}, dataTable =>", autCall, sqlVarName, paraListVarName, enabledBuffer);
+                method.append(ref code, leftSpaceLevel + 1, "{4}.query({0}, {1}, {2}, {3}, dataTable =>", autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
                 method.append(ref code, leftSpaceLevel + 1, "{");                
                 #region ***** action
                 method.append(ref code, leftSpaceLevel + 2, "dataTable = null == dataTable ? new System.Data.DataTable() : dataTable;");
@@ -802,7 +802,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             }
             else
             {
-                method.append(ref code, leftSpaceLevel + 1, "{0} += dbHelper.{1}({2}, {3}, {4},{5}, resultNum =>", returnVarName, methodName, autCall, sqlVarName, paraListVarName, enabledBuffer);
+                method.append(ref code, leftSpaceLevel + 1, "{0} += {6}.{1}({2}, {3}, {4},{5}, resultNum =>", returnVarName, methodName, autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
                 method.append(ref code, leftSpaceLevel + 1, "{");
                 #region ***** action
                 method.append(ref code, leftSpaceLevel + 2, "{0} += resultNum;", returnVarName);
