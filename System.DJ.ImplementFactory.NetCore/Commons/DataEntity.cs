@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.DataAccess;
 using System.Linq;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ namespace System.DJ.ImplementFactory.Commons
         or
     }
 
-    public class DataElement
+    public class DataElement : AbsDataModel
     {
         public DataElement(string name, object value)
         {
