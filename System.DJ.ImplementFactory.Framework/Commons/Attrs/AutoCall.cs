@@ -874,7 +874,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             int n = 0;
             foreach (Type type in types)
             {
-                item = type.Name;                
+                item = type.TypeToString(true);                
                 method.append(ref code, leftSpaceLevel, "atts = typeof({0}).GetCustomAttributes(true);", item);
                 method.append(ref code, leftSpaceLevel, "tb_name = {0}.GetTableName(atts);", method.AutoCallVarName);
                 method.append(ref code, leftSpaceLevel, "if(string.IsNullOrEmpty(tb_name))");
