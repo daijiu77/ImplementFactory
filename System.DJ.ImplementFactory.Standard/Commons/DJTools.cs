@@ -176,11 +176,13 @@ namespace System.DJ.ImplementFactory.Commons
         public static void ForeachProperty(this object obj, Func<PropertyInfo, Type, string, object, bool> func)
         {
             if (null == obj) return;
-            PropertyInfo[] piArr = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            Type type = obj.GetType();
+            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             object v = null;
             bool mbool = false;
             foreach (var item in piArr)
             {
+                if (item.DeclaringType != type) continue;
                 v = item.GetValue(obj);
                 mbool = func(item, item.PropertyType, item.Name, v);
                 if (false == mbool) break;
@@ -199,10 +201,11 @@ namespace System.DJ.ImplementFactory.Commons
         public static void ForeachProperty(this Type objType, Func<PropertyInfo, Type, string, bool> func)
         {
             if (null == objType) return;
-            PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             bool mbool = false;
             foreach (var item in piArr)
             {
+                if (item.DeclaringType != objType) continue;
                 mbool = func(item, item.PropertyType, item.Name);
                 if (false == mbool) break;
             }

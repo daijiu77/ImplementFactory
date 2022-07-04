@@ -15,10 +15,9 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class DynamicEntity
     {
-        IDbHelper dbHelper = new DbHelper();
-
         public T Exec<T>(MethodInformation method, DataOptType dataOptType, Action<T> action, string sql)
         {
+            IDbHelper dbHelper = ImplementAdapter.DbHelper;
             T result = default(T);
             AutoCall autoCall = (AutoCall)method.AutoCall;
             dynamicWhere(method, ref sql);
@@ -161,6 +160,11 @@ namespace System.DJ.ImplementFactory.Commons
                 }
 
                 result = funcResult(n);
+            }
+
+            if (ImplementAdapter.IsDbUsed)
+            {
+                if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
             }
             return result;
         }

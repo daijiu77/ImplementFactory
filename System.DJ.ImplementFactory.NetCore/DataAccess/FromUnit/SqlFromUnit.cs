@@ -10,6 +10,10 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 
         public static SqlFromUnit New { get { return new SqlFromUnit(); } }
 
+        public static SqlFromUnit Me { get { return new SqlFromUnit(); } }
+
+        public static SqlFromUnit Instance { get { return new SqlFromUnit(); } }
+
         public SqlFromUnit From<T>(T dataModel) where T : AbsDataModel
         {
             this.dataModel = dataModel;

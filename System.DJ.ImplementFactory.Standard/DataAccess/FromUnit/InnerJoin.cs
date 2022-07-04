@@ -8,7 +8,9 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
     {
         private InnerJoin() { }
 
-        public static InnerJoin Me { get { return new InnerJoin(); } }
-        public static InnerJoin Instance { get { return new InnerJoin(); } }
+        public static new InnerJoin New { get { return new InnerJoin(); } }
+
+        public static new InnerJoin Me { get { return new InnerJoin(); } }
+        public static new InnerJoin Instance { get { return new InnerJoin(); } }
     }
 }

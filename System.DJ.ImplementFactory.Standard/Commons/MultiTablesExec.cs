@@ -369,7 +369,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         void IMultiTablesExec.Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             initBasicExecForSQL(dbAdapter, dbHelper);
-            if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, dbHelper);
+            if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, ImplementAdapter.DbHelper);
             createNewTable.SplitTable(sql);
             if (false == string.IsNullOrEmpty(createNewTable.SrcTableName)
                 && false == string.IsNullOrEmpty(createNewTable.NewTableName))
@@ -489,7 +489,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 _ID = Guid.NewGuid().ToString();
                 this.multiTablesExec = multiTablesExec;
-                multiTablesExec.initBasicExecForSQL(dbAdapter, MultiTablesExec.dbHelper);
+                multiTablesExec.initBasicExecForSQL(dbAdapter, dbHelper);
             }
 
             public string ID { get { return _ID; } }

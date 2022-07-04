@@ -276,6 +276,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             }
 
+            method.append(ref code, LeftSpaceLevel.one, "if (ImplementAdapter.IsDbUsed)");
+            method.append(ref code, LeftSpaceLevel.one, "{");
+            method.append(ref code, LeftSpaceLevel.two, "if (null != ({0} as System.IDisposable)) ((System.IDisposable){0}).Dispose();", dbHelperVarName);
+            method.append(ref code, LeftSpaceLevel.one, "}");
+
             return code;
         }
 

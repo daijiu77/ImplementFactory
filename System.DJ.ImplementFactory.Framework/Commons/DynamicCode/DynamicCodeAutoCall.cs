@@ -662,8 +662,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         public void MadeExecuteSql(string sqlVarName, string paraListVarName, MethodInformation method, DataOptType dataOptType, ref string code)
         {
             method.append(ref code, LeftSpaceLevel.one, "");
+            string dbHelperVarName = "dbHelper";
             //1. 执行sql语句, 要考虑是否存在参数 List<DbParameter>, 也就是 paraListVarName 是否为空
-            method.append(ref code, LeftSpaceLevel.one, "IDbHelper dbHelper = ImplementAdapter.DbHelper;");
+            method.append(ref code, LeftSpaceLevel.one, "IDbHelper {0} = ImplementAdapter.DbHelper;", dbHelperVarName);
 
             //2. 要得到接口方法的返回类型
             MethodComponent mc = method.methodComponent;
@@ -682,7 +683,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, LeftSpaceLevel.one, "if(null != dbHelper)");
             method.append(ref code, LeftSpaceLevel.one, "{");
             method.append(ref code, LeftSpaceLevel.two, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, dynamicCodeChange.procParaSign, dbTag);
-            method.append(ref code, LeftSpaceLevel.two, "dbHelper.{0}({1}, {2}, {3}, {4}, dtTable =>", methodNameOfIDbHelper, autCall, sqlVarName, paraListVarName, enabledBuffer);
+            method.append(ref code, LeftSpaceLevel.two, "{5}.{0}({1}, {2}, {3}, {4}, dtTable =>", methodNameOfIDbHelper, autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
             method.append(ref code, LeftSpaceLevel.two, "{");
             #region ***** action
             method.append(ref code, LeftSpaceLevel.two + 1, "object vObj = dtTable;");
@@ -819,6 +820,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, LeftSpaceLevel.one, "}");
             method.append(ref code, LeftSpaceLevel.one, "");
 
+            method.append(ref code, LeftSpaceLevel.one, "if (ImplementAdapter.IsDbUsed)");
+            method.append(ref code, LeftSpaceLevel.one, "{");
+            method.append(ref code, LeftSpaceLevel.two, "if (null != ({0} as System.IDisposable)) ((System.IDisposable){0}).Dispose();", dbHelperVarName);
+            method.append(ref code, LeftSpaceLevel.one, "}");
         }
 
         void DataTableToEntity(MethodInformation method, Type returnType, string resultVarName, string resultVarName1, ref string code)

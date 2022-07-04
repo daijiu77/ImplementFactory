@@ -96,5 +96,8 @@
         /// 分表存储及查询
         /// </summary>
         public SplitTable splitTable { get; set; } = new SplitTable();
+
+        private string _IsDbUsed = "当设置为 true 时，每次使用完 DbConnection 都会被释放";
+        public bool IsDbUsed { get; set; }
     }
 }

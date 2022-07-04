@@ -179,7 +179,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (null == obj) return;
             Type type = obj.GetType();
-            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             object v = null;
             bool mbool = false;
             foreach (var item in piArr)
@@ -203,7 +203,7 @@ namespace System.DJ.ImplementFactory.Commons
         public static void ForeachProperty(this Type objType, Func<PropertyInfo, Type, string, bool> func)
         {
             if (null == objType) return;
-            PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             bool mbool = false;
             foreach (var item in piArr)
             {
