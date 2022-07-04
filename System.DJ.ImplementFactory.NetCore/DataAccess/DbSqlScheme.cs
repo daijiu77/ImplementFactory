@@ -7,6 +7,7 @@ using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Entities;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 
 namespace System.DJ.ImplementFactory.DataAccess
@@ -26,21 +27,25 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string sql = GetCountSql();
             int num = 0;
-            ImplementAdapter.DbHelper.query(autoCall, sql, false, dt =>
+            IDbHelper dbHelper = DbHelper;
+            dbHelper.query(autoCall, sql, false, dt =>
             {
                 num = Convert.ToInt32(dt.Rows[0][0]);
             }, ref err);
+            dbDispose(dbHelper);
             return num;
         }
 
         DataTable IDbSqlScheme.ToDataTable()
         {
             string sql = GetSql();
-            DataTable dt = null; ;
-            DbHelper.query(autoCall, sql, false, data =>
+            DataTable dt = null;
+            IDbHelper dbHelper = DbHelper;
+            dbHelper.query(autoCall, sql, false, data =>
             {
                 dt = data;
             }, ref err);
+            dbDispose(dbHelper);
             if (null == dt) dt = new DataTable();
             return dt;
             //throw new NotImplementedException();
@@ -142,13 +147,15 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             int num = 0;
             List<SqlDataItem> list = GetUpdate();
+            IDbHelper dbHelper = DbHelper;
             foreach (SqlDataItem item in list)
             {
-                DbHelper.update(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
+                dbHelper.update(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
                 {
                     num += n;
                 }, ref err);
             }
+            dbDispose(dbHelper);
             return num;
         }
 
@@ -156,13 +163,15 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             int num = 0;
             List<SqlDataItem> list = GetInsert();
+            IDbHelper dbHelper = DbHelper;
             foreach (SqlDataItem item in list)
             {
-                DbHelper.insert(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
+                dbHelper.insert(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
                 {
                     num += n;
                 }, ref err);
             }
+            dbDispose(dbHelper);
             return num;
         }
 
@@ -170,15 +179,24 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             int num = 0;
             List<SqlDataItem> list = GetDelete();
+            IDbHelper dbHelper = DbHelper;
             foreach (SqlDataItem item in list)
             {
-                DbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
+                dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
                 {
                     num += n;
                 }, ref err);
             }
+            dbDispose(dbHelper);
             return num;
         }
 
+        void dbDispose(IDbHelper dbHelper)
+        {
+            if ((null != dbHelper) && IsDbUsed)
+            {
+                if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
+            }
+        }
     }
 }
