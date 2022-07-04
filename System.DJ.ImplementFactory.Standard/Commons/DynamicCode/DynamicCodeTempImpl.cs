@@ -1058,19 +1058,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 string objTypeName = objType.TypeToString(true);
                 foreach (PropertyInfo item in piArr)
                 {
-                    if (isNotInheritInterface)
-                    {
-                        if (item.CanRead)
-                        {
-                            if (false == item.GetGetMethod().IsVirtual) continue;
-                        }
-
-                        if (item.CanWrite)
-                        {
-                            if (false == item.GetSetMethod().IsVirtual) continue;
-                        }
-                    }
-
                     returnType = item.PropertyType.TypeToString(true);
                     if (0 < piNum)
                     {
@@ -1079,7 +1066,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     if (isNotInheritInterface)
                     {
-                        DJTools.append(ref code, 2, "public override {0} {1}", returnType, item.Name);
+                        if (item.GetGetMethod().IsVirtual)
+                        {
+                            DJTools.append(ref code, 2, "public override {0} {1}", returnType, item.Name);
+                        }
+                        else
+                        {
+                            DJTools.append(ref code, 2, "public new {0} {1}", returnType, item.Name);
+                        }
                         DJTools.append(ref code, 2, "{");
                         if (item.CanRead)
                         {

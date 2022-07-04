@@ -50,7 +50,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return typeof(AbsDataModel).IsAssignableFrom(modelType);
         }
 
-        private object NewDataModel(Type dataModelType)
+        public object CreateDataModel(Type dataModelType)
         {
             object dtModel = null;
             if (null == dataModelType) return null;
@@ -72,11 +72,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string pro = "";
             string s = "";
             string GetBody = "";
+            string tag = "";
             const string getFlag = "{#GetBody}";
             Type pt = null;
             Type[] types = null;
             PropType propType = PropType.none;
             int level = 0;
+            bool isVirtual = false;
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
@@ -93,32 +95,25 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             {
                 pro = "";
                 level = 2;
+
+                level++;
                 if (pi.CanRead)
                 {
-                    if (pi.GetGetMethod().IsVirtual)
-                    {
-                        level++;
-                        DJTools.append(ref pro, level, "get");
-                        DJTools.append(ref pro, level, "{");
-                        DJTools.append(ref pro, 0, getFlag);
-                        DJTools.append(ref pro, level + 1, "return base.{0};", fn);
-                        DJTools.append(ref pro, level, "}");
-                        level--;
-                    }
+                    DJTools.append(ref pro, level, "get");
+                    DJTools.append(ref pro, level, "{");
+                    DJTools.append(ref pro, 0, getFlag);
+                    DJTools.append(ref pro, level + 1, "return base.{0};", fn);
+                    DJTools.append(ref pro, level, "}");
                 }
 
                 if (pi.CanWrite)
                 {
-                    if (pi.GetSetMethod().IsVirtual)
-                    {
-                        level++;
-                        DJTools.append(ref pro, level, "set");
-                        DJTools.append(ref pro, level, "{");
-                        DJTools.append(ref pro, level + 1, "base.{0} = value;", fn);
-                        DJTools.append(ref pro, level, "}");
-                        level--;
-                    }
+                    DJTools.append(ref pro, level, "set");
+                    DJTools.append(ref pro, level, "{");
+                    DJTools.append(ref pro, level + 1, "base.{0} = value;", fn);
+                    DJTools.append(ref pro, level, "}");
                 }
+                level--;
 
                 s = "";
                 if (!string.IsNullOrEmpty(pro))
@@ -216,9 +211,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         }
                     }
                     pro = pro.Replace(getFlag, GetBody);
+                    tag = pi.GetGetMethod().IsVirtual ? "override" : "new";
                     s = "";
                     DJTools.append(ref s, level, "");
-                    DJTools.append(ref s, level, "public override {0} {1}", type.TypeToString(true), fn);
+                    DJTools.append(ref s, level, "public {0} {1} {2}", tag, type.TypeToString(true), fn);
                     DJTools.append(ref s, level, "{");
                     DJTools.append(ref s, 0, pro);
                     DJTools.append(ref s, level, "}");
@@ -269,12 +265,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
             }
             return dtModel;
-        }
-
-        public object CreateDataModel(Type dataModelType)
-        {
-            object dm = NewDataModel(dataModelType);
-            return dm;
         }
 
         public string error { get; set; }
