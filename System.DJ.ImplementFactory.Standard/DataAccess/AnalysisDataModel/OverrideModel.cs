@@ -249,6 +249,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 typeName = newNamespace + "." + newClassName;
                 try
                 {
+                    ImplementAdapter.codeCompiler.SavePathOfDll = "";
                     Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
                     if(!string.IsNullOrEmpty(err)) error = err;
                     if (null != assembly && string.IsNullOrEmpty(err))
