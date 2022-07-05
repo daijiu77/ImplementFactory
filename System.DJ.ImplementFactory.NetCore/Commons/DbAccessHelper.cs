@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {
-    public class DbHelper : IDbHelper, IDisposable
+    public class DbAccessHelper : IDbHelper, IDisposable
     {
         static Dictionary<string, IExecuteSql> execSqlDic = new Dictionary<string, IExecuteSql>();
 

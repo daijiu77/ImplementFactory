@@ -149,8 +149,8 @@ namespace System.DJ.ImplementFactory
             Type[] dsTypes = new Type[] { dspType, type1 };
 
             Assembly asse1 = null;
-            DbHelper = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbHelper) }, ref asse1);
-            if (null == DbHelper) DbHelper = new DbHelper();
+            dbHelper1 = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbAccessHelper) }, ref asse1);
+            if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
 
             string dsFlag = "ms";
             if(db_dialect.mysql== DataAdapter.dbDialect)
@@ -164,35 +164,35 @@ namespace System.DJ.ImplementFactory
             Assembly asse2 = null;
             dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
             if (null == dataServerProvider) dataServerProvider = dsp;
-            DbHelper.dataServerProvider = dataServerProvider;
+            dbHelper1.dataServerProvider = dataServerProvider;
 
             DbVisitor.sqlAnalysis = DJTools.GetInstanceByType<ISqlAnalysis>(dsFlag);
 
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
-            DbHelper.dbConnectionState = dbConnectionState;
+            dbHelper1.dbConnectionState = dbConnectionState;
 
             microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
 
-            if (null != DbHelper)
+            if (null != dbHelper1)
             {
-                DbHelper.connectString = dbInfo.ConnectionString;
-                DbHelper.optByBatchMaxNumber = dbInfo.optByBatchMaxNumber;
-                DbHelper.optByBatchWaitSecond = dbInfo.optByBatchWaitSecond;
-                DbHelper.sqlMaxLengthForBatch = dbInfo.sqlMaxLengthForBatch;
-                DbHelper.disposableAndClose = dbInfo.close;
-                DbHelper.splitTablesRule = dbInfo.splitTable.Rule;
-                DbHelper.splitTablesRecordQuantity = dbInfo.splitTable.RecordQuantity;
+                dbHelper1.connectString = dbInfo.ConnectionString;
+                dbHelper1.optByBatchMaxNumber = dbInfo.optByBatchMaxNumber;
+                dbHelper1.optByBatchWaitSecond = dbInfo.optByBatchWaitSecond;
+                dbHelper1.sqlMaxLengthForBatch = dbInfo.sqlMaxLengthForBatch;
+                dbHelper1.disposableAndClose = dbInfo.close;
+                dbHelper1.splitTablesRule = dbInfo.splitTable.Rule;
+                dbHelper1.splitTablesRecordQuantity = dbInfo.splitTable.RecordQuantity;
 
                 if (!string.IsNullOrEmpty(dbConnectionFreeStrategy))
                 {
-                    DbHelper.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
+                    dbHelper1.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
                 }
-                DbHelper.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
-                new MultiTablesExec(dbInfo, DbHelper);
+                dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
+                new MultiTablesExec(dbInfo, dbHelper1);
             }
             IsDbUsed = dbInfo.IsDbUsed;
         }
@@ -374,7 +374,7 @@ namespace System.DJ.ImplementFactory
         {
             get
             {
-                if (null == dbHelper1) dbHelper1 = new DbHelper();
+                if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
                 IDbHelper dbHelper = dbHelper1;
                 if (IsDbUsed)
                 {
@@ -409,9 +409,9 @@ namespace System.DJ.ImplementFactory
             set
             {
                 _connStr = value;
-                if (null != DbHelper)
+                if (null != dbHelper1)
                 {
-                    DbHelper.connectString = _connStr;
+                    dbHelper1.connectString = _connStr;
                 }
             }
         }
@@ -443,9 +443,9 @@ namespace System.DJ.ImplementFactory
 
         public static void Destroy()
         {
-            if (null == DbHelper) return;
-            if (null == (DbHelper as IDisposable)) return;
-            ((IDisposable)DbHelper).Dispose();
+            if (null == dbHelper1) return;
+            if (null == (dbHelper1 as IDisposable)) return;
+            ((IDisposable)dbHelper1).Dispose();
         }
 
         static SynchronizationContext _SynicContext = null;
@@ -524,7 +524,7 @@ namespace System.DJ.ImplementFactory
             temp.IsShowCodeOfAll = sysConfig1.IsShowCode;
 
             bool enableCompiler = false;
-            if (null != codeCompiler && null != dataServerProvider && null != DbHelper)
+            if (null != codeCompiler && null != dataServerProvider && null != dbHelper1)
             {
                 enableCompiler = true;
             }

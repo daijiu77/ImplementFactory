@@ -395,8 +395,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IMultiTablesExec.Query(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            queryDatas.Rows.Clear();
-            queryDatas.Columns.Clear();
+            //queryDatas.Rows.Clear();
+            //queryDatas.Columns.Clear();
+            queryDatas = new DataTable();
             threadDic.Clear();
             if (0 == tbDic.Count) return;
 

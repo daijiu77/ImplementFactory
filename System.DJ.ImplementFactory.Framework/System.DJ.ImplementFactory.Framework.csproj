@@ -106,6 +106,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\DbAccessHelper.cs" />
     <Compile Include="DataAccess\SqlAnalysisImpl\OracleSqlAnalysis.cs" />
     <Compile Include="DataAccess\SqlAnalysisImpl\MySqlAnalysis.cs" />
     <Compile Include="DataAccess\SqlAnalysisImpl\MSqlAnalysis.cs" />
@@ -171,7 +172,6 @@
     <Compile Include="Commons\DataOperate\DeleteBatch.cs" />
     <Compile Include="Commons\DataOperate\InsertBatch.cs" />
     <Compile Include="Commons\DataOperate\UpdateBatch.cs" />
-    <Compile Include="Commons\DbHelper.cs" />
     <Compile Include="Commons\DJTools.cs" />
     <Compile Include="Commons\DynamicCode\DynamicCodeAutoCall.cs" />
     <Compile Include="Commons\DynamicCode\DynamicCodeChange.cs" />

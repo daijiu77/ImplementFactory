@@ -114,9 +114,6 @@ namespace Test.Framework
             //TestObj testObj = new TestObj();
             //testObj.test123();
 
-            WorkInfo workInfo = new WorkInfo();
-            WorkInfo[] workInfos = new WorkInfo[] { };
-            
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
