@@ -3,6 +3,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.IO;
 using System.Reflection;
 
 namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
@@ -244,6 +245,26 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 DJTools.append(ref code, level, "}");
                 level--;
                 DJTools.append(ref code, level, "}");
+
+                if (ImplementAdapter.dbInfo1.IsShowCode)
+                {
+                    string fn = newClassName + ".txt";
+                    string f = Path.Combine(DJTools.RootPath, TempImpl.dirName);
+                    if (!Directory.Exists(f))
+                    {
+                        try
+                        {
+                            Directory.CreateDirectory(f);
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                    }
+                    f = Path.Combine(f, fn);
+                    File.WriteAllText(f, code);
+                }
 
                 string err = "";
                 typeName = newNamespace + "." + newClassName;
