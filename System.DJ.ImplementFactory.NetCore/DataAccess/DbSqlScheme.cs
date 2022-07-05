@@ -73,6 +73,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 _field = pi.Name.ToLower();
                 if (!dic.ContainsKey(_field)) continue;
                 _vObj = dr[dic[_field]];
+                if (System.DBNull.Value == _vObj) continue;
                 if (null == _vObj) continue;
                 _vObj = _vObj.ConvertTo(pi.PropertyType);
                 if (null == _vObj) continue;
