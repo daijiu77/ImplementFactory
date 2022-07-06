@@ -22,7 +22,7 @@ namespace System.DJ.ImplementFactory.Commons
         private AutoCall autoCall = new AutoCall();
         private static DbInfo dbInfo = null;
         private static IDbHelper dbHelper = null;
-        private DataTable queryDatas = new DataTable();
+        private DataTable queryDatas = null;
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
         private int OptDatas = 0;
@@ -395,8 +395,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IMultiTablesExec.Query(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            //queryDatas.Rows.Clear();
-            //queryDatas.Columns.Clear();
             queryDatas = new DataTable();
             threadDic.Clear();
             if (0 == tbDic.Count) return;
@@ -426,7 +424,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             lock (_QueryResult)
             {
-                if (null != data)
+                string id = threadOpt.ID;
+                if ((null != data) && threadDic.ContainsKey(id))
                 {
                     DataTable dt = data as DataTable;
                     foreach (DataRow item in dt.Rows)
@@ -447,7 +446,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     }
                 }
 
-                string id = threadOpt.ID;
                 ((IDisposable)threadOpt).Dispose();
                 threadDic.Remove(id);
             }

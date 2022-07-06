@@ -169,6 +169,21 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             uskv.Add(new CKeyValue() { Key = typeof(SqlFromUnit).Namespace });
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionItem).Namespace });
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionRelation).Namespace });
+                            DJTools.append(ref GetBody, level, "if (null != base.{0})", fn);
+                            DJTools.append(ref GetBody, level, "{");
+                            if (PropType.isArray == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Length) return base.{0};", fn);
+                            }
+                            else if (PropType.isList == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Count) return base.{0};", fn);
+                            }
+                            else
+                            {
+                                DJTools.append(ref GetBody, level + 1, "return base.{0};", fn);
+                            }
+                            DJTools.append(ref GetBody, level, "}");
                             DJTools.append(ref GetBody, level, "DbVisitor db = new DbVisitor();");
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
