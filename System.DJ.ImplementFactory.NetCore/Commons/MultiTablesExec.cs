@@ -194,14 +194,31 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string s1 = "";
             string newSql = sql;
             string _sql = sql;
+            List<Regex> rgList = new List<Regex>();
+            int n = 0;
+            const int max = 50;
             foreach (KeyValuePair<string, object> item in tbDic)
             {
                 s1 += @"|(\s" + item.Key + @"\s)";
+                n++;
+                if (max == n)
+                {
+                    s1 = s1.Substring(1);
+                    s1 = "(?<TbName>(" + s1 + "))";
+                    rgList.Add(new Regex(s1, RegexOptions.IgnoreCase));
+                    s1 = "";
+                    n = 0;
+                }
             }
-            s1 = s1.Substring(1);
-            s1 = "(?<TbName>(" + s1 + "))";
 
-            Regex rg1 = new Regex(s1, RegexOptions.IgnoreCase);
+            if (!string.IsNullOrEmpty(s1))
+            {
+                s1 = s1.Substring(1);
+                s1 = "(?<TbName>(" + s1 + "))";
+                rgList.Add(new Regex(s1, RegexOptions.IgnoreCase));
+                s1 = "";
+            }
+
             Action<Regex> action = _rg =>
             {
                 if (_rg.IsMatch(_sql))
@@ -217,33 +234,36 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         s = m1.Groups[0].Value;
                         ss = s;
                         _sql = _sql.Replace(s, "");
-                        if (!rg1.IsMatch(s)) continue;
-                        mc2 = rg1.Matches(s);
-                        foreach (Match m2 in mc2)
+                        foreach (Regex rg1 in rgList)
                         {
-                            tb = m2.Groups["TbName"].Value.Trim();
-                            tbn = tb.ToLower();
-                            ss = ss.Replace(m2.Groups["TbName"].Value, " " + leftStr + tbn + rightStr + " ");
-                            if (dic.ContainsKey(tbn)) continue;
-                            dic.Add(tbn, tb);
+                            if (!rg1.IsMatch(s)) continue;
+                            mc2 = rg1.Matches(s);
+                            foreach (Match m2 in mc2)
+                            {
+                                tb = m2.Groups["TbName"].Value.Trim();
+                                tbn = tb.ToLower();
+                                ss = ss.Replace(m2.Groups["TbName"].Value, " " + leftStr + tbn + rightStr + " ");
+                                if (dic.ContainsKey(tbn)) continue;
+                                dic.Add(tbn, tb);
+                            }
+                            newSql = newSql.Replace(s, ss);
                         }
-                        newSql = newSql.Replace(s, ss);
                     }
                 }
             };
 
-            Regex rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+\s((where)|(group)|(order))\s", RegexOptions.IgnoreCase);
+            Regex rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+\s((where)|(group)|(order))\s", RegexOptions.IgnoreCase);
             action(rg2);
 
-            rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\()(?!\))).)+\)", RegexOptions.IgnoreCase);
+            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\()(?!\))).)+\)", RegexOptions.IgnoreCase);
             action(rg2);
 
-            rg2 = new Regex(@"from\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
+            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
             action(rg2);
 
             new_sql = newSql;
             string[] arr = new string[dic.Count];
-            int n = 0;
+            n = 0;
             foreach (var item in dic)
             {
                 arr[n] = item.Key;

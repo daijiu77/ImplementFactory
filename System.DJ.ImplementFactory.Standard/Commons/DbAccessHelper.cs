@@ -218,7 +218,9 @@ namespace System.DJ.ImplementFactory.Commons
             else
             {
                 num = 0;
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref err, result =>
+                BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
+                basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
+                basicExecForSQL1.Exec(autoCall_1, sql, parameters, ref err, result =>
                 {
                     if (null == result) result = 0;
                     int.TryParse(result.ToString(), out num);
@@ -227,6 +229,7 @@ namespace System.DJ.ImplementFactory.Commons
                         isExec = false;
                         resultAction(num);
                     }
+                    ((IDisposable)basicExecForSQL1).Dispose();
                 }, cmd =>
                 {
                     try
@@ -245,7 +248,7 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
                     return num;
-                });
+                });                
             }
             err = msg;
         }
@@ -281,7 +284,9 @@ namespace System.DJ.ImplementFactory.Commons
             Action action = () =>
             {
                 bool isExec = true;
-                basicExecForSQL.Exec(autoCall_1, sql, parameters, ref msg, result =>
+                BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
+                basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
+                basicExecForSQL1.Exec(autoCall_1, sql, parameters, ref msg, result =>
                 {
                     dt = result as DataTable;
                     if (null != resultAction && isExec)
@@ -303,6 +308,7 @@ namespace System.DJ.ImplementFactory.Commons
                             resultAction(dt);
                         }
                     }
+                    ((IDisposable)basicExecForSQL1).Dispose();
                 }, cmd =>
                 {
                     IDataServerProvider dataServerProvider = ((IDbHelper)this).dataServerProvider;
@@ -346,7 +352,7 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 Task task = new Task(() =>
                   {
-                      Thread.Sleep(50);
+                      //Thread.Sleep(50);
                       action();
                   });
                 task.Start();
