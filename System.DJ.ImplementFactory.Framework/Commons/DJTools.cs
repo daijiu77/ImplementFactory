@@ -917,13 +917,32 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         public static object createListByType(Type type)
-        {
-            object list = null;
-            if (null == type.GetInterface("IList")) return list;
+        {            
+            Type listType = null;
+            if (null == type.GetInterface("IList"))
+            {
+                listType = typeof(List<>);
+                listType = listType.MakeGenericType(type);
+            }
+            else
+            {
+                listType = type;
+            }
 
-            Type[] types = type.GetGenericArguments();
-            string asseName = type.Assembly.GetName().Name;
-            string dicTypeName = type.FullName;
+            object v = null;
+            try
+            {
+                v = Activator.CreateInstance(listType);
+                return v;
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+            Type[] types = listType.GetGenericArguments();
+            string asseName = listType.Assembly.GetName().Name;
+            string dicTypeName = listType.FullName;
             string ClsPath = "";
             string s = @"\[(?<ClsPath>[a-z0-9_\.]+)\s*\,\s*[^\[\]]+\]";
             Regex rg = new Regex(s, RegexOptions.IgnoreCase);
@@ -954,12 +973,12 @@ namespace System.DJ.ImplementFactory.Commons
             //Type t = GetClassTypeByPath(ClsPath);
             //if (null == t) return list;
 
-            object v = null;
             try
             {
                 v = Activator.CreateInstance(asseName, dicTypeName) as ObjectHandle;
             }
             catch { }
+            object list = null;
             if (null == v) return list;
             list = ((ObjectHandle)v).Unwrap();
             return list;
@@ -986,6 +1005,16 @@ namespace System.DJ.ImplementFactory.Commons
         {
             object dic = null;
             if (null == type.GetInterface("IDictionary")) return dic;
+            try
+            {
+                dic = Activator.CreateInstance(type);
+                return dic;
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
 
             Type[] types = type.GetGenericArguments();
             Type dicType = typeof(Dictionary<string, int>);

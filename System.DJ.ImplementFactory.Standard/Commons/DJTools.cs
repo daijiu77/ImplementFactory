@@ -922,17 +922,28 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static object createListByType(Type type)
         {
-            object list = null;
+            Type listType = null;
+            if (null == type.GetInterface("IList"))
+            {
+                listType = typeof(List<>);
+                listType = listType.MakeGenericType(type);
+            }
+            else
+            {
+                listType = type;
+            }
+
+            object v = null;
             try
             {
-                list = Activator.CreateInstance(type);
+                v = Activator.CreateInstance(listType);
             }
             catch (Exception ex)
             {
 
                 throw ex;
             }
-            return list;
+            return v;
         }
 
         public static void listAdd(object list, object listElement)
