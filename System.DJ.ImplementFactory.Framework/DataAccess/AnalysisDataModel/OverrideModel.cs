@@ -19,29 +19,64 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             isClass
         }
 
+        class ModelPropertyInfo
+        {
+            private Dictionary<string, PropertyInfo> dicProp = new Dictionary<string, PropertyInfo>();
+            public PropertyInfo this[string field]
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(field)) return null;
+                    string fn = field.Trim().ToLower();
+                    if (dicProp.ContainsKey(fn)) return dicProp[fn];
+                    return null;
+                }
+            }
+
+            public void Add(string field, PropertyInfo pi)
+            {
+                string fn = field.Trim().ToLower();
+                if (dicProp.ContainsKey(fn)) return;
+                dicProp.Add(fn, pi);
+            }
+
+            public bool ContainsKey(string field)
+            {
+                string fn = field.Trim().ToLower();
+                return dicProp.ContainsKey(fn);
+            }
+        }
+
+        private Dictionary<Type, ModelPropertyInfo> dicMProp = new Dictionary<Type, ModelPropertyInfo>();
         private Type GetPropertyType(Type modelType, string fieldName)
         {
             Type pt = null;
             fieldName = fieldName.ToLower().Trim();
-            Attribute att = null;
-            FieldMapping fm = null;
-            modelType.ForeachProperty((pi, type, fn) =>
+            ModelPropertyInfo modelPropertyInfo = null;
+            if (dicMProp.ContainsKey(modelType))
             {
-                if (fn.ToLower().Equals(fieldName))
+                modelPropertyInfo = dicMProp[modelType];
+            }
+            else
+            {
+                modelPropertyInfo = new ModelPropertyInfo();
+                dicMProp.Add(modelType, modelPropertyInfo);
+                Attribute att = null;
+                FieldMapping fm = null;
+                string field = "";
+                modelType.ForeachProperty((pi, type, fn) =>
                 {
-                    pt = type;
-                    return false;
-                }
-                att = pi.GetCustomAttribute(typeof(FieldMapping));
-                if (null != att) fm = (FieldMapping)att;
-                if (null == fm) return true;
-                if (fm.FieldName.Trim().ToLower().Equals(fieldName))
-                {
-                    pt = type;
-                    return false;
-                }
-                return true;
-            });
+                    if (!modelPropertyInfo.ContainsKey(fn)) modelPropertyInfo.Add(fn, pi);
+                    att = pi.GetCustomAttribute(typeof(FieldMapping));
+                    if (null != att) fm = (FieldMapping)att;
+                    if (null == fm) return true;
+                    field = fm.FieldName;
+                    if (!modelPropertyInfo.ContainsKey(field)) modelPropertyInfo.Add(field, pi);
+                    return true;
+                });
+            }
+            PropertyInfo pi = modelPropertyInfo[fieldName];
+            if (null != pi) pt = pi.PropertyType;
             return pt;
         }
 
@@ -79,7 +114,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             Type[] types = null;
             PropType propType = PropType.none;
             int level = 0;
-            bool isVirtual = false;
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
@@ -117,7 +151,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 level--;
 
                 s = "";
-                if (!string.IsNullOrEmpty(pro))
+                if (pi.CanRead)
                 {
                     constraint = null;
                     GetBody = "";
