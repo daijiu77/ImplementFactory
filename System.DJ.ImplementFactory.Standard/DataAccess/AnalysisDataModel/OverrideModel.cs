@@ -75,8 +75,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     return true;
                 });
             }
-            PropertyInfo pi = modelPropertyInfo[fieldName];
-            if (null != pi) pt = pi.PropertyType;
+            PropertyInfo pi1 = modelPropertyInfo[fieldName];
+            if (null != pi1) pt = pi1.PropertyType;
             return pt;
         }
 
