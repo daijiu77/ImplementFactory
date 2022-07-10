@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
@@ -1134,6 +1135,53 @@ namespace System.DJ.ImplementFactory.Commons
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
             return pi;
+        }
+
+        public static List<T> DataTableToList<T>(this DataTable dataTable)
+        {
+            List<T> list = new List<T>();
+            if (null == dataTable) return list;
+            if (0 == dataTable.Rows.Count) return list;
+            Dictionary<string, string> dic = new Dictionary<string, string>();
+            foreach (DataColumn item in dataTable.Columns)
+            {
+                dic.Add(item.ColumnName.ToLower(), item.ColumnName);
+            }
+
+            object ele = null;
+            object vObj = null;
+            string field = "";
+            string fn1 = "";
+            Attribute att = null;
+            Type type = typeof(T);
+            foreach (DataRow dr in dataTable.Rows)
+            {
+                ele = Activator.CreateInstance(type);
+                type.ForeachProperty((pi, tp, fn) =>
+                {
+                    if (!IsBaseType(tp)) return;
+                    field = "";
+                    fn1 = fn.ToLower();
+                    if (dic.ContainsKey(fn1)) field = dic[fn1];
+                    if (string.IsNullOrEmpty(field))
+                    {
+                        att = pi.GetCustomAttribute(typeof(FieldMapping));
+                        if (null != att)
+                        {
+                            fn1 = ((FieldMapping)att).FieldName.ToLower();
+                            if (dic.ContainsKey(fn1)) field = dic[fn1];
+                        }
+                    }
+                    if (string.IsNullOrEmpty(field)) return;
+                    vObj = dr[field];
+                    if (DBNull.Value == vObj) return;
+                    if (null == vObj) return;
+                    vObj = ConvertTo(vObj, tp);
+                    pi.SetValue(ele, vObj);
+                });
+                list.Add((T)ele);
+            }
+            return list;
         }
 
         public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
