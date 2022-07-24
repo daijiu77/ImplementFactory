@@ -93,18 +93,20 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         private void AddField(string tableName, Type type)
         {
-            string sql = "select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';";
+            //select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';
+            List<string> list = dbTableScheme.GetFields(tableName);
+            if (null == list) return;
+            if (0 == list.Count) return;
             IDbHelper dbHelper = ImplementAdapter.DbHelper;
-            string err = "";
-            DataTable dt = dbHelper.query(autoCall, sql, false, null, ref err);
-            if (null == dt) return;
-            if (0 == dt.Rows.Count) return;
             Dictionary<string, string> fieldDic = new Dictionary<string, string>();
             string fn = "";
-            foreach (DataRow item in dt.Rows)
+            string sql = "";
+            string err = "";
+            foreach (var item in list)
             {
-                fn = item[0].ToString();
-                fieldDic.Add(fn.ToLower(), fn);
+                fn = item.ToLower();
+                if (fieldDic.ContainsKey(fn)) continue;
+                fieldDic.Add(fn, item);
             }
 
             FieldMapping fm = null;
