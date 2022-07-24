@@ -390,6 +390,12 @@ namespace System.DJ.ImplementFactory
             }
         }
 
+        public static void Destroy(IDbHelper dbHelper)
+        {
+            if (!IsDbUsed) return;
+            if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
+        }
+
         public static IDataServerProvider dataServerProvider { get; set; }
 
         public static IInstanceCodeCompiler codeCompiler { get; set; }

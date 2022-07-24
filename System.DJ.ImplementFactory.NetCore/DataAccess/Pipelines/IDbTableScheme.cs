@@ -9,7 +9,9 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
     public interface IDbTableScheme
     {
         string GetTableScheme(string tableName, List<FieldMapping> fieldMappings);
+        bool IsExistTable(string tableName);
         string GetAddFieldScheme(string tableName, FieldMapping fieldMapping);
+        bool IsExistFieldName(string tableName, string fieldName);
         string GetDeleteFieldScheme(string tableName, FieldMapping fieldMapping);
     }
 }

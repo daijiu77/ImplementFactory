@@ -12,8 +12,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         private Type fieldType = null;
         private int length = 0;
         private string defaultValue = "";
-        private bool IsPrimaryKey = false;
-        private bool NoNull = false;
+        private bool isPrimaryKey = false;
+        private bool noNull = false;
         public FieldMapping(string fieldName)
         {
             this.fieldName = fieldName;
@@ -46,7 +46,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             this.fieldType = fieldType;
             this.length = length;
             this.defaultValue = defaultValue;
-            this.IsPrimaryKey = IsPrimaryKey;
+            this.isPrimaryKey = IsPrimaryKey;
         }
 
         public FieldMapping(string fieldName, Type fieldType, int length, string defaultValue, bool IsPrimaryKey, bool NoNull)
@@ -55,8 +55,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             this.fieldType = fieldType;
             this.length = length;
             this.defaultValue = defaultValue;
-            this.IsPrimaryKey = IsPrimaryKey;
-            this.NoNull = NoNull;
+            this.isPrimaryKey = IsPrimaryKey;
+            this.noNull = NoNull;
         }
 
         public string FieldName
@@ -65,6 +65,37 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             {
                 return fieldName;
             }
+            set { fieldName = value; }
+        }
+
+        public Type FieldType
+        {
+            get { return fieldType; }
+            set { fieldType = value; }
+        }
+
+        public int Length
+        {
+            get { return length; }
+            set { length = value; }
+        }
+
+        public string DefualtValue
+        {
+            get { return defaultValue; }
+            set { defaultValue = value; }
+        }
+
+        public bool IsPrimaryKey
+        {
+            get { return isPrimaryKey; }
+            set { isPrimaryKey = value; }
+        }
+
+        public bool NoNull
+        {
+            get { return noNull; }
+            set { noNull = value; }
         }
 
         public static string GetFieldMapping(PropertyInfo propertyInfo)
