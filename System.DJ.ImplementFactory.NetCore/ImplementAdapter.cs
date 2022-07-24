@@ -390,12 +390,6 @@ namespace System.DJ.ImplementFactory
             }
         }
 
-        public static void Destroy(IDbHelper dbHelper)
-        {
-            if (!IsDbUsed) return;
-            if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
-        }
-
         public static IDataServerProvider dataServerProvider { get; set; }
 
         public static IInstanceCodeCompiler codeCompiler { get; set; }
@@ -452,6 +446,12 @@ namespace System.DJ.ImplementFactory
             if (null == dbHelper1) return;
             if (null == (dbHelper1 as IDisposable)) return;
             ((IDisposable)dbHelper1).Dispose();
+        }
+
+        public static void Destroy(IDbHelper dbHelper)
+        {
+            if (!IsDbUsed) return;
+            if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
         }
 
         static SynchronizationContext _SynicContext = null;
