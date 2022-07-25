@@ -37,7 +37,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         }
 
-        public void CreateTable()
+        public void TableScheme()
         {
             Dictionary<string, string> tableDic = MultiTablesExec.Tables;
             IDbHelper dbHelper = ImplementAdapter.DbHelper;

@@ -7,7 +7,7 @@ using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
-    public class SqlServerTableScheme : IDbTableScheme
+    public class MSTableScheme : IDbTableScheme
     {
         private AutoCall autoCall = new AutoCall();
 
@@ -92,7 +92,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         string IDbTableScheme.GetAddFieldScheme(string tableName, FieldMapping fieldMapping)
         {
             string sql = "alter table {0} add";
-            sql = string.Format(sql, tableName, fieldMapping.FieldName);
+            sql = string.Format(sql, tableName);
             if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             sql += " " + getFieldScheme(fieldMapping);
             return sql;

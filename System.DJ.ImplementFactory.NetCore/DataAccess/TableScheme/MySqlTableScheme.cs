@@ -110,6 +110,10 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
                 sql += ",alter table {0} add primary key({1});";
                 sql = sql.ExtFormat(tableName, fieldMapping.FieldName);
             }
+            else
+            {
+                sql += ";";
+            }
             return sql;
         }
 

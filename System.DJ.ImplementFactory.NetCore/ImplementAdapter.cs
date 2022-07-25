@@ -168,6 +168,8 @@ namespace System.DJ.ImplementFactory
 
             DbVisitor.sqlAnalysis = DJTools.GetInstanceByType<ISqlAnalysis>(dsFlag);
 
+            IDbTableScheme dbTableScheme = DJTools.GetInstanceByType<IDbTableScheme>(dsFlag);
+
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
             dbHelper1.dbConnectionState = dbConnectionState;
@@ -193,6 +195,11 @@ namespace System.DJ.ImplementFactory
                 }
                 dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
                 new MultiTablesExec(dbInfo, dbHelper1);
+                if(null != dbTableScheme && dbInfo.UpdateTableDesign)
+                {
+                    UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
+                    updateTableDesign.TableScheme();
+                }
             }
             IsDbUsed = dbInfo.IsDbUsed;
         }
