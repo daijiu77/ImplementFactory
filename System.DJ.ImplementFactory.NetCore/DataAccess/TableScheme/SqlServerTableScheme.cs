@@ -5,7 +5,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 
-namespace System.DJ.ImplementFactory.NetCore.DataAccess.TableScheme
+namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
     public class SqlServerTableScheme : IDbTableScheme
     {
@@ -19,35 +19,38 @@ namespace System.DJ.ImplementFactory.NetCore.DataAccess.TableScheme
                 ft = "varchar({0})";
                 ft = ft.ExtFormat(fieldMapping.Length.ToString());
             }
-            else if (typeof(Guid) == fieldMapping.FieldType)
+            else if (typeof(Guid) == fieldMapping.FieldType || typeof(Guid?) == fieldMapping.FieldType)
             {
                 ft = "uniqueidentifier";
             }
-            else if (typeof(float) == fieldMapping.FieldType || typeof(Single) == fieldMapping.FieldType)
+            else if (typeof(float) == fieldMapping.FieldType || typeof(float?) == fieldMapping.FieldType)
             {
                 ft = "float";
             }
-            else if (typeof(decimal) == fieldMapping.FieldType)
+            else if (typeof(decimal) == fieldMapping.FieldType || typeof(decimal?) == fieldMapping.FieldType)
             {
                 ft = "decimal(18, 0)";
             }
-            else if (typeof(bool) == fieldMapping.FieldType)
+            else if (typeof(bool) == fieldMapping.FieldType || typeof(bool?) == fieldMapping.FieldType)
             {
                 ft = "bit";
             }
-            else if (typeof(DateTime) == fieldMapping.FieldType)
+            else if (typeof(DateTime) == fieldMapping.FieldType || typeof(DateTime?) == fieldMapping.FieldType)
             {
                 ft = "datetime";
             }
-            else if (typeof(int) == fieldMapping.FieldType)
+            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType)
             {
                 ft = "int";
             }
-            else if (typeof(Int64) == fieldMapping.FieldType || typeof(long) == fieldMapping.FieldType)
+            else if (typeof(Int64) == fieldMapping.FieldType
+                 || typeof(Int64?) == fieldMapping.FieldType
+                  || typeof(long) == fieldMapping.FieldType
+                   || typeof(long?) == fieldMapping.FieldType)
             {
                 ft = "bigint";
             }
-            else if (typeof(double) == fieldMapping.FieldType)
+            else if (typeof(double) == fieldMapping.FieldType || typeof(double?) == fieldMapping.FieldType)
             {
                 ft = "money";
             }
