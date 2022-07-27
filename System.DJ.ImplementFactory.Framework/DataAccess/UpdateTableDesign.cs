@@ -44,7 +44,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<FieldMapping> fieldMappings = new List<FieldMapping>();
             IEnumerable<Attribute> atts = null;
             Attribute att = null;
-            PropertyInfo pi = null;
+            PropertyInfo ppi = null;
             FieldMapping fm = null;
             object v = null;
             string tbName = "";
@@ -60,10 +60,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                     {
                         if (-1 != at.GetType().Name.ToLower().IndexOf("table"))
                         {
-                            pi = at.GetType().GetProperty("Name");
-                            if (null != pi)
+                            ppi = at.GetType().GetProperty("Name");
+                            if (null != ppi)
                             {
-                                v = pi.GetValue(at);
+                                v = ppi.GetValue(at);
                                 if (null == v) v = "";
                                 tbName = v.ToString();
                                 break;
@@ -99,14 +99,14 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (0 == list.Count) return;
             IDbHelper dbHelper = ImplementAdapter.DbHelper;
             Dictionary<string, string> fieldDic = new Dictionary<string, string>();
-            string fn = "";
+            string fn1 = "";
             string sql = "";
             string err = "";
             foreach (var item in list)
             {
-                fn = item.ToLower();
-                if (fieldDic.ContainsKey(fn)) continue;
-                fieldDic.Add(fn, item);
+                fn1 = item.ToLower();
+                if (fieldDic.ContainsKey(fn1)) continue;
+                fieldDic.Add(fn1, item);
             }
 
             FieldMapping fm = null;
