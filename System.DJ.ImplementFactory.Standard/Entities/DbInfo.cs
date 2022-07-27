@@ -99,5 +99,8 @@
 
         private string _IsDbUsed = "当设置为 true 时，每次使用完 DbConnection 都会被释放";
         public bool IsDbUsed { get; set; }
+
+        private string _UpdateTableDesign = "是否开启更新数据表设计";
+        public bool UpdateTableDesign { get; set; }
     }
 }

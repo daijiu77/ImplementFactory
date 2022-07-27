@@ -18,6 +18,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// key: tableName_lower, value: List<string>
         /// </summary>
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
+        private static Dictionary<string, string> _tableDic = new Dictionary<string, string>();
         private Dictionary<string, ThreadOpt> threadDic = new Dictionary<string, ThreadOpt>();
         private AutoCall autoCall = new AutoCall();
         private static DbInfo dbInfo = null;
@@ -51,12 +52,12 @@ namespace System.DJ.ImplementFactory.Commons
                 //select TABLE_NAME from {0}.dbo.sysobjects where type='U'
                 sql = "select name as TABLE_NAME from sysobjects where type='U'";
             }
-            else if (dbInfo.DatabaseType.Equals("sqlserver"))
+            else if (dbInfo.DatabaseType.Equals("mysql"))
             {
                 //select TABLE_NAME from information_schema.tables where table_schema='{0}';
-                sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)<>'information_schema' and LOWER(TABLE_SCHEMA)<>'mysql';";
+                sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)<>'information_schema' and LOWER(TABLE_SCHEMA)<>'mysql' and LOWER(ENGINE)='innodb';";
             }
-            else if (dbInfo.DatabaseType.Equals("sqlserver"))
+            else if (dbInfo.DatabaseType.Equals("oracle"))
             {
                 //SELECT TABLE_NAME FROM all_tables WHERE OWNER='{0}'
                 sql = "SELECT TABLE_NAME FROM all_tables";
@@ -72,6 +73,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             }
 
             initDictionary(rule, sql);
+        }
+
+        public static Dictionary<string, string> Tables
+        {
+            get { return _tableDic; }
         }
 
         private void initBasicExecForSQL(DbAdapter dbAdapter, IDbHelper dbHelper)
@@ -175,10 +181,16 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             if (null == dt) return;
             string tbName = "";
+            string tn = "";
             string srcTableName = "";
             foreach (DataRow item in dt.Rows)
             {
                 tbName = item["TABLE_NAME"].ToString();
+                tn = tbName.ToLower();
+                if (!_tableDic.ContainsKey(tn))
+                {
+                    _tableDic.Add(tn, tbName);
+                }
                 //if (!isSplitTable(rule, tbName, ref srcTableName)) continue;
                 if (!isSplitTable(rule, tbName, ref srcTableName)) srcTableName = tbName;
                 set_tbDic(srcTableName, tbName);
