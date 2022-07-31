@@ -33,7 +33,7 @@ namespace System.DJ.ImplementFactory
         private static readonly string svrFile = "svr_info.dt";
         private static string dbConnectionFreeStrategy = "";
         private static EList<CKeyValue> matchRules = null;
-        private static readonly DbInfo dbInfo = new DbInfo();
+        private static DbInfo dbInfo = new DbInfo();
         private static List<ErrorLevels> errorLevels1 = new List<ErrorLevels>();
         private static List<Assembly> assemblies = null;
         private static List<Assembly> assembliesOfTemp = new List<Assembly>();
@@ -178,6 +178,9 @@ namespace System.DJ.ImplementFactory
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
+
+            DbAdapter.IsPrintSQLToTrace = dbInfo.IsPrintSQLToTrace;
+            DbAdapter.IsPrintSqlToLog = dbInfo.IsPrintSqlToLog;
 
             if (null != dbHelper1)
             {

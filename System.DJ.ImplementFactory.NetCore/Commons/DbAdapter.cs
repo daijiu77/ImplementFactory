@@ -24,6 +24,9 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public static bool IsPrintSQLToTrace { get; set; }
+        public static bool IsPrintSqlToLog { get; set; }
+
         bool DbConnct(ref string err)
         {
             bool mbool = true;
@@ -99,14 +102,13 @@ namespace System.DJ.ImplementFactory.Commons
 
         private void printSql(AutoCall autoCall, string sql)
         {
-            DbInfo dbInfo = ImplementAdapter.dbInfo1;
-            if (dbInfo.IsPrintSQLToTrace)
+            if (IsPrintSQLToTrace)
             {
                 Trace.WriteLine(sql);
                 Trace.WriteLine("++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++");
             }
 
-            if (dbInfo.IsPrintSqlToLog)
+            if (IsPrintSqlToLog)
             {
                 autoCall.e(sql, ErrorLevels.debug);
             }
