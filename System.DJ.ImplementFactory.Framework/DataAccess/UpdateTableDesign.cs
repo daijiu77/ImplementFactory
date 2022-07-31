@@ -79,12 +79,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                 fieldMappings.Clear();
                 item.ForeachProperty((pi, tp, fn) =>
                 {
+                    if (!tp.IsBaseType()) return;
                     att = pi.GetCustomAttribute(typeof(FieldMapping));
                     if (null != att) fm = (FieldMapping)att;
                     if (null == fm) fm = new FieldMapping(fn);
                     if (null == fm.FieldType) fm.FieldType = tp;
                     fieldMappings.Add(fm);
+                    fm = null;
                 });
+                if (0 == fieldMappings.Count) continue;
                 sql = dbTableScheme.GetTableScheme(tbName, fieldMappings);
                 dbHelper.update(autoCall, sql, null, false, null, ref err);
             }

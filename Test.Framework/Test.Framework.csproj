@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\Terminal.cs" />
     <Compile Include="Entities\WorkInfo.cs" />
     <Compile Include="Entities\EmployeeInfo.cs" />
     <Compile Include="Entities\EquipmentInfo.cs" />
@@ -64,7 +65,6 @@
     <Compile Include="ICalculate.cs" />
     <Compile Include="LogicCalculate.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

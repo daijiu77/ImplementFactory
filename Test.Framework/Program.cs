@@ -119,7 +119,7 @@ namespace Test.Framework
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
-            EmployeeInfo employeeInfo2 = workInfos1[1].employeeInfo;
+            EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }

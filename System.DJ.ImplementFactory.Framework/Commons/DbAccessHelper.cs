@@ -248,16 +248,18 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     if (!string.IsNullOrEmpty(msg)) throw new Exception(msg);
                     return num;
-                });                
+                });
             }
             err = msg;
         }
 
         int IDbHelper.delete(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
+            if (string.IsNullOrEmpty(sql)) return 0;
             int num = 1;
             AutoCall autoCall_1 = autoCall as AutoCall;
-            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data=> {
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data =>
+            {
                 num = Convert.ToInt32(data);
                 resultAction(num);
             }, ref err);
@@ -266,11 +268,13 @@ namespace System.DJ.ImplementFactory.Commons
 
         int IDbHelper.insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
+            if (string.IsNullOrEmpty(sql)) return 0;
             int num = 1;
             AutoCall autoCall_1 = autoCall as AutoCall;
-            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data => {
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data =>
+            {
                 num = Convert.ToInt32(data);
-                resultAction(num);
+                if(null != resultAction) resultAction(num);
             }, ref err);
             return num;
         }
@@ -278,9 +282,10 @@ namespace System.DJ.ImplementFactory.Commons
         DataTable IDbHelper.query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
             DataTable dt = new DataTable();
+            if (string.IsNullOrEmpty(sql)) return dt;
             string msg = "";
             AutoCall autoCall_1 = autoCall as AutoCall;
-            
+
             Action action = () =>
             {
                 bool isExec = true;
@@ -372,11 +377,13 @@ namespace System.DJ.ImplementFactory.Commons
 
         int IDbHelper.update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)
         {
+            if (string.IsNullOrEmpty(sql)) return 0;
             int num = 1;
             AutoCall autoCall_1 = autoCall as AutoCall;
-            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data => {
+            DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data =>
+            {
                 num = Convert.ToInt32(data);
-                resultAction(num);
+                if (null != resultAction) resultAction(num);
             }, ref err);
             return num;
         }

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 
 namespace Test.NetCore.Entities
 {
     [Condition]
-    public class EquipmentInfo
+    public class EquipmentInfo: AbsDataModel
     {
         [IgnoreField(IgnoreField.IgnoreType.Insert|IgnoreField.IgnoreType.Update)]
         public Guid id { get; set; }

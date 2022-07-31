@@ -14,6 +14,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         private string getFieldType(FieldMapping fieldMapping)
         {
             string ft = "";
+            if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             if (typeof(string) == fieldMapping.FieldType)
             {
                 ft = "varchar({0})";
