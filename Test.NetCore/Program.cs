@@ -111,17 +111,40 @@ namespace Test.NetCore
         {
             SetWindowPositionCenter();
 
-            //TestObj testObj = new TestObj();
-            //testObj.test123();
-
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
+
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
             EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
+
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
+        }
+
+        void InsertData(WorkInfo workInfo)
+        {
+            DbVisitor db = new DbVisitor();
+            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
+            scheme.dbSqlBody.DataOperateExcludes("id", "employeeInfo");
+            scheme.Insert();
+        }
+
+        void UpdateData(WorkInfo workInfo)
+        {
+            DbVisitor db = new DbVisitor();
+            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
+            scheme.dbSqlBody.DataOperateContains("CompanyName", "CompanyNameEn");
+            scheme.Update();
+        }
+
+        void DeleteData(WorkInfo workInfo)
+        {
+            DbVisitor db = new DbVisitor();
+            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And("id", ConditionRelation.Equals, workInfo.id));
+            scheme.Delete();
         }
 
         class TestObj : ImplementAdapter
