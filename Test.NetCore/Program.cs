@@ -85,13 +85,13 @@ namespace Test.NetCore
             public string key1 { get; set; }
             [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
             public virtual string key { get; set; }
-            public virtual string val { get; set; }     
+            public virtual string val { get; set; }
             public virtual List<string> children { get; set; }
         }
 
-        class TTJson: testJson
+        class TTJson : testJson
         {
-            
+
             public override string key { get => base.key; set => base.key = value; }
             public override string val { get => base.val; set => base.val = value; }
             public override List<string> children
@@ -119,6 +119,11 @@ namespace Test.NetCore
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
             EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
 
+            Console.WriteLine(employeeInfo1.ToJson((type, fn) =>
+            {
+                if (typeof(EmployeeInfo) == type) return false;
+                return true;
+            }));
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }
