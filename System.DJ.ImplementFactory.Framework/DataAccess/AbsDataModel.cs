@@ -35,7 +35,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             object fv = null;
             tp.ForeachProperty((pi, type, fn) =>
             {
-                if (!property(type, fn)) return;
+                if (!property(type, fn))
+                {
+                    json += ", " + fn + ": null";
+                    return;
+                }
                 fv = pi.GetValue(dataModel);
                 if (type == typeof(string) || type == typeof(Guid) || type == typeof(DateTime)
                  || type == typeof(Guid?) || type == typeof(DateTime?))
@@ -101,8 +105,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 json += ", " + fn + ": " + fv.ToString();
             });
-            if (!string.IsNullOrEmpty(json)) json = json.Substring(2);
-            json = "{" + json + "}";
+            if (!string.IsNullOrEmpty(json))
+            {
+                json = json.Substring(2);
+                json = "{" + json + "}";
+            }
             return json;
         }
 
