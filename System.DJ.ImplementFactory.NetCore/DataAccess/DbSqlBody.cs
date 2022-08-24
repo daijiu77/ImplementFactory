@@ -425,6 +425,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (null == propertyAction) continue;
                 item.dataModel.ForeachProperty((pi, type, fn, fv) =>
                 {
+                    if (!DJTools.IsBaseType(type)) return;
                     if (null == fv) return;
                     field = fn.ToLower();
                     if (0 < dicContains.Count)

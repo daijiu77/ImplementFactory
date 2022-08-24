@@ -153,7 +153,7 @@ namespace System.DJ.ImplementFactory.Commons
             bool mbool = ((typeof(ValueType) == type.BaseType) || (typeof(string) == type));
             if (!mbool)
             {
-                mbool = typeof(Guid) == type || typeof(DateTime) == type;
+                mbool = typeof(Guid) == type || typeof(Guid?) == type || typeof(DateTime) == type || typeof(DateTime?) == type;
             }
             return mbool;
 
