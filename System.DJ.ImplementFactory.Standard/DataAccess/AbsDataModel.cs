@@ -10,7 +10,6 @@ namespace System.DJ.ImplementFactory.DataAccess
 {
     public abstract class AbsDataModel
     {
-        protected Dictionary<string, object> _dictionary_key = new Dictionary<string, object>();
         public T GetValue<T>(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName)) return default(T);

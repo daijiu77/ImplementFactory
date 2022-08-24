@@ -10,7 +10,7 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AssemblyVersion>1.0.0.22</AssemblyVersion>
     <FileVersion>1.0.0.22</FileVersion>
-    <Version>1.0.0.22</Version>
+    <Version>1.0.0.23</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
     <Authors>DJ</Authors>
   </PropertyGroup>
