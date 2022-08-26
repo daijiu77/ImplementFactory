@@ -385,7 +385,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return orderbyPart;
         }
 
-        private void GetPropertyOfModel(object dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
+        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
         {
             Attribute att = null;
             string tbName = "";
@@ -473,9 +473,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             Constraint constraint = null;
             dataModel.ForeachProperty((pi, type, fn, fv) =>
             {
+                if (null == fv) return;
                 if (!DJTools.IsBaseType(type))
                 {
-                    if (null == fv) return;
                     att = dataModel.GetType().GetCustomAttribute(typeof(Constraint));
                     if (null == att) return;
                     constraint = (Constraint)att;
@@ -486,20 +486,21 @@ namespace System.DJ.ImplementFactory.DataAccess
                         IEnumerable collect = (IEnumerable)fv;
                         foreach (var item in collect)
                         {
+                            if (null == (item as AbsDataModel)) break;
                             ws = funcItemWhere(dataModel, item, constraint, tbName);
                             if (string.IsNullOrEmpty(ws)) break;
-                            GetPropertyOfModel(item, ws, fromUnitAction, propertyAction, propEndAction);
+                            GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction);
                         }
                     }
-                    else if (type.IsClass)
+                    else if (typeof(AbsDataModel).IsAssignableFrom(type))
                     {
                         ws = funcItemWhere(dataModel, fv, constraint, tbName);
                         if (string.IsNullOrEmpty(ws)) return;
-                        GetPropertyOfModel(fv, ws, fromUnitAction, propertyAction, propEndAction);
+                        GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
                     }
                     return;
                 }
-                if (null == fv) return;
+                
                 field = fn.ToLower();
                 if (0 < dicContains.Count)
                 {
@@ -526,7 +527,6 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string wherePart = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
-            Attribute att = null;
             foreach (SqlFromUnit item in fromUnits)
             {
                 if (null == item.dataModel) continue;
