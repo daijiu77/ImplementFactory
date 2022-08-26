@@ -228,7 +228,7 @@ namespace System.DJ.ImplementFactory.Commons
             PropertyInfo propertyInfo = null;
             if (string.IsNullOrEmpty(fieldName)) return propertyInfo;
             string fn = fieldName.Trim().ToLower();
-            obj.ForeachProperty((pi, fieldType, fName, fValue) =>
+            obj.GetType().ForeachProperty((pi, fieldType, fName) =>
             {
                 if (fName.ToLower().Equals(fn))
                 {
