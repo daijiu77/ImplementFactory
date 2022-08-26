@@ -113,8 +113,11 @@ namespace Test.Framework
 
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "G"));
 
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
+
+            //已实现数据懒加载，访问属性时加载数据
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
             EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
@@ -132,7 +135,7 @@ namespace Test.Framework
         {
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
-            scheme.dbSqlBody.DataOperateExcludes("id", "employeeInfo");
+            scheme.dbSqlBody.DataOperateExcludes("id");//Insert操作时排除id字段
             scheme.Insert();
         }
 
@@ -140,6 +143,7 @@ namespace Test.Framework
         {
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
+            //Update操作时仅对CompanyName，CompanyNameEn字段操作
             scheme.dbSqlBody.DataOperateContains("CompanyName", "CompanyNameEn");
             scheme.Update();
         }
