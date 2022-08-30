@@ -268,6 +268,36 @@ namespace System.DJ.ImplementFactory.Commons
             });
         }
 
+        public static void SetPropertyFrom<T>(this T targetObj, object srcObj, Func<PropertyInfo, bool> func)
+        {
+            if (null == srcObj || null == targetObj) return;
+            PropertyInfo propertyInfo = null;
+            PropertyInfo pInfo = null;
+            object v = null;
+            Type type = typeof(T);
+            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            foreach (var pi in piArr)
+            {
+                if (!func(pi)) continue;
+                pInfo = targetObj.GetType().GetProperty(pi.Name);
+                if (pInfo.CanWrite) continue;
+                propertyInfo = srcObj.find(pi.Name);
+                if (null == propertyInfo) continue;
+                v = propertyInfo.GetValue(srcObj);
+                if (null != v) v = v.ConvertTo(pInfo.PropertyType);
+                try
+                {
+                    pInfo.SetValue(targetObj, v);
+                }
+                catch (Exception) { }
+            }
+        }
+
+        public static void SetPropertyFrom<T>(this T targetObj, object srcObj)
+        {
+            targetObj.SetPropertyFrom<T>(srcObj, pi => { return true; });
+        }
+
         /// <summary>
         /// 根据类型获取该数据对应的类型默认值
         /// </summary>

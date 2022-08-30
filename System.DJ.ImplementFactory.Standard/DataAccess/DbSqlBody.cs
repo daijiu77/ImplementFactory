@@ -385,34 +385,153 @@ namespace System.DJ.ImplementFactory.DataAccess
             return orderbyPart;
         }
 
+        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
+        {
+            Attribute att = null;
+            string tbName = "";
+            string field = "";
+
+            Func<Type, string> funcTbName = (_type) =>
+            {
+                if (null == _type) return "";
+                Attribute _att = _type.GetCustomAttribute(typeof(TableAttribute));
+                string _tbName = "";
+                if (null != _att)
+                {
+                    _tbName = ((TableAttribute)_att).Name;
+                }
+                else
+                {
+                    _tbName = _type.Name;
+                }
+                return _tbName;
+            };
+
+            Action<object, string, object, string> actionSetVal = (_pObj, _pFn, _cObj, _cFn) =>
+               {
+                   PropertyInfo _pi = _pObj.find(_pFn);
+                   object _pv = null;
+                   if (null != _pi)
+                   {
+                       _pv = _pi.GetValue(_pObj);
+                       if (null == _pv) return;
+                       _pi = _cObj.find(_cFn);
+                       if (null == _pi) return;
+                       _pv = DJTools.ConvertTo(_pv, _pi.PropertyType);
+                       if (null == _pv) return;
+                       _pi.SetValue(_cObj, _pv);
+                   }
+               };
+
+            Func<object, object, Constraint, string, string> funcItemWhere = (_pObj, _cObj, _constraint, _tName) =>
+             {
+                 string _tn = funcTbName(_cObj.GetType());
+                 if (string.IsNullOrEmpty(_tn)) return "";
+                 string _ws = "";
+                 if (string.IsNullOrEmpty(wherePart))
+                 {
+                     _ws = _tName + "." + _constraint.ForeignKey + "=" + _tn + "." + _constraint.RefrenceKey;
+                 }
+                 else
+                 {
+                     _ws = wherePart + " and " + _tName + "." + _constraint.ForeignKey + "=" + _tn + "." + _constraint.RefrenceKey;
+                 }
+                 actionSetVal(_pObj, _constraint.ForeignKey, _cObj, _constraint.RefrenceKey);
+
+                 if (null != _constraint.Foreign_refrenceKeys)
+                 {
+                     int _len = _constraint.Foreign_refrenceKeys.Length / 2;
+                     if (0 < _len)
+                     {
+                         _len *= 2;
+                         int _n = 0, _index = 0;
+                         string _pn = "";
+                         foreach (var _fr in _constraint.Foreign_refrenceKeys)
+                         {
+                             if (0 == _n)
+                             {
+                                 _n = 1;
+                                 _ws += " and " + _tName + "." + _fr;
+                                 _pn = _fr;
+                             }
+                             else
+                             {
+                                 _n = 0;
+                                 _ws += "=" + _tn + "." + _fr;
+                                 actionSetVal(_pObj, _pn, _cObj, _fr);
+                             }
+                             _index++;
+                             if (_index == _len) break;
+                         }
+                     }
+                 }
+                 return _ws;
+             };
+            tbName = funcTbName(dataModel.GetType());
+            fromUnitAction(tbName, wherePart);
+            if (null == propertyAction) return;
+            Constraint constraint = null;
+            dataModel.ForeachProperty((pi, type, fn, fv) =>
+            {
+                if (null == fv) return;
+                if (!DJTools.IsBaseType(type))
+                {
+                    att = dataModel.GetType().GetCustomAttribute(typeof(Constraint));
+                    if (null == att) return;
+                    constraint = (Constraint)att;
+
+                    string ws = "";
+                    if (typeof(IEnumerable).IsAssignableFrom(type))
+                    {
+                        IEnumerable collect = (IEnumerable)fv;
+                        foreach (var item in collect)
+                        {
+                            if (null == (item as AbsDataModel)) break;
+                            ws = funcItemWhere(dataModel, item, constraint, tbName);
+                            if (string.IsNullOrEmpty(ws)) break;
+                            GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction);
+                        }
+                    }
+                    else if (typeof(AbsDataModel).IsAssignableFrom(type))
+                    {
+                        ws = funcItemWhere(dataModel, fv, constraint, tbName);
+                        if (string.IsNullOrEmpty(ws)) return;
+                        GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
+                    }
+                    return;
+                }
+                
+                field = fn.ToLower();
+                if (0 < dicContains.Count)
+                {
+                    if (!dicContains.ContainsKey(field)) field = "";
+                }
+                if (string.IsNullOrEmpty(field)) return;
+                if (0 < dicExcludes.Count)
+                {
+                    if (dicExcludes.ContainsKey(field)) field = "";
+                }
+                if (string.IsNullOrEmpty(field)) return;
+                propertyAction(fn, fv, constraint);
+            });
+            if (null != propEndAction) propEndAction();
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="fromUnitAction">tableName, where</param>
         /// <param name="propertyAction">fieldName, fieldValue</param>
         /// <param name="propEndAction">属性结束</param>
-        private void CreateDataOpt(Action<string, string> fromUnitAction, Action<string, object> propertyAction, Action propEndAction)
+        private void CreateDataOpt(Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
         {
-            string tbName = "";
             string wherePart = "";
-            string field = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
-            Attribute att = null;
             foreach (SqlFromUnit item in fromUnits)
             {
                 if (null == item.dataModel) continue;
                 if (null != (item.dataModel as DbSqlBody)) continue;
                 wherePart = "";
-                att = item.dataModel.GetType().GetCustomAttribute(typeof(TableAttribute));
-                if (null != att)
-                {
-                    tbName = ((TableAttribute)att).Name;
-                }
-                else
-                {
-                    tbName = item.dataModel.GetType().Name;
-                }
-
                 if (null != item.conditions)
                 {
                     wherePart = GetConditionUnit(item.conditions);
@@ -421,26 +540,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                         wherePart = rg.Match(wherePart).Groups["ConditionBody"].Value;
                     }
                 }
-                fromUnitAction(tbName, wherePart);
-                if (null == propertyAction) continue;
-                item.dataModel.ForeachProperty((pi, type, fn, fv) =>
-                {
-                    if (!DJTools.IsBaseType(type)) return;
-                    if (null == fv) return;
-                    field = fn.ToLower();
-                    if (0 < dicContains.Count)
-                    {
-                        if (!dicContains.ContainsKey(field)) field = "";
-                    }
-                    if (string.IsNullOrEmpty(field)) return;
-                    if (0 < dicExcludes.Count)
-                    {
-                        if (dicExcludes.ContainsKey(field)) field = "";
-                    }
-                    if (string.IsNullOrEmpty(field)) return;
-                    propertyAction(fn, fv);
-                });
-                if (null != propEndAction) propEndAction();
+
+                GetPropertyOfModel(item.dataModel, wherePart, fromUnitAction, propertyAction, propEndAction);
             }
         }
 
@@ -459,7 +560,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 sql = "update " + tb + " set ";
                 where = whereStr;
                 sets = "";
-            }, (fn, fv) =>
+            }, (fn, fv, constraint) =>
             {
                 sets += ", " + fn + "=" + dbTag + fn;
                 para = ImplementAdapter.dataServerProvider.CreateDbParameter(fn, fv);
@@ -494,7 +595,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 sql = "insert into " + tb + "({0}) values({1})";
                 fields = "";
                 vals = "";
-            }, (fn, fv) =>
+            }, (fn, fv, constraint) =>
             {
                 fields += ", " + fn;
                 vals += ", " + dbTag + fn;

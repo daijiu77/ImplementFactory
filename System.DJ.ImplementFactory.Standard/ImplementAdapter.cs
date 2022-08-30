@@ -162,7 +162,8 @@ namespace System.DJ.ImplementFactory
                 dsFlag = "oracle";
             }
             Assembly asse2 = null;
-            dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
+            dataServerProvider = DJTools.GetInstanceByType<IDataServerProvider>(dsFlag);
+            //dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
             if (null == dataServerProvider) dataServerProvider = dsp;
             dbHelper1.dataServerProvider = dataServerProvider;
 
@@ -270,8 +271,6 @@ namespace System.DJ.ImplementFactory
                     action(types);
                 }
                 catch { }
-
-                if (null == _obj) return default(T);
             }
 
             if (null == _obj)
