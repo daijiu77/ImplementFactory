@@ -170,9 +170,9 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
                 foreach (Para item in dic)
                 {
                     Para p = new Para();
-                    p.SetPropertyFrom(item, (pi) =>
+                    p.SetCurrentPropertyFrom(item, (pi) =>
                     {
-                        if (pi.Name.ToLower().Equals("id")) return false;
+                        //if (pi.Name.ToLower().Equals("id")) return false;
                         return true;
                     });
                     _paraList.Add(p);

@@ -14,13 +14,14 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
         public Para this[string paraName]
         {
             get
-            {
+            {                
                 Para para = null;
                 if (string.IsNullOrEmpty(paraName)) return para;
                 string pn = paraName.ToLower();
                 IList list = this;
                 foreach (var item in list)
                 {
+                    if (null == ((Para)item).ParaName) continue;
                     if (((Para)item).ParaName.ToLower().Equals(pn))
                     {
                         para = (Para)item;

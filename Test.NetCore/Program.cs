@@ -113,7 +113,7 @@ namespace Test.NetCore
 
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
-            scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "G"));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "A"));
 
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
 
