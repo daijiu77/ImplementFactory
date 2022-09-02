@@ -28,6 +28,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 types = item.GetTypes();
                 foreach (Type tp in types)
                 {
+                    if (tp.IsAbstract || tp.IsInterface || tp.IsEnum) continue;
                     if (typeof(AbsDataModel).IsAssignableFrom(tp))
                     {
                         absDataModels.Add(tp);
@@ -117,6 +118,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             type.ForeachProperty((pi, tp, fn) =>
             {
                 fm = null;
+                if (!tp.IsBaseType()) return;
                 if (fieldDic.ContainsKey(fn.ToLower())) return;
                 att = pi.GetCustomAttribute(typeof(FieldMapping));
                 if (null != att) fm = (FieldMapping)att;

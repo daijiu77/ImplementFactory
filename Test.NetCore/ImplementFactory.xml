@@ -12,7 +12,7 @@
     <IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">false</IsPrintSQLToTrace>
     <IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
 		<IsDbUsed description="当设置为 true 时，每次使用完 DbConnection 都会被释放">true</IsDbUsed>
-    <UpdateTableDesign description="是否开启更新数据表设计">false</UpdateTableDesign>
+    <UpdateTableDesign description="是否开启更新数据表设计">true</UpdateTableDesign>
 		<SplitTable>
 			<Enabled description="分表存储，分表查询">true</Enabled>
 			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#{6}</Rule>

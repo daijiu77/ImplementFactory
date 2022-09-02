@@ -110,8 +110,11 @@ namespace Test.NetCore
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
-
+            bool mbool = typeof(AbsDataModel).IsAssignableFrom(typeof(Plan));
             DbVisitor db = new DbVisitor();
+            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
+            IList<Plan> plans = sqlScheme.ToList<Plan>();
+
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "A"));
 

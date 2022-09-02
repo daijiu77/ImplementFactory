@@ -51,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\Plan.cs" />
+    <Compile Include="Entities\BaseModel.cs" />
     <Compile Include="Entities\Terminal.cs" />
     <Compile Include="Entities\WorkInfo.cs" />
     <Compile Include="Entities\EmployeeInfo.cs" />

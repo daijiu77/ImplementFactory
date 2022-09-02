@@ -66,7 +66,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         private string getFieldScheme(FieldMapping fieldMapping)
         {
-            string sql = fieldMapping.FieldName;
+            string sql = "'" + fieldMapping.FieldName + "'";
             sql += " " + getFieldType(fieldMapping);
 
             if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
@@ -100,14 +100,14 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         string IDbTableScheme.GetAddFieldScheme(string tableName, FieldMapping fieldMapping)
         {
-            string sql = "alter table {0} add column";
-            sql = string.Format(sql, tableName, fieldMapping.FieldName);
+            string sql = "alter table '{0}' add column";
+            sql = sql.ExtFormat(tableName);
             if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             sql += " " + getFieldScheme(fieldMapping);
 
             if (fieldMapping.IsPrimaryKey)
             {
-                sql += ",alter table {0} add primary key({1});";
+                sql += ",alter table '{0}' add primary key('{1}');";
                 sql = sql.ExtFormat(tableName, fieldMapping.FieldName);
             }
             else
@@ -143,7 +143,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         {
             if (null == fieldMappings) return "";
             if (0 == fieldMappings.Count) return "";
-            string sql = "create table " + tableName;
+            string sql = "create table '" + tableName + "'";
             DJTools.append(ref sql, "(");
             string field = "";
             int n = 0;
@@ -156,7 +156,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
                     DJTools.append(ref sql, field + ",");
                     if (item.IsPrimaryKey)
                     {
-                        DJTools.append(ref sql, "primary key({0}),", item.FieldName);
+                        DJTools.append(ref sql, "primary key('{0}'),", item.FieldName);
                     }
                 }
                 else
@@ -164,7 +164,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
                     if (item.IsPrimaryKey)
                     {
                         DJTools.append(ref sql, field + ",");
-                        DJTools.append(ref sql, "primary key({0})", item.FieldName);
+                        DJTools.append(ref sql, "primary key('{0}')", item.FieldName);
                     }
                     else
                     {

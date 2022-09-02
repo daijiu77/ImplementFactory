@@ -66,7 +66,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         private string getFieldScheme(FieldMapping fieldMapping)
         {
-            string sql = fieldMapping.FieldName;
+            string sql = "\"" + fieldMapping.FieldName + "\"";
             sql += " " + getFieldType(fieldMapping);
 
             if (fieldMapping.IsPrimaryKey)
@@ -93,8 +93,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         string IDbTableScheme.GetAddFieldScheme(string tableName, FieldMapping fieldMapping)
         {
-            string sql = "alter table {0} add (";
-            sql = string.Format(sql, tableName);
+            string sql = "alter table \"{0}\" add (";
+            sql = sql.ExtFormat(tableName);
             if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             sql += " " + getFieldScheme(fieldMapping) + ");";
             return sql;
@@ -126,7 +126,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         {
             if (null == fieldMappings) return "";
             if (0 == fieldMappings.Count) return "";
-            string sql = "create table " + tableName;
+            string sql = "create table \"" + tableName + "\"";
             DJTools.append(ref sql, "(");
             string field = "";
             int n = 0;

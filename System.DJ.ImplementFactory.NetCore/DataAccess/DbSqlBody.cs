@@ -171,11 +171,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                         att = type.GetCustomAttribute(typeof(FieldMapping));
                         if (null != att)
                         {
-                            s += ", " + ((FieldMapping)att).FieldName;
+                            s += ", " + sqlAnalysis.GetFieldName(((FieldMapping)att).FieldName);
                         }
                         else
                         {
-                            s += ", " + fn;
+                            s += ", " + sqlAnalysis.GetFieldName(fn);
                         }
                     });
                 }
@@ -293,11 +293,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                     att = item.modelType.GetCustomAttribute(typeof(TableAttribute));
                     if (null != att)
                     {
-                        s = ((TableAttribute)att).Name;
+                        s = sqlAnalysis.GetTableName(((TableAttribute)att).Name);
                     }
                     else
                     {
-                        s = item.modelType.Name;
+                        s = sqlAnalysis.GetTableName(item.modelType.Name);
                     }
 
                     mbool = false;
@@ -368,7 +368,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string groupPart = "";
             foreach (var item in groupFields)
             {
-                groupPart += ", " + item;
+                groupPart += ", " + sqlAnalysis.GetFieldName(item);
             }
             if (!string.IsNullOrEmpty(groupPart)) groupPart = groupPart.Substring(1);
             return groupPart;

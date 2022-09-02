@@ -96,7 +96,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 sign = string.Format(sign, fieldValueOfBaseValue.ToString());
             }
 
-            if (string.IsNullOrEmpty(wherePart)) wherePart = fieldName + " " + sign;
+            if (string.IsNullOrEmpty(wherePart)) wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " " + sign;
             return wherePart;
             //throw new NotImplementedException();
         }
@@ -121,7 +121,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 }
             }
             if (!string.IsNullOrEmpty(s)) s = s.Substring(2);
-            wherePart = fieldName + " in (" + s + ")";
+            wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " in (" + s + ")";
             return wherePart;
         }
 
@@ -132,7 +132,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             string sign = GetRuleSign(relation);
             string sql = "(" + fieldValueOfSql + ")";
             sign = string.Format(sign, sql);
-            if (string.IsNullOrEmpty(wherePart)) wherePart = fieldName + " " + sign;
+            if (string.IsNullOrEmpty(wherePart)) wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " " + sign;
             return wherePart;
             //throw new NotImplementedException();
         }
@@ -156,7 +156,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.GetOrderByItem(string fieldName, OrderByRule orderByRule)
         {
             if (string.IsNullOrEmpty(fieldName)) return "";
-            string orderbyPart = fieldName;
+            string orderbyPart = ((ISqlAnalysis)this).GetFieldName(fieldName);
             if (OrderByRule.Asc == orderByRule)
             {
                 orderbyPart += " asc";
@@ -274,7 +274,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         private string GetJoin(string flag, string tableName, string alias, string wherePart)
         {
-            string sql = flag + " " + tableName;
+            string sql = flag + " " + ((ISqlAnalysis)this).GetTableName(tableName);
             sql = ((ISqlAnalysis)this).GetTableAilas(sql, alias);
             if (!string.IsNullOrEmpty(wherePart))
             {
@@ -304,7 +304,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetTableAilas(string tableName, string alias)
         {
-            string sql = tableName;
+            string sql = ((ISqlAnalysis)this).GetTableName(tableName);
             string s = null == alias ? "" : alias;
             s = s.Trim();
             if (!string.IsNullOrEmpty(s)) sql += " " + s;
@@ -313,12 +313,23 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetFieldAlias(string fieldName, string alias)
         {
-            string sql = fieldName;
+            string sql = ((ISqlAnalysis)this).GetFieldName(fieldName);
             string s = null == alias ? "" : alias;
             s = s.Trim();
             if (!string.IsNullOrEmpty(s)) sql += " " + s;
             return sql;
         }
 
+        string ISqlAnalysis.GetTableName(string tableName)
+        {
+            if ("'" == tableName.Substring(0, 1) && "'" == tableName.Substring(tableName.Length - 1)) return tableName;
+            return "'" + tableName + "'";
+        }
+
+        string ISqlAnalysis.GetFieldName(string fieldName)
+        {
+            if ("'" == fieldName.Substring(0, 1) && "'" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
+            return "'" + fieldName + "'";
+        }
     }
 }
