@@ -385,7 +385,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return orderbyPart;
         }
 
-        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
+        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
         {
             Attribute att = null;
             string tbName = "";
@@ -512,7 +512,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (dicExcludes.ContainsKey(field)) field = "";
                 }
                 if (string.IsNullOrEmpty(field)) return;
-                propertyAction(fn, fv, constraint);
+                propertyAction(fn, fv, constraint, pi);
             });
             if (null != propEndAction) propEndAction();
         }
@@ -523,7 +523,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// <param name="fromUnitAction">tableName, where</param>
         /// <param name="propertyAction">fieldName, fieldValue</param>
         /// <param name="propEndAction">属性结束</param>
-        private void CreateDataOpt(Action<string, string> fromUnitAction, Action<string, object, Constraint> propertyAction, Action propEndAction)
+        private void CreateDataOpt(Action<string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
         {
             string wherePart = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
@@ -550,6 +550,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlDataItem> list = new List<SqlDataItem>();
             SqlDataItem dataItem = null;
             DbParameter para = null;
+            FieldMapping fm = null;
             string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
             string sql = "";
             string sets = "";
@@ -557,12 +558,17 @@ namespace System.DJ.ImplementFactory.DataAccess
             CreateDataOpt((tb, whereStr) =>
             {
                 dataItem = new SqlDataItem();
-                sql = "update " + tb + " set ";
+                sql = "update " + sqlAnalysis.GetTableName(tb) + " set ";
                 where = whereStr;
                 sets = "";
-            }, (fn, fv, constraint) =>
+            }, (fn, fv, constraint, pi) =>
             {
-                sets += ", " + fn + "=" + dbTag + fn;
+                fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
+                if (null != fm)
+                {
+                    if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
+                }
+                sets += ", " + sqlAnalysis.GetFieldName(fn) + "=" + dbTag + fn;
                 para = ImplementAdapter.dataServerProvider.CreateDbParameter(fn, fv);
                 dataItem.parameters.Add(para);
             }, () =>
@@ -585,6 +591,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlDataItem> list = new List<SqlDataItem>();
             SqlDataItem dataItem = null;
             DbParameter para = null;
+            FieldMapping fm = null;
             string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
             string sql = "";
             string fields = "";
@@ -592,12 +599,17 @@ namespace System.DJ.ImplementFactory.DataAccess
             CreateDataOpt((tb, whereStr) =>
             {
                 dataItem = new SqlDataItem();
-                sql = "insert into " + tb + "({0}) values({1})";
+                sql = "insert into " + sqlAnalysis.GetTableName(tb) + "({0}) values({1})";
                 fields = "";
                 vals = "";
-            }, (fn, fv, constraint) =>
+            }, (fn, fv, constraint, pi) =>
             {
-                fields += ", " + fn;
+                fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
+                if (null != fm)
+                {
+                    if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
+                }
+                fields += ", " + sqlAnalysis.GetFieldName(fn) ;
                 vals += ", " + dbTag + fn;
                 para = ImplementAdapter.dataServerProvider.CreateDbParameter(fn, fv);
                 dataItem.parameters.Add(para);
@@ -622,7 +634,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string whereStr = "";
             CreateDataOpt((tb, where) =>
             {
-                sql = "delete from " + tb;
+                sql = "delete from " + sqlAnalysis.GetTableName(tb);
                 whereStr = GetWherePart(where);
                 if (!string.IsNullOrEmpty(whereStr)) sql += " where " + whereStr;
                 list.Add(new SqlDataItem()

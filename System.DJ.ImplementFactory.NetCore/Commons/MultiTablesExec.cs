@@ -211,7 +211,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             const int max = 50;
             foreach (KeyValuePair<string, object> item in tbDic)
             {
-                s1 += @"|(\s" + item.Key + @"\s)";
+                s1 += @"|(\s[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
                 n++;
                 if (max == n)
                 {
@@ -241,6 +241,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     string tbn = "";
                     MatchCollection mc1 = _rg.Matches(_sql);
                     MatchCollection mc2 = null;
+                    Regex rg3 = new Regex(@"^(?<LeftS>[^a-z0-9_\s])[a-z0-9_]+(?<RightS>[^a-z0-9_\s])$", RegexOptions.IgnoreCase);
+                    Match m3 = null;
+                    string LeftS = "", RightS = "";
                     foreach (Match m1 in mc1)
                     {
                         s = m1.Groups[0].Value;
@@ -253,8 +256,18 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                             foreach (Match m2 in mc2)
                             {
                                 tb = m2.Groups["TbName"].Value.Trim();
+                                LeftS = "";
+                                RightS = "";
+                                if (rg3.IsMatch(tb))
+                                {
+                                    m3 = rg3.Match(tb);
+                                    LeftS = m3.Groups["LeftS"].Value;
+                                    RightS = m3.Groups["RightS"].Value;
+                                    tb = tb.Substring(1);
+                                    tb = tb.Substring(0, tb.Length - 1);
+                                }
                                 tbn = tb.ToLower();
-                                ss = ss.Replace(m2.Groups["TbName"].Value, " " + leftStr + tbn + rightStr + " ");
+                                ss = ss.Replace(m2.Groups["TbName"].Value, " " + LeftS + leftStr + tbn + rightStr + RightS + " ");
                                 if (dic.ContainsKey(tbn)) continue;
                                 dic.Add(tbn, tb);
                             }
@@ -273,12 +286,18 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
             action(rg2);
 
+            rg2 = new Regex(@"[a-z0-9_]+", RegexOptions.IgnoreCase);
             new_sql = newSql;
             string[] arr = new string[dic.Count];
             n = 0;
             foreach (var item in dic)
             {
-                arr[n] = item.Key;
+                s1 = item.Key;
+                if (rg2.IsMatch(s1))
+                {
+                    s1 = rg2.Match(s1).Groups[0].Value;
+                }
+                arr[n] = s1;
                 n++;
             }
             return arr;
@@ -297,6 +316,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 string k1 = "";
                 List<TableInfo> list1 = tbDic[tbn1] as List<TableInfo>;
                 List<TableInfo> list2 = null;
+                Regex rg = null;
                 if (!string.IsNullOrEmpty(tbn2))
                 {
                     list2 = tbDic[tbn2] as List<TableInfo>;

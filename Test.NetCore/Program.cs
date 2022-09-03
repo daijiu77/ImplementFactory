@@ -110,10 +110,23 @@ namespace Test.NetCore
         static void Main(string[] args)
         {
             SetWindowPositionCenter();
-            bool mbool = typeof(AbsDataModel).IsAssignableFrom(typeof(Plan));
+
+            Plan plan = new Plan()
+            {
+                PName = "Go to play game.",
+                Detail = "With my friend",
+                StartDate = DateTime.Now,
+                EndDate = DateTime.Now.AddHours(2)
+            };
+
             DbVisitor db = new DbVisitor();
-            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
+            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(plan));
+            sqlScheme.Insert();
             IList<Plan> plans = sqlScheme.ToList<Plan>();
+
+            sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<EquipmentInfo>("e",
+                ConditionItem.Me.And("equipmentName", ConditionRelation.Equals, "'868b5'")));
+            IList<EquipmentInfo> equipmentInfos = sqlScheme.ToList<EquipmentInfo>();
 
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "A"));
