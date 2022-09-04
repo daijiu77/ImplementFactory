@@ -122,7 +122,9 @@ namespace Test.NetCore
 
             DbVisitor db = new DbVisitor();
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(plan));
-            sqlScheme.Insert();
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            dic.Add("IsEnabled", false);
+            sqlScheme.AppendInsert(dic); //当有有默认值的情况下，可以通过 AppendInsert 或 AppendUpdate 改变默认值
             IList<Plan> plans = sqlScheme.ToList<Plan>();
 
             sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<EquipmentInfo>("e",
