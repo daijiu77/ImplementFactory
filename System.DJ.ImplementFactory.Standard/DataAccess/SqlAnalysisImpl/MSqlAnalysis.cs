@@ -69,7 +69,17 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             {
                 if (-1 != sign.ToLower().IndexOf("like"))
                 {
-                    sign = string.Format(sign, fieldValueOfBaseValue.ToString());
+                    s = fieldValueOfBaseValue.ToString();
+                    if (2 < s.Length)
+                    {
+                        if ((s.Substring(0, 1).Equals("'") && s.Substring(s.Length - 1).Equals("'"))
+                            || (s.Substring(0, 1).Equals("\"") && s.Substring(s.Length - 1).Equals("\"")))
+                        {
+                            s = s.Substring(1);
+                            s = s.Substring(0, s.Length - 1);
+                        }
+                    }
+                    sign = string.Format(sign, s);
                 }
                 else if (-1 != sign.ToLower().IndexOf("in"))
                 {
@@ -88,7 +98,17 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 }
                 else
                 {
-                    sign = string.Format(sign, fieldValueOfBaseValue.ToString());
+                    Regex rg = new Regex(@"(^[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^[\-\+][0-9]$)|(^[\-\+][1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]*[0-9]$)|(^[1-9][0-9]+\.[0-9]*[0-9]$)|(^[\-\+][0-9]\.[0-9]*[0-9]$)|(^[\-\+][1-9][0-9]+\.[0-9]*[0-9]$)|(^true$)|(^false$)|(^null$)", RegexOptions.IgnoreCase);
+                    s = fieldValueOfBaseValue.ToString();
+                    if (!rg.IsMatch(s))
+                    {
+                        if (false == s.Substring(0, 1).Equals("'") && false == s.Substring(s.Length - 1).Equals("'")
+                            && false == s.Substring(0, 1).Equals("\"") && false == s.Substring(s.Length - 1).Equals("\""))
+                        {
+                            s = "'" + s + "'";
+                        }
+                    }
+                    sign = string.Format(sign, s);
                 }
             }
             else

@@ -11,6 +11,7 @@ using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Test.Framework.DataInterface;
 using Test.Framework.Entities;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
@@ -125,7 +126,7 @@ namespace Test.Framework
             IList<Plan> plans = sqlScheme.ToList<Plan>();
 
             sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<EquipmentInfo>("e",
-                ConditionItem.Me.And("equipmentName", ConditionRelation.Equals, "'868b5'")));
+                ConditionItem.Me.And("equipmentName", ConditionRelation.Equals, "868b5")));
             IList<EquipmentInfo> equipmentInfos = sqlScheme.ToList<EquipmentInfo>();
 
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));

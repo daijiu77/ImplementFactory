@@ -9,10 +9,10 @@
 		<dbConnectionFreeStrategy description="数据库连接释放策略，onlyDispose(仅释放资源)/disposeAndClose(释放资源且关闭连接) 或整数值: 0/1, 默认 onlyDispose">onlyDispose</dbConnectionFreeStrategy>
 		<insertBatchStrategy description="缓存时批量插入策略，normalBatch/singleList 或整数值: 0/1, 默认采用通用批量插入">normalBatch</insertBatchStrategy>
 		<IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
-    <IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">false</IsPrintSQLToTrace>
-    <IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
+		<IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">true</IsPrintSQLToTrace>
+		<IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
 		<IsDbUsed description="当设置为 true 时，每次使用完 DbConnection 都会被释放">true</IsDbUsed>
-    <UpdateTableDesign description="是否开启更新数据表设计">true</UpdateTableDesign>
+		<UpdateTableDesign description="是否开启更新数据表设计">true</UpdateTableDesign>
 		<SplitTable>
 			<Enabled description="分表存储，分表查询">true</Enabled>
 			<Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#{6}</Rule>
@@ -28,7 +28,7 @@
 		<Recomplie description="是否启用重新编译机制, false(不启用), true(启用), 默认为 false">true</Recomplie>
 		<IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">true</IsShowCode>
 	</SysConfig>
-	
+
 	<MatchRules description="可以不需要配置匹配规则，由组件自动适配, 但配置后可提高组件加载速度">
 		<item>
 			<DllRelativePathOfImpl description="[可选] - 实例类所在dll文件的相对路径,如果为空,表示实例类和exe文件属同一dll文件"></DllRelativePathOfImpl>
