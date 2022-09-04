@@ -545,6 +545,26 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
+        private Dictionary<string, object> keyValUpdate = new Dictionary<string, object>();
+        protected void SetAppendUpdate(Dictionary<string, object> keyValue)
+        {
+            keyValUpdate.Clear();
+            foreach (var item in keyValue)
+            {
+                keyValUpdate.Add(item.Key, item.Value);
+            }
+        }
+
+        private Dictionary<string, object> keyValInsert = new Dictionary<string, object>();
+        protected void SetAppendInsert(Dictionary<string, object> keyValue)
+        {
+            keyValInsert.Clear();
+            foreach (var item in keyValue)
+            {
+                keyValInsert.Add(item.Key, item.Value);
+            }
+        }
+
         protected List<SqlDataItem> GetUpdate()
         {
             List<SqlDataItem> list = new List<SqlDataItem>();
@@ -552,9 +572,27 @@ namespace System.DJ.ImplementFactory.DataAccess
             DbParameter para = null;
             FieldMapping fm = null;
             string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
+            Dictionary<string, DbParameter> dic = new Dictionary<string, DbParameter>();
             string sql = "";
             string sets = "";
             string where = "";
+
+            Action<string, object> kvAction = (_fn, _fv) =>
+            {
+                if (dic.ContainsKey(_fn.ToLower()))
+                {
+                    para = dic[_fn.ToLower()];
+                    dataItem.parameters.Remove(para);
+                    para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);
+                    dataItem.parameters.Add(para);
+                    return;
+                }
+                sets += ", " + sqlAnalysis.GetFieldName(_fn) + "=" + dbTag + _fn;
+                para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);
+                dataItem.parameters.Add(para);
+                dic.Add(_fn.ToLower(), para);
+            };
+
             CreateDataOpt((tb, whereStr) =>
             {
                 dataItem = new SqlDataItem();
@@ -568,11 +606,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
                 }
-                sets += ", " + sqlAnalysis.GetFieldName(fn) + "=" + dbTag + fn;
-                para = ImplementAdapter.dataServerProvider.CreateDbParameter(fn, fv);
-                dataItem.parameters.Add(para);
+                kvAction(fn, fv);
             }, () =>
             {
+                foreach (var item in keyValUpdate)
+                {
+                    kvAction(item.Key, item.Value);
+                }
+                keyValUpdate.Clear();
+
                 if (!string.IsNullOrEmpty(sets))
                 {
                     sets = sets.Substring(2);
@@ -592,10 +634,29 @@ namespace System.DJ.ImplementFactory.DataAccess
             SqlDataItem dataItem = null;
             DbParameter para = null;
             FieldMapping fm = null;
+            Dictionary<string, DbParameter> dic = new Dictionary<string, DbParameter>();
             string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
             string sql = "";
             string fields = "";
             string vals = "";
+
+            Action<string, object> kvAction = (_fn, _fv) =>
+            {
+                if (dic.ContainsKey(_fn.ToLower()))
+                {
+                    para = dic[_fn.ToLower()];
+                    dataItem.parameters.Remove(para);
+                    para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);
+                    dataItem.parameters.Add(para);
+                    return;
+                }
+                fields += ", " + sqlAnalysis.GetFieldName(_fn);
+                vals += ", " + dbTag + _fn;
+                para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);
+                dataItem.parameters.Add(para);
+                dic.Add(_fn.ToLower(), para);
+            };
+
             CreateDataOpt((tb, whereStr) =>
             {
                 dataItem = new SqlDataItem();
@@ -609,12 +670,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
                 }
-                fields += ", " + sqlAnalysis.GetFieldName(fn) ;
-                vals += ", " + dbTag + fn;
-                para = ImplementAdapter.dataServerProvider.CreateDbParameter(fn, fv);
-                dataItem.parameters.Add(para);
+                kvAction(fn, fv);
             }, () =>
-            {
+            {                
+                foreach (var item in keyValInsert)
+                {
+                    kvAction(item.Key, item.Value);
+                }
+                keyValInsert.Clear();
+
                 if (!string.IsNullOrEmpty(fields))
                 {
                     fields = fields.Substring(2);

@@ -13,7 +13,9 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         IList<T> ToList<T>();
         T DefaultFirst<T>();
         int Update();
+        int AppendUpdate(Dictionary<string, object> keyValue);
         int Insert();
+        int AppendInsert(Dictionary<string, object> keyValue);
         int Delete();
         DbSqlBody dbSqlBody { get; }
         string error { get; }

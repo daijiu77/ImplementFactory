@@ -199,5 +199,17 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
             }
         }
+
+        int IDbSqlScheme.AppendUpdate(Dictionary<string, object> keyValue)
+        {
+            SetAppendUpdate(keyValue);
+            return ((IDbSqlScheme)this).Update();
+        }
+
+        int IDbSqlScheme.AppendInsert(Dictionary<string, object> keyValue)
+        {
+            SetAppendInsert(keyValue);
+            return ((IDbSqlScheme)this).Insert();
+        }
     }
 }
