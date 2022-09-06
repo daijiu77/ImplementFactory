@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons;
@@ -38,6 +39,46 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         }
 
+        private bool IsEnabledType(Type type, ref Type type1, ref int length)
+        {
+            bool mbool = false;
+            type1 = null;
+            length = 0;
+            if (typeof(System.Collections.ICollection).IsAssignableFrom(type))
+            {
+                Type tp = null;
+                if (type.IsArray)
+                {
+                    string ts = type.TypeToString(true);
+                    ts = ts.Replace("[]", "");
+                    tp = Type.GetType(ts);
+                }
+                else if (typeof(IList).IsAssignableFrom(type))
+                {
+                    Type[] types = type.GetGenericArguments();
+                    if (null != types)
+                    {
+                        if (0 < types.Length) tp = types[0];
+                    }
+                }
+
+                if (null == tp) return mbool;
+                if (tp.IsBaseType())
+                {
+                    mbool = true;
+                    type1 = typeof(string);
+                    length = 500;
+                }
+            }
+            else if (type.IsBaseType())
+            {
+                type1 = type;
+                mbool = true;
+            }
+                        
+            return mbool;
+        }
+
         public void TableScheme()
         {
             Dictionary<string, string> tableDic = MultiTablesExec.Tables;
@@ -47,6 +88,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             Attribute att = null;
             PropertyInfo ppi = null;
             FieldMapping fm = null;
+            Type type1 = null;
+            int length = 0;
             object v = null;
             string tbName = "";
             string sql = "";
@@ -81,11 +124,14 @@ namespace System.DJ.ImplementFactory.DataAccess
                 item.ForeachProperty((pi, tp, fn) =>
                 {
                     fm = null;
-                    if (!tp.IsBaseType()) return;
+                    type1 = null;
+                    length = 0;
+                    if (!IsEnabledType(tp, ref type1, ref length)) return;
                     att = pi.GetCustomAttribute(typeof(FieldMapping));
                     if (null != att) fm = (FieldMapping)att;
                     if (null == fm) fm = new FieldMapping(fn);
-                    if (null == fm.FieldType) fm.FieldType = tp;
+                    if (null == fm.FieldType) fm.FieldType = type1;
+                    if (0 == fm.Length) fm.Length = length;
                     fieldMappings.Add(fm);
                 });
                 if (0 == fieldMappings.Count) continue;
@@ -115,15 +161,20 @@ namespace System.DJ.ImplementFactory.DataAccess
 
             FieldMapping fm = null;
             Attribute att = null;
+            Type type1 = null;
+            int length = 0;
             type.ForeachProperty((pi, tp, fn) =>
             {
                 fm = null;
-                if (!tp.IsBaseType()) return;
+                type1 = null;
+                length = 0;
+                if (!IsEnabledType(tp, ref type1, ref length)) return;
                 if (fieldDic.ContainsKey(fn.ToLower())) return;
                 att = pi.GetCustomAttribute(typeof(FieldMapping));
                 if (null != att) fm = (FieldMapping)att;
                 if (null == fm) fm = new FieldMapping(fn);
-                if (null == fm.FieldType) fm.FieldType = tp;
+                if (null == fm.FieldType) fm.FieldType = type1;
+                if (0 == fm.Length) fm.Length = length;
                 sql = dbTableScheme.GetAddFieldScheme(tableName, fm);
                 dbHelper.update(autoCall, sql, null, false, null, ref err);
             });
