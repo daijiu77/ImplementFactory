@@ -1204,9 +1204,9 @@ namespace System.DJ.ImplementFactory.Commons
             return pi;
         }
 
-        public static List<T> DataTableToList<T>(this DataTable dataTable)
+        public static List<object> DataTableToList(this DataTable dataTable, Type type)
         {
-            List<T> list = new List<T>();
+            List<object> list = new List<object>();
             if (null == dataTable) return list;
             if (0 == dataTable.Rows.Count) return list;
             Dictionary<string, string> dic = new Dictionary<string, string>();
@@ -1220,7 +1220,6 @@ namespace System.DJ.ImplementFactory.Commons
             string field = "";
             string fn1 = "";
             Attribute att = null;
-            Type type = typeof(T);
             foreach (DataRow dr in dataTable.Rows)
             {
                 ele = Activator.CreateInstance(type);
@@ -1246,9 +1245,21 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = ConvertTo(vObj, tp);
                     pi.SetValue(ele, vObj);
                 });
-                list.Add((T)ele);
+                list.Add(ele);
             }
             return list;
+        }
+
+        public static List<T> DataTableToList<T>(this DataTable dataTable)
+        {
+            Type type = typeof(T);
+            List<T> datas = new List<T>();
+            List<object> list = dataTable.DataTableToList(type);
+            foreach (var item in list)
+            {
+                datas.Add((T)item);
+            }
+            return datas;
         }
 
         public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
