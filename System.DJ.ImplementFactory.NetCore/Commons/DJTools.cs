@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.Commons;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
@@ -188,7 +189,7 @@ namespace System.DJ.ImplementFactory.Commons
                 if (!isAll)
                 {
                     if (item.DeclaringType != type) continue;
-                }                
+                }
                 v = item.GetValue(obj);
                 mbool = func(item, item.PropertyType, item.Name, v);
                 if (false == mbool) break;
@@ -229,7 +230,7 @@ namespace System.DJ.ImplementFactory.Commons
                 if (!isAll)
                 {
                     if (item.DeclaringType != objType) continue;
-                }                
+                }
                 mbool = func(item, item.PropertyType, item.Name);
                 if (false == mbool) break;
             }
@@ -1146,16 +1147,16 @@ namespace System.DJ.ImplementFactory.Commons
             catch { }
         }
 
-        private static object _entity = null;
+        private static Type _entityType = null;
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
         private static void initPropertyDic(object entity)
         {
-            _entity = null == _entity ? entity : _entity;
-            if ((false == entity.Equals(_entity)) || (0 == _entityPropertyDic.Count))
+            _entityType = null == _entityType ? entity.GetType() : _entityType;
+            if ((_entityType != entity.GetType()) || (0 == _entityPropertyDic.Count))
             {
-                _entity = entity;
+                _entityType = entity.GetType();
                 _entityPropertyDic.Clear();
-                entity.ForeachProperty((propertyInfo, type, fn, fv) =>
+                entity.GetType().ForeachProperty((propertyInfo, type, fn) =>
                 {
                     _entityPropertyDic.Add(fn.ToLower(), propertyInfo);
                 });
@@ -1798,9 +1799,9 @@ namespace System.DJ.ImplementFactory.Commons
         {
             string whereStr = "";
             Func<string> resultFn = () =>
-              {
-                  return startChar + whereStr;
-              };
+            {
+                return startChar + whereStr;
+            };
             if (null == entity) return resultFn();
             if (false == entity.GetType().IsClass) return resultFn();
             if (entity.GetType().IsAbstract) return resultFn();
@@ -2005,6 +2006,12 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             return list1.ToArray();
+        }
+
+        public static object JsonToObject(string json)
+        {
+            JsonToEntity toEntity = new JsonToEntity();
+            return toEntity.GetObject(json);
         }
     }
 }

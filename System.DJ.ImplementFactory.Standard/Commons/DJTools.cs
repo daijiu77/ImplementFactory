@@ -1062,16 +1062,16 @@ namespace System.DJ.ImplementFactory.Commons
             catch { }
         }
 
-        private static object _entity = null;
+        private static Type _entityType = null;
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
         private static void initPropertyDic(object entity)
         {
-            _entity = null == _entity ? entity : _entity;
-            if ((false == entity.Equals(_entity)) || (0 == _entityPropertyDic.Count))
+            _entityType = null == _entityType ? entity.GetType() : _entityType;
+            if ((_entityType != entity.GetType()) || (0 == _entityPropertyDic.Count))
             {
-                _entity = entity;
+                _entityType = entity.GetType();
                 _entityPropertyDic.Clear();
-                entity.ForeachProperty((propertyInfo, type, fn, fv) =>
+                entity.GetType().ForeachProperty((propertyInfo, type, fn) =>
                 {
                     _entityPropertyDic.Add(fn.ToLower(), propertyInfo);
                 });
@@ -1921,6 +1921,12 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             return list1.ToArray();
+        }
+
+        public static object JsonToObject(string json)
+        {
+            JsonToEntity toEntity = new JsonToEntity();
+            return toEntity.GetObject(json);
         }
     }
 }
