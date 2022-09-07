@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
@@ -383,6 +385,14 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             }
             string s = SqlLeft + output + SqlRight;
             return s;
+        }
+
+        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
+        {
+            defaultValue = null;
+            if (null == fieldMapping) return true;
+            if (!string.IsNullOrEmpty(fieldMapping.DefualtValue)) return false;
+            return true;
         }
     }
 }

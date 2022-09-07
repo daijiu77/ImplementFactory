@@ -664,9 +664,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             FieldMapping fm = null;
             Dictionary<string, DbParameter> dic = new Dictionary<string, DbParameter>();
             string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
+            string tableName = null;
             string sql = "";
             string fields = "";
             string vals = "";
+            object dFv = null;
             List<string> pks = new List<string>();
 
             Action<string, object> kvAction = (_fn, _fv) =>
@@ -692,6 +694,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     model = dataModel
                 };
+                tableName = tb;
                 sql = "insert into " + sqlAnalysis.GetTableName(tb) + "({0}) values({1})";
                 fields = "";
                 vals = "";
@@ -711,7 +714,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                             pks.Add(fn);
                         }
                     }
-                    if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
+                    if (!sqlAnalysis.IsLegalCaseDefaultValueWhenInsert(tableName, pi, fm, ref dFv)) return;
+                    fv = dFv;
                 }
                 kvAction(fn, fv);
             }, () =>

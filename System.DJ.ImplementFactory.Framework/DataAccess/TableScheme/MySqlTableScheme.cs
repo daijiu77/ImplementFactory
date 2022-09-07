@@ -69,22 +69,22 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             string sql = "'" + fieldMapping.FieldName + "'";
             sql += " " + getFieldType(fieldMapping);
 
-            if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
-            {
-                if (typeof(string) == fieldMapping.FieldType
-                    || typeof(Guid) == fieldMapping.FieldType
-                    || typeof(Guid?) == fieldMapping.FieldType
-                    || typeof(DateTime) == fieldMapping.FieldType
-                    || typeof(DateTime?) == fieldMapping.FieldType)
-                {
-                    sql += " default '{0}'";
-                }
-                else
-                {
-                    sql += " default {0}";
-                }
-                sql = sql.ExtFormat(fieldMapping.DefualtValue);
-            }
+            //if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
+            //{
+            //    if (typeof(string) == fieldMapping.FieldType
+            //        || typeof(Guid) == fieldMapping.FieldType
+            //        || typeof(Guid?) == fieldMapping.FieldType
+            //        || typeof(DateTime) == fieldMapping.FieldType
+            //        || typeof(DateTime?) == fieldMapping.FieldType)
+            //    {
+            //        sql += " default '{0}'";
+            //    }
+            //    else
+            //    {
+            //        sql += " default {0}";
+            //    }
+            //    sql = sql.ExtFormat(fieldMapping.DefualtValue);
+            //}
 
             if (fieldMapping.NoNull)
             {

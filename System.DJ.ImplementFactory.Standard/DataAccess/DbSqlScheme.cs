@@ -32,7 +32,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 num = Convert.ToInt32(dt.Rows[0][0]);
             }, ref err);
-            dbDispose(dbHelper);
+            ImplementAdapter.Destroy(dbHelper);
             return num;
         }
 
@@ -45,7 +45,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 dt = data;
             }, ref err);
-            dbDispose(dbHelper);
+            ImplementAdapter.Destroy(dbHelper);
             if (null == dt) dt = new DataTable();
             return dt;
             //throw new NotImplementedException();
@@ -156,7 +156,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     num += n;
                 }, ref err);
             }
-            dbDispose(dbHelper);
+            ImplementAdapter.Destroy(dbHelper);
             return num;
         }
 
@@ -206,7 +206,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     });
                 }, ref err);
             }
-            dbDispose(dbHelper);
+            ImplementAdapter.Destroy(dbHelper);
             return num;
         }
 
@@ -222,16 +222,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                     num += n;
                 }, ref err);
             }
-            dbDispose(dbHelper);
+            ImplementAdapter.Destroy(dbHelper);
             return num;
-        }
-
-        void dbDispose(IDbHelper dbHelper)
-        {
-            if ((null != dbHelper) && IsDbUsed)
-            {
-                if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
-            }
         }
 
         int IDbSqlScheme.AppendUpdate(Dictionary<string, object> keyValue)

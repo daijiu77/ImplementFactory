@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess;
+using System.Reflection;
 using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess.Pipelines
@@ -28,5 +30,6 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         string GetTableName(string tableName);
         string GetFieldName(string fieldName);
         string GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys);
+        bool IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue);
     }
 }

@@ -74,11 +74,11 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
                 sql += " primary key";
             }
 
-            if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
-            {
-                sql += " default({0})";
-                sql = sql.ExtFormat(fieldMapping.DefualtValue);
-            }
+            //if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
+            //{
+            //    sql += " default({0})";
+            //    sql = sql.ExtFormat(fieldMapping.DefualtValue);
+            //}
 
             if (fieldMapping.NoNull)
             {

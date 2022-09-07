@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Pipelines;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
@@ -361,6 +364,70 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (";" == sql.Substring(sql.Length - 1)) sql = sql.Substring(0, sql.Length - 1);
             sql += "; select last_insert_id() " + ((ISqlAnalysis)this).GetFieldName(primaryKeys[0]) + ";";
             return sql;
+        }
+
+        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
+        {
+            defaultValue = null;
+            if (null == fieldMapping) return true;
+            if (!string.IsNullOrEmpty(fieldMapping.DefualtValue))
+            {
+                Regex rg = new Regex(@"[0-9]+", RegexOptions.IgnoreCase);
+                if ((propertyInfo.PropertyType == typeof(int)) || (propertyInfo.PropertyType == typeof(long)))
+                {                    
+                    if (rg.IsMatch(fieldMapping.DefualtValue))
+                    {
+                        string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;
+                        defaultValue = Convert.ToInt32(sNum);
+                        return true;
+                    }
+                    AutoCall autoCall = new AutoCall();
+                    long num = 0;
+                    string err = "";
+                    string sql = "select {0} from {1} order by {0} desc limit 1;";
+                    sql = sql.ExtFormat(propertyInfo.Name, tableName);
+                    IDbHelper dbHelper = ImplementAdapter.DbHelper;
+                    dbHelper.query(autoCall, sql, false, (dt) =>
+                    {
+                        if (null == dt) return;
+                        if (0 == dt.Rows.Count) return;
+                        object fv = DBNull.Value == dt.Rows[0][0] ? 0 : dt.Rows[0][0];
+                        fv = DJTools.ConvertTo(fv, propertyInfo.PropertyType);
+                        num = Convert.ToInt64(fv);
+                    }, ref err);
+                    ImplementAdapter.Destroy(dbHelper);
+                    defaultValue = num + 1;
+                }
+                else if(propertyInfo.PropertyType == typeof(Guid))
+                {
+                    defaultValue = Guid.NewGuid();
+                }
+                else if(propertyInfo.PropertyType == typeof(DateTime))
+                {
+                    defaultValue = DateTime.Now;
+                }
+                else if(propertyInfo.PropertyType == typeof(bool))
+                {
+                    if (rg.IsMatch(fieldMapping.DefualtValue))
+                    {
+                        string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;
+                        defaultValue = Convert.ToInt32(sNum);
+                    }
+
+                    if (-1 != fieldMapping.DefualtValue.ToLower().IndexOf("false"))
+                    {
+                        defaultValue = "false";
+                    }
+                    else if(-1 != fieldMapping.DefualtValue.ToLower().IndexOf("true"))
+                    {
+                        defaultValue = "true";
+                    }
+                }
+
+                if (null == defaultValue) return false;
+            }
+            return true;
+            //throw new NotImplementedException();
         }
     }
 }
