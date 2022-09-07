@@ -476,29 +476,54 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (null == fv) return;
                 if (!DJTools.IsBaseType(type))
                 {
-                    att = dataModel.GetType().GetCustomAttribute(typeof(Constraint));
-                    if (null == att) return;
-                    constraint = (Constraint)att;
+                    Type eleType = null;
+                    if (typeof(IList).IsAssignableFrom(type))
+                    {
+                        Type[] types = type.GetGenericArguments();
+                        if (0 < types.Length)
+                        {
+                            eleType = types[0];
+                            if (!eleType.IsBaseType()) eleType = null;
+                        }                        
+                    }
 
                     string ws = "";
-                    if (typeof(IEnumerable).IsAssignableFrom(type))
+                    if (null != eleType)
                     {
                         IEnumerable collect = (IEnumerable)fv;
+                        
                         foreach (var item in collect)
                         {
-                            if (null == (item as AbsDataModel)) break;
-                            ws = funcItemWhere(dataModel, item, constraint, tbName);
-                            if (string.IsNullOrEmpty(ws)) break;
-                            GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction);
+                            ws += "," + item;
                         }
+                        if (!string.IsNullOrEmpty(ws)) ws = ws.Substring(1);
+                        fv = ws;
                     }
-                    else if (typeof(AbsDataModel).IsAssignableFrom(type))
+                    else
                     {
-                        ws = funcItemWhere(dataModel, fv, constraint, tbName);
-                        if (string.IsNullOrEmpty(ws)) return;
-                        GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
-                    }
-                    return;
+                        att = dataModel.GetType().GetCustomAttribute(typeof(Constraint));
+                        if (null == att) return;
+                        constraint = (Constraint)att;
+                                                
+                        if (typeof(IEnumerable).IsAssignableFrom(type))
+                        {
+                            IEnumerable collect = (IEnumerable)fv;
+                            foreach (var item in collect)
+                            {
+                                if (null == (item as AbsDataModel)) break;
+                                ws = funcItemWhere(dataModel, item, constraint, tbName);
+                                if (string.IsNullOrEmpty(ws)) break;
+                                GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction);
+                            }
+                        }
+                        else if (typeof(AbsDataModel).IsAssignableFrom(type))
+                        {
+                            ws = funcItemWhere(dataModel, fv, constraint, tbName);
+                            if (string.IsNullOrEmpty(ws)) return;
+                            GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
+                        }
+                        return;
+                    }                    
                 }
 
                 field = fn.ToLower();
