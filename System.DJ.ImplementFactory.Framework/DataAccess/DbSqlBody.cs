@@ -385,7 +385,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return orderbyPart;
         }
 
-        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
+        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<AbsDataModel, string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
         {
             Attribute att = null;
             string tbName = "";
@@ -468,7 +468,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                  return _ws;
              };
             tbName = funcTbName(dataModel.GetType());
-            fromUnitAction(tbName, wherePart);
+            fromUnitAction(dataModel, tbName, wherePart);
             if (null == propertyAction) return;
             Constraint constraint = null;
             dataModel.ForeachProperty((pi, type, fn, fv) =>
@@ -500,7 +500,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     return;
                 }
-                
+
                 field = fn.ToLower();
                 if (0 < dicContains.Count)
                 {
@@ -523,7 +523,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// <param name="fromUnitAction">tableName, where</param>
         /// <param name="propertyAction">fieldName, fieldValue</param>
         /// <param name="propEndAction">属性结束</param>
-        private void CreateDataOpt(Action<string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
+        private void CreateDataOpt(Action<AbsDataModel, string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
         {
             string wherePart = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
@@ -593,9 +593,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dic.Add(_fn.ToLower(), para);
             };
 
-            CreateDataOpt((tb, whereStr) =>
+            CreateDataOpt((dataModel, tb, whereStr) =>
             {
-                dataItem = new SqlDataItem();
+                dataItem = new SqlDataItem()
+                {
+                    model = dataModel
+                };
                 sql = "update " + sqlAnalysis.GetTableName(tb) + " set ";
                 where = whereStr;
                 sets = "";
@@ -639,6 +642,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string sql = "";
             string fields = "";
             string vals = "";
+            List<string> pks = new List<string>();
 
             Action<string, object> kvAction = (_fn, _fv) =>
             {
@@ -657,9 +661,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dic.Add(_fn.ToLower(), para);
             };
 
-            CreateDataOpt((tb, whereStr) =>
+            CreateDataOpt((dataModel, tb, whereStr) =>
             {
-                dataItem = new SqlDataItem();
+                dataItem = new SqlDataItem()
+                {
+                    model = dataModel
+                };
                 sql = "insert into " + sqlAnalysis.GetTableName(tb) + "({0}) values({1})";
                 fields = "";
                 vals = "";
@@ -668,11 +675,22 @@ namespace System.DJ.ImplementFactory.DataAccess
                 fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
                 if (null != fm)
                 {
+                    if (fm.IsPrimaryKey)
+                    {
+                        if (!string.IsNullOrEmpty(fm.FieldName))
+                        {
+                            pks.Add(fm.FieldName);
+                        }
+                        else
+                        {
+                            pks.Add(fn);
+                        }
+                    }
                     if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
                 }
                 kvAction(fn, fv);
             }, () =>
-            {                
+            {
                 foreach (var item in keyValInsert)
                 {
                     kvAction(item.Key, item.Value);
@@ -684,7 +702,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     fields = fields.Substring(2);
                     vals = vals.Substring(2);
                     sql = sql.ExtFormat(fields, vals);
-                    dataItem.sql = sql;
+                    dataItem.sql = sqlAnalysis.GetPrimaryKeyValueScheme(sql, pks);
                     list.Add(dataItem);
                 }
             });
@@ -696,14 +714,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlDataItem> list = new List<SqlDataItem>();
             string sql = "";
             string whereStr = "";
-            CreateDataOpt((tb, where) =>
+            CreateDataOpt((dataModel, tb, where) =>
             {
                 sql = "delete from " + sqlAnalysis.GetTableName(tb);
                 whereStr = GetWherePart(where);
                 if (!string.IsNullOrEmpty(whereStr)) sql += " where " + whereStr;
                 list.Add(new SqlDataItem()
                 {
-                    sql = sql
+                    sql = sql,
+                    model = dataModel
                 });
             }, null, null);
             return list;

@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.NetCore.Commons;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -55,10 +57,16 @@ namespace System.DJ.ImplementFactory.Commons
 
         public void Exec(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = trace.GetFrame(1);
+            MethodBase methodBase = stackFrame.GetMethod();
+            string methodName = methodBase.Name;
+            bool isQuery = -1 != methodName.IndexOf("Pipelines.IDbHelper.query");
             Regex rg = new Regex(@"^((select\s)|(insert\s)|(update\s)|(delete\s))", RegexOptions.IgnoreCase);
             if (rg.IsMatch(sql))
             {
                 string sign = rg.Match(sql).Groups[0].Value.Trim().ToLower();
+                if (isQuery) sign = "select";
                 switch (sign)
                 {
                     case "select":

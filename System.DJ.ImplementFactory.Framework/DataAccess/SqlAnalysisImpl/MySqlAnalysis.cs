@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.Text.RegularExpressions;
@@ -232,7 +233,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             groupPart = groupPart.Trim();
             if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
             Random rnd = new Random();
-            
+
             string sql = "select {0} from {1}{2}{3}{4} limit {5}, {6};";
             sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, (pageSize * (pageNumber - 1)).ToString(), pageSize.ToString());
             return sql;
@@ -271,7 +272,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
             orderByPart = orderByPart.Trim();
             if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
-            
+
             string sql = "select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4} limit {5}, {6};";
             sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), length.ToString());
             return sql;
@@ -350,6 +351,16 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         {
             if ("'" == fieldName.Substring(0, 1) && "'" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
             return "'" + fieldName + "'";
+        }
+
+        string ISqlAnalysis.GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys)
+        {
+            if (null == primaryKeys) return sql;
+            if (0 == primaryKeys.Count) return sql;
+            sql = sql.Trim();
+            if (";" == sql.Substring(sql.Length - 1)) sql = sql.Substring(0, sql.Length - 1);
+            sql += "; select last_insert_id() " + ((ISqlAnalysis)this).GetFieldName(primaryKeys[0]) + ";";
+            return sql;
         }
     }
 }

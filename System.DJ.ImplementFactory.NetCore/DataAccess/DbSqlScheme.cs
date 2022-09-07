@@ -165,11 +165,45 @@ namespace System.DJ.ImplementFactory.DataAccess
             int num = 0;
             List<SqlDataItem> list = GetInsert();
             IDbHelper dbHelper = DbHelper;
+            Dictionary<string, string> dic = new Dictionary<string, string>();
+            DataRow dr = null;
+            string field = "";
+            string k = "";
+            object v = null;
             foreach (SqlDataItem item in list)
             {
-                dbHelper.insert(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
+                dbHelper.query(autoCall, item.sql, (List<DbParameter>)item.parameters, false, (dt) =>
                 {
-                    num += n;
+                    if (null == dt) return;
+                    num = dt.Rows.Count;
+                    if (0 >= num) return;
+                    if (null == item.model) return;
+                    if (0 == dic.Count)
+                    {
+                        foreach (DataColumn dc in dt.Columns)
+                        {
+                            dic.Add(dc.ColumnName.ToLower(), dc.ColumnName);
+                        }
+                    }
+                    dr = dt.Rows[0];
+                    item.model.GetType().ForeachProperty(true, (pi, tp, fn) =>
+                    {
+                        k = fn.ToLower();
+                        if (!dic.ContainsKey(k)) return;
+                        field = dic[k];
+                        v = dr[field];
+                        if (System.DBNull.Value == v) v = null;
+                        v = DJTools.ConvertTo(v, tp);
+                        try
+                        {
+                            pi.SetValue(item.model, v);
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                    });
                 }, ref err);
             }
             dbDispose(dbHelper);
@@ -211,5 +245,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             SetAppendInsert(keyValue);
             return ((IDbSqlScheme)this).Insert();
         }
+
     }
 }

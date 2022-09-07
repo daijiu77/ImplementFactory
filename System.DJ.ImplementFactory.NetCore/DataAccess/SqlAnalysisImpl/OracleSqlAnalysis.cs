@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.Text.RegularExpressions;
@@ -350,6 +351,12 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         {
             if ("\"" == fieldName.Substring(0, 1) && "\"" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
             return "\"" + fieldName + "\"";
+        }
+
+        string ISqlAnalysis.GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys)
+        {
+            return sql;
+            //throw new NotImplementedException();
         }
     }
 }

@@ -10,5 +10,6 @@ namespace System.DJ.ImplementFactory.NetCore.Entities
         public string sql { get; set; }
         private List<DbParameter> paras = new List<DbParameter>();
         public IList<DbParameter> parameters { get { return paras; } }
+        public object model { get; set; }
     }
 }

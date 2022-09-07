@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.Text.RegularExpressions;
@@ -240,7 +241,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         }
 
         string ISqlAnalysis.GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
-        {        
+        {
             if (null == wherePart) wherePart = "";
             if (null == groupPart) groupPart = "";
             if (null == orderByPart) orderByPart = "";
@@ -273,7 +274,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
             int end = startNumber + length;
             string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
-            sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart,startNumber.ToString(),end.ToString());
+            sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
             return sql;
             //throw new NotImplementedException();
         }
@@ -294,7 +295,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         private string GetJoin(string flag, string tableName, string alias, string wherePart)
         {
-            string sql = flag + " " + ((ISqlAnalysis)this).GetTableName(tableName);            
+            string sql = flag + " " + ((ISqlAnalysis)this).GetTableName(tableName);
             sql = ((ISqlAnalysis)this).GetTableAilas(sql, alias);
             if (!string.IsNullOrEmpty(wherePart))
             {
@@ -350,6 +351,38 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         {
             if ("[" == fieldName.Substring(0, 1) && "]" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
             return "[" + fieldName + "]";
+        }
+
+        string ISqlAnalysis.GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys)
+        {
+            Regex rg = new Regex(@"(?<SqlLeft>^insert\s+(into\s+)?[a-z0-9_\[\]]+\s*\([^\(\)]+\))\s+(?<SqlRight>values\s*\([^\(\)]+\))", RegexOptions.IgnoreCase);
+            if (!rg.IsMatch(sql)) return sql;
+            Match m = rg.Match(sql);
+            string SqlLeft = m.Groups["SqlLeft"].Value;
+            string SqlRight = m.Groups["SqlRight"].Value;
+            string output = " ";
+            if (null != primaryKeys)
+            {
+                output = "";
+                ISqlAnalysis sqlAnalysis = this;
+                foreach (var item in primaryKeys)
+                {
+                    output += ",Inserted." + sqlAnalysis.GetFieldName(item);
+                }
+
+                if (0 < primaryKeys.Count)
+                {
+                    int n = output.IndexOf(",") + 1;
+                    output = output.Substring(n);
+                    output = " output " + output + " ";
+                }
+                else
+                {
+                    output = " ";
+                }
+            }
+            string s = SqlLeft + output + SqlRight;
+            return s;
         }
     }
 }
