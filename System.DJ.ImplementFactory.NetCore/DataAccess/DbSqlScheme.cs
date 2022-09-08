@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons;
@@ -75,7 +76,54 @@ namespace System.DJ.ImplementFactory.DataAccess
                 _vObj = dr[dic[_field]];
                 if (System.DBNull.Value == _vObj) continue;
                 if (null == _vObj) continue;
-                _vObj = _vObj.ConvertTo(pi.PropertyType);
+                if (typeof(ICollection).IsAssignableFrom(pi.PropertyType))
+                {
+                    Type type = null;
+                    object list = null;
+                    object v = null;
+                    string[] arr = null;
+                    string s = "";
+                    if (pi.PropertyType.IsArray)
+                    {
+                        s = pi.PropertyType.TypeToString(true);
+                        s = s.Replace("[]", "");
+                        type = Type.GetType(s);
+                        if (null == type) continue;
+                        if (!type.IsBaseType()) continue;                        
+                        int n = 0;
+                        arr = _vObj.ToString().Split(',');
+                        list = DJTools.createArrayByType(type, arr.Length);
+                        foreach (var item in arr)
+                        {
+                            s = item.Replace(EnDH, ",");
+                            v = DJTools.ConvertTo(s, type);
+                            DJTools.arrayAdd(list, v, n);
+                            n++;
+                        }
+                        _vObj = list;
+                    }
+                    else if (typeof(IList).IsAssignableFrom(pi.PropertyType))
+                    {
+                        Type[] types = pi.PropertyType.GetGenericArguments();
+                        if (1 != types.Length) continue;
+                        type = types[0];
+                        if (!type.IsBaseType()) continue;
+                        list = DJTools.createListByType(type);
+                        arr = _vObj.ToString().Split(',');
+                        foreach (var item in arr)
+                        {
+                            s = item.Replace(EnDH, ",");
+                            v = DJTools.ConvertTo(s, type);
+                            DJTools.listAdd(list, v);
+                        }
+                        _vObj = list;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                if (pi.PropertyType.IsBaseType()) _vObj = _vObj.ConvertTo(pi.PropertyType);
                 if (null == _vObj) continue;
                 pi.SetValue(ele, _vObj);
             }
@@ -186,24 +234,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         }
                     }
                     dr = dt.Rows[0];
-                    item.model.GetType().ForeachProperty(true, (pi, tp, fn) =>
-                    {
-                        k = fn.ToLower();
-                        if (!dic.ContainsKey(k)) return;
-                        field = dic[k];
-                        v = dr[field];
-                        if (System.DBNull.Value == v) v = null;
-                        v = DJTools.ConvertTo(v, tp);
-                        try
-                        {
-                            pi.SetValue(item.model, v);
-                        }
-                        catch (Exception)
-                        {
-
-                            //throw;
-                        }
-                    });
+                    DataRowToObj(dr, item.model, dic);
                 }, ref err);
             }
             ImplementAdapter.Destroy(dbHelper);

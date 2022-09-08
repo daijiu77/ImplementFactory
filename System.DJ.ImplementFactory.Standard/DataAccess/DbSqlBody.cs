@@ -18,6 +18,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         private List<ConditionItem> conditionItems = new List<ConditionItem>();
         private Dictionary<string, object> dicPara = new Dictionary<string, object>();
 
+        protected string EnDH = "{#$}";
+
         public DbSqlBody() { }
 
         public DbSqlBody Where(params ConditionItem[] conditionItems)
@@ -486,15 +488,27 @@ namespace System.DJ.ImplementFactory.DataAccess
                             if (!eleType.IsBaseType()) eleType = null;
                         }                        
                     }
+                    else if (type.IsArray)
+                    {
+                        string s = type.TypeToString(true);
+                        s = s.Replace("[]", "");
+                        eleType = Type.GetType(s);
+                        if (null != eleType)
+                        {
+                            if (!eleType.IsBaseType()) eleType = null;
+                        }
+                    }
 
                     string ws = "";
                     if (null != eleType)
                     {
                         IEnumerable collect = (IEnumerable)fv;
-                        
+                        string v = null;
                         foreach (var item in collect)
                         {
-                            ws += "," + item;
+                            if (null == item) continue;
+                            v = item.ToString().Replace(",", EnDH);
+                            ws += "," + v;
                         }
                         if (!string.IsNullOrEmpty(ws)) ws = ws.Substring(1);
                         fv = ws;
@@ -671,7 +685,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             object dFv = null;
             List<string> pks = new List<string>();
 
-            Action<string, object> kvAction = (_fn, _fv) =>
+            Action<string, object, PropertyInfo> kvAction = (_fn, _fv, _pi) =>
             {
                 if (dic.ContainsKey(_fn.ToLower()))
                 {
@@ -681,6 +695,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     dataItem.parameters.Add(para);
                     return;
                 }
+                
                 fields += ", " + sqlAnalysis.GetFieldName(_fn);
                 vals += ", " + dbTag + _fn;
                 para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);
@@ -717,12 +732,14 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (!sqlAnalysis.IsLegalCaseDefaultValueWhenInsert(tableName, pi, fm, ref dFv)) return;
                     fv = dFv;
                 }
-                kvAction(fn, fv);
+                kvAction(fn, fv, pi);
             }, () =>
             {
+                PropertyInfo ppi = null;
                 foreach (var item in keyValInsert)
                 {
-                    kvAction(item.Key, item.Value);
+                    ppi = dataItem.model.GetPropertyInfo(item.Key);
+                    kvAction(item.Key, item.Value, ppi);
                 }
                 keyValInsert.Clear();
 
