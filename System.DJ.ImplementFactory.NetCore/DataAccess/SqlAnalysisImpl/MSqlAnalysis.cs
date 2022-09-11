@@ -387,9 +387,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return s;
         }
 
-        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
+        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, object fieldValue, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
         {
-            defaultValue = null;
+            defaultValue = fieldValue;
             if (null == fieldMapping) return true;
             if (!string.IsNullOrEmpty(fieldMapping.DefualtValue)) return false;
             return true;

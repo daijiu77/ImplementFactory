@@ -1149,18 +1149,23 @@ namespace System.DJ.ImplementFactory.Commons
 
         private static Type _entityType = null;
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
+        private static object _initPropertyDic = new object();
         private static void initPropertyDic(object entity)
         {
-            _entityType = null == _entityType ? entity.GetType() : _entityType;
-            if ((_entityType != entity.GetType()) || (0 == _entityPropertyDic.Count))
+            lock (_initPropertyDic)
             {
-                _entityType = entity.GetType();
-                _entityPropertyDic.Clear();
-                entity.GetType().ForeachProperty((propertyInfo, type, fn) =>
+                _entityType = null == _entityType ? entity.GetType() : _entityType;
+                if ((_entityType != entity.GetType()) || (0 == _entityPropertyDic.Count))
                 {
-                    _entityPropertyDic.Add(fn.ToLower(), propertyInfo);
-                });
-            }
+                    _entityType = entity.GetType();
+                    _entityPropertyDic.Clear();
+                    entity.GetType().ForeachProperty((propertyInfo, type, fn) =>
+                    {
+                        if (_entityPropertyDic.ContainsKey(fn.ToLower())) return;
+                        _entityPropertyDic.Add(fn.ToLower(), propertyInfo);
+                    });
+                }
+            }            
         }
 
         public static T GetPropertyValue<T>(this object entity, string propertyName)

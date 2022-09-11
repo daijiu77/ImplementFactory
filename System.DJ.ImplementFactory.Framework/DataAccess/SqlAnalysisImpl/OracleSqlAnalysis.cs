@@ -362,7 +362,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             //throw new NotImplementedException();
         }
 
-        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
+        bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName, object fieldValue, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue)
         {
             defaultValue = null;
             if (null == fieldMapping) return true;
@@ -371,6 +371,21 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 Regex rg = new Regex(@"[0-9]+", RegexOptions.IgnoreCase);
                 if ((propertyInfo.PropertyType == typeof(int)) || (propertyInfo.PropertyType == typeof(long)))
                 {
+                    if (null != fieldValue)
+                    {
+                        if (propertyInfo.PropertyType == typeof(int))
+                        {
+                            int iNum = 0;
+                            if (int.TryParse(fieldValue.ToString(), out iNum)) defaultValue = iNum;
+                        }
+                        else
+                        {
+                            long lNum = 0;
+                            if (Int64.TryParse(fieldValue.ToString(), out lNum)) defaultValue = lNum;
+                        }
+                        if (null != defaultValue) return true;
+                    }
+
                     if (rg.IsMatch(fieldMapping.DefualtValue))
                     {
                         string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;
@@ -396,14 +411,33 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 }
                 else if (propertyInfo.PropertyType == typeof(Guid))
                 {
+                    if (null != fieldValue)
+                    {
+                        Guid guid = Guid.Empty;
+                        if (Guid.TryParse(fieldValue.ToString(), out guid)) defaultValue = guid;
+                        if (null != defaultValue) return true;
+                    }
                     defaultValue = Guid.NewGuid();
                 }
                 else if (propertyInfo.PropertyType == typeof(DateTime))
                 {
+                    if (null != fieldValue)
+                    {
+                        DateTime dt = DateTime.Now;
+                        if (DateTime.TryParse(fieldValue.ToString(), out dt)) defaultValue = dt;
+                        if (null != defaultValue) return true;
+                    }
                     defaultValue = DateTime.Now;
                 }
                 else if (propertyInfo.PropertyType == typeof(bool))
                 {
+                    if (null != fieldValue)
+                    {
+                        bool mbool = false;
+                        if (bool.TryParse(fieldValue.ToString(), out mbool)) defaultValue = mbool;
+                        if (null != defaultValue) return true;
+                    }
+
                     if (rg.IsMatch(fieldMapping.DefualtValue))
                     {
                         string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;

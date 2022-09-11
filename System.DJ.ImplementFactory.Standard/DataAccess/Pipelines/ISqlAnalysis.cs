@@ -30,6 +30,6 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         string GetTableName(string tableName);
         string GetFieldName(string fieldName);
         string GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys);
-        bool IsLegalCaseDefaultValueWhenInsert(string tableName, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue);
+        bool IsLegalCaseDefaultValueWhenInsert(string tableName, object fieldValue, PropertyInfo propertyInfo, FieldMapping fieldMapping, ref object defaultValue);
     }
 }
