@@ -71,7 +71,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             PropertyInfo[] piArr = ele.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (PropertyInfo pi in piArr)
             {
-                _field = pi.Name.ToLower();
+                _field = sqlAnalysis.GetLegalName(pi.Name);
+                _field = _field.ToLower();                
                 if (!dic.ContainsKey(_field)) continue;
                 _vObj = dr[dic[_field]];
                 if (System.DBNull.Value == _vObj) continue;
