@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Reflection;
 using System.Text;
 
@@ -48,7 +49,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             object fv = null;
             tp.ForeachProperty((pi, type, fn) =>
             {
-                if (fn.Equals("parentModel")) return;
                 if (!((AbsDataModel)dataModel).IsLegalType(type))
                 {
                     json += ", \"" + fn + "\": null";
@@ -174,6 +174,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             });
         }
 
+        [IgnoreForeachProp]
         public AbsDataModel parentModel { get; set; }
     }
 }

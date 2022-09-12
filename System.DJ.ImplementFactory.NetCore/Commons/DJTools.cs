@@ -186,8 +186,11 @@ namespace System.DJ.ImplementFactory.Commons
             PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             object v = null;
             bool mbool = false;
+            Attribute att = null;
             foreach (var item in piArr)
             {
+                att = item.PropertyType.GetCustomAttribute(typeof(IgnoreForeachProp));
+                if (null != att) continue;
                 if (!isAll)
                 {
                     if (item.DeclaringType != type) continue;
@@ -227,8 +230,11 @@ namespace System.DJ.ImplementFactory.Commons
             if (null == objType) return;
             PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             bool mbool = false;
+            Attribute att = null;
             foreach (var item in piArr)
             {
+                att = item.PropertyType.GetCustomAttribute(typeof(IgnoreForeachProp));
+                if (null != att) continue;
                 if (!isAll)
                 {
                     if (item.DeclaringType != objType) continue;
@@ -1154,6 +1160,7 @@ namespace System.DJ.ImplementFactory.Commons
         private static object _initPropertyDic = new object();
         private static void initPropertyDic(object entity)
         {
+            if (null == entity) return;
             lock (_initPropertyDic)
             {
                 _entityType = null == _entityType ? entity.GetType() : _entityType;
