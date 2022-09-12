@@ -26,6 +26,20 @@ namespace System.DJ.ImplementFactory.DataAccess
             return (T)fv;
         }
 
+        private bool IsLegalType(Type type)
+        {
+            object dataModel = this;
+            Type pt = dataModel.GetType();
+            if (pt == type) return false;
+            bool mbool = true;
+            AbsDataModel dm = this;
+            if (null != dm.parentModel)
+            {
+                mbool = dm.parentModel.IsLegalType(type);
+            }
+            return mbool;
+        }
+
         public string ToJson(Func<Type, string, bool> property)
         {
             string json = "";
@@ -34,32 +48,68 @@ namespace System.DJ.ImplementFactory.DataAccess
             object fv = null;
             tp.ForeachProperty((pi, type, fn) =>
             {
-                if (!property(type, fn))
+                if (fn.Equals("parentModel")) return;
+                if (!((AbsDataModel)dataModel).IsLegalType(type))
                 {
-                    json += ", " + fn + ": null";
+                    json += ", \"" + fn + "\": null";
                     return;
                 }
-                fv = pi.GetValue(dataModel);
+
+                if (!property(type, fn))
+                {
+                    json += ", \"" + fn + "\": null";
+                    return;
+                }
+
                 if (type == typeof(string) || type == typeof(Guid) || type == typeof(DateTime)
                  || type == typeof(Guid?) || type == typeof(DateTime?))
                 {
+                    fv = pi.GetValue(dataModel);
                     fv = null == fv ? "null" : "\"" + fv + "\"";
                 }
-                else if (typeof(IEnumerable).IsAssignableFrom(type))
+                else if (type.IsArray || typeof(IList).IsAssignableFrom(type))
                 {
+                    fv = pi.GetValue(dataModel);
                     if (null == fv)
                     {
                         fv = "null";
                     }
                     else
                     {
+                        bool isBaseVal = false;
                         IEnumerable arr = fv as IEnumerable;
                         AbsDataModel absDataModel = null;
                         string s = "";
+                        Type t = null;
+
                         foreach (object item in arr)
                         {
+                            if (null == item)
+                            {
+                                s += ", null";
+                                continue;
+                            }
                             absDataModel = item as AbsDataModel;
-                            if (null == absDataModel) break;
+                            if (null == absDataModel && string.IsNullOrEmpty(s))
+                            {
+                                isBaseVal = DJTools.IsBaseType(item.GetType());
+                            }
+
+                            if (isBaseVal)
+                            {
+                                t = item.GetType();
+                                if ((typeof(string) == t) || (typeof(Guid) == t) || (typeof(DateTime) == t)
+                                 || (typeof(Guid?) == t) || (typeof(DateTime?) == t))
+                                {
+                                    s += ", \"" + item + "\"";
+                                }
+                                else
+                                {
+                                    s += ", " + item;
+                                }
+                                continue;
+                            }
+                            absDataModel.parentModel = this;
                             s += ", " + absDataModel.ToJson(property);
                         }
 
@@ -77,6 +127,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else if (typeof(AbsDataModel).IsAssignableFrom(type))
                 {
+                    fv = pi.GetValue(dataModel);
                     if (null == fv)
                     {
                         fv = "null";
@@ -84,11 +135,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                     else
                     {
                         AbsDataModel absDataModel = (AbsDataModel)fv;
+                        absDataModel.parentModel = this;
                         fv = absDataModel.ToJson(property);
                     }
                 }
                 else if (type.IsClass)
                 {
+                    fv = pi.GetValue(dataModel);
                     if (null == fv)
                     {
                         fv = "null";
@@ -100,9 +153,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else
                 {
+                    fv = pi.GetValue(dataModel);
                     fv = null == fv ? "null" : fv;
                 }
-                json += ", " + fn + ": " + fv.ToString();
+                json += ", \"" + fn + "\": " + fv.ToString();
             });
             if (!string.IsNullOrEmpty(json))
             {
@@ -119,5 +173,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 return true;
             });
         }
+
+        public AbsDataModel parentModel { get; set; }
     }
 }

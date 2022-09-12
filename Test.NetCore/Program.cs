@@ -88,6 +88,23 @@ namespace Test.NetCore
             public virtual string key { get; set; }
             public virtual string val { get; set; }
             public virtual List<string> children { get; set; }
+
+            public virtual Json2 json2 { get; set; }
+        }
+
+        class Json1: AbsDataModel
+        {
+            public string field1 { get; set; }
+            public int field2 { get; set; }
+
+            public testJson tjson { get; set; }
+        }
+
+        class Json2 : AbsDataModel
+        {
+            public string field3 { get; set; }
+            public int field4 { get; set; }
+            public Json1 json1 { get; set; }
         }
 
         class TTJson : testJson
@@ -110,6 +127,34 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            Json1 json1 = new Json1()
+            {
+                field1 = "1",
+                field2 = 2
+            };
+
+            testJson tjson = new testJson()
+            {
+                key = "key",
+                val = "value",
+                children = new List<string>()
+            };
+            json1.tjson = tjson;
+
+            tjson.children.Add("a");
+            tjson.children.Add("b");
+
+            Json2 json2 = new Json2()
+            {
+                field3 = "f3",
+                field4 = 4,
+                json1 = json1
+            };
+
+            tjson.json2 = json2;
+
+            string json = json1.ToJson();
+
             SetWindowPositionCenter();
 
             Plan plan = new Plan()
