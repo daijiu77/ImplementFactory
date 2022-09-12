@@ -11,5 +11,6 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         string GetTableScheme(string tableName, List<FieldMapping> fieldMappings);
         string GetAddFieldScheme(string tableName, FieldMapping fieldMapping);
         List<string> GetFields(string tableName);
+        ISqlAnalysis sqlAnalysis { get; }
     }
 }

@@ -4,6 +4,7 @@ using System.Data;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
 
@@ -12,6 +13,10 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
     public class OracleTableScheme : IDbTableScheme
     {
         private AutoCall autoCall = new AutoCall();
+
+        private ISqlAnalysis sqlAnalysis = new OracleSqlAnalysis();
+
+        ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
 
         private string getFieldType(FieldMapping fieldMapping)
         {
@@ -23,7 +28,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             }
             else if (typeof(Guid) == fieldMapping.FieldType || typeof(Guid?) == fieldMapping.FieldType)
             {
-                ft = "uniqueidentifier";
+                ft = "varchar(50)";
             }
             else if (typeof(float) == fieldMapping.FieldType || typeof(float?) == fieldMapping.FieldType)
             {
@@ -66,7 +71,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         private string getFieldScheme(FieldMapping fieldMapping)
         {
-            string sql = "\"" + fieldMapping.FieldName + "\"";
+            string sql = sqlAnalysis.GetFieldName(fieldMapping.FieldName);
             sql += " " + getFieldType(fieldMapping);
 
             if (fieldMapping.IsPrimaryKey)
@@ -93,7 +98,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         string IDbTableScheme.GetAddFieldScheme(string tableName, FieldMapping fieldMapping)
         {
-            string sql = "alter table \"{0}\" add (";
+            string sql = "alter table {0} add (";
+            tableName = sqlAnalysis.GetTableName(tableName);
             sql = sql.ExtFormat(tableName);
             if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             sql += " " + getFieldScheme(fieldMapping) + ");";
@@ -126,7 +132,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         {
             if (null == fieldMappings) return "";
             if (0 == fieldMappings.Count) return "";
-            string sql = "create table \"" + tableName + "\"";
+            tableName = sqlAnalysis.GetTableName(tableName);
+            string sql = "create table " + tableName;
             DJTools.append(ref sql, "(");
             string field = "";
             int n = 0;

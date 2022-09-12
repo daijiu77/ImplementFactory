@@ -101,7 +101,9 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 string sv = null == value ? "" : value.ToString();
                 sv = string.IsNullOrEmpty(sv) ? Guid.Empty.ToString() : sv;
-                obj = new Guid(sv);
+                Guid guid = Guid.Empty;
+                isSuccess = Guid.TryParse(sv, out guid);
+                obj = guid;
             }
             else if (null == obj)
             {

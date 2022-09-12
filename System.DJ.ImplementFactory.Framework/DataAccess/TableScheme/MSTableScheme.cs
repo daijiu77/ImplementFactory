@@ -3,6 +3,7 @@ using System.Data;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
@@ -10,6 +11,10 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
     public class MSTableScheme : IDbTableScheme
     {
         private AutoCall autoCall = new AutoCall();
+
+        private ISqlAnalysis sqlAnalysis = new MSqlAnalysis();
+
+        ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
 
         private string getFieldType(FieldMapping fieldMapping)
         {
@@ -65,7 +70,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         private string getFieldScheme(FieldMapping fieldMapping)
         {
-            string sql = "[" + fieldMapping.FieldName + "]";
+            string sql = sqlAnalysis.GetFieldName(fieldMapping.FieldName);
             sql += " " + getFieldType(fieldMapping);
 
             if (fieldMapping.IsPrimaryKey)
@@ -93,7 +98,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         string IDbTableScheme.GetAddFieldScheme(string tableName, FieldMapping fieldMapping)
         {
             string sql = "alter table {0} add";
-            sql = string.Format(sql, "[" + tableName + "]");
+            tableName = sqlAnalysis.GetTableName(tableName);
+            sql = string.Format(sql, tableName);
             if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             sql += " " + getFieldScheme(fieldMapping);
             return sql;
@@ -127,7 +133,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         {
             if (null == fieldMappings) return "";
             if (0 == fieldMappings.Count) return "";
-            string sql = "create table [" + tableName + "]";
+            string fn = sqlAnalysis.GetTableName(tableName);
+            string sql = "create table " + fn;
             DJTools.append(ref sql, "(");
             string field = "";
             int n = 0;

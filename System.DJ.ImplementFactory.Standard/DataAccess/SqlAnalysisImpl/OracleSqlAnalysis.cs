@@ -346,13 +346,31 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetTableName(string tableName)
         {
-            if ("\"" == tableName.Substring(0, 1) && "\"" == tableName.Substring(tableName.Length - 1)) return tableName;
+            ISqlAnalysis sqlAnalysis = this;
+            if ("\"" == tableName.Substring(0, 1) && "\"" == tableName.Substring(tableName.Length - 1))
+            {
+                string s = tableName.Substring(1);
+                s = s.Substring(0, s.Length - 1);
+                tableName = sqlAnalysis.GetLegalName(s);
+                tableName = "\"" + tableName + "\"";
+                return tableName;
+            }
+            tableName = sqlAnalysis.GetLegalName(tableName);
             return "\"" + tableName + "\"";
         }
 
         string ISqlAnalysis.GetFieldName(string fieldName)
         {
-            if ("\"" == fieldName.Substring(0, 1) && "\"" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
+            ISqlAnalysis sqlAnalysis = this;
+            if ("\"" == fieldName.Substring(0, 1) && "\"" == fieldName.Substring(fieldName.Length - 1))
+            {
+                string s = fieldName.Substring(1);
+                s = s.Substring(0, s.Length - 1);
+                fieldName = sqlAnalysis.GetLegalName(s);
+                fieldName = "\"" + fieldName + "\"";
+                return fieldName;
+            }
+            fieldName = sqlAnalysis.GetLegalName(fieldName);
             return "\"" + fieldName + "\"";
         }
 
@@ -414,7 +432,11 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                     if (null != fieldValue)
                     {
                         Guid guid = Guid.Empty;
-                        if (Guid.TryParse(fieldValue.ToString(), out guid)) defaultValue = guid;
+                        if (Guid.TryParse(fieldValue.ToString(), out guid))
+                        {
+                            if (Guid.Empty == guid) guid = Guid.NewGuid();
+                            defaultValue = guid;
+                        }
                         if (null != defaultValue) return true;
                     }
                     defaultValue = Guid.NewGuid();
@@ -424,24 +446,29 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                     if (null != fieldValue)
                     {
                         DateTime dt = DateTime.Now;
-                        if (DateTime.TryParse(fieldValue.ToString(), out dt)) defaultValue = dt;
+                        if (DateTime.TryParse(fieldValue.ToString(), out dt))
+                        {
+                            if (DateTime.MinValue == dt) dt = DateTime.Now;
+                            defaultValue = dt;
+                        }
                         if (null != defaultValue) return true;
                     }
                     defaultValue = DateTime.Now;
                 }
                 else if (propertyInfo.PropertyType == typeof(bool))
                 {
+                    if (rg.IsMatch(fieldMapping.DefualtValue))
+                    {
+                        string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;
+                        defaultValue = 1 == Convert.ToInt32(sNum);
+                        return true;
+                    }
+
                     if (null != fieldValue)
                     {
                         bool mbool = false;
                         if (bool.TryParse(fieldValue.ToString(), out mbool)) defaultValue = mbool;
                         if (null != defaultValue) return true;
-                    }
-
-                    if (rg.IsMatch(fieldMapping.DefualtValue))
-                    {
-                        string sNum = rg.Match(fieldMapping.DefualtValue).Groups[0].Value;
-                        defaultValue = Convert.ToInt32(sNum);
                     }
 
                     if (-1 != fieldMapping.DefualtValue.ToLower().IndexOf("false"))
@@ -458,6 +485,29 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             }
             return true;
             //throw new NotImplementedException();
+        }
+
+        string ISqlAnalysis.GetLegalName(string name)
+        {
+            string dbn = name;
+            const int size = 60;
+            if (size < name.Length)
+            {
+                string s = "";
+                Regex rg = new Regex(@"[A-Z0-9]+");
+                if (rg.IsMatch(name))
+                {
+                    MatchCollection mc = rg.Matches(name);
+                    foreach (Match item in mc)
+                    {
+                        s += item.Groups[0].Value;
+                    }
+                }
+                int n = size - s.Length - 1;
+                int len = name.Length;
+                dbn = s + "_" + name.Substring(len - n);
+            }
+            return dbn;
         }
     }
 }

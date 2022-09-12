@@ -345,13 +345,31 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetTableName(string tableName)
         {
-            if ("[" == tableName.Substring(0, 1) && "]" == tableName.Substring(tableName.Length - 1)) return tableName;
+            ISqlAnalysis sqlAnalysis = this;
+            if ("[" == tableName.Substring(0, 1) && "]" == tableName.Substring(tableName.Length - 1))
+            {
+                string s = tableName.Substring(1);
+                s = s.Substring(0, s.Length - 1);
+                tableName = sqlAnalysis.GetLegalName(s);
+                tableName = "[" + tableName + "]";
+                return tableName;
+            }
+            tableName = sqlAnalysis.GetLegalName(tableName);
             return "[" + tableName + "]";
         }
 
         string ISqlAnalysis.GetFieldName(string fieldName)
         {
-            if ("[" == fieldName.Substring(0, 1) && "]" == fieldName.Substring(fieldName.Length - 1)) return fieldName;
+            ISqlAnalysis sqlAnalysis = this;
+            if ("[" == fieldName.Substring(0, 1) && "]" == fieldName.Substring(fieldName.Length - 1))
+            {
+                string s = fieldName.Substring(1);
+                s = s.Substring(0, s.Length - 1);
+                fieldName = sqlAnalysis.GetLegalName(s);
+                fieldName = "[" + fieldName + "]";
+                return fieldName;
+            }
+            fieldName = sqlAnalysis.GetLegalName(fieldName);
             return "[" + fieldName + "]";
         }
 
@@ -393,6 +411,29 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (null == fieldMapping) return true;
             if (!string.IsNullOrEmpty(fieldMapping.DefualtValue)) return false;
             return true;
+        }
+
+        string ISqlAnalysis.GetLegalName(string name)
+        {
+            string dbn = name;
+            const int size = 60;
+            if (size < name.Length)
+            {
+                string s = "";
+                Regex rg = new Regex(@"[A-Z0-9]+");
+                if (rg.IsMatch(name))
+                {
+                    MatchCollection mc = rg.Matches(name);
+                    foreach (Match item in mc)
+                    {
+                        s += item.Groups[0].Value;
+                    }
+                }
+                int n = size - s.Length - 1;
+                int len = name.Length;
+                dbn = s + "_" + name.Substring(len - n);
+            }
+            return dbn;
         }
     }
 }

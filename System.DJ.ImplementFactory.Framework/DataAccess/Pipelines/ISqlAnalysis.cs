@@ -27,6 +27,7 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
 
         string GetTableAilas(string tableName, string alias);
         string GetFieldAlias(string fieldName, string alias);
+        string GetLegalName(string name);
         string GetTableName(string tableName);
         string GetFieldName(string fieldName);
         string GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys);

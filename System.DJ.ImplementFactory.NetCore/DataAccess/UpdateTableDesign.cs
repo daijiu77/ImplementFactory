@@ -43,7 +43,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             bool mbool = false;
             type1 = null;
-            length = 0;
+            length = 50;
             if (typeof(System.Collections.ICollection).IsAssignableFrom(type))
             {
                 Type tp = null;
@@ -115,6 +115,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         }
                     }
                 }
+                tbName = dbTableScheme.sqlAnalysis.GetLegalName(tbName);
                 if (tableDic.ContainsKey(tbName.ToLower()))
                 {
                     AddField(tbName, item);
@@ -168,11 +169,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 fm = null;
                 type1 = null;
                 length = 0;
+                fn1 = dbTableScheme.sqlAnalysis.GetLegalName(fn);
                 if (!IsEnabledType(tp, ref type1, ref length)) return;
-                if (fieldDic.ContainsKey(fn.ToLower())) return;
+                if (fieldDic.ContainsKey(fn1.ToLower())) return;
                 att = pi.GetCustomAttribute(typeof(FieldMapping));
                 if (null != att) fm = (FieldMapping)att;
-                if (null == fm) fm = new FieldMapping(fn);
+                if (null == fm) fm = new FieldMapping(fn1);
                 if (null == fm.FieldType) fm.FieldType = type1;
                 if (0 == fm.Length) fm.Length = length;
                 sql = dbTableScheme.GetAddFieldScheme(tableName, fm);
