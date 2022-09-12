@@ -186,7 +186,7 @@ namespace System.DJ.ImplementFactory.Commons
             Attribute att = null;
             foreach (var item in piArr)
             {
-                att = item.PropertyType.GetCustomAttribute(typeof(IgnoreForeachProp));
+                att = item.GetCustomAttribute(typeof(IgnoreForeachProp));
                 if (null != att) continue;
                 if (!isAll)
                 {
@@ -230,7 +230,7 @@ namespace System.DJ.ImplementFactory.Commons
             Attribute att = null;
             foreach (var item in piArr)
             {
-                att = item.PropertyType.GetCustomAttribute(typeof(IgnoreForeachProp));
+                att = item.GetCustomAttribute(typeof(IgnoreForeachProp));
                 if (null != att) continue;
                 if (!isAll)
                 {
