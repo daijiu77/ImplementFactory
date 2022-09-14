@@ -136,7 +136,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     fieldMappings.Add(fm);
                 });
                 if (0 == fieldMappings.Count) continue;
-                tableDic.Add(tbName.ToLower(), tbName);
+                MultiTablesExec.SetTable(tbName);
                 sql = dbTableScheme.GetTableScheme(tbName, fieldMappings);
                 dbHelper.update(autoCall, sql, null, false, null, ref err);
             }
