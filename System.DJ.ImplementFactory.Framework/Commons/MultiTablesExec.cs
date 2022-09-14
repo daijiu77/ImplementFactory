@@ -80,6 +80,16 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             get { return _tableDic; }
         }
 
+        public static void SetTable(string tableName)
+        {
+            string tb = tableName.ToLower();
+            if (!_tableDic.ContainsKey(tb))
+            {
+                _tableDic.Add(tb, tableName);
+            }
+            set_tbDic(tableName, tableName);
+        }
+
         private void initBasicExecForSQL(DbAdapter dbAdapter, IDbHelper dbHelper)
         {
             dbAdapter.dbConnectionString = dbHelper.connectString;
@@ -150,7 +160,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return dt;
         }
 
-        private void set_tbDic(string srcTableName, string newTableName)
+        private static void set_tbDic(string srcTableName, string newTableName)
         {
             string tbn = srcTableName.ToLower();
             List<TableInfo> list = null;
