@@ -146,9 +146,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             return mbool;
         }
 
-        private IList<T> GetList<T>(DataTable dt)
+        private IList<object> GetList(DataTable dt, Type modelType)
         {
-            IList<T> list = new List<T>();
+            IList<object> list = new List<object>();
             if (null == dt) return list;
             if (0 == dt.Rows.Count) return list;
             Dictionary<string, string> dic = new Dictionary<string, string>();
@@ -164,11 +164,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 mbool = FuncResult(dr, sfList, dic);
                 if (!mbool) continue;
-                ele = overrideModel.CreateDataModel(typeof(T));
+                ele = overrideModel.CreateDataModel(modelType);
                 if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
-                if (null == ele) ele = Activator.CreateInstance(typeof(T));
+                if (null == ele) ele = Activator.CreateInstance(modelType);
                 DataRowToObj(dr, ele, dic);
-                list.Add((T)ele);
+                list.Add(ele);
             }
 
             return list;
@@ -178,17 +178,25 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
-            IList<T> list = GetList<T>(dt);
+            IList<T> list = new List<T>();
+            IList<object> results= GetList(dt, typeof(T));
+            if (null != results)
+            {
+                foreach (var item in results)
+                {
+                    list.Add((T)item);
+                }
+            }
             return list;
         }
 
         T IDbSqlScheme.DefaultFirst<T>()
         {
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
-            IList<T> list = GetList<T>(dt);
+            IList<object> list = GetList(dt, typeof(T));
             if (0 < list.Count)
             {
-                return list[0];
+                return (T)list[0];
             }
             return default(T);
         }
@@ -270,5 +278,23 @@ namespace System.DJ.ImplementFactory.DataAccess
             return ((IDbSqlScheme)this).Insert();
         }
 
+        IList<object> IDbSqlScheme.ToList(Type modelType)
+        {
+            List<SqlFromUnit> sfList = GetSqlFromUnits();
+            DataTable dt = ((IDbSqlScheme)this).ToDataTable();
+            IList<object> results = GetList(dt, modelType);
+            return results;
+        }
+
+        object IDbSqlScheme.DefaultFirst(Type modelType)
+        {
+            DataTable dt = ((IDbSqlScheme)this).ToDataTable();
+            IList<object> list = GetList(dt, modelType);
+            if (0 < list.Count)
+            {
+                return list[0];
+            }
+            return null;
+        }
     }
 }

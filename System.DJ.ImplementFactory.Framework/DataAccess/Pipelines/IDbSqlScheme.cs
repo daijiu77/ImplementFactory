@@ -11,7 +11,9 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         int Count();
         DataTable ToDataTable();
         IList<T> ToList<T>();
+        IList<object> ToList(Type modelType);
         T DefaultFirst<T>();
+        object DefaultFirst(Type modelType);
         int Update();
         int AppendUpdate(Dictionary<string, object> keyValue);
         int Insert();
