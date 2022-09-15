@@ -164,7 +164,14 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 mbool = FuncResult(dr, sfList, dic);
                 if (!mbool) continue;
-                ele = overrideModel.CreateDataModel(modelType);
+                if (isUseConstraintLoad)
+                {
+                    ele = overrideModel.CreateDataModel(modelType);
+                }
+                else
+                {
+                    ele = Activator.CreateInstance(modelType);
+                }
                 if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
                 if (null == ele) ele = Activator.CreateInstance(modelType);
                 DataRowToObj(dr, ele, dic);

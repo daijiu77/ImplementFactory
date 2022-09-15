@@ -10,8 +10,10 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected int startNumber = 0;
         protected List<SqlFromUnit> fromUnits = new List<SqlFromUnit>();
-        public IDbSqlScheme CreateSqlFrom(params SqlFromUnit[] sqlFromUnits)
+        protected bool isUseConstraintLoad = false;
+        public IDbSqlScheme CreateSqlFrom(bool isUseConstraintLoad, params SqlFromUnit[] sqlFromUnits)
         {
+            this.isUseConstraintLoad = isUseConstraintLoad;
             startNumber = 0;
             DbSqlScheme dbSqlStructure = new DbSqlScheme();
             if (null != sqlFromUnits)
@@ -22,6 +24,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
             }
             return dbSqlStructure;
+        }
+
+        public IDbSqlScheme CreateSqlFrom(params SqlFromUnit[] sqlFromUnits)
+        {
+            return CreateSqlFrom(true, sqlFromUnits);
         }
 
         void IDisposable.Dispose()
