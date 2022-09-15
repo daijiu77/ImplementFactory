@@ -294,6 +294,44 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null == propertyInfo) return true;
                 v = propertyInfo.GetValue(srcObj, null);
                 if (null == v) return true;
+                if (typeof(ICollection).IsAssignableFrom(fieldType) && (typeof(string) == propertyInfo.PropertyType))
+                {
+                    string[] arr = v.ToString().Split(',');
+                    object collection = null;
+                    Type eleType = null;
+                    if (fieldType.IsArray)
+                    {
+                        string s = fieldType.TypeToString(true);
+                        s = s.Replace("[]", "");
+                        eleType = Type.GetType(s);
+                        if (null == eleType) return true;
+                        collection = createArrayByType(null, arr.Length);
+                    }
+                    else if (typeof(IList).IsAssignableFrom(fieldType))
+                    {
+                        eleType = fieldType.GetGenericArguments()[0];
+                        collection = createListByType(eleType);
+                    }
+
+                    if (null == collection) return true;
+                    object sv = "";
+                    int n = 0;
+                    foreach (var item in arr)
+                    {
+                        sv = item.Trim();
+                        sv = ConvertTo(sv, eleType);
+                        if (fieldType.IsArray)
+                        {
+                            arrayAdd(collection, sv, n);
+                        }
+                        else
+                        {
+                            listAdd(collection, sv);
+                        }
+                        n++;
+                    }
+                    v = collection;
+                }
                 v = ConvertTo(v, pi.PropertyType);
                 try
                 {
@@ -319,7 +357,7 @@ namespace System.DJ.ImplementFactory.Commons
             PropertyInfo pInfo = null;
             object v = null;
             Type tp = typeof(T);
-            tp.ForeachProperty((pi, type, fn) =>
+            tp.ForeachProperty(false, (pi, type, fn) =>
             {
                 if (!func(pi)) return;
                 pInfo = targetObj.GetType().GetProperty(pi.Name);
