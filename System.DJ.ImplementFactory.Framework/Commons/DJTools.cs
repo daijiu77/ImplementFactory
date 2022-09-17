@@ -956,7 +956,8 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static Type GetClassTypeByPath(this string classPath)
         {
-            Type classType = null;
+            Type classType = Type.GetType(classPath);
+            if (null != classType) return classType;
             if (-1 != classPath.IndexOf("+"))
             {
                 string[] arr = classPath.Split('+');

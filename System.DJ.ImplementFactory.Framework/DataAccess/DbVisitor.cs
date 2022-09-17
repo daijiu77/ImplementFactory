@@ -13,9 +13,9 @@ namespace System.DJ.ImplementFactory.DataAccess
         protected bool isUseConstraintLoad = false;
         public IDbSqlScheme CreateSqlFrom(bool isUseConstraintLoad, params SqlFromUnit[] sqlFromUnits)
         {
-            this.isUseConstraintLoad = isUseConstraintLoad;
             startNumber = 0;
             DbSqlScheme dbSqlStructure = new DbSqlScheme();
+            dbSqlStructure.isUseConstraintLoad = isUseConstraintLoad;
             if (null != sqlFromUnits)
             {
                 foreach (var item in sqlFromUnits)

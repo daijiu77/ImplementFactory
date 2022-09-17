@@ -945,31 +945,33 @@ namespace System.DJ.ImplementFactory.Commons
             return s;
         }
 
+        private static Type getTypeFromAssemblies(this string typeName)
+        {
+            Type type = Type.GetType(typeName);
+            if (null != type) return type;
+            List<Assembly> assemblies = GetAssemblyCollection(RootPath);
+            foreach (Assembly item in assemblies)
+            {
+                type = item.GetType(typeName);
+                if (null != type) break;
+            }
+            return type;
+        }
+
         public static Type GetClassTypeByPath(this string classPath)
         {
-            Type classType = null;
-            Assembly[] asses = AppDomain.CurrentDomain.GetAssemblies();
-            Assembly item = null;
-            int num = 0;
-            int len = asses.Length;
-            while (num < len)
+            Type classType = Type.GetType(classPath);
+            if (null != classType) return classType;
+            if (-1 != classPath.IndexOf("+"))
             {
-                try
-                {
-                    item = asses[num];
-                    if (string.IsNullOrEmpty(item.Location)) continue;
-                    classType = item.GetType(classPath);
-                    if (null != classType) break;
-                }
-                catch (Exception ex)
-                {
-                    _err = ex.ToString();
-                    //throw;
-                }
-                finally
-                {
-                    num++;
-                }
+                string[] arr = classPath.Split('+');
+                Type tp = arr[0].getTypeFromAssemblies();
+                if (null == tp) return classType;
+                classType = tp.GetNestedType(arr[1], BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+            else
+            {
+                classType = classPath.getTypeFromAssemblies();
             }
             return classType;
         }

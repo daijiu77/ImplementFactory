@@ -27,7 +27,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return (T)fv;
         }
 
-        private bool IsLegalType(Type type)
+        public bool IsLegalType(Type type)
         {
             object dataModel = this;
             Type pt = dataModel.GetType();

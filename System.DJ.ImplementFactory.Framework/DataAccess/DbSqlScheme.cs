@@ -63,6 +63,103 @@ namespace System.DJ.ImplementFactory.DataAccess
             return sfList;
         }
 
+        private void GetConstraintData(PropertyInfo pi, DataRow dr, object ele, Dictionary<string, string> dic)
+        {
+            if (isUseConstraintLoad) return;
+            Attribute attr = pi.GetCustomAttribute(typeof(Commons.Attrs.Constraint));
+            if (null == attr) return;
+            Commons.Attrs.Constraint constraint = (Commons.Attrs.Constraint)attr;
+            string fn = constraint.ForeignKey.ToLower();
+            if (!dic.ContainsKey(fn)) return;
+            fn = dic[fn];
+            object vObj = dr[fn];
+            if (DBNull.Value == vObj) return;
+            if (null == vObj) return;
+
+            Func<Type, IList<object>> func = (_type) =>
+            {
+                if (_type.IsBaseType()) return null;
+                if (!typeof(AbsDataModel).IsAssignableFrom(_type)) return null;
+                if (!((AbsDataModel)ele).IsLegalType(_type)) return null;
+                DbVisitor _db = new DbVisitor();
+                IDbSqlScheme _scheme = _db.CreateSqlFrom(false, SqlFromUnit.Me.From(_type));
+                _scheme.dbSqlBody.Where(ConditionItem.Me.And(constraint.RefrenceKey, ConditionRelation.Equals, vObj.ToString()));
+                _scheme.parentModel = (AbsDataModel)ele;
+                IList<object> _list = _scheme.ToList(_type);
+                return _list;
+            };
+
+            Type type = null;
+            if (typeof(ICollection).IsAssignableFrom(pi.PropertyType))
+            {
+                if (pi.PropertyType.IsArray)
+                {
+                    string s = pi.PropertyType.TypeToString(true);
+                    s = s.Replace("[]", "");
+                    type = DJTools.GetClassTypeByPath(s);
+                    if (null == type) return;
+                    IList<object> results = func(type);
+                    if (null == results) return;
+                    object arr = DJTools.createArrayByType(type, results.Count);
+                    int n = 0;
+                    foreach (var item in results)
+                    {
+                        ((AbsDataModel)item).parentModel = (AbsDataModel)ele;
+                        DJTools.arrayAdd(arr, item, n);
+                        n++;
+                    }
+                    try
+                    {
+                        pi.SetValue(ele, arr);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //throw;
+                    }
+                }
+                else if (typeof(IList).IsAssignableFrom(pi.PropertyType))
+                {
+                    type = pi.PropertyType.GetGenericArguments()[0];
+                    IList<object> results = func(type);
+                    if (null == results) return;
+                    results = new List<object>();
+                    object list = DJTools.createListByType(type);
+                    foreach (var item in results)
+                    {
+                        ((AbsDataModel)item).parentModel = (AbsDataModel)ele;
+                        DJTools.listAdd(list, item);
+                    }
+                    try
+                    {
+                        pi.SetValue(ele, list);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        //throw;
+                    }
+                }
+            }
+            else if (pi.PropertyType.IsClass)
+            {
+                IList<object> results = func(pi.PropertyType);
+                if (null == results) return;
+                if (0 == results.Count) return;
+                object md = results[0];
+                ((AbsDataModel)md).parentModel = (AbsDataModel)ele;
+                try
+                {
+                    pi.SetValue(ele, md);
+                }
+                catch (Exception ex)
+                {
+
+                    //throw;
+                }
+            }
+        }
+
         private object DataRowToObj(DataRow dr, object ele, Dictionary<string, string> dic)
         {
             object _vObj = null;
@@ -72,7 +169,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (PropertyInfo pi in piArr)
             {
                 _field = sqlAnalysis.GetLegalName(pi.Name);
-                _field = _field.ToLower();                
+                _field = _field.ToLower();
+                GetConstraintData(pi, dr, ele, dic);
                 if (!dic.ContainsKey(_field)) continue;
                 _vObj = dr[dic[_field]];
                 if (System.DBNull.Value == _vObj) continue;
@@ -174,6 +272,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
                 if (null == ele) ele = Activator.CreateInstance(modelType);
+                ((AbsDataModel)ele).parentModel = this.parentModel;
                 DataRowToObj(dr, ele, dic);
                 list.Add(ele);
             }

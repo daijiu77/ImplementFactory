@@ -14,6 +14,7 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         IList<object> ToList(Type modelType);
         T DefaultFirst<T>();
         object DefaultFirst(Type modelType);
+        AbsDataModel parentModel { get; set; }
         int Update();
         int AppendUpdate(Dictionary<string, object> keyValue);
         int Insert();

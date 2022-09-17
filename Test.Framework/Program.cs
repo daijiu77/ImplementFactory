@@ -176,15 +176,22 @@ namespace Test.Framework
                 ConditionItem.Me.And("equipmentName", ConditionRelation.Equals, "868b5")));
             IList<EquipmentInfo> equipmentInfos = sqlScheme.ToList<EquipmentInfo>();
 
-            IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
+            //把 IsUseConstraintLoad 参数设置为 false 时，加载所有关联的子表数据，但不递归加载父级表数据；
+            //该参数缺省时，默认为 true，采用数据懒加载
+            IDbSqlScheme scheme = db.CreateSqlFrom(false, SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "A"));
 
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
 
-            //已实现数据懒加载，访问属性时加载数据
+            //在懒加载的情况下，也就是 IsUseConstraintLoad=true 时，访问属性时加载数据
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
+
+            //当 IsUseConstraintLoad 设置为 false 时，禁止递归加载数据，所以获取 WorkInfos 属性时为 null 值
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
-            EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
+            if(null != workInfos1)
+            {
+                EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
+            }
 
             Console.WriteLine(employeeInfo1.ToJson((type, fn) =>
             {
