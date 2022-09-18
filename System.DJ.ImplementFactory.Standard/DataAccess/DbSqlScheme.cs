@@ -80,9 +80,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 if (_type.IsBaseType()) return null;
                 if (!typeof(AbsDataModel).IsAssignableFrom(_type)) return null;
-                if (!((AbsDataModel)ele).IsLegalType(_type)) return null;
+                bool isConstraint = !((AbsDataModel)ele).IsLegalType(_type);
                 DbVisitor _db = new DbVisitor();
-                IDbSqlScheme _scheme = _db.CreateSqlFrom(false, SqlFromUnit.Me.From(_type));
+                IDbSqlScheme _scheme = _db.CreateSqlFrom(isConstraint, SqlFromUnit.Me.From(_type));
                 _scheme.dbSqlBody.Where(ConditionItem.Me.And(constraint.RefrenceKey, ConditionRelation.Equals, vObj.ToString()));
                 _scheme.parentModel = (AbsDataModel)ele;
                 IList<object> _list = _scheme.ToList(_type);
@@ -123,7 +123,6 @@ namespace System.DJ.ImplementFactory.DataAccess
                     type = pi.PropertyType.GetGenericArguments()[0];
                     IList<object> results = func(type);
                     if (null == results) return;
-                    results = new List<object>();
                     object list = DJTools.createListByType(type);
                     foreach (var item in results)
                     {
