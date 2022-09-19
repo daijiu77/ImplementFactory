@@ -12,6 +12,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Test.NetCore.DataInterface;
 using Test.NetCore.Entities;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
@@ -127,6 +129,32 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            Task task = Task.Run(() =>
+              {
+                  int n = 0;
+                  while (n < 50)
+                  {
+                      n++;
+                      Trace.WriteLine("Task print: " + n.ToString());
+                      Thread.Sleep(500);
+                  }
+              });
+
+            Task task1 = Task.Run(() =>
+            {
+                int n = 0;
+                while (n < 10)
+                {
+                    n++;
+                    Thread.Sleep(600);
+                    Trace.WriteLine("Task-1 print: " + n.ToString());
+                }
+            });
+
+            List<Task> tasks = new List<Task>();
+            tasks.Add(task);
+            tasks.Add(task1);
+            Task.WaitAll(tasks.ToArray());
             Json1 json1 = new Json1()
             {
                 field1 = "1",

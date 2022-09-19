@@ -27,6 +27,7 @@ namespace System.DJ.ImplementFactory.Commons
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
         private int OptDatas = 0;
+        private List<Task> tasks = new List<Task>();
 
         private string leftStr = "|#";
         private string rightStr = "#|";
@@ -378,17 +379,18 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             const int sleepNum = 100;
             int maxNum = 100;
-            int num = 0;
+            //int num = 0;
             if (0 < dbInfo.splitTable.MaxWaitIntervalOfS)
             {
                 maxNum = dbInfo.splitTable.MaxWaitIntervalOfS * 1000 / sleepNum;
             }
 
-            while (0 < threadDic.Count && num <= maxNum)
-            {
-                num++;
-                Thread.Sleep(sleepNum);
-            }
+            //while (0 < threadDic.Count && num <= maxNum)
+            //{
+            //    num++;
+            //    Thread.Sleep(sleepNum);
+            //}
+            Task.WaitAll(tasks.ToArray());
             resultAction();
         }
 
@@ -396,6 +398,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             OptDatas = 0;
             threadDic.Clear();
+            tasks.Clear();
             if (0 == tbDic.Count) return;
 
             List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
@@ -410,6 +413,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
                 threadOpt.oparete(autoCall, item, parameters);
+                if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
             WaitExecResult(() =>
@@ -459,6 +463,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             queryDatas = new DataTable();
             threadDic.Clear();
+            tasks.Clear();
             if (0 == tbDic.Count) return;
 
             List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
@@ -473,6 +478,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
                 threadOpt.query(autoCall, item, parameters);
+                if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
             WaitExecResult(() =>
@@ -555,9 +561,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             public string ID { get { return _ID; } }
 
+            public Task task { get; set; }
+
             public void query(object autoCall, string sql, List<DbParameter> parameters)
             {
-                Task.Run(() =>
+                task = Task.Run(() =>
                 {
                     DataTable dt = null;
                     AutoCall autoCall1 = autoCall as AutoCall;
@@ -581,7 +589,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             public void oparete(object autoCall, string sql, List<DbParameter> parameters)
             {
-                Task.Run(() =>
+                task = Task.Run(() =>
                 {
                     int num = 0;
                     AutoCall autoCall1 = autoCall as AutoCall;
