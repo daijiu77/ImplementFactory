@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
@@ -11,6 +12,7 @@ using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -129,32 +131,8 @@ namespace Test.Framework
 
         static void Main(string[] args)
         {
-            Task task = Task.Run(() =>
-              {
-                  int n = 0;
-                  while (n < 50)
-                  {
-                      n++;
-                      Trace.WriteLine("Task print: " + n.ToString());
-                      Thread.Sleep(500);
-                  }
-              });
+            TestDataTableByteArray();
 
-            Task task1 = Task.Run(() =>
-            {
-                int n = 0;
-                while (n < 10)
-                {
-                    n++;
-                    Thread.Sleep(600);
-                    Trace.WriteLine("Task-1 print: " + n.ToString());
-                }
-            });
-
-            List<Task> tasks = new List<Task>();
-            tasks.Add(task);
-            tasks.Add(task1);
-            Task.WaitAll(tasks.ToArray());
             Json1 json1 = new Json1()
             {
                 field1 = "1",
@@ -253,6 +231,40 @@ namespace Test.Framework
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(workInfo));
             scheme.dbSqlBody.Where(ConditionItem.Me.And("id", ConditionRelation.Equals, workInfo.id));
             scheme.Delete();
+        }
+
+        private static void TestDataTableByteArray()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("name", typeof(string));
+            dt.Columns.Add("age", typeof(int));
+            dt.Columns.Add("isGirl", typeof(bool));
+            dt.Columns.Add("img", typeof(byte[]));
+            dt.Columns.Add("phone", typeof(string));
+            dt.Columns.Add("qq", typeof(string));
+            dt.Columns.Add("email", typeof(string));
+            dt.Columns.Add("address", typeof(string));
+
+            DataRow dr = dt.NewRow();
+            dr["name"] = "张三";
+            dr["age"] = 23;
+            dr["isGirl"] = false;
+            dr["img"] = Encoding.UTF8.GetBytes("saewrsFgs43243yyrreVw");
+            dr["address"] = "广东省";
+            dr["qq"] = "565343112";
+            dt.Rows.Add(dr);
+
+            dr = dt.NewRow();
+            dr["name"] = "李丽";
+            dr["age"] = 25;
+            dr["isGirl"] = true;
+            dr["img"] = Encoding.UTF8.GetBytes("sfsfdspp__sss");
+            dr["address"] = "广东省123";
+            dt.Rows.Add(dr);
+
+            byte[] data = dt.DataTableToByteArray();
+            DataTable dataTable = data.ByteArrayToDataTable();
+            int len = data.Length;
         }
 
         class TestObj : ImplementAdapter

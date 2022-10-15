@@ -1700,6 +1700,183 @@ namespace System.DJ.ImplementFactory.Commons
             return dt;
         }
 
+        private const int dataTableTopSize = 50;
+        private const string dataTableTag = "DataTable@";
+        private const char unitSplit = ':';
+        private const char cellSplit = ',';
+        private const char rowSplit = ';';
+        private static string getCells(object key, object val)
+        {
+            return key + unitSplit.ToString() + val;
+        }
+
+        public static string Join(this Array array, string splitTag)
+        {
+            string s = "";
+            if (null == array) return s;
+            if (0 == array.Length) return s;
+            foreach (var item in array)
+            {
+                s += splitTag + item;
+            }
+            s = s.Substring(splitTag.Length);
+            return s;
+        }
+
+        public static byte[] DataTableToByteArray(this DataTable dataTable)
+        {
+            byte[] result = null;
+            if (null == dataTable) return result;
+            if (0 == dataTable.Rows.Count) return result;
+
+            string cells = "";
+            string rows = "";
+            string grids = "";
+            string tp = "";
+            int dataSize = 0;
+            int len = 0;
+            object val = null;
+            byte[] bt = null;
+            List<byte[]> list = new List<byte[]>();
+
+            List<string> cols = new List<string>();
+            foreach (DataColumn dc in dataTable.Columns)
+            {
+                tp = dc.DataType.TypeToString(true);
+                cells = getCells(dc.ColumnName, tp);
+                cols.Add(cells);
+            }
+
+            dataSize = 0;
+            foreach (DataRow dr in dataTable.Rows)
+            {
+                rows = "";
+                foreach (DataColumn dc in dataTable.Columns)
+                {
+                    val = dr[dc.ColumnName];
+                    cells = "";
+                    if (DBNull.Value == val)
+                    {
+                        len = 0;
+                    }
+                    else if (typeof(byte[]) == dc.DataType)
+                    {
+                        len = ((byte[])val).Length;
+                        list.Add((byte[])val);
+                    }
+                    else
+                    {
+                        bt = val.ToString().StrToByte();
+                        len = bt.Length;
+                        list.Add(bt);
+                    }
+                    cells = getCells(dataSize, len);
+                    dataSize += len;
+                    rows += cellSplit + cells;
+                }
+                rows = rows.Substring(1);
+                grids += rowSplit + rows;
+            }
+
+            string s = cols.ToArray().Join(cellSplit.ToString());
+            s += grids;
+            byte[] infoData = s.StrToByte();
+            int infoSize = infoData.Length;
+
+            int size = dataTableTopSize;
+            size += infoSize;
+            size += dataSize;
+
+            result = new byte[size];
+            string top = dataTableTag + infoSize;
+            bt = top.StrToByte();
+            int pos = 0;
+            Array.Copy(bt, pos, result, 0, bt.Length);
+            pos += dataTableTopSize;
+
+            Array.Copy(infoData, 0, result, pos, infoSize);
+            pos += infoSize;
+
+            foreach (byte[] item in list)
+            {
+                if (0 == item.Length) continue;
+                Array.Copy(item, 0, result, pos, item.Length);
+                pos += item.Length;
+            }
+            return result;
+        }
+
+        public static DataTable ByteArrayToDataTable(this byte[] data)
+        {
+            if (null == data) return null;
+            if (dataTableTopSize >= data.Length) return null;
+            byte[] topData = new byte[dataTableTopSize];
+            Array.Copy(data, 0, topData, 0, dataTableTopSize);
+            string top = topData.ByteToStr();
+            if (0 != top.IndexOf(dataTableTag)) return null;
+
+            string s = top.Substring(dataTableTag.Length);
+            int infoSize = Convert.ToInt32(s);
+
+            byte[] infoData = new byte[infoSize];
+            Array.Copy(data, dataTableTopSize, infoData, 0, infoSize);
+
+            s = infoData.ByteToStr();
+            string[] rows = s.Split(rowSplit);
+            string[] columnInfos = rows[0].Split(cellSplit);
+
+            string[] arr = null;
+            Type type = null;
+            DataTable dt = new DataTable();
+            foreach (string item in columnInfos)
+            {
+                arr = item.Split(unitSplit);
+                type = Type.GetType(arr[1]);
+                dt.Columns.Add(arr[0], type);
+            }
+
+            int pos = dataTableTopSize + infoSize;
+            int dataSize = data.Length - pos;
+            byte[] dataBt = new byte[dataSize];
+            Array.Copy(data, pos, dataBt, 0, dataSize);
+            int len = rows.Length;
+            int col = 0;
+            int size = 0;
+            string row = "";
+            string[] units = null;
+            byte[] bt = null;
+            pos = 0;
+            for (int i = 1; i < len; i++)
+            {
+                col = 0;
+                row = rows[i];
+                arr = row.Split(cellSplit);
+                DataRow dr = dt.NewRow();
+                foreach (DataColumn dc in dt.Columns)
+                {
+                    units = arr[col].Split(unitSplit);
+                    col++;
+                    pos = Convert.ToInt32(units[0]);
+                    size = Convert.ToInt32(units[1]);
+                    if (0 == size) continue;
+                    bt = new byte[size];
+                    Array.Copy(dataBt, pos, bt, 0, size);
+                    if (typeof(byte[]) == dc.DataType)
+                    {
+                        dr[dc.ColumnName] = bt;
+                    }
+                    else
+                    {
+                        s = bt.ByteToStr();
+                        dr[dc.ColumnName] = ConvertTo(s, dc.DataType);
+                    }
+                }
+                dt.Rows.Add(dr);
+            }
+            return dt;
+            //throw new NotImplementedException();
+        }
+
         public static byte[] SerializableObjectToByteArray(this object entity)
         {
             BinaryFormatter binaryFormatter = new BinaryFormatter();
