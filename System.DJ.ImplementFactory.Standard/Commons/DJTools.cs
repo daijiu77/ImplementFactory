@@ -1727,7 +1727,6 @@ namespace System.DJ.ImplementFactory.Commons
         {
             byte[] result = null;
             if (null == dataTable) return result;
-            if (0 == dataTable.Rows.Count) return result;
 
             string cells = "";
             string rows = "";
