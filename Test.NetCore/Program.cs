@@ -262,6 +262,31 @@ namespace Test.NetCore
             dr["address"] = "广东省123";
             dt.Rows.Add(dr);
 
+            for (int i = 0; i < 20; i++)
+            {
+                if (0 == (i % 2))
+                {
+                    dr = dt.NewRow();
+                    dr["name"] = "李丽_" + i;
+                    dr["age"] = 25;
+                    dr["isGirl"] = true;
+                    dr["img"] = Encoding.UTF8.GetBytes("sfsfdspp__sss");
+                    dr["address"] = "广东省123";
+                    dt.Rows.Add(dr);
+                }
+                else
+                {
+                    dr = dt.NewRow();
+                    dr["name"] = "张三_" + i;
+                    dr["age"] = 23;
+                    dr["isGirl"] = false;
+                    dr["img"] = Encoding.UTF8.GetBytes("saewrsFgs43243yyrreVw");
+                    dr["address"] = "广东省";
+                    dr["qq"] = "565343112";
+                    dt.Rows.Add(dr);
+                }
+            }
+
             byte[] data = dt.DataTableToByteArray();
             DataTable dataTable = data.ByteArrayToDataTable();
             int len = data.Length;
