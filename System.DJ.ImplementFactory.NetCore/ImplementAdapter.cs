@@ -688,6 +688,12 @@ namespace System.DJ.ImplementFactory
                         impl = null;
                     });
 
+                    if (!string.IsNullOrEmpty(autoCall.MatchRuleOrClassName))
+                    {
+                        isSingleCall = true;
+                        impl = null;
+                    }
+
                     if (null == impl)
                     {
                         kv = GetKvByInterfaceType(interfaceType);
