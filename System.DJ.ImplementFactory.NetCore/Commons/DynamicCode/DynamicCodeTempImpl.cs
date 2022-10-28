@@ -323,7 +323,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 else if (p.ParameterType.BaseType == typeof(System.MulticastDelegate) && rg.IsMatch(p.ParameterType.ToString()))
                 {
                     //Action<>, Func<> 情况
-                    s = p.ParameterType.TypeToString();
+                    s = p.ParameterType.TypeToString(true);
                     paraStr += "," + s + " " + p.Name;
                     actionParaName = p.Name;
                     mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
@@ -341,7 +341,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     uskv.Add(new CKeyValue() { Key = p.ParameterType.Namespace });
 
                     //out, ref 情况
-                    s = p.ParameterType.FullName.Replace("&", "");
+                    s = p.ParameterType.TypeToString(true);
                     s = s.Replace("+", ".");
                     if (p.IsOut)
                     {
@@ -359,45 +359,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
                 else if (p.ParameterType.GetInterface("IEnumerable") == typeof(IEnumerable) && typeof(string) != p.ParameterType)
                 {
-                    s = p.ParameterType.FullName;
-                    if (rg1.IsMatch(s))
-                    {
-                        s = rg1.Match(s).Groups["TypeFull"].Value;
-                    }
-
-                    Type[] types = p.ParameterType.GetGenericArguments();
-                    //集合类型: 数组 List Dictionary   
-                    if (p.ParameterType.GetInterface("IDictionary") == typeof(IDictionary))
-                    {
-                        uskv.Add(new CKeyValue() { Key = types[0].Namespace });
-                        uskv.Add(new CKeyValue() { Key = types[1].Namespace });
-
-                        //集合类型: Dictionary            
-                        string s1 = "";
-                        foreach (Type item in types)
-                        {
-                            s1 += "," + item.FullName;
-                        }
-
-                        if (!string.IsNullOrEmpty(s1))
-                        {
-                            s1 = s1.Substring(1);
-                        }
-                        s += "<" + s1 + ">";
-                    }
-                    else if (p.ParameterType.IsArray)
-                    {
-                        uskv.Add(new CKeyValue() { Key = p.ParameterType.GetElementType().Namespace });
-                        //集合类型: 数组       
-                        //p.ParameterType.FullName 已经是 '参数类型[]' ,所以不必再组合
-                    }
-                    else if (p.ParameterType.GetInterface("IList") == typeof(IList))
-                    {
-                        uskv.Add(new CKeyValue() { Key = types[0].Namespace });
-                        s += "<" + types[0].FullName + ">";
-                        //集合类型: List                       
-                    }
-
+                    s = p.ParameterType.TypeToString(true);
+                    
                     s = s.Replace("+", ".");
                     paraStr += "," + s + " " + p.Name;
                     mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);

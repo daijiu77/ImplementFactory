@@ -84,82 +84,10 @@ namespace Test.NetCore
             MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
         }
 
-        [Table("TestJson")]
-        class testJson : AbsDataModel
-        {
-            public string key1 { get; set; }
-            [Condition(LogicSign.and, WhereIgrons.igroneEmptyNull)]
-            public virtual string key { get; set; }
-            public virtual string val { get; set; }
-            public virtual List<string> children { get; set; }
-
-            public virtual Json2 json2 { get; set; }
-        }
-
-        class Json1: AbsDataModel
-        {
-            public string field1 { get; set; }
-            public int field2 { get; set; }
-
-            public testJson tjson { get; set; }
-        }
-
-        class Json2 : AbsDataModel
-        {
-            public string field3 { get; set; }
-            public int field4 { get; set; }
-            public Json1 json1 { get; set; }
-        }
-
-        class TTJson : testJson
-        {
-
-            public override string key { get => base.key; set => base.key = value; }
-            public override string val { get => base.val; set => base.val = value; }
-            public override List<string> children
-            {
-                get
-                {
-                    return base.children;
-                }
-                set
-                {
-                    base.children = value;
-                }
-            }
-        }
-
         static void Main(string[] args)
         {
+            TestObj testObj = new TestObj();
             TestDataTableByteArray();
-
-            Json1 json1 = new Json1()
-            {
-                field1 = "1",
-                field2 = 2
-            };
-
-            testJson tjson = new testJson()
-            {
-                key = "key",
-                val = "value",
-                children = new List<string>()
-            };
-            json1.tjson = tjson;
-
-            tjson.children.Add("a");
-            tjson.children.Add("b");
-
-            Json2 json2 = new Json2()
-            {
-                field3 = "f3",
-                field4 = 4,
-                json1 = json1
-            };
-
-            tjson.json2 = json2;
-
-            string json = json1.ToJson();
 
             SetWindowPositionCenter();
 
@@ -175,7 +103,7 @@ namespace Test.NetCore
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(plan));
             Dictionary<string, object> dic = new Dictionary<string, object>();
             dic.Add("IsEnabled", false);
-            sqlScheme.AppendInsert(dic); //当有有默认值的情况下，可以通过 AppendInsert 或 AppendUpdate 改变默认值
+            sqlScheme.AppendInsert(dic); //当有默认值的情况下，可以通过 AppendInsert 或 AppendUpdate 改变默认值
             IList<Plan> plans = sqlScheme.ToList<Plan>();
 
             sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<EquipmentInfo>("e",
@@ -295,6 +223,9 @@ namespace Test.NetCore
         class TestObj : ImplementAdapter
         {
             [MyAutoCall]
+            private IDbHelper dbHelper;
+
+            [MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
 
             public void test20220313_1()
@@ -339,19 +270,6 @@ namespace Test.NetCore
 
             public void test20220313()
             {
-                MethodInfo[] ms = typeof(testJson).GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                foreach (MethodInfo item in ms)
-                {
-                    if (!item.IsGenericMethod) continue;
-                    ParameterInfo[] ps = item.GetParameters();
-                    ParameterInfo pi = ps[0];
-                    Type tp = pi.ParameterType;
-                    Type[] ts = tp.GetGenericArguments();
-                    string ns = pi.ParameterType.Namespace;
-                    bool mbool = item.ReturnType.IsGenericType;
-                    string name = pi.Name;
-                }
-
                 LogicCalculate logicCalculate = new LogicCalculate();
                 Console.WriteLine("result: " + logicCalculate.testCalculate());
                 Console.WriteLine("");
@@ -393,10 +311,6 @@ namespace Test.NetCore
                 Console.WriteLine("");
             }
 
-            ~TestObj()
-            {
-                Trace.WriteLine("TestObj distory");
-            }
         }
 
     }
