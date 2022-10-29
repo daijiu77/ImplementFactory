@@ -46,15 +46,20 @@ namespace System.DJ.ImplementFactory
 
         static ImplementAdapter()
         {
-            int n = 3;
+            int n = 5;
             StackTrace trace = new StackTrace();
             StackFrame stackFrame = null;
+            Regex rg = new Regex(@"PublicKeyToken\=null", RegexOptions.IgnoreCase);
+            string assembleStr = "";
             while (null == UserType && 0 <= n)
             {                
                 stackFrame = trace.GetFrame(n);
                 n--;
                 if (null == stackFrame) continue;
                 UserType = stackFrame.GetMethod().DeclaringType;
+                assembleStr = UserType.AssemblyQualifiedName;
+                if (string.IsNullOrEmpty(assembleStr)) assembleStr = "";
+                if (!rg.IsMatch(assembleStr)) UserType = null;
             }
 
             if (null == UserType) UserType = typeof(ImplementAdapter);
