@@ -710,7 +710,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string autocall_name = autocallImplName1 + "_01";
             if (null != implementType && false == isNotInheritInterface)
             {
-                mInfo.append(ref code, LeftSpaceLevel.three, "private static {0} {1} = ({0})ImplementAdapter.Register(new {0}());", implName, impl_name1);
+                mInfo.append(ref code, LeftSpaceLevel.three, "private {0} {1} = ({0})ImplementAdapter.Register(new {0}());", implName, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
                 mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get { return {2}; } }", DJTools.GetClassName(implementType, true), InterfaceInstanceType, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
@@ -1128,6 +1128,23 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             };
 
+            if (false == impl_name1.Equals("null"))
+            {
+                uskv.Add(new CKeyValue() { Key = typeof(FieldInfo).Namespace });
+                mInfo.append(ref code, "");
+                mInfo.append(ref code, LeftSpaceLevel.three, "public {0}_{1}()", implName, dt);
+                mInfo.append(ref code, LeftSpaceLevel.three, "{");
+                mInfo.append(ref code, LeftSpaceLevel.four, "FieldInfo[] fiArr = this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);");
+                mInfo.append(ref code, LeftSpaceLevel.four, "foreach (FieldInfo fi in fiArr)");
+                mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                mInfo.append(ref code, LeftSpaceLevel.five, "if (fi.Name.Equals(\"{0}\")) continue;", impl_name1);
+                mInfo.append(ref code, LeftSpaceLevel.five, "if (!fi.FieldType.IsAssignableFrom(typeof({0}))) continue;", implName);
+                mInfo.append(ref code, LeftSpaceLevel.five, "fi.SetValue(this, {0});", impl_name1);
+                //mInfo.append(ref code, LeftSpaceLevel.five, "");
+                mInfo.append(ref code, LeftSpaceLevel.four, "}");
+                mInfo.append(ref code, LeftSpaceLevel.three, "}");
+            }
+
             string privateVarNameCode = "";
             foreach (Type typeItem in typeList)
             {
@@ -1172,7 +1189,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     if (false == impl_name1.Equals("null"))
                     {
                         impl_name = interfaceType.Name + "_01";
-                        mInfo.append(ref privateVarNameCode, LeftSpaceLevel.three, "private {0} {1} = {2};", interfaceName, impl_name, impl_name1);
+                        mInfo.append(ref privateVarNameCode, LeftSpaceLevel.three, "private {0} {1} = null;", interfaceName, impl_name);                        
                     }
                 }
 

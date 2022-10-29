@@ -87,6 +87,7 @@ namespace Test.NetCore
         static void Main(string[] args)
         {
             TestObj testObj = new TestObj();
+            bool mbool = testObj.Compare();
             TestDataTableByteArray();
 
             SetWindowPositionCenter();
@@ -223,10 +224,25 @@ namespace Test.NetCore
         class TestObj : ImplementAdapter
         {
             [MyAutoCall]
-            private IDbHelper dbHelper;
+            private IDbHelper dbHelper1;
 
             [MyAutoCall]
+            private IDbHelper dbHelper2;
+
+            //[MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
+
+            public TestObj()
+            {
+                //
+            }
+
+            public bool Compare()
+            {
+                dbHelper1.ConStr = "1";
+                dbHelper2.ConStr = "2";
+                return dbHelper1.Equals(dbHelper2);
+            }
 
             public void test20220313_1()
             {
