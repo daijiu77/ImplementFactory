@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.DJ.Framework.CodeCompiler;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Entities;
@@ -855,7 +856,13 @@ namespace System.DJ.ImplementFactory
                     {
                         if (null == ((ISingleInstance)impl).Instance)
                         {
-                            ((ISingleInstance)impl).Instance = impl;
+                            object inst = impl;
+                            PropertyInfo pi = impl.GetType().GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
+                            if (null != pi)
+                            {
+                                inst = pi.GetValue(impl);
+                            }
+                            ((ISingleInstance)impl).Instance = inst;
                         }
                     }
 
