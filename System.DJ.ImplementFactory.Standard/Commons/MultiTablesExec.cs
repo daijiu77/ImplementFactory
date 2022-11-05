@@ -137,6 +137,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string err = "";
 
             initBasicExecForSQL(dbAdapter, dbHelper);
+            dbAdapter.IgnoreError = true;
             dbAdapter.ExecSql(autoCall, sql, null, ref err, vObj =>
             {
                 if (null == vObj) return;

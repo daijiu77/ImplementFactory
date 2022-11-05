@@ -160,7 +160,6 @@ namespace System.DJ.ImplementFactory.Commons
                         {
                             autoCall.ExecuteException(this.GetType(), this, "Exec", null, new Exception(err));
                         }
-                        IgnoreError = false;
                         //throw;
                     }
                     finally
@@ -173,6 +172,7 @@ namespace System.DJ.ImplementFactory.Commons
                         }
 
                         action(vObj);
+                        IgnoreError = false;
                     }
                 }
             }

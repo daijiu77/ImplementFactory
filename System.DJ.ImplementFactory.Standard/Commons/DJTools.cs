@@ -2169,5 +2169,14 @@ namespace System.DJ.ImplementFactory.Commons
             JsonToEntity toEntity = new JsonToEntity();
             return toEntity.GetObject(json);
         }
+
+        public static int Count<T>(this IEnumerable<T> collection)
+        {
+            int count = 0;
+            if (null == collection) return count;
+            foreach (T item in collection) count++;
+            return count;
+        }
+
     }
 }

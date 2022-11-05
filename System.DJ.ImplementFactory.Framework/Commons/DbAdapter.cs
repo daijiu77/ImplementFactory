@@ -78,11 +78,15 @@ namespace System.DJ.ImplementFactory.Commons
                 DJTools.append(ref err, "");
                 DJTools.append(ref err, "ConnectionString: {0}", dbConnectionString);
                 mbool = false;
-                AutoCall.Instance.e(err, ErrorLevels.severe);
+                if (false == IgnoreError)
+                {
+                    AutoCall.Instance.e(err, ErrorLevels.severe);
+                }
                 if (null != dbConnectionState)
                 {
                     dbConnectionState.DbConnection_CreatedFail(new Exception(err));
                 }
+                IgnoreError = false;
                 //throw;
             }
             return mbool;
@@ -152,7 +156,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                         err = ex.ToString();
                         err += "\r\n\r\n" + sql;
-                        if (null != autoCall)
+                        if (null != autoCall && false == IgnoreError)
                         {
                             autoCall.ExecuteException(this.GetType(), this, "Exec", null, new Exception(err));
                         }
@@ -168,11 +172,13 @@ namespace System.DJ.ImplementFactory.Commons
                         }
 
                         action(vObj);
+                        IgnoreError = false;
                     }
                 }
             }
         }
 
+        public bool IgnoreError { get; set; }
         void IDisposable.Dispose()
         {
             if (null == conn) return;
