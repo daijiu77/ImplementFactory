@@ -13,7 +13,7 @@
 # Compiled Release files
 *.cache
 
-/.vs/ImplementFactory
+/.vs/
 /packages/
 
 # Compiled bin files
