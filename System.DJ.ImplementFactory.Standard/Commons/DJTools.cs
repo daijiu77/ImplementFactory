@@ -193,8 +193,18 @@ namespace System.DJ.ImplementFactory.Commons
                     if (item.DeclaringType != type) continue;
                 }
                 v = item.GetValue(obj);
-                mbool = func(item, item.PropertyType, item.Name, v);
-                if (false == mbool) break;
+
+                try
+                {
+                    mbool = func(item, item.PropertyType, item.Name, v);
+                    if (false == mbool) break;
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+
             }
         }
 
@@ -236,8 +246,17 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     if (item.DeclaringType != objType) continue;
                 }
-                mbool = func(item, item.PropertyType, item.Name);
-                if (false == mbool) break;
+
+                try
+                {
+                    mbool = func(item, item.PropertyType, item.Name);
+                    if (false == mbool) break;
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
             }
         }
 
@@ -1188,13 +1207,34 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = null;
             string field = "";
             string fn1 = "";
+            string ft = "";
+            Type type1 = null;
+            bool isArr = false;
             Attribute att = null;
             foreach (DataRow dr in dataTable.Rows)
             {
                 ele = Activator.CreateInstance(type);
                 type.ForeachProperty((pi, tp, fn) =>
                 {
-                    if (!IsBaseType(tp)) return;
+                    isArr = false;
+                    if (!IsBaseType(tp))
+                    {
+                        if (tp.IsArray)
+                        {
+                            ft = tp.TypeToString(true);
+                            ft = ft.Replace("[]", "");
+                            type1 = Type.GetType(ft);
+                            if (null != type1)
+                            {
+                                isArr = IsBaseType(type1);
+                            }
+                            if (!isArr) return;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
                     field = "";
                     fn1 = fn.ToLower();
                     if (dic.ContainsKey(fn1)) field = dic[fn1];
@@ -1211,7 +1251,11 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = dr[field];
                     if (DBNull.Value == vObj) return;
                     if (null == vObj) return;
-                    vObj = ConvertTo(vObj, tp);
+
+                    if (!isArr)
+                    {
+                        vObj = ConvertTo(vObj, tp);
+                    }
                     pi.SetValue(ele, vObj);
                 });
                 list.Add(ele);
