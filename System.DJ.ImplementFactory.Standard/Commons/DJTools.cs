@@ -2218,6 +2218,14 @@ namespace System.DJ.ImplementFactory.Commons
         {
             int count = 0;
             if (null == collection) return count;
+            if (typeof(ICollection).IsAssignableFrom(collection.GetType()))
+            {
+                return ((ICollection)collection).Count;
+            }
+            else if (null != (collection as Array))
+            {
+                return ((Array)collection).Length;
+            }
             foreach (T item in collection) count++;
             return count;
         }
