@@ -1,11 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.Reflection;
-using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -29,146 +24,112 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         public bool IsLegalType(Type type)
         {
-            object dataModel = this;
-            Type pt = dataModel.GetType();
-            if (pt == type) return false;
-            bool mbool = true;
-            AbsDataModel dm = this;
-            if (null != dm.parentModel)
-            {
-                mbool = dm.parentModel.IsLegalType(type);
-            }
+            if (this.GetType() == type) return false;
+            if (null == parentModel) return true;
+            bool mbool = parentModel.IsLegalType(type);            
             return mbool;
         }
 
-        public string ToJson(Func<Type, string, bool> property)
+        public bool IsLegalValue(object val)
         {
-            string json = "";
-            object dataModel = this;
-            Type tp = dataModel.GetType();
-            object fv = null;
-            tp.ForeachProperty((pi, type, fn) =>
+            if (val == this) return false;
+            if (null == parentModel) return true;
+            bool mbool = parentModel.IsLegalValue(val);
+            return mbool;
+        }
+
+        private string toJsonValue(object v, AbsDataModel parent, bool limitType, Func<Type,string,bool> func)
+        {
+            if (null == v) return "null";
+            Type t = v.GetType();
+            string vs = "";
+            if (t.IsBaseType())
             {
-                if (!((AbsDataModel)dataModel).IsLegalType(type))
+                if (typeof(DateTime) == t || typeof(Guid) == t || typeof(DateTime?) == t || typeof(Guid?) == t || typeof(string) == t)
                 {
-                    json += ", \"" + fn + "\": null";
-                    return;
-                }
-
-                if (!property(type, fn))
-                {
-                    json += ", \"" + fn + "\": null";
-                    return;
-                }
-
-                if (type == typeof(string) || type == typeof(Guid) || type == typeof(DateTime)
-                 || type == typeof(Guid?) || type == typeof(DateTime?))
-                {
-                    fv = pi.GetValue(dataModel);
-                    fv = null == fv ? "null" : "\"" + fv + "\"";
-                }
-                else if (type.IsArray || typeof(IList).IsAssignableFrom(type))
-                {
-                    fv = pi.GetValue(dataModel);
-                    if (null == fv)
-                    {
-                        fv = "null";
-                    }
-                    else
-                    {
-                        bool isBaseVal = false;
-                        IEnumerable arr = fv as IEnumerable;
-                        AbsDataModel absDataModel = null;
-                        string s = "";
-                        Type t = null;
-
-                        foreach (object item in arr)
-                        {
-                            if (null == item)
-                            {
-                                s += ", null";
-                                continue;
-                            }
-                            absDataModel = item as AbsDataModel;
-                            if (null == absDataModel && string.IsNullOrEmpty(s))
-                            {
-                                isBaseVal = DJTools.IsBaseType(item.GetType());
-                            }
-
-                            if (isBaseVal)
-                            {
-                                t = item.GetType();
-                                if ((typeof(string) == t) || (typeof(Guid) == t) || (typeof(DateTime) == t)
-                                 || (typeof(Guid?) == t) || (typeof(DateTime?) == t))
-                                {
-                                    s += ", \"" + item + "\"";
-                                }
-                                else
-                                {
-                                    s += ", " + item;
-                                }
-                                continue;
-                            }
-                            absDataModel.parentModel = this;
-                            s += ", " + absDataModel.ToJson(property);
-                        }
-
-                        if (!string.IsNullOrEmpty(s))
-                        {
-                            s = s.Substring(2);
-                            s = "[" + s + "]";
-                        }
-                        else
-                        {
-                            s = "null";
-                        }
-                        fv = s;
-                    }
-                }
-                else if (typeof(AbsDataModel).IsAssignableFrom(type))
-                {
-                    fv = pi.GetValue(dataModel);
-                    if (null == fv)
-                    {
-                        fv = "null";
-                    }
-                    else
-                    {
-                        AbsDataModel absDataModel = (AbsDataModel)fv;
-                        absDataModel.parentModel = this;
-                        fv = absDataModel.ToJson(property);
-                    }
-                }
-                else if (type.IsClass)
-                {
-                    fv = pi.GetValue(dataModel);
-                    if (null == fv)
-                    {
-                        fv = "null";
-                    }
-                    else
-                    {
-                        fv = JsonConvert.SerializeObject(fv);
-                    }
+                    vs = "\"" + v.ToString() + "\"";
                 }
                 else
                 {
-                    fv = pi.GetValue(dataModel);
-                    fv = null == fv ? "null" : fv;
+                    vs = v.ToString();
+                    if (typeof(bool) == t) vs = vs.ToLower();
                 }
-                json += ", \"" + fn + "\": " + fv.ToString();
-            });
-            if (!string.IsNullOrEmpty(json))
-            {
-                json = json.Substring(2);
-                json = "{" + json + "}";
             }
-            return json;
+            else if (typeof(ICollection).IsAssignableFrom(t))
+            {
+                ICollection collection = (ICollection)v;
+                string ele = "";
+                foreach (var item in collection)
+                {
+                    ele += ", " + toJsonValue(item, parent, limitType, func);
+                }
+                if (!string.IsNullOrEmpty(ele)) ele = ele.Substring(2);
+                vs = "[" + ele + "]";
+            }
+            else
+            {
+                AbsDataModel abs = (AbsDataModel)v;
+                abs.parentModel = parent;
+                bool enabled = false;
+                object vObj = null;
+                v.GetType().ForeachProperty((pi, pt, fn) =>
+                {
+                    enabled = true;
+                    if (null != func)
+                    {
+                        enabled = func(pt, fn);
+                    }
+
+                    if (enabled)
+                    {
+                        if (limitType)
+                        {
+                            enabled = IsLegalType(pt);
+                        }
+                        else
+                        {
+                            vObj = pi.GetValue(v, null);
+                            enabled = abs.IsLegalValue(vObj);
+                        }
+                    }                    
+
+                    if (enabled)
+                    {
+                        if (limitType) vObj = pi.GetValue(v, null);
+                        vs += ", \"" + fn + "\": " + toJsonValue(vObj, abs, limitType, func);
+                    }
+                    else
+                    {
+                        vs += ", \"" + fn + "\": null";
+                    }
+                });
+                if (!string.IsNullOrEmpty(vs)) vs = vs.Substring(2);
+                vs = "{" + vs + "}";
+            }
+            return vs;
+        }
+
+        public string ToJson(bool limitType, Func<Type, string, bool> func)
+        {
+            return toJsonValue(this, null, limitType, func);
+        }
+
+        public string ToJson(Func<Type, string, bool> func)
+        {
+            return toJsonValue(this, null, true, func);
+        }
+
+        public string ToJson(bool limitType)
+        {
+            return toJsonValue(this, null, limitType, (tp, fn) =>
+            {
+                return true;
+            });
         }
 
         public string ToJson()
         {
-            return ToJson((tp, fn) =>
+            return toJsonValue(this, null, true, (tp, fn) =>
             {
                 return true;
             });
