@@ -224,10 +224,13 @@ namespace Test.Framework
         class TestObj : ImplementAdapter
         {
             [MyAutoCall]
-            private IDbHelper dbHelper1;
+            private IDb_Helper dbHelper1;
 
             [MyAutoCall]
-            private IDbHelper dbHelper2;
+            private IDb_Helper dbHelper2;
+
+            [MyAutoCall]
+            private ICalculate calculate;
 
             //[MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
@@ -239,6 +242,7 @@ namespace Test.Framework
 
             public bool Compare()
             {
+                calculate.Division(1, 2);
                 dbHelper1.ConStr = "1";
                 dbHelper2.ConStr = "2";
                 return dbHelper1.Equals(dbHelper2);

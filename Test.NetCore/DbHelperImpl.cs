@@ -6,12 +6,12 @@ using System.Text;
 
 namespace Test.NetCore
 {
-    public class DbHelperImpl : IDbHelper, ISingleInstance
+    public class DbHelperImpl : IDb_Helper, ISingleInstance
     {
         object ISingleInstance.Instance { get; set; }
-        string IDbHelper.ConStr { get; set; }
+        string IDb_Helper.ConStr { get; set; }
 
-        int IDbHelper.ExecuteSql(string sql, IEnumerable<DbParameter> dbs, ref string err)
+        int IDb_Helper.ExecuteSql(string sql, IEnumerable<DbParameter> dbs, ref string err)
         {
             int num = 0;
             return num;

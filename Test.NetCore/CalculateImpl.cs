@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
+using Test.NetCore.DataInterface;
 
 namespace Test.NetCore
 {
@@ -9,6 +10,9 @@ namespace Test.NetCore
     {
         [MyAutoCall]
         private IApiUserInfo apiUserInfo;
+
+        [MyAutoCall]
+        IUserInfo userInfo;
 
         private event getData GetData;
 
