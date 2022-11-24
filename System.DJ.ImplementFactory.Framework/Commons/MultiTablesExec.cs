@@ -78,11 +78,16 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         public static Dictionary<string, string> Tables
         {
-            get { return _tableDic; }
+            get
+            {
+                ImplementAdapter.task.Wait();
+                return _tableDic;
+            }
         }
 
         public static void SetTable(string tableName)
         {
+            ImplementAdapter.task.Wait();
             string tb = tableName.ToLower();
             if (!_tableDic.ContainsKey(tb))
             {

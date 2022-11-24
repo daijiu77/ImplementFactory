@@ -14,6 +14,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using static System.DJ.ImplementFactory.Commons.Attrs.AutoCall;
 
@@ -25,7 +26,7 @@ namespace System.DJ.ImplementFactory
     /// Email: 564343162@qq.com
     /// CreateDate: 2020-03-05
     /// </summary>
-    public abstract class ImplementAdapter: AbsDataModel
+    public abstract class ImplementAdapter : AbsDataModel
     {
         object currentObj = null;
 
@@ -45,6 +46,8 @@ namespace System.DJ.ImplementFactory
 
         public static readonly SysConfig sysConfig1 = new SysConfig();
 
+        public static Task task = null;
+
         static ImplementAdapter()
         {
             int n = 5;
@@ -53,7 +56,7 @@ namespace System.DJ.ImplementFactory
             Regex rg = new Regex(@"PublicKeyToken\=null", RegexOptions.IgnoreCase);
             string assembleStr = "";
             while (null == UserType && 0 <= n)
-            {                
+            {
                 stackFrame = trace.GetFrame(n);
                 n--;
                 if (null == stackFrame) continue;
@@ -159,7 +162,7 @@ namespace System.DJ.ImplementFactory
             if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
 
             string dsFlag = "ms";
-            if(db_dialect.mysql== DataAdapter.dbDialect)
+            if (db_dialect.mysql == DataAdapter.dbDialect)
             {
                 dsFlag = "mysql";
             }
@@ -204,8 +207,11 @@ namespace System.DJ.ImplementFactory
                     dbHelper1.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
                 }
                 dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
-                new MultiTablesExec(dbInfo, dbHelper1);
-                if(null != dbTableScheme && dbInfo.UpdateTableDesign)
+                task = Task.Run(() =>
+                  {
+                      new MultiTablesExec(dbInfo, dbHelper1);
+                  });
+                if (null != dbTableScheme && dbInfo.UpdateTableDesign)
                 {
                     UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
                     updateTableDesign.TableScheme();
