@@ -7,21 +7,29 @@ namespace System.DJ.ImplementFactory.Commons
     {
         Regex bracketRg = null;
         /// <summary>
-        /// 乘 - 除 - % 运算
+        /// 按运算符的优先级顺序来做匹配(数组元素的先后顺序决定运算符的优先级)
         /// </summary>
-        Regex calcLevel1 = null;
-        /// <summary>
-        /// 加 - 减 运算
-        /// </summary>
-        Regex calcLevel2 = null;
-
+        Regex[] regexes = null;
+        
         const int max = 100;
 
         public MixedCalculate()
         {
             bracketRg = new Regex(@"\((?<CalculateExp>[^\(\)]+)\)", RegexOptions.IgnoreCase);
-            calcLevel1 = new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>[\/\*\%])\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase);
-            calcLevel2 = new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>[\+\-])\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase);
+            regexes = new Regex[]
+            {
+                new Regex(@"(?<CalcChar>\+\+)(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), // ++number 运算
+                new Regex(@"(?<Num1>[0-9\.]+)(?<CalcChar>\+\+)", RegexOptions.IgnoreCase), //number++ 运算
+                new Regex(@"(?<CalcChar>\-\-)(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), // --number 运算
+                new Regex(@"(?<Num1>[0-9\.]+)(?<CalcChar>\-\-)", RegexOptions.IgnoreCase), //number-- 运行
+                new Regex(@"(?<CalcChar>[\~])(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), //按位取反运算符
+                new Regex(@"(?<Num1>[\-\+]?[0-9\.]+)\s*(?<CalcChar>[\/\*\%])\s*(?<Num2>[\-\+]?[0-9\.]+)", RegexOptions.IgnoreCase), //除|乘|余
+                new Regex(@"(?<Num1>[\-\+]?[0-9\.]+)\s*(?<CalcChar>[\+\-])\s*(?<Num2>[\-\+]?[0-9\.]+)", RegexOptions.IgnoreCase), //加|减
+                new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>((\<\<)|(\>\>)))\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), //左位移|右位移
+                new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>[\&])\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), //按位与
+                new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>[\^])\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase), //按位异或
+                new Regex(@"(?<Num1>[0-9\.]+)\s*(?<CalcChar>[\|])\s*(?<Num2>[0-9\.]+)", RegexOptions.IgnoreCase)  //按位或
+            };
         }
 
         T IMixedCalculate.Exec<T>(string expression)
@@ -29,8 +37,10 @@ namespace System.DJ.ImplementFactory.Commons
             T val = default(T);
             if (string.IsNullOrEmpty(expression)) return val;
             BracketCalculate(ref expression);
-            Level_Calculate(calcLevel1, ref expression);
-            Level_Calculate(calcLevel2, ref expression);
+            foreach (Regex item in regexes)
+            {
+                Level_Calculate(item, ref expression);
+            }
             string s = expression.Trim();
             object vObj = ConvertTo<T>(s);
             if (null != vObj) val = (T)vObj;
@@ -105,8 +115,10 @@ namespace System.DJ.ImplementFactory.Commons
                 Num2 = m.Groups["Num2"].Value;
                 CalcChar = m.Groups["CalcChar"].Value;
 
-                n1 = Convert.ToSingle(Num1);
-                n2 = Convert.ToSingle(Num2);
+                n1 = 0;
+                n2 = 0;
+                if (!string.IsNullOrEmpty(Num1)) n1 = Convert.ToSingle(Num1);
+                if (!string.IsNullOrEmpty(Num2)) n2 = Convert.ToSingle(Num2);
                 num = calculat(n1, n2, CalcChar);
                 s = s.Replace(m.Groups[0].Value, num.ToString());
                 n++;
@@ -125,8 +137,10 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 m = bracketRg.Match(s);
                 CalculateExp = m.Groups["CalculateExp"].Value;
-                Level_Calculate(calcLevel1, ref CalculateExp);
-                Level_Calculate(calcLevel2, ref CalculateExp);
+                foreach (var item in regexes)
+                {
+                    Level_Calculate(item, ref CalculateExp);                    
+                }
                 s = s.Replace(m.Groups[0].Value, CalculateExp);
                 n++;
             }
@@ -155,6 +169,46 @@ namespace System.DJ.ImplementFactory.Commons
                     break;
                 case "%":
                     v1 = num1 % num2;
+                    break;
+                case "|":
+                    v1 = Convert.ToInt32(num1) | Convert.ToInt32(num2);
+                    break;
+                case "&":
+                    v1 = Convert.ToInt32(num1) & Convert.ToInt32(num2);
+                    break;
+                case "^":
+                    v1 = Convert.ToInt32(num1) ^ Convert.ToInt32(num2);
+                    break;
+                case "<<":
+                    v1 = Convert.ToInt32(num1) << Convert.ToInt32(num2);
+                    break;
+                case ">>":
+                    v1 = Convert.ToInt32(num1) >> Convert.ToInt32(num2);
+                    break;
+                case "~":
+                    v1 = ~Convert.ToInt32(num2);
+                    break;
+                case "++":
+                    if (0 != num1)
+                    {
+                        num1++;
+                        v1 = num1;
+                    }
+                    else if (0 != num2)
+                    {
+                        v1 = ++num2;
+                    }
+                    break;
+                case "--":
+                    if (0 != num1)
+                    {
+                        num1--;
+                        v1 = num1;
+                    }
+                    else if (0 != num2)
+                    {
+                        v1 = --num2;
+                    }
                     break;
             }
             return v1;
