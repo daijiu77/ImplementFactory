@@ -99,13 +99,6 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     catch { }
                 }
-                else
-                {
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        autoCall_Impl.e(err);
-                    }
-                }
             }
 
             autoCall_Impl.CreateInstanceByInterface(interfaceType, implType, autoCall_Impl, instanceCount);

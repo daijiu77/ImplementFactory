@@ -206,13 +206,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
         void LoadErrorLevel()
         {
-            if (null != errorLevels1)
-            {
-                errorLevels1 = new List<ErrorLevels>();
-                errorLevels1.Add(ErrorLevels.severe);
-                errorLevels1.Add(ErrorLevels.debug);
-                return;
-            }
+            if (null != errorLevels1) return;
             string configFile = "ImplementFactory.xml";
             string rootPath = ImplementAdapter.rootPath;
             string f = Path.Combine(rootPath, configFile);
