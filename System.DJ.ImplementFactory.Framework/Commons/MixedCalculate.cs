@@ -47,7 +47,7 @@ namespace System.DJ.ImplementFactory.Commons
             return val;
         }
 
-        object ConvertTo<T>(string vs)
+        private object ConvertTo<T>(string vs)
         {
             Type type = typeof(T);
             object vObj = null;
@@ -96,7 +96,7 @@ namespace System.DJ.ImplementFactory.Commons
             return vObj;
         }
 
-        void Level_Calculate(Regex rg, ref string expression)
+        private void Level_Calculate(Regex rg, ref string expression)
         {
             string s = expression.Trim();
             if (string.IsNullOrEmpty(s)) return;
@@ -115,8 +115,8 @@ namespace System.DJ.ImplementFactory.Commons
                 Num2 = m.Groups["Num2"].Value;
                 CalcChar = m.Groups["CalcChar"].Value;
 
-                n1 = 0;
-                n2 = 0;
+                n1 = float.MinValue;
+                n2 = float.MinValue;
                 if (!string.IsNullOrEmpty(Num1)) n1 = Convert.ToSingle(Num1);
                 if (!string.IsNullOrEmpty(Num2)) n2 = Convert.ToSingle(Num2);
                 num = calculat(n1, n2, CalcChar);
@@ -126,7 +126,7 @@ namespace System.DJ.ImplementFactory.Commons
             expression = s;
         }
 
-        void BracketCalculate(ref string expression)
+        private void BracketCalculate(ref string expression)
         {
             string s = expression.Trim();
             if (string.IsNullOrEmpty(s)) return;
@@ -147,7 +147,7 @@ namespace System.DJ.ImplementFactory.Commons
             expression = s;
         }
 
-        float calculat(float num1, float num2, string CalculateChar)
+        private float calculat(float num1, float num2, string CalculateChar)
         {
             float v1 = 0;
             if (string.IsNullOrEmpty(CalculateChar)) return v1;
@@ -189,23 +189,23 @@ namespace System.DJ.ImplementFactory.Commons
                     v1 = ~Convert.ToInt32(num2);
                     break;
                 case "++":
-                    if (0 != num1)
+                    if (float.MinValue != num1)
                     {
                         num1++;
                         v1 = num1;
                     }
-                    else if (0 != num2)
+                    else if (float.MinValue != num2)
                     {
                         v1 = ++num2;
                     }
                     break;
                 case "--":
-                    if (0 != num1)
+                    if (float.MinValue != num1)
                     {
                         num1--;
                         v1 = num1;
                     }
-                    else if (0 != num2)
+                    else if (float.MinValue != num2)
                     {
                         v1 = --num2;
                     }
