@@ -214,7 +214,10 @@ namespace System.DJ.ImplementFactory
                 if (null != dbTableScheme && dbInfo.UpdateTableDesign)
                 {
                     UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
-                    updateTableDesign.TableScheme();
+                    Task.Run(() =>
+                    {
+                        updateTableDesign.TableScheme();
+                    });                    
                 }
             }
             IsDbUsed = dbInfo.IsDbUsed;

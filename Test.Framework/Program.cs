@@ -91,7 +91,13 @@ namespace Test.Framework
             TestDataTableByteArray();
 
             SetWindowPositionCenter();
+            
+            Console.WriteLine("Hello World!");
+            Console.ReadKey(true);
+        }
 
+        void QueryData()
+        {
             Plan plan = new Plan()
             {
                 PName = "Go to play game.",
@@ -118,11 +124,12 @@ namespace Test.Framework
 
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
 
+            if (0 == list.Count) return;
             //在懒加载的情况下，也就是 IsUseConstraintLoad=true 时，访问属性时加载数据
             EmployeeInfo employeeInfo1 = list[0].employeeInfo;
-                        
+
             IList<WorkInfo> workInfos1 = employeeInfo1.WorkInfos;
-            if(null != workInfos1)
+            if (null != workInfos1)
             {
                 //当 IsUseConstraintLoad 设置为 false 时，禁止递归加载数据，所以获取 WorkInfos 属性子元素的 employeeInfo 属性值时将采用懒加载
                 EmployeeInfo employeeInfo2 = workInfos1[0].employeeInfo;
@@ -133,8 +140,6 @@ namespace Test.Framework
                 if (typeof(EmployeeInfo) == type) return false;
                 return true;
             }));
-            Console.WriteLine("Hello World!");
-            Console.ReadKey(true);
         }
 
         void InsertData(WorkInfo workInfo)
