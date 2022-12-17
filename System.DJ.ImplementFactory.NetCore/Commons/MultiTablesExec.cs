@@ -441,6 +441,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IMultiTablesExec.Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
+            ImplementAdapter.task.Wait();
             initBasicExecForSQL(dbAdapter, dbHelper);
             if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, ImplementAdapter.DbHelper);
             createNewTable.SplitTable(sql);

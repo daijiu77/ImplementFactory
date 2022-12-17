@@ -2230,5 +2230,94 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
+        public static int HexToDecimalism(string hex)
+        {
+            int dec = 0;
+            if (string.IsNullOrEmpty(hex)) return dec;
+            dec = (int)Convert.ToInt64(hex, 16);
+            return dec;
+        }
+
+        public static string DecimalismToHex(Int64 dec)
+        {
+            string hex = dec.ToString("X6");
+            while (0 < hex.Length)
+            {
+                if (!hex.Substring(0, 1).Equals("0")) break;
+                hex = hex.Substring(1);
+            }
+            return hex;
+        }
+
+        public static Int64 ByteArrayToDecimalism(byte[] bytes)
+        {
+            string s = ByteArrayToHex(bytes);
+            Int64 num = Convert.ToInt64(s, 16);
+            return num;
+        }
+
+        public static string ByteArrayToHex(byte[] bytes)
+        {
+            string s = "";
+            if (null == bytes) return s;
+            if (0 == bytes.Length) return s;
+            int len = bytes.Length;
+            string[] arr = new string[len];
+            for (int i = 0; i < len; i++)
+            {
+                arr[i] = Convert.ToString(bytes[i], 16);
+            }
+            s = string.Join("", arr);
+            return s;
+        }
+
+        public static byte[] DecimalismToByteArray(int decNum)
+        {
+            byte[] n16 = null;
+            string s = Convert.ToString(decNum, 16);
+            n16 = HexToByteArray(s);
+            return n16;
+        }
+
+        public static byte[] HexToByteArray(string hex)
+        {
+            byte[] n16 = null;
+            string s = hex;
+            string[] arr = null;
+            if (2 < s.Length)
+            {
+                if (s.Substring(0, 2).ToLower().Equals("0x")) s = s.Substring(2);
+            }
+            int len = s.Length;
+            int size = len / 2;
+            if (0 < (len % 2)) size++;
+            arr = new string[size];
+            n16 = new byte[size];
+            int n = size;
+            while (!string.IsNullOrEmpty(s))
+            {
+                n--;
+                if (2 < s.Length)
+                {
+                    arr[n] = s.Substring(s.Length - 2);
+                    s = s.Substring(0, s.Length - 2);
+                }
+                else
+                {
+                    arr[n] = s;
+                    s = "";
+                }
+            }
+
+            len = arr.Length;
+            int num = 0;
+            for (int i = 0; i < len; i++)
+            {
+                num = Convert.ToInt32(arr[i], 16);
+                n16[i] = (byte)num;
+            }
+            return n16;
+        }
+
     }
 }
