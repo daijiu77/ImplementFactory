@@ -86,6 +86,7 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            QueryData();
             TestObj testObj = new TestObj();
             bool mbool = testObj.Compare();
             TestDataTableByteArray();
@@ -96,7 +97,7 @@ namespace Test.NetCore
             Console.ReadKey(true);
         }
 
-        void QueryData()
+        static void QueryData()
         {
             Plan plan = new Plan()
             {

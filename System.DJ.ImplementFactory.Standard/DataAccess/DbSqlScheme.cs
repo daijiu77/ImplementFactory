@@ -281,7 +281,6 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         IList<T> IDbSqlScheme.ToList<T>()
         {
-            List<SqlFromUnit> sfList = GetSqlFromUnits();
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
             IList<T> list = new List<T>();
             IList<object> results= GetList(dt, typeof(T));

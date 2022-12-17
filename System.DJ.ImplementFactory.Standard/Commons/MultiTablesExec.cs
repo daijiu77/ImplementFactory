@@ -405,6 +405,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             OptDatas = 0;
             threadDic.Clear();
             tasks.Clear();
+            ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
             List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
@@ -450,13 +451,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             }
             string err1 = "";
             dbAdapter.ExecSql((AutoCall)autoCall, sql, parameters, ref err1, val =>
-                {
-                    int n = Convert.ToInt32(val);
-                    action(n);
-                }, cmd =>
-             {
-                 return cmd.ExecuteNonQuery();
-             });
+            {
+                int n = Convert.ToInt32(val);
+                action(n);
+            }, cmd =>
+            {
+                return cmd.ExecuteNonQuery();
+            });
             err = err1;
         }
 
@@ -470,6 +471,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             queryDatas = new DataTable();
             threadDic.Clear();
             tasks.Clear();
+            ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
             List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
