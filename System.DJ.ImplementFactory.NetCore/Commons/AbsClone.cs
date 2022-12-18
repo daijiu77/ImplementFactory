@@ -119,7 +119,7 @@ namespace System.DJ.ImplementFactory.Commons
                         
                         if (pi.CanWrite)
                         {
-                            arr1 = DJTools.createArrayByType(fv.GetType(), len);
+                            arr1 = ExtCollection.createArrayByType(fv.GetType(), len);
                         }
                         else
                         {
@@ -142,7 +142,7 @@ namespace System.DJ.ImplementFactory.Commons
                                 {
                                     ele = getClone(null, a, 1, while_num);
                                 }
-                                DJTools.arrayAdd(arr1, ele, n);
+                                ExtCollection.arrayAdd(arr1, ele, n);
                                 n++;
                             }
                         }
@@ -156,7 +156,7 @@ namespace System.DJ.ImplementFactory.Commons
                         object list = null;
                         if (pi.CanWrite)
                         {
-                            list = DJTools.createListByType(fv.GetType());
+                            list = ExtCollection.createListByType(fv.GetType());
                         }
                         else
                         {
@@ -178,7 +178,7 @@ namespace System.DJ.ImplementFactory.Commons
                                 {
                                     ele = getClone(null, a, 1, while_num);
                                 }
-                                DJTools.listAdd(list, ele);
+                                ExtCollection.listAdd(list, ele);
                             }
                         }
 
@@ -191,7 +191,7 @@ namespace System.DJ.ImplementFactory.Commons
                         object dic1 = null;
                         if (pi.CanWrite)
                         {
-                            dic1 = DJTools.createDictionaryByType(fv.GetType());
+                            dic1 = ExtCollection.createDictionaryByType(fv.GetType());
                         }
                         else
                         {
@@ -220,7 +220,7 @@ namespace System.DJ.ImplementFactory.Commons
                                         ele = getClone(null, val, 1, while_num);
                                     }
                                 }
-                                DJTools.dictionaryAdd(dic1, key, val);
+                                ExtCollection.dictionaryAdd(dic1, key, val);
                             }
                         }
 

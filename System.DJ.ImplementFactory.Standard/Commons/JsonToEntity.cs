@@ -187,12 +187,12 @@ namespace System.DJ.ImplementFactory.Commons
                     if (dicType.ContainsKey(item.Name.ToLower())) vType = dicType[item.Name.ToLower()];
                     if (null != vType)
                     {
-                        object list = DJTools.createListByType(vType);
+                        object list = ExtCollection.createListByType(vType);
                         foreach (var item1 in item.Value.Children())
                         {
                             v1 = Activator.CreateInstance(vType);
                             SetObjVal(v1, item1);
-                            DJTools.listAdd(list, v1);
+                            ExtCollection.listAdd(list, v1);
                         }
                         vObj.SetPropertyValue(item.Name + "s", list);
                     }
@@ -201,12 +201,12 @@ namespace System.DJ.ImplementFactory.Commons
                         pi = vObj.GetPropertyInfo(item.Name + "s");
                         if (null == pi) continue;
                         type = pi.PropertyType.GetGenericArguments()[0];
-                        object list = DJTools.createListByType(type);
+                        object list = ExtCollection.createListByType(type);
                         foreach (var item1 in item.Value.Children())
                         {
                             v1 = DJTools.ConvertTo(item1.ToString(), type);
                             if (null == v1) continue;
-                            DJTools.listAdd(list, v1);
+                            ExtCollection.listAdd(list, v1);
                         }
                         vObj.SetPropertyValue(item.Name + "s", list);
                     }

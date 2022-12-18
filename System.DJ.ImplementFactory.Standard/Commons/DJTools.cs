@@ -202,7 +202,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                     //throw;
                 }
-
+                
             }
         }
 
@@ -254,7 +254,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
 
                     //throw;
-                }
+                }                
             }
         }
 
@@ -322,12 +322,12 @@ namespace System.DJ.ImplementFactory.Commons
                         s = s.Replace("[]", "");
                         eleType = Type.GetType(s);
                         if (null == eleType) return true;
-                        collection = createArrayByType(null, arr.Length);
+                        collection = ExtCollection.createArrayByType(eleType, arr.Length);
                     }
                     else if (typeof(IList).IsAssignableFrom(fieldType))
                     {
                         eleType = fieldType.GetGenericArguments()[0];
-                        collection = createListByType(eleType);
+                        collection = ExtCollection.createListByType(eleType);
                     }
 
                     if (null == collection) return true;
@@ -339,11 +339,11 @@ namespace System.DJ.ImplementFactory.Commons
                         sv = ConvertTo(sv, eleType);
                         if (fieldType.IsArray)
                         {
-                            arrayAdd(collection, sv, n);
+                            ExtCollection.arrayAdd(collection, sv, n);
                         }
                         else
                         {
-                            listAdd(collection, sv);
+                            ExtCollection.listAdd(collection, sv);
                         }
                         n++;
                     }
@@ -1015,111 +1015,6 @@ namespace System.DJ.ImplementFactory.Commons
             return dataElements;
         }
 
-        public static object createArrayByType(Type type, int length)
-        {
-            object arr = null;
-            if (false == type.IsArray) return arr;
-
-            try
-            {
-                arr = type.InvokeMember("Set", BindingFlags.CreateInstance, null, arr, new object[] { length });
-            }
-            catch { }
-
-            return arr;
-        }
-
-        public static void arrayAdd(object arrObj, object arrElement, int eleIndex)
-        {
-            if (null == arrObj) return;
-
-            Type type = arrObj.GetType();
-            if (false == type.IsArray) return;
-
-            Array array = (Array)arrObj;
-
-            try
-            {
-                array.SetValue(arrElement, eleIndex);
-            }
-            catch { }
-        }
-
-        public static object createListByType(Type type)
-        {
-            Type listType = null;
-            if (null == type.GetInterface("IList"))
-            {
-                listType = typeof(List<>);
-                listType = listType.MakeGenericType(type);
-            }
-            else
-            {
-                listType = type;
-            }
-
-            object v = null;
-            try
-            {
-                v = Activator.CreateInstance(listType);
-            }
-            catch (Exception ex)
-            {
-
-                throw ex;
-            }
-            return v;
-        }
-
-        public static void listAdd(object list, object listElement)
-        {
-            if (null == list) return;
-
-            Type listType = list.GetType();
-            if (null == listType.GetInterface("IList")) return;
-
-            MethodInfo methodInfo = listType.GetMethod("Add");
-            if (null == methodInfo) return;
-
-            try
-            {
-                methodInfo.Invoke(list, new object[] { listElement });
-            }
-            catch { }
-        }
-        
-        public static object createDictionaryByType(Type type)
-        {
-            object dic = null;
-            try
-            {
-                dic = Activator.CreateInstance(type);
-            }
-            catch (Exception ex)
-            {
-
-                throw ex;
-            }
-            return dic;
-        }
-
-        public static void dictionaryAdd(object dic, string key, object val)
-        {
-            if (null == dic) return;
-
-            Type dicType = dic.GetType();
-            if (null == dicType.GetInterface("IDictionary")) return;
-
-            MethodInfo methodInfo = dicType.GetMethod("Add");
-            if (null == methodInfo) return;
-
-            try
-            {
-                methodInfo.Invoke(dic, new object[] { key, val });
-            }
-            catch { }
-        }
-
         private static Type _entityType = null;
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
         private static object _initPropertyDic = new object();
@@ -1242,7 +1137,7 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = dr[field];
                     if (DBNull.Value == vObj) return;
                     if (null == vObj) return;
-
+                    
                     if (!isArr)
                     {
                         vObj = ConvertTo(vObj, tp);
@@ -1662,6 +1557,41 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static object createArrayByType(Type type, int length)
+        {
+            return ExtCollection.createArrayByType(type, length);
+        }
+
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static void arrayAdd(object arrObj, object arrElement, int eleIndex)
+        {
+            ExtCollection.arrayAdd(arrObj, arrElement, eleIndex);
+        }
+
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static object createListByType(Type type)
+        {
+            return ExtCollection.createListByType(type);
+        }
+
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static void listAdd(object list, object listElement)
+        {
+            ExtCollection.listAdd(list, listElement);
+        }
+
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static object createDictionaryByType(Type type)
+        {
+            return ExtCollection.createDictionaryByType(type);
+        }
+
+        [Obsolete("Please use method from class 'ExtCollection'.")]
+        public static void dictionaryAdd(object dic, string key, object val)
+        {
+            ExtCollection.dictionaryAdd(dic, key, val);
+        }
     }
 
 }

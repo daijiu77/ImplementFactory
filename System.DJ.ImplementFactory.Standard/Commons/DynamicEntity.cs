@@ -440,12 +440,12 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     if (paraType.BaseType == typeof(Array))
                     {
-                        v = DJTools.createArrayByType(paraType, dt.Rows.Count);
+                        v = ExtCollection.createArrayByType(paraType, dt.Rows.Count);
                         arrayAdd(method, v, dt);
                     }
                     else
                     {
-                        v = DJTools.createListByType(paraType);
+                        v = ExtCollection.createListByType(paraType);
                         listAdd(method, v, dt);
                     }
                 }

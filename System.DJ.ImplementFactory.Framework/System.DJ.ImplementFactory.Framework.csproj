@@ -110,6 +110,7 @@
     <Compile Include="Commons\ColorTranslation.cs" />
     <Compile Include="Commons\DataTranslation.cs" />
     <Compile Include="Commons\Attrs\IgnoreForeachProp.cs" />
+    <Compile Include="Commons\ExtCollection.cs" />
     <Compile Include="Commons\JsonToEntity.cs" />
     <Compile Include="DataAccess\TableScheme\OracleTableScheme.cs" />
     <Compile Include="DataAccess\TableScheme\MySqlTableScheme.cs" />

@@ -100,12 +100,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (null == type) return;
                     IList<object> results = func(type);
                     if (null == results) return;
-                    object arr = DJTools.createArrayByType(type, results.Count);
+                    object arr = ExtCollection.createArrayByType(type, results.Count);
                     int n = 0;
                     foreach (var item in results)
                     {
                         ((AbsDataModel)item).parentModel = (AbsDataModel)ele;
-                        DJTools.arrayAdd(arr, item, n);
+                        ExtCollection.arrayAdd(arr, item, n);
                         n++;
                     }
                     try
@@ -123,11 +123,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                     type = pi.PropertyType.GetGenericArguments()[0];
                     IList<object> results = func(type);
                     if (null == results) return;
-                    object list = DJTools.createListByType(type);
+                    object list = ExtCollection.createListByType(type);
                     foreach (var item in results)
                     {
                         ((AbsDataModel)item).parentModel = (AbsDataModel)ele;
-                        DJTools.listAdd(list, item);
+                        ExtCollection.listAdd(list, item);
                     }
                     try
                     {
@@ -190,12 +190,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                         if (!type.IsBaseType()) continue;                        
                         int n = 0;
                         arr = _vObj.ToString().Split(',');
-                        list = DJTools.createArrayByType(type, arr.Length);
+                        list = ExtCollection.createArrayByType(type, arr.Length);
                         foreach (var item in arr)
                         {
                             s = item.Replace(EnDH, ",");
                             v = DJTools.ConvertTo(s, type);
-                            DJTools.arrayAdd(list, v, n);
+                            ExtCollection.arrayAdd(list, v, n);
                             n++;
                         }
                         _vObj = list;
@@ -206,13 +206,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                         if (1 != types.Length) continue;
                         type = types[0];
                         if (!type.IsBaseType()) continue;
-                        list = DJTools.createListByType(type);
+                        list = ExtCollection.createListByType(type);
                         arr = _vObj.ToString().Split(',');
                         foreach (var item in arr)
                         {
                             s = item.Replace(EnDH, ",");
                             v = DJTools.ConvertTo(s, type);
-                            DJTools.listAdd(list, v);
+                            ExtCollection.listAdd(list, v);
                         }
                         _vObj = list;
                     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.IO;
 using System.Reflection;
@@ -25,345 +26,6 @@ namespace System.DJ.ImplementFactory.Commons
         public static byte[] StrToByte(this string s)
         {
             return Encoding.UTF8.GetBytes(s);
-        }
-
-        private static int headSize = 6;
-        private static string headFlag = "@";
-        private static string CollectSign = "IEnumerable";
-        public static byte[] ObjectToByteArray(this object dataObj)
-        {
-            byte[] result = null;
-            if (null == dataObj) return result;
-            Type type = dataObj.GetType();
-
-            if (DJTools.IsBaseType(type))
-            {
-                result = dataObj.ToString().StrToByte();
-            }
-            else if (null != (dataObj as IEnumerable))
-            {
-                IEnumerable enumerable = dataObj as IEnumerable;
-                List<byte[]> list = new List<byte[]>();
-                int size = 0;
-                byte[] buffer = null;
-                string prop = "";
-                foreach (var item in enumerable)
-                {
-                    buffer = item.ObjectToByteArray();
-                    size += buffer.Length;
-                    prop += "," + buffer.Length;
-                    list.Add(buffer);
-                }
-                if (0 == list.Count) return result;
-
-                prop = prop.Substring(1);
-                byte[] propertyData = prop.StrToByte();
-
-                int AllSize = propertyData.Length + size;
-                string typeName = type.TypeToString(true);
-                typeName += ":" + CollectSign + ":" + AllSize + ":" + propertyData.Length;
-                byte[] headBuffer = typeName.StrToByte();
-
-                string headStr = headFlag + headBuffer.Length;
-                buffer = headStr.StrToByte();
-                AllSize += (headSize + headBuffer.Length);
-
-                int pos = 0;
-                result = new byte[AllSize];
-                Array.Copy(buffer, 0, result, pos, buffer.Length);
-                pos += headSize;
-
-                Array.Copy(headBuffer, 0, result, pos, headBuffer.Length);
-                pos += headBuffer.Length;
-
-                Array.Copy(propertyData, 0, result, pos, propertyData.Length);
-                pos += propertyData.Length;
-
-                foreach (var item in list)
-                {
-                    Array.Copy(item, 0, result, pos, item.Length);
-                    pos += item.Length;
-                }
-            }
-            else
-            {
-                result = dataObj.EntityToByteArray();
-            }
-            return result;
-        }
-
-        public static byte[] EntityToByteArray(this object entity)
-        {
-            if (null == entity) return null;
-            byte[] dt = null;
-            byte[] buffer = null;
-            if (DJTools.IsBaseType(entity.GetType()))
-            {
-                dt = entity.ToString().StrToByte();
-                return dt;
-            }
-
-            string paras = "";
-            int dataSize = 0;
-            Dictionary<string, byte[]> dic = new Dictionary<string, byte[]>();
-            entity.ForeachProperty((pi, type, fn, fv) =>
-            {
-                buffer = null;
-                if (null != fv)
-                {
-                    if (typeof(byte[]) == type)
-                    {
-                        buffer = (byte[])fv;
-                    }
-                    else if (DJTools.IsBaseType(type))
-                    {
-                        buffer = fv.ToString().StrToByte();
-                    }
-                    else
-                    {
-                        buffer = fv.ObjectToByteArray();
-                    }
-                }
-
-                if (null == buffer) buffer = new byte[] { };
-                dic.Add(fn, buffer);
-                dataSize += buffer.Length;
-                paras += "," + fn + ":" + type.TypeToString(true) + ":" + buffer.Length;
-            });
-
-            if (!string.IsNullOrEmpty(paras))
-            {
-                paras = paras.Substring(1);
-            }
-
-            paras = entity.GetType().TypeToString(true) + "#" + paras;
-            byte[] infoDatas = paras.StrToByte();
-            int AllSize = infoDatas.Length + dataSize;
-
-            string sizeInfo = "object:" + AllSize + ",property:" + infoDatas.Length;
-            byte[] hdData = sizeInfo.StrToByte();
-
-            string headStr = headFlag + hdData.Length;
-            byte[] headBuffer = headStr.StrToByte();
-            AllSize += (headSize + hdData.Length);
-
-            int pos = 0;
-            dt = new byte[AllSize];
-            Array.Copy(headBuffer, 0, dt, pos, headBuffer.Length);
-            pos += headSize;
-
-            Array.Copy(hdData, 0, dt, pos, hdData.Length);
-            pos += hdData.Length;
-
-            Array.Copy(infoDatas, 0, dt, pos, infoDatas.Length);
-            pos += infoDatas.Length;
-
-            foreach (var item in dic)
-            {
-                Array.Copy(item.Value, 0, dt, pos, item.Value.Length);
-                pos += item.Value.Length;
-            }
-
-            return dt;
-        }
-
-        public static T ByteArrayToEntity<T>(this byte[] data)
-        {
-            Type type = typeof(T);
-            return (T)data.ByteArrayToEntity(type);
-        }
-
-        public static T ByteArrayToObject<T>(this byte[] data)
-        {
-            Type type = typeof(T);
-            return (T)data.ByteArrayToObject(type);
-        }
-
-        public static object ByteArrayToObject(this byte[] data, Type type)
-        {
-            object result = null;
-            if (null == data) return result;
-            if (0 == data.Length) return result;
-
-            string s = "";
-            if (DJTools.IsBaseType(type))
-            {
-                s = data.ByteToStr();
-                result = DJTools.ConvertTo(s, type);
-                return result;
-            }
-
-            if (headSize > data.Length) return result;
-            byte[] buffer = new byte[headSize];
-            Array.Copy(data, 0, buffer, 0, headSize);
-            s = buffer.ByteToStr();
-            if (string.IsNullOrEmpty(s)) return result;
-            if (!s.Substring(0, 1).Equals(headFlag)) return result;
-
-            s = s.Substring(1);
-            int len = Convert.ToInt32(s);
-            buffer = new byte[len];
-            Array.Copy(data, headSize, buffer, 0, len);
-            s = buffer.ByteToStr();
-
-            string sign = ":" + CollectSign + ":";
-            if (-1 != s.IndexOf(sign))
-            {
-                string[] arr = s.Split(':');
-                int propSize = Convert.ToInt32(arr[3]);
-
-                int pos = headSize + len;
-                buffer = new byte[propSize];
-                Array.Copy(data, pos, buffer, 0, propSize);
-                pos += propSize;
-
-                s = buffer.ByteToStr();
-                arr = s.Split(',');
-                len = arr.Length;
-                Type[] types = type.GenericTypeArguments;
-                Type paraType = null;
-                bool isArr = false;
-                if (0 == types.Length)
-                {
-                    result = DJTools.createArrayByType(type, len);
-                    s = type.FullName;
-                    s = s.Replace("[]", "");
-                    paraType = s.GetClassTypeByPath();
-                    isArr = true;
-                }
-                else
-                {
-                    result = DJTools.createListByType(type);
-                    paraType = types[0];
-                }
-                if (null == paraType) return result;
-
-                int size = 0;
-                object vObj = null;
-                for (int i = 0; i < len; i++)
-                {
-                    size = Convert.ToInt32(arr[i]);
-                    buffer = new byte[size];
-                    Array.Copy(data, pos, buffer, 0, size);
-                    pos += size;
-                    vObj = buffer.ByteArrayToObject(paraType);
-                    if (isArr)
-                    {
-                        DJTools.arrayAdd(result, vObj, i);
-                    }
-                    else
-                    {
-                        DJTools.listAdd(result, vObj);
-                    }
-                }
-            }
-            else
-            {
-                result = data.ByteArrayToEntity(type);
-            }
-            return result;
-        }
-
-        public static object ByteArrayToEntity(this byte[] data, Type type)
-        {
-            object dt = null;
-            if (null == data) return dt;
-            if (0 == data.Length) return dt;
-            Func<byte[], Type, object> func = (_para, _paraType) =>
-            {
-                string s = _para.ByteToStr();
-                return DJTools.ConvertTo(s, _paraType);
-            };
-
-            if (headSize > data.Length)
-            {
-                dt = func(data, type);
-                return dt;
-            }
-            byte[] buffer = new byte[headSize];
-            Array.Copy(data, 0, buffer, 0, headSize);
-            string headStr = buffer.ByteToStr();
-            if (string.IsNullOrEmpty(headStr)) return dt;
-            if (!headStr.Substring(0, 1).Equals(headFlag)) return dt;
-
-            headStr = headStr.Substring(1);
-            int len = Convert.ToInt32(headStr);
-            buffer = new byte[len];
-            Array.Copy(data, headSize, buffer, 0, len);
-            headStr = buffer.ByteToStr();
-            if (string.IsNullOrEmpty(headStr)) return dt;
-
-            Regex rg = new Regex(@"object\s*\:\s*(?<ObjectSize>[0-9]+)\s*\,\s*property\s*\:\s*(?<PropertySize>[0-9]+)", RegexOptions.IgnoreCase);
-            if (!rg.IsMatch(headStr))
-            {
-                dt = func(data, type);
-                return dt;
-            }
-
-            int ObjectSize = 0;
-            int PropertySize = 0;
-
-            Match match = rg.Match(headStr);
-            string sv = match.Groups["ObjectSize"].Value;
-            int.TryParse(sv, out ObjectSize);
-
-            sv = match.Groups["PropertySize"].Value;
-            int.TryParse(sv, out PropertySize);
-
-            int pos = headSize + len;
-            buffer = new byte[PropertySize];
-            Array.Copy(data, pos, buffer, 0, PropertySize);
-            string prop = buffer.ByteToStr();
-
-            pos = prop.IndexOf("#");
-            string typeName = prop.Substring(0, pos);
-            prop = prop.Substring(pos + 1);
-
-            if (null == type) type = typeName.GetClassTypeByPath();
-            if (null == type) throw new Exception("Object type '" + typeName + "' is not exist.");
-
-            dt = Activator.CreateInstance(type);
-            PropertyInfo pi = null;
-
-            int size = 0;
-            string[] arr = prop.Split(',');
-            string[] arr1 = null;
-            string fn = "";
-            object fv = null;
-            //Type ft = null;
-            pos = headSize + len + PropertySize;
-            foreach (var item in arr)
-            {
-                size = 0;
-                arr1 = item.Split(':');
-                fn = arr1[0].Trim();
-                //ft = arr1[1].GetClassTypeByPath();
-                //if (null == ft) continue;
-                int.TryParse(arr1[2].Trim(), out size);
-                buffer = new byte[size];
-                Array.Copy(data, pos, buffer, 0, buffer.Length);
-                pos += buffer.Length;
-
-                pi = dt.GetType().GetProperty(fn);
-                if (null == pi) continue;
-                if (pi.PropertyType == typeof(byte[]))
-                {
-                    pi.SetValue(dt, buffer);
-                }
-                else if (DJTools.IsBaseType(pi.PropertyType))
-                {
-                    fv = buffer.ByteToStr();
-                    fv = DJTools.ConvertTo(fv, pi.PropertyType);
-                    pi.SetValue(dt, fv);
-                }
-                else
-                {
-                    fv = buffer.ByteArrayToObject(pi.PropertyType);
-                    if (null != fv) pi.SetValue(dt, fv);
-                }
-            }
-
-            return dt;
         }
 
         private const int dataTableTopSize = 50;
@@ -473,12 +135,13 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static DataTable ByteArrayToDataTable(this byte[] data)
         {
-            if (null == data) return null;
-            if (dataTableTopSize >= data.Length) return null;
+            DataTable dt = new DataTable();
+            if (null == data) return dt;
+            if (dataTableTopSize >= data.Length) return dt;
             byte[] topData = new byte[dataTableTopSize];
             Array.Copy(data, 0, topData, 0, dataTableTopSize);
             string top = topData.ByteToStr();
-            if (0 != top.IndexOf(dataTableTag)) return null;
+            if (0 != top.IndexOf(dataTableTag)) return dt;
 
             string s = top.Substring(dataTableTag.Length);
             int infoSize = Convert.ToInt32(s);
@@ -492,7 +155,6 @@ namespace System.DJ.ImplementFactory.Commons
 
             string[] arr = null;
             Type type = null;
-            DataTable dt = new DataTable();
             foreach (string item in columnInfos)
             {
                 arr = item.Split(unitSplit);
@@ -540,6 +202,55 @@ namespace System.DJ.ImplementFactory.Commons
             }
             return dt;
             //throw new NotImplementedException();
+        }
+
+        public static byte[] ListToByteArray<T>(this List<T> list)
+        {
+            if (DJTools.IsBaseType(typeof(T))) return null;
+            DataTable dt = new DataTable();
+            typeof(T).ForeachProperty((pi, pt, fn) =>
+            {
+                dt.Columns.Add(fn, pi.PropertyType);
+            });
+
+            DataRow dr = null;
+            foreach (T item in list)
+            {
+                dr = dt.NewRow();
+                item.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (null == fv) return;
+                    dr[fn] = DJTools.ConvertTo(fv, pi.PropertyType);
+                });
+                dt.Rows.Add(dr);
+            }
+            return dt.DataTableToByteArray();
+            //throw new NotImplementedException();
+        }
+
+        public static List<T> ByteArrayToList<T>(this byte[] data)
+        {
+            List<T> list = new List<T>();
+            if (DJTools.IsBaseType(typeof(T))) return list;
+            DataTable dt = data.ByteArrayToDataTable();
+            list = dt.DataTableToList<T>();
+            return list;
+            //throw new NotImplementedException();
+        }
+
+        public static byte[] ObjectToByteArray<T>(this T dataObj)
+        {
+            List<T> list = new List<T>();
+            list.Add(dataObj);
+            return list.ListToByteArray();
+        }
+
+        public static T ByteArrayToObject<T>(this byte[] data)
+        {
+            if (DJTools.IsBaseType(typeof(T))) return default(T);
+            List<T> list = data.ByteArrayToList<T>();
+            if (0 == list.Count) return default(T);
+            return list[0];
         }
 
         public static byte[] SerializableObjectToByteArray(this object entity)
