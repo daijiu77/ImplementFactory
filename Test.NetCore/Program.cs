@@ -10,6 +10,7 @@ using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -106,12 +107,10 @@ namespace Test.NetCore
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddHours(2)
             };
-
+            
             DbVisitor db = new DbVisitor();
-            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(plan));
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-            dic.Add("IsEnabled", false);
-            sqlScheme.AppendInsert(dic); //当有默认值的情况下，可以通过 AppendInsert 或 AppendUpdate 改变默认值
+            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
+            sqlScheme.dbSqlBody.Where(ConditionItem.Me.And("PName", ConditionRelation.Contain, "play"));
             IList<Plan> plans = sqlScheme.ToList<Plan>();
 
             sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<EquipmentInfo>("e",
@@ -122,7 +121,6 @@ namespace Test.NetCore
             //该参数缺省时，默认为 true，采用数据懒加载
             IDbSqlScheme scheme = db.CreateSqlFrom(false, SqlFromUnit.New.From<WorkInfo>(dm => dm.CompanyName.Equals("HG")));
             scheme.dbSqlBody.Where(ConditionItem.Me.And("CompanyNameEn", ConditionRelation.Contain, "A"));
-
             IList<WorkInfo> list = scheme.ToList<WorkInfo>();
 
             if (0 == list.Count) return;
@@ -141,6 +139,15 @@ namespace Test.NetCore
                 if (typeof(EmployeeInfo) == type) return false;
                 return true;
             }));
+        }
+
+        void InsertData1(Plan plan)
+        {
+            DbVisitor db = new DbVisitor();
+            IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(plan));
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            dic.Add("IsEnabled", false);
+            sqlScheme.AppendInsert(dic); //当有默认值的情况下，可以通过 AppendInsert 或 AppendUpdate 改变默认值
         }
 
         void InsertData(WorkInfo workInfo)
