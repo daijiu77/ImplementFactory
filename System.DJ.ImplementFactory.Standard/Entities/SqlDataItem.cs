@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
-namespace System.DJ.ImplementFactory.NetCore.Entities
+namespace System.DJ.ImplementFactory.Entities
 {
     public class SqlDataItem
     {

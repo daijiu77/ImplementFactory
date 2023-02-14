@@ -4,7 +4,7 @@ using System.Xml;
 
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
-    public class MicroServiceRoute: Attribute
+    public class MicroServiceRoute : Attribute
     {
         private string _routeName = "";
         private string _controllerName = "";
@@ -37,12 +37,12 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
                 doc.AppendChild(dec);
 
-                XmlElement XMLroot = doc.CreateElement("MicroServiceRoute");
+                XmlElement XMLroot = doc.CreateElement("MicroServiceRoutes");
                 doc.AppendChild(XMLroot);
 
                 XmlElement route = doc.CreateElement("Route");
-                route.SetAttribute("name", "route1");
-                route.SetAttribute("uri", "http://127.0.0.1:8080");
+                route.SetAttribute("Name", "route1");
+                route.SetAttribute("Uri", "http://127.0.0.1:8080,http://127.0.0.1:8081");
 
                 XMLroot.AppendChild(route);
 
@@ -66,6 +66,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
                 string uri = "";
                 string attrName = "";
+                string attrName1 = "";
                 XmlNode node = document.ChildNodes[1];
                 foreach (XmlNode routeItem in node.ChildNodes)
                 {
@@ -85,8 +86,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
                     if (false == string.IsNullOrEmpty(attrName) && false == string.IsNullOrEmpty(uri))
                     {
-                        dic.Remove(attrName.ToLower());
-                        dic.Add(attrName.ToLower(), uri);
+                        attrName1 = attrName.ToLower();
+                        if (!dic.ContainsKey(attrName1)) dic.Add(attrName1, uri);
                     }
                 }
             }
@@ -100,6 +101,15 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
         public string ControllerName { get { return _controllerName; } }
 
-        public string Uri { get { return _uri; } }
+        public string Uri
+        {
+            get
+            {
+                _uri = string.Empty;
+                if (string.IsNullOrEmpty(_routeName)) _routeName = "";
+                dic.TryGetValue(_routeName.ToLower(), out _uri);
+                return _uri;
+            }
+        }
     }
 }

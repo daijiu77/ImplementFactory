@@ -87,13 +87,16 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            int n1 = 1 % 3; //n1=1
+            int n2 = 2 % 3; //n2=2
+            int n3 = 3 % 3; //n3=0
             QueryData();
             TestObj testObj = new TestObj();
             bool mbool = testObj.Compare();
             TestDataTableByteArray();
 
             SetWindowPositionCenter();
-            
+
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
         }
@@ -107,7 +110,7 @@ namespace Test.NetCore
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddHours(2)
             };
-            
+
             DbVisitor db = new DbVisitor();
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
             sqlScheme.dbSqlBody.Where(ConditionItem.Me.And("PName", ConditionRelation.Contain, "play"));

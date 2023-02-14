@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\ResultData.cs" />
     <Compile Include="Commons\ColorTranslation.cs" />
     <Compile Include="Commons\DataTranslation.cs" />
     <Compile Include="Commons\Attrs\IgnoreForeachProp.cs" />
@@ -149,6 +150,8 @@
     <Compile Include="Entities\MatchRule.cs" />
     <Compile Include="Entities\SplitTable.cs" />
     <Compile Include="Entities\SysConfig.cs" />
+    <Compile Include="MServiceRoute\MicroServiceMethodImpl.cs" />
+    <Compile Include="MServiceRoute\MSDataVisitor.cs" />
     <Compile Include="Pipelines\IMultiTablesExec.cs" />
     <Compile Include="Commons\Attrs\Condition.cs" />
     <Compile Include="Commons\HttpHelper.cs" />
@@ -169,11 +172,6 @@
     <Compile Include="Commons\Attrs\AutoUpdate.cs" />
     <Compile Include="Commons\Attrs\ExistCall.cs" />
     <Compile Include="Commons\Attrs\FieldMapping.cs" />
-    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForDeleteOnClass.cs" />
-    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForInsertOnClass.cs" />
-    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForSelectOnClass.cs" />
-    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlForUpdateOnClass.cs" />
-    <Compile Include="Commons\Attrs\Generic\AnalyzeSqlOnClass.cs" />
     <Compile Include="Commons\Attrs\SingleCall.cs" />
     <Compile Include="Commons\BasicExecForSQL.cs" />
     <Compile Include="Commons\BufferData.cs" />

@@ -7,7 +7,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
-using System.DJ.ImplementFactory.NetCore.Entities;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 
