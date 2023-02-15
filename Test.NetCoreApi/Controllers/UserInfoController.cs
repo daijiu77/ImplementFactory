@@ -6,11 +6,23 @@ namespace Test.NetCoreApi.Controllers
     [ApiController]
     public class UserInfoController : Controller
     {
-        [HttpPost, Route("GetUserInfo")]        
+        [HttpPost, Route("GetUserInfo")]
         public object GetUserInfo(object data)
         {
             //string pwd = DJPW.GetPW(3024);
             return new { success = true, message = "", data = data };
+        }
+
+        [Route("GetCount")]
+        public int Count()
+        {
+            return 3;
+        }
+
+        [HttpPost, Route("GetUserName")]
+        public string UserName(string name)
+        {
+            return name;
         }
     }
 }

@@ -5,12 +5,13 @@ using System.DJ.ImplementFactory.Pipelines;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {
     public class HttpHelper : IHttpHelper
     {
-        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, Action<object, string> action)
+        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, MethodTypes methodTypes, Action<object, string> action)
         {
             byte[] dts = null;
             string mvType = "application/octet-stream";
@@ -49,7 +50,15 @@ namespace System.DJ.ImplementFactory.Commons
             HttpResponseMessage httpResponseMessage = null;
             try
             {
-                var postasync = httpClient.PostAsync(uri, httpContent);
+                Task<HttpResponseMessage> postasync = null;
+                if (MethodTypes.Post == methodTypes)
+                {
+                    postasync = httpClient.PostAsync(uri, httpContent);
+                }
+                else
+                {
+                    postasync = httpClient.GetAsync(uri);
+                }
                 postasync.Wait();
                 httpResponseMessage = postasync.Result;
             }
@@ -76,10 +85,15 @@ namespace System.DJ.ImplementFactory.Commons
                         //throw new Exception(err);
                     }
                 }
-            }            
+            }
 
             resultData = null == resultData ? "" : resultData;
             action(resultData, err);
+        }
+
+        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, Action<object, string> action)
+        {
+            ((IHttpHelper)this).SendData(uri, heads, data, isJson, MethodTypes.Post, action);
         }
     }
 }

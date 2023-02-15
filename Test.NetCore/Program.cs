@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Test.NetCore.DataInterface;
 using Test.NetCore.Entities;
+using Test.NetCore.MSVisitor;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace Test.NetCore
@@ -90,8 +91,9 @@ namespace Test.NetCore
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
-            QueryData();
+            //QueryData();
             TestObj testObj = new TestObj();
+            string un = testObj.VisitService();
             bool mbool = testObj.Compare();
             TestDataTableByteArray();
 
@@ -248,6 +250,9 @@ namespace Test.NetCore
             [MyAutoCall]
             private ICalculate calculate;
 
+            [MyAutoCall]
+            private IMSUserInfo userInfo2;
+
             //[MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
 
@@ -347,6 +352,12 @@ namespace Test.NetCore
                 Console.WriteLine("");
             }
 
+            public string VisitService()
+            {
+                string un = userInfo2.UserName("LiShi");
+                un = userInfo2.UserName("LiShi-123");
+                return un;
+            }
         }
 
     }
