@@ -356,6 +356,7 @@ namespace Test.NetCore
             {
                 string un = userInfo2.UserName("LiShi");
                 un = userInfo2.UserName("LiShi-123");
+                un = userInfo2.UserName("LiShi-321");
                 return un;
             }
         }

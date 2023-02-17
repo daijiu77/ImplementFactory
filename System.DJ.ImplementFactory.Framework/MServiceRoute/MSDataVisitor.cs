@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text.RegularExpressions;
 
@@ -11,6 +12,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     {
         [AutoCall]
         private IHttpHelper httpHelper;
+
+        [AutoCall]
+        private IMSAllot mSAllot;
 
         private static Dictionary<string, int> map = new Dictionary<string, int>();
 
@@ -87,12 +91,54 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string actionName = InitActionName(action, data);
             controller = InitUri(controller);
             actionName = InitUri(actionName);
-            string[] arr = uri.Split(',');
+
+            string[] arr = null;
+            if (null != mSAllot)
+            {
+                string[] uri1 = mSAllot.UrlCollection(routeName);
+                if (null != uri1)
+                    if (0 < uri1.Length) arr = uri1;
+            }
+            else
+            {
+                arr = uri.Split(',');
+            }
             string key = routeName + "-" + controller + "-" + action;
-            int index = GetIndex(key, arr.Length);            
-            string url = InitUri(arr[index]);           
+            int index = GetIndex(key, arr.Length);
+            string url = InitUri(arr[index]);
             string addr = string.Format("{0}/{1}/{2}", url, controller, actionName);
-            httpHelper.SendData(addr, null, data, true, methodTypes, (resultData, err) =>
+
+            Dictionary<string, string> headers = null;
+            if (null != mSAllot)
+            {
+                string action1 = actionName;
+                if (-1 != action1.IndexOf("/")) action1 = action1.Substring(0, action1.IndexOf("/"));
+                if (-1 != action1.IndexOf("?")) action1 = action1.Substring(0, action1.IndexOf("?"));
+                Dictionary<string, string> parameters = mSAllot.HttpParameters(routeName, controller, action1);
+                if (null != parameters)
+                {
+                    string paras = "";
+                    foreach (var item in parameters)
+                    {
+                        paras += "&" + item.Key + "=" + item.Value;
+                    }
+
+                    if (0 < paras.Length)
+                    {
+                        paras = paras.Substring(1);
+                        if (-1 != addr.IndexOf("?"))
+                        {
+                            addr += "&" + paras;
+                        }
+                        else
+                        {
+                            addr += "?" + addr;
+                        }
+                    }
+                }
+                headers = mSAllot.HttpHeaders(routeName, controller, action1);
+            }
+            httpHelper.SendData(addr, headers, data, true, methodTypes, (resultData, err) =>
             {
                 if (string.IsNullOrEmpty(err) && null != resultData) result = resultData.ToString();
             });
