@@ -217,7 +217,7 @@ namespace System.DJ.ImplementFactory
                     Task.Run(() =>
                     {
                         updateTableDesign.TableScheme();
-                    });                    
+                    });
                 }
             }
             IsDbUsed = dbInfo.IsDbUsed;
@@ -525,7 +525,6 @@ namespace System.DJ.ImplementFactory
             public ImplAdapter(object currentObj) : base(currentObj) { }
         }
 
-        static object _adapterOfImplement = new object();
         void Adapter()
         {
             if (string.IsNullOrEmpty(rootPath)) return;
@@ -770,7 +769,7 @@ namespace System.DJ.ImplementFactory
                                     if (null != implNew)
                                     {
                                         impl = Activator.CreateInstance(implNew);
-                                        assembliesOfTemp.Add(implNew.Assembly);
+                                        SetAssembliesOfTemp(implNew);
                                     }
                                     else if (null != implType)
                                     {
@@ -810,7 +809,7 @@ namespace System.DJ.ImplementFactory
                                     if (null != implNew)
                                     {
                                         impl = Activator.CreateInstance(implNew);
-                                        assembliesOfTemp.Add(implNew.Assembly);
+                                        SetAssembliesOfTemp(implNew);
                                     }
                                     else if (null != implType)
                                     {
@@ -833,23 +832,7 @@ namespace System.DJ.ImplementFactory
 
                         if (null != impl && null == impl_1 && false == isSingleCall)
                         {
-                            lock (_adapterOfImplement)
-                            {
-                                interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
-                                if (null == instanceObj)
-                                {
-                                    interfaceImplements.Add(resetKeyName, new InstanceObj()
-                                    {
-                                        newInstance = impl,
-                                        oldInstanceType = implType
-                                    });
-                                }
-                                else
-                                {
-                                    if (null != (impl as IDisposable)) ((IDisposable)impl).Dispose();
-                                    impl = instanceObj.newInstance;
-                                }
-                            }
+                            SetInterfaceImplements(resetKeyName, implType, ref impl, out instanceObj);
                         }
                     }
 
@@ -881,6 +864,38 @@ namespace System.DJ.ImplementFactory
                 }
             }
 
+        }
+
+        private static object _SetAssembliesOfTemp = new object();
+        private void SetAssembliesOfTemp(Type implNew)
+        {
+            lock (_SetAssembliesOfTemp)
+            {
+                assembliesOfTemp.Add(implNew.Assembly);
+            }            
+        }
+
+        private static object _adapterOfImplement = new object();
+        private void SetInterfaceImplements(string resetKeyName, Type implType, ref object impl, out InstanceObj instanceObj)
+        {
+            lock (_adapterOfImplement)
+            {
+                object impl_1 = impl;
+                interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
+                if (null == instanceObj)
+                {
+                    interfaceImplements.Add(resetKeyName, new InstanceObj()
+                    {
+                        newInstance = impl_1,
+                        oldInstanceType = implType
+                    });
+                }
+                else
+                {
+                    if (null != (impl_1 as IDisposable)) ((IDisposable)impl_1).Dispose();
+                    impl_1 = instanceObj.newInstance;
+                }
+            }
         }
 
         CKeyValue GetKvByInterfaceType(Type interfaceType)

@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MicroServiceRoute>
+  <Route name="route1" uri="http://localhost:81/api/,http://localhost:82/api/,http://localhost:83/api/" />
+</MicroServiceRoute>

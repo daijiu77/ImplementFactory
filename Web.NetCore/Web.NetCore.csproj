@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.DJ.ImplementFactory.NetCore\System.DJ.ImplementFactory.NetCore.csproj" />
+    <PackageReference Include="ImplementFactory.NetCore" Version="1.1.11.78" />
   </ItemGroup>
 
 </Project>
