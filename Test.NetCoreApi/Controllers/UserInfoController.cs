@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using System;
+using System.DJ.ImplementFactory.Commons;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -34,6 +36,17 @@ namespace Test.NetCoreApi.Controllers
         {
             string code = getBase64Code();
             return code;
+        }
+
+        [HttpPost, Route("ValidateLogin")]
+        public string ValidateLogin(object data)
+        {
+            if (null == data) return "empty";
+            JToken jt = JToken.Parse(data.ToString());
+            string UserName = jt["UserName"].ToString();
+            string Password = jt["Password"].ToString();
+            string AuthCode = jt["AuthCode"].ToString();
+            return DJTools.ExtFormat("[{0}] 登录成功！", UserName);
         }
 
         private static object _getCode = new object();
@@ -80,7 +93,7 @@ namespace Test.NetCoreApi.Controllers
                     s = "data:image/png;base64,";
                     string s1 = s.ToLower();
                     string s2 = code.Substring(0, s.Length).ToLower();
-                    if(!s1.Equals(s2))
+                    if (!s1.Equals(s2))
                     {
                         code = s + code;
                     }
