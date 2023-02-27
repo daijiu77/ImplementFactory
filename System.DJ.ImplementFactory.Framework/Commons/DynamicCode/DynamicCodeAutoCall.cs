@@ -918,6 +918,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     method.append(ref code, LeftSpaceLevel.one, "{");
 
                     string typeName = "";
+                    Type valType = null;
                     if (typeof(IEnumerable) == returnType.GetInterface("IEnumerable")
                         && typeof(string) != returnType)
                     {
@@ -928,10 +929,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             Type[] types = returnType.GetGenericArguments();
                             if (0 < types.Length)
                             {
+                                valType = types[0];
                                 typeName = types[0].TypeToString();
                             }
                             else
                             {
+                                valType = returnType;
                                 typeName = returnType.TypeToString();
                             }
 
@@ -957,6 +960,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             GetColumnsForDataTable(method, LeftSpaceLevel.three, ref code);
 
+                            bool isExsitConstraint = Commons.Attrs.Constraint.ExistConstraint(valType);
+                            if (isExsitConstraint)
+                            {
+                                method.append(ref code, LeftSpaceLevel.three, "System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel overrideModel = " +
+                                "new System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel();");
+                            }
+
                             method.append(ref code, LeftSpaceLevel.three, "");
                             method.append(ref code, LeftSpaceLevel.three, "foreach (System.Data.DataRow dr in dt.Rows)");
                             method.append(ref code, LeftSpaceLevel.three, "{");
@@ -965,7 +975,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             {
                                 method.append(ref code, LeftSpaceLevel.four, "System.Threading.Thread.Sleep({0});", method.methodComponent.Interval.ToString());
                             }
-                            method.append(ref code, LeftSpaceLevel.four, "entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
+
+                            if (isExsitConstraint)
+                            {
+                                method.append(ref code, LeftSpaceLevel.four, "entity = overrideModel.CreateDataModel(typeof({0}));", typeName);
+                            }
+                            else
+                            {
+                                method.append(ref code, LeftSpaceLevel.four, "entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
+                            }
 
                             DataRowToEntity(method, LeftSpaceLevel.four, ref code);
 
@@ -1005,6 +1023,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     else
                     {
                         typeName = returnType.TypeToString();
+                        
                         //接口方法返回值为 单体复杂对象
                         method.append(ref code, LeftSpaceLevel.two, "if (vObj.GetType() == typeof(System.Data.DataTable))");
                         method.append(ref code, LeftSpaceLevel.two, "{");
@@ -1016,7 +1035,19 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         GetColumnsForDataTable(method, LeftSpaceLevel.four, ref code);
 
                         method.append(ref code, LeftSpaceLevel.four, "System.Data.DataRow dr = dt.Rows[0];");
-                        method.append(ref code, LeftSpaceLevel.four, "{0} entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
+
+                        bool isExsitConstraint = Commons.Attrs.Constraint.ExistConstraint(returnType);
+                        if (isExsitConstraint)
+                        {
+                            method.append(ref code, LeftSpaceLevel.four, "System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel overrideModel = " +
+                            "new System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel();");
+                            method.append(ref code, LeftSpaceLevel.four, "{0} entity = overrideModel.CreateDataModel(typeof({0}));", typeName);
+                        }
+                        else
+                        {
+                            method.append(ref code, LeftSpaceLevel.four, "{0} entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
+                        }
+                        
                         code = declearVar(code, LeftSpaceLevel.four, typeName);
 
                         DataRowToEntity(method, LeftSpaceLevel.four, ref code);
