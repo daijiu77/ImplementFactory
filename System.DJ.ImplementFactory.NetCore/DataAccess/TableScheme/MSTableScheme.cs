@@ -45,7 +45,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             {
                 ft = "datetime";
             }
-            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType)
+            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType || fieldMapping.FieldType.IsEnum)
             {
                 ft = "int";
             }

@@ -13,7 +13,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
     public class MySqlTableScheme : IDbTableScheme
     {
         private AutoCall autoCall = new AutoCall();
-                
+
         private ISqlAnalysis sqlAnalysis = new MySqlAnalysis();
 
         ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
@@ -46,7 +46,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             {
                 ft = "timestamp";
             }
-            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType)
+            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType || fieldMapping.FieldType.IsEnum)
             {
                 ft = "int";
             }
