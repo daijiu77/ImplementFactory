@@ -1226,9 +1226,20 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 pi.SetValue(entity, v, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                string methodName = "Set" + propertyName;
+                MethodInfo mi = entity.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
+                if (null == mi) throw ex;
+                try
+                {
+                    mi.Invoke(entity, new object[] { v });
+                }
+                catch (Exception)
+                {
 
+                    throw;
+                }
                 //throw;
             }
         }

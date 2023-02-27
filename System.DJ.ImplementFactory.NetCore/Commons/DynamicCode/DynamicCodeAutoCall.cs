@@ -29,7 +29,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 paraListVarName = "dbParaList";
                 method.append(ref code, LeftSpaceLevel.one, "DbList<System.Data.Common.DbParameter> {0} = new DbList<System.Data.Common.DbParameter>();", paraListVarName);
             }
-            
+
             method.append(ref code, LeftSpaceLevel.one, "ISqlExpressionProvider dataProvider = {0}.GetDataProvider(\"{1}\",\"{2}\",{0});", method.AutoCallVarName, dataProviderNamespace, dataProviderClassName);
             method.append(ref code, LeftSpaceLevel.one, "{0}.GetSqlByDataProvider(dataProvider,{1},{2},{3},(DataOptType){4}, ref {5});", method.AutoCallVarName, method.ParaListVarName, paraListVarName, method.AutoCallVarName, ((int)dataOptType).ToString(), sqlVarName);
         }
@@ -327,11 +327,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     code = code.Replace("{$_objVal}", "");
                 }
             }
-            
-            if(false == isDynamicEntity)
+
+            if (false == isDynamicEntity)
             {
                 method.append(ref code, LeftSpaceLevel.one, "{0} = DynamicCodeExec.Calculate({0});", sqlVarName);
-            }            
+            }
         }
 
         /// <summary>
@@ -1093,10 +1093,19 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, leftSpaceLevel + 2, "}");
             method.append(ref code, leftSpaceLevel + 2, "catch (Exception ex)");
             method.append(ref code, leftSpaceLevel + 2, "{");
+
+            method.append(ref code, leftSpaceLevel + 3, "try");
+            method.append(ref code, leftSpaceLevel + 3, "{");
+            method.append(ref code, leftSpaceLevel + 4, "entity.SetPropertyValue(attrName, v);");
+            method.append(ref code, leftSpaceLevel + 3, "}");
+            method.append(ref code, leftSpaceLevel + 3, "catch(Exception)");
+            method.append(ref code, leftSpaceLevel + 3, "{");
             string interfaceName = DJTools.GetClassName(method.ofInterfaceType, true);
-            method.append(ref code, leftSpaceLevel + 3, "string errMsg = \"Type '\"+entity.GetType().FullName+\"' find not property name：\"+attrName+\"\\r\\n\"+ex.ToString();");
-            method.append(ref code, leftSpaceLevel + 3, "{0}.ExecuteException(typeof({1}),{2},\"{3}\",{4},new Exception(errMsg));",
+            method.append(ref code, leftSpaceLevel + 4, "string errMsg = \"Type '\"+entity.GetType().FullName+\"' find not property name：\"+attrName+\"\\r\\n\"+ex.ToString();");
+            method.append(ref code, leftSpaceLevel + 4, "{0}.ExecuteException(typeof({1}),{2},\"{3}\",{4},new Exception(errMsg));",
                 method.AutoCallVarName, interfaceName, "null", method.methodComponent.InterfaceMethodName, method.ParaListVarName);
+            method.append(ref code, leftSpaceLevel + 3, "}");
+
             method.append(ref code, leftSpaceLevel + 2, "}");
             //method.append(ref code, leftSpaceLevel + 2, "");
             method.append(ref code, leftSpaceLevel + 1, "}"); //if (!string.IsNullOrEmpty(fieldName))
