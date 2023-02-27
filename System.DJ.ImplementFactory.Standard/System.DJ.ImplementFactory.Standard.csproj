@@ -8,9 +8,9 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.0.86</AssemblyVersion>
-    <FileVersion>1.0.0.86</FileVersion>
-    <Version>1.0.0.86</Version>
+    <AssemblyVersion>1.0.0.87</AssemblyVersion>
+    <FileVersion>1.0.0.87</FileVersion>
+    <Version>1.0.0.87</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
     <Authors>DJ</Authors>
   </PropertyGroup>

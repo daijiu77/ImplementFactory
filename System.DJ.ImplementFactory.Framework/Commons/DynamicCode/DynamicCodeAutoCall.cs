@@ -978,7 +978,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             if (isExsitConstraint)
                             {
-                                method.append(ref code, LeftSpaceLevel.four, "entity = overrideModel.CreateDataModel(typeof({0}));", typeName);
+                                method.append(ref code, LeftSpaceLevel.four, "entity = ({0})overrideModel.CreateDataModel(typeof({0}));", typeName);
                             }
                             else
                             {
@@ -1041,7 +1041,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         {
                             method.append(ref code, LeftSpaceLevel.four, "System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel overrideModel = " +
                             "new System.DJ.ImplementFactory.DataAccess.AnalysisDataModel.OverrideModel();");
-                            method.append(ref code, LeftSpaceLevel.four, "{0} entity = overrideModel.CreateDataModel(typeof({0}));", typeName);
+                            method.append(ref code, LeftSpaceLevel.four, "{0} entity = ({0})overrideModel.CreateDataModel(typeof({0}));", typeName);
                         }
                         else
                         {
