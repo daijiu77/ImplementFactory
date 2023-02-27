@@ -61,6 +61,7 @@ namespace System.DJ.ImplementFactory
                 n--;
                 if (null == stackFrame) continue;
                 UserType = stackFrame.GetMethod().DeclaringType;
+                if (null == UserType) break;
                 assembleStr = UserType.AssemblyQualifiedName;
                 if (string.IsNullOrEmpty(assembleStr)) assembleStr = "";
                 if (!rg.IsMatch(assembleStr)) UserType = null;
