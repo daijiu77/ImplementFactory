@@ -64,6 +64,41 @@ namespace System.DJ.ImplementFactory.Commons
             if (null == value) return value;
             if (null == type) return value;
             if (!IsBaseType(value.GetType())) return value;
+            if (type.IsEnum)
+            {
+                object enumV = null;
+                if (value.GetType() == typeof(string))
+                {
+                    string[] ns = Enum.GetNames(type);
+                    string s1 = value.ToString().ToLower();
+                    string s2 = "";
+                    foreach (var item in ns)
+                    {
+                        if (item.ToLower().Equals(s1))
+                        {
+                            s2 = item;
+                            break;
+                        }
+                    }
+                    enumV = Enum.Parse(type, s2);
+                }
+                else if (value.GetType() == typeof(int))
+                {
+                    int num = Convert.ToInt32(value);
+                    Array arr = Enum.GetValues(type);
+                    foreach (var item in arr)
+                    {
+                        if (((int)item) == num)
+                        {
+                            enumV = item;
+                            break;
+                        }
+                    }
+                }
+
+                isSuccess = null != enumV;
+                return enumV;
+            }
             if (!IsBaseType(type)) return value;
 
             object obj = null;
@@ -202,7 +237,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                     //throw;
                 }
-                
+
             }
         }
 
@@ -254,7 +289,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
 
                     //throw;
-                }                
+                }
             }
         }
 
@@ -1137,7 +1172,7 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = dr[field];
                     if (DBNull.Value == vObj) return;
                     if (null == vObj) return;
-                    
+
                     if (!isArr)
                     {
                         vObj = ConvertTo(vObj, tp);
