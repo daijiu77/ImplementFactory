@@ -1,11 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
-using System.Text;
 
 namespace Test.NetCore.Entities
 {
+    public enum UserType
+    {
+        None,
+        Normal,
+        VIP,
+        TOP
+    }
+
     public class UserInfo: AbsDataModel
     {
         public Guid id { get; set; }
@@ -20,6 +26,8 @@ namespace Test.NetCore.Entities
         //µÈÍ¬ÓÚ Condition.WhereIgrons.igroneEmptyNull
         [Condition("like", Condition.WhereIgrons.igroneEmpty | Condition.WhereIgrons.igroneNull)]
         public string address { get; set; }
+
+        public UserType userType { get; set; }
 
         public DateTime cdatetime { get; set; }
     }

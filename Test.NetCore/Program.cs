@@ -93,6 +93,7 @@ namespace Test.NetCore
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
+            testObj.test_user();
             string un = testObj.VisitService();
             bool mbool = testObj.Compare();
             TestDataTableByteArray();
@@ -253,7 +254,10 @@ namespace Test.NetCore
             [MyAutoCall]
             private IMSUserInfo userInfo2;
 
-            //[MyAutoCall]
+            [MyAutoCall]
+            private IUserInfo userInfo3;
+
+            [MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
 
             public TestObj()
@@ -358,6 +362,14 @@ namespace Test.NetCore
                 un = userInfo2.UserName("LiShi-123");
                 un = userInfo2.UserName("LiShi-321");
                 return un;
+            }
+
+            public void test_user()
+            {
+                List<UserInfo> userInfos = userInfo3.query(new UserInfo()
+                {
+                    name = "SZ"
+                });
             }
         }
 

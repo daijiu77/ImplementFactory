@@ -1416,7 +1416,8 @@ namespace System.DJ.ImplementFactory.Commons
                            || _t == typeof(Int64)
                            || _t == typeof(double)
                            || _t == typeof(float)
-                           || _t == typeof(decimal))
+                           || _t == typeof(decimal)
+                           || _t.IsEnum)
                 {
                     _cond.where_igrones = WhereIgrons.igroneZero;
                 }

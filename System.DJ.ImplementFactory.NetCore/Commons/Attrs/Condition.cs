@@ -121,7 +121,8 @@ namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
                 || pi.PropertyType == typeof(Int64?)
                 || pi.PropertyType == typeof(float?)
                 || pi.PropertyType == typeof(double?)
-                || pi.PropertyType == typeof(decimal?))
+                || pi.PropertyType == typeof(decimal?)
+                || pi.PropertyType.IsEnum)
             {
                 if (null == val) val = "0";
                 double db = Convert.ToDouble(val);
