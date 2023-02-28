@@ -121,14 +121,17 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         {
             //method.append(ref code, leftSpaceLevel, "");             
             method.append(ref code, leftSpaceLevel, "_objVal = {0};", newStrVarName);
-            //method.append(ref code, leftSpaceLevel, "if(typeof({0}) == typeof(string)) _objVal = null == _objVal ? \"\" : _objVal;", newStrTypeName);
-            //method.append(ref code, leftSpaceLevel, "else if(typeof({0}) == typeof(decimal)) _objVal = null == _objVal ? 0 : _objVal;", newStrTypeName);
-            //method.append(ref code, leftSpaceLevel, "else if(typeof({0}) == typeof(bool)) _objVal = null == _objVal ? false : _objVal;", newStrTypeName);
-            //method.append(ref code, leftSpaceLevel, "else if(typeof({0}) == typeof(DateTime)) _objVal = null == _objVal ? DateTime.MinValue : _objVal;", newStrTypeName);
-            //method.append(ref code, leftSpaceLevel, "else if(typeof({0}) == typeof(Guid)) _objVal = null == _objVal ? Guid.Empty : _objVal;", newStrTypeName);
-            //method.append(ref code, leftSpaceLevel, "else if(typeof({0}) == typeof(Int16) || typeof({0}) == typeof(int) || typeof({0}) == typeof(Int64) || typeof({0}) == typeof(float) || typeof({0}) == typeof(double)) _objVal = null == _objVal ? 0 : _objVal;", newStrTypeName);
-            method.append(ref code, leftSpaceLevel, "_objVal = System.DJ.ImplementFactory.Commons.DJTools.ConvertTo({0},typeof({1}));",
+
+            method.append(ref code, leftSpaceLevel, "if (typeof({0}).IsEnum)", newStrTypeName);
+            method.append(ref code, leftSpaceLevel, "{");
+            method.append(ref code, leftSpaceLevel + 1, "_objVal = System.DJ.ImplementFactory.Commons.DJTools.ConvertTo({0},typeof(int));",
+                newStrVarName);            
+            method.append(ref code, leftSpaceLevel, "}");
+            method.append(ref code, leftSpaceLevel, "else");
+            method.append(ref code, leftSpaceLevel, "{");
+            method.append(ref code, leftSpaceLevel + 1, "_objVal = System.DJ.ImplementFactory.Commons.DJTools.ConvertTo({0},typeof({1}));",
                 newStrVarName, newStrTypeName);
+            method.append(ref code, leftSpaceLevel, "}");
             method.append(ref code, leftSpaceLevel, "if(null == _objVal) _objVal = default({0});", newStrTypeName);
             method.append(ref code, leftSpaceLevel, "{0} = {0}.Replace(\"{{1}}\", _objVal.ToString());", resultStrVarName, oldStrVarName);
         }
@@ -1023,7 +1026,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     else
                     {
                         typeName = returnType.TypeToString();
-                        
+
                         //接口方法返回值为 单体复杂对象
                         method.append(ref code, LeftSpaceLevel.two, "if (vObj.GetType() == typeof(System.Data.DataTable))");
                         method.append(ref code, LeftSpaceLevel.two, "{");
@@ -1047,7 +1050,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         {
                             method.append(ref code, LeftSpaceLevel.four, "{0} entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
                         }
-                        
+
                         code = declearVar(code, LeftSpaceLevel.four, typeName);
 
                         DataRowToEntity(method, LeftSpaceLevel.four, ref code);

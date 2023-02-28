@@ -63,6 +63,19 @@ namespace System.DJ.ImplementFactory.Commons
             isSuccess = true;
             if (null == value) return value;
             if (null == type) return value;
+            if (value.GetType().IsEnum)
+            {
+                object vEnum = null;
+                if (type == typeof(int))
+                {
+                    vEnum = (int)value;
+                }
+                else if (type == typeof(string))
+                {
+                    vEnum = Enum.GetName(value.GetType(), value);
+                }
+                return vEnum;
+            }
             if (!IsBaseType(value.GetType())) return value;
             if (type.IsEnum)
             {
@@ -183,30 +196,15 @@ namespace System.DJ.ImplementFactory.Commons
         {
             byte[] arr = type.Assembly.GetName().GetPublicKeyToken();
             if (0 == arr.Length) return false;
-            bool mbool = ((typeof(ValueType) == type.BaseType) || (typeof(string) == type));
-            if (!mbool)
-            {
-                mbool = typeof(Guid) == type || typeof(Guid?) == type || typeof(DateTime) == type || typeof(DateTime?) == type;
-            }
+            bool mbool = ((typeof(ValueType) == type.BaseType)
+                || (typeof(string) == type))
+                || typeof(Guid) == type
+                || typeof(Guid?) == type
+                || typeof(DateTime) == type
+                || typeof(DateTime?) == type
+                || type.IsEnum;
+            
             return mbool;
-
-            //string s = type.ToString();
-            //string typeName = s.Substring(s.LastIndexOf(".") + 1);
-            //typeName = typeName.Replace("]", "");
-            //typeName = typeName.Replace("&", "");
-            //string methodName = "To" + typeName;
-
-            //Type t = Type.GetType("System.Convert");
-            //MethodInfo[] miArr = t.GetMethods(BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public);
-            //foreach (MethodInfo m in miArr)
-            //{
-            //    if (methodName.Equals(m.Name))
-            //    {
-            //        mbool = true;
-            //        break;
-            //    }
-            //}
-            //return mbool;
         }
 
         public static void ForeachProperty(this object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)

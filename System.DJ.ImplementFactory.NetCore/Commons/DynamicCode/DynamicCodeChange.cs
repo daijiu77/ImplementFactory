@@ -164,7 +164,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         //方法参数为基本类型 string, int, bool 等
                         kv = sqlParaList1[para.ParaName.ToLower()];
                         if (null == kv) continue;
-                        method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\", {3});", dbParaListVarName, paraClassName, kv.Value.ToString(), para.ParaName);
+                        if(para.ParaType.IsEnum)
+                        {
+                            method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\", DJTools.ConvertTo({3}, typeof(int));", dbParaListVarName, paraClassName, kv.Value.ToString(), para.ParaName);
+                        }
+                        else
+                        {
+                            method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\", {3});", dbParaListVarName, paraClassName, kv.Value.ToString(), para.ParaName);
+                        }                        
                     }
                     else
                     {
