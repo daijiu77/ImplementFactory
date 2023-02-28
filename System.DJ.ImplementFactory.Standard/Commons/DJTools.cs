@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
@@ -18,6 +19,8 @@ namespace System.DJ.ImplementFactory.Commons
     /// </summary>
     public static class DJTools
     {
+        private static ForechExtends forechExtends = new ForechExtends();
+
         public static void append(ref string srcStr, int level, string newstr, char[] splitStr, params string[] arr)
         {
             string space = "";
@@ -75,7 +78,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     vEnum = Enum.GetName(value.GetType(), value);
                     return vEnum;
-                }                
+                }
             }
             if (!IsBaseType(value.GetType())) return value;
             if (type.IsEnum)
@@ -204,116 +207,48 @@ namespace System.DJ.ImplementFactory.Commons
                 || typeof(DateTime) == type
                 || typeof(DateTime?) == type
                 || type.IsEnum;
-            
+
             return mbool;
         }
 
         public static void ForeachProperty(this object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)
         {
-            if (null == obj) return;
-            Type type = obj.GetType();
-            PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-            object v = null;
-            bool mbool = false;
-            Attribute att = null;
-            foreach (var item in piArr)
-            {
-                att = item.GetCustomAttribute(typeof(IgnoreForeachProp));
-                if (null != att) continue;
-                if (!isAll)
-                {
-                    if (item.DeclaringType != type) continue;
-                }
-                v = item.GetValue(obj);
-
-                try
-                {
-                    mbool = func(item, item.PropertyType, item.Name, v);
-                    if (false == mbool) break;
-                }
-                catch (Exception)
-                {
-
-                    //throw;
-                }
-
-            }
+            forechExtends.ForeachProperty(obj, isAll, func);
         }
 
         public static void ForeachProperty(this object obj, Func<PropertyInfo, Type, string, object, bool> func)
         {
-            bool isAll = true;
-            obj.ForeachProperty(isAll, func);
+            forechExtends.ForeachProperty(obj, func);
         }
 
         public static void ForeachProperty(this object obj, Action<PropertyInfo, Type, string, object> action)
         {
-            obj.ForeachProperty((pi, fieldType, fName, fValue) =>
-            {
-                action(pi, fieldType, fName, fValue);
-                return true;
-            });
+            forechExtends.ForeachProperty(obj, action);
         }
 
         public static void ForeachProperty(this object obj, bool isAll, Action<PropertyInfo, Type, string, object> action)
         {
-            obj.ForeachProperty(isAll, (pi, fieldType, fName, fValue) =>
-            {
-                action(pi, fieldType, fName, fValue);
-                return true;
-            });
+            forechExtends.ForeachProperty(obj, isAll, action);
         }
 
         public static void ForeachProperty(this Type objType, bool isAll, Func<PropertyInfo, Type, string, bool> func)
         {
-            if (null == objType) return;
-            PropertyInfo[] piArr = objType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-            bool mbool = false;
-            Attribute att = null;
-            foreach (var item in piArr)
-            {
-                att = item.GetCustomAttribute(typeof(IgnoreForeachProp));
-                if (null != att) continue;
-                if (!isAll)
-                {
-                    if (item.DeclaringType != objType) continue;
-                }
-
-                try
-                {
-                    mbool = func(item, item.PropertyType, item.Name);
-                    if (false == mbool) break;
-                }
-                catch (Exception)
-                {
-
-                    //throw;
-                }
-            }
+            forechExtends.ForeachProperty(objType, isAll, func);
         }
 
         public static void ForeachProperty(this Type objType, Func<PropertyInfo, Type, string, bool> func)
         {
-            bool isAll = true;
-            objType.ForeachProperty(isAll, func);
+            forechExtends.ForeachProperty(objType, func);
         }
 
         public static void ForeachProperty(this Type objType, Action<PropertyInfo, Type, string> action)
         {
-            objType.ForeachProperty((pi, fieldType, fName) =>
-            {
-                action(pi, fieldType, fName);
-                return true;
-            });
+            forechExtends.ForeachProperty(objType, action);
         }
 
         public static void ForeachProperty(this Type objType, bool isAll, Action<PropertyInfo, Type, string> action)
         {
-            objType.ForeachProperty(isAll, (pi, fieldType, fName) =>
-            {
-                action(pi, fieldType, fName);
-                return true;
-            });
+            forechExtends.ForeachProperty(objType, isAll, action);
         }
 
         public static PropertyInfo find(this object obj, string fieldName)
@@ -1547,7 +1482,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             T v = default(T);
             if (newInstance.GetType().IsInterface) return v;
-            v = newInstance.GetPropertyValue<T>(TempImpl.InterfaceInstanceType);
+            v = newInstance.GetPropertyValue<T>(TempImplCode.InterfaceInstanceType);
             return v;
         }
 
@@ -1604,7 +1539,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]
-        public static object createArrayByType(Type type, int length)
+        public static object createArrayByType(this Type type, int length)
         {
             return ExtCollection.createArrayByType(type, length);
         }
@@ -1616,7 +1551,7 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]
-        public static object createListByType(Type type)
+        public static object createListByType(this Type type)
         {
             return ExtCollection.createListByType(type);
         }
@@ -1628,13 +1563,13 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]
-        public static object createDictionaryByType(Type type)
+        public static object createDictionaryByType(this Type type)
         {
             return ExtCollection.createDictionaryByType(type);
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]
-        public static void dictionaryAdd(object dic, string key, object val)
+        public static void dictionaryAdd(this object dic, string key, object val)
         {
             ExtCollection.dictionaryAdd(dic, key, val);
         }

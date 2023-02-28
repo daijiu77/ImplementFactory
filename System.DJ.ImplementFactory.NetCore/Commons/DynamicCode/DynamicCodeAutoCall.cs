@@ -94,8 +94,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             }
             else if (null != para.ParaType.FullName)
-            {                
-                para.ParaType.ForeachProperty((pi, pt, fieldName) =>
+            {
+                ForechExtends fe = new ForechExtends();
+                fe.ForeachProperty(para.ParaType, (pi, pt, fieldName) =>
                 {
                     if (!pi.Name.ToLower().Equals(fn)) return true;
                     if (!DJTools.IsBaseType(pi.PropertyType)) return true;
@@ -413,6 +414,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         continue;
                     }
 
+                    ForechExtends fe = new ForechExtends();
                     para = paras[FieldName];
                     if (null != para)
                     {
@@ -422,8 +424,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             sql1 = sql1.Replace("{" + FieldName + "}", para.ParaValue.ToString());
                         }
                         else if (null != para.ParaValue)
-                        {
-                            para.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
+                        {                            
+                            fe.ForeachProperty(para.ParaValue, (pi, type, fName, fVal) =>
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
@@ -438,7 +440,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             if (null == item.ParaValue) continue;
                             if (DJTools.IsBaseType(item.ParaValue.GetType())) continue;
 
-                            item.ParaValue.ForeachProperty((pi, type, fName, fVal) =>
+                            fe.ForeachProperty(item.ParaValue, (pi, type, fName, fVal) =>
                             {
                                 fv = null == fVal ? "" : fVal.ToString();
                                 sql1 = sql1.Replace("{" + fName + "}", fv);
@@ -1086,7 +1088,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         void DataRowToEntity(MethodInformation method, LeftSpaceLevel leftSpaceLevel, string typeName, ref string code)
         {
             //method.append(ref code, leftSpaceLevel, "foreach (System.Reflection.PropertyInfo pi in piArr)");
-            method.append(ref code, leftSpaceLevel, "typeof({0}).ForeachProperty((pi, pt, fn) =>", typeName);
+            method.append(ref code, leftSpaceLevel, "ForechExtends fe = new ForechExtends();");
+            method.append(ref code, leftSpaceLevel, "fe.ForeachProperty(typeof({0}), (pi, pt, fn) =>", typeName);
             method.append(ref code, leftSpaceLevel, "{");
             if ((method.methodComponent.IsAsync || method.methodComponent.EnabledBuffer)
                 && 0 < method.methodComponent.Interval)

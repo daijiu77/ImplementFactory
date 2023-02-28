@@ -298,7 +298,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 if (ImplementAdapter.dbInfo1.IsShowCode)
                 {
                     string fn = newClassName + ".txt";
-                    string f = Path.Combine(DJTools.RootPath, TempImpl.dirName);
+                    string f = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
                     if (!Directory.Exists(f))
                     {
                         try

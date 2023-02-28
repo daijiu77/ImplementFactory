@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using System.DJ.ImplementFactory.Commons;
+﻿using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -26,7 +23,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string interfaceName = interfaceType.TypeToString(true);
             string returnType = "";
             string code = "{#usingList}";
-            string namespaceStr = "System.DJ.MicroService." + TempImpl.dirName + "." + TempImpl.libName;
+            string namespaceStr = "System.DJ.MicroService." + TempImplCode.dirName + "." + TempImplCode.libName;
             string controllerName = interfaceType.Name;
             if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
             
@@ -40,7 +37,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             elist.Add(new CKeyValue() { Key = typeof(ExtMethod).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MSDataVisitor).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MethodTypes).Namespace });
-            elist.Add(new CKeyValue() { Key = typeof(JToken).Namespace });
 
             string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
             string clssPath = namespaceStr + "." + clssName;
@@ -191,8 +187,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             code = code.Replace("{#usingList}", usingList);
             code = code.Replace("{#methodList}", methodList);
 
-            string binDirPath = Path.Combine(DJTools.RootPath, TempImpl.dirName);
-            binDirPath = Path.Combine(binDirPath, TempImpl.libName);
+            string binDirPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
+            binDirPath = Path.Combine(binDirPath, TempImplCode.libName);
             binDirPath.InitDirectory();
             instanceCodeCompiler.SavePathOfDll = Path.Combine(binDirPath, clssName + ".dll");
 
@@ -219,7 +215,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     txt += "\r\n\r\n/**\r\n" + err + "\r\n**/";
                 }
-                clssPath = Path.Combine(DJTools.RootPath, TempImpl.dirName);
+                clssPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
                 clssPath = Path.Combine(clssPath, clssName + ".cs");
                 File.WriteAllText(clssPath, txt);
             }

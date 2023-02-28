@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 /// </summary>
 namespace System.DJ.ImplementFactory.Commons
 {
-    public class TempImpl
+    public class TempImplCode
     {
         public static string dirName = "TempImpl";
         public static string libName = "bin";
@@ -124,7 +124,7 @@ namespace System.DJ.ImplementFactory.Commons
             instanceCount = 0;
             if (string.IsNullOrEmpty(rootPath)) return;
 
-            TempImpl.rootPath = rootPath;
+            TempImplCode.rootPath = rootPath;
 
             Regex rg = new Regex(@".+\.((dll)|(exe))$", RegexOptions.IgnoreCase);
             List<string> list = new List<string>();

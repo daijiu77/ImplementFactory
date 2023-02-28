@@ -369,7 +369,7 @@ namespace Test.Framework
                 UserInfo userInfo = new UserInfo()
                 {
                     id = Guid.NewGuid(),
-                    name = "LS-abc",
+                    name = "LS-abc-123",
                     age = 13,
                     address = "Szsf",
                     userType = UserType.TOP,

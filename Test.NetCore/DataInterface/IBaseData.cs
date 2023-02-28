@@ -11,7 +11,7 @@ namespace Test.NetCore.DataInterface
     public interface IBaseData<T>
     {
         [AutoInsert("insert into {T}{userInfo}",
-            fields: new string[] { "id", "cdatetime" },
+            fields: new string[] { "cdatetime" },
             fieldsType: FieldsType.Exclude,
             EnabledBuffer: true)]
         int insert(T userInfo);

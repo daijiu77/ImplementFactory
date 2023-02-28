@@ -3,114 +3,137 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace System.DJ.ImplementFactory.Commons
+namespace System.DJ.ImplementFactory.Commons.Exts
 {
     public static class ExtCollection
     {
-
-        public static object createArrayByType(Type type, int length)
+        private static object _createArrayByType = new object();
+        public static object createArrayByType(this Type type, int length)
         {
-            object arr = null;
-            if (false == type.IsArray) return arr;
-
-            try
+            lock (_createArrayByType)
             {
-                arr = type.InvokeMember("Set", BindingFlags.CreateInstance, null, arr, new object[] { length });
-            }
-            catch { }
+                object arr = null;
+                if (false == type.IsArray) return arr;
 
-            return arr;
+                try
+                {
+                    arr = type.InvokeMember("Set", BindingFlags.CreateInstance, null, arr, new object[] { length });
+                }
+                catch { }
+
+                return arr;
+            }
         }
 
-        public static void arrayAdd(object arrObj, object arrElement, int eleIndex)
+        private static object _arrayAdd = new object();
+        public static void arrayAdd(this object arrObj, object arrElement, int eleIndex)
         {
-            if (null == arrObj) return;
-
-            Type type = arrObj.GetType();
-            if (false == type.IsArray) return;
-
-            Array array = (Array)arrObj;
-
-            try
+            lock (_arrayAdd)
             {
-                array.SetValue(arrElement, eleIndex);
+                if (null == arrObj) return;
+
+                Type type = arrObj.GetType();
+                if (false == type.IsArray) return;
+
+                Array array = (Array)arrObj;
+
+                try
+                {
+                    array.SetValue(arrElement, eleIndex);
+                }
+                catch { }
             }
-            catch { }
         }
 
-        public static object createListByType(Type type)
+        private static object _createListByType = new object();
+        public static object createListByType(this Type type)
         {
-            Type listType = null;
-            if (null == type.GetInterface("IList"))
+            lock (_createListByType)
             {
-                listType = typeof(List<>);
-                listType = listType.MakeGenericType(type);
-            }
-            else
-            {
-                listType = type;
-            }
+                Type listType = null;
+                if (null == type.GetInterface("IList"))
+                {
+                    listType = typeof(List<>);
+                    listType = listType.MakeGenericType(type);
+                }
+                else
+                {
+                    listType = type;
+                }
 
-            object v = null;
-            try
-            {
-                v = Activator.CreateInstance(listType);
-            }
-            catch (Exception ex)
-            {
+                object v = null;
+                try
+                {
+                    v = Activator.CreateInstance(listType);
+                }
+                catch (Exception ex)
+                {
 
-                throw ex;
+                    throw ex;
+                }
+                return v;
             }
-            return v;
         }
 
-        public static void listAdd(object list, object listElement)
+        private static object _listAdd = new object();
+        public static void listAdd(this object list, object listElement)
         {
-            if (null == list) return;
-
-            Type listType = list.GetType();
-            if (null == listType.GetInterface("IList")) return;
-
-            MethodInfo methodInfo = listType.GetMethod("Add");
-            if (null == methodInfo) return;
-
-            try
+            lock (_listAdd)
             {
-                methodInfo.Invoke(list, new object[] { listElement });
+                if (null == list) return;
+
+                Type listType = list.GetType();
+                if (null == listType.GetInterface("IList")) return;
+
+                MethodInfo methodInfo = listType.GetMethod("Add");
+                if (null == methodInfo) return;
+
+                try
+                {
+                    methodInfo.Invoke(list, new object[] { listElement });
+                }
+                catch { }
             }
-            catch { }
         }
 
-        public static object createDictionaryByType(Type type)
+        private static object _createDictionaryByType = new object();
+        public static object createDictionaryByType(this Type type)
         {
-            object dic = null;
-            try
+            lock (_createDictionaryByType)
             {
-                dic = Activator.CreateInstance(type);
-            }
-            catch (Exception ex)
-            {
+                object dic = null;
+                try
+                {
+                    dic = Activator.CreateInstance(type);
+                }
+                catch (Exception ex)
+                {
 
-                throw ex;
+                    throw ex;
+                }
+                return dic;
             }
-            return dic;
         }
 
-        public static void dictionaryAdd(object dic, string key, object val)
+        private static object _dictionaryAdd = new object();
+        public static void dictionaryAdd(this object dic, string key, object val)
         {
-            if (null == dic) return;
-
-            Type dicType = dic.GetType();
-            if (null == dicType.GetInterface("IDictionary")) return;
-
-            MethodInfo methodInfo = dicType.GetMethod("Add");
-            if (null == methodInfo) return;
-
-            try
+            lock (_dictionaryAdd)
             {
-                methodInfo.Invoke(dic, new object[] { key, val });
+                if (null == dic) return;
+
+                Type dicType = dic.GetType();
+                if (null == dicType.GetInterface("IDictionary")) return;
+
+                MethodInfo methodInfo = dicType.GetMethod("Add");
+                if (null == methodInfo) return;
+
+                try
+                {
+                    methodInfo.Invoke(dic, new object[] { key, val });
+                }
+                catch { }
             }
-            catch { }
         }
 
     }

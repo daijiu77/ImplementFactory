@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -54,8 +54,8 @@
     <Reference Include="MySql.Data, Version=8.0.29.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.29\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.ManagedDataAccess, Version=4.122.19.1, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
       <HintPath>..\packages\Oracle.ManagedDataAccess.19.15.1\lib\net40\Oracle.ManagedDataAccess.dll</HintPath>
@@ -107,6 +107,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\TempImplCode.cs" />
+    <Compile Include="Commons\ForechExtends.cs" />
     <Compile Include="Pipelines\IMSAllot.cs" />
     <Compile Include="Commons\Attrs\RequestMapping.cs" />
     <Compile Include="Commons\ExtMethod.cs" />
@@ -194,7 +196,6 @@
     <Compile Include="Commons\ExecuteSql.cs" />
     <Compile Include="Commons\MixedCalculate.cs" />
     <Compile Include="Commons\TempData.cs" />
-    <Compile Include="Commons\TempImpl.cs" />
     <Compile Include="ImplementAdapter.cs" />
     <Compile Include="Pipelines\DataOptType.cs" />
     <Compile Include="Pipelines\IAnalyzeSql.cs" />

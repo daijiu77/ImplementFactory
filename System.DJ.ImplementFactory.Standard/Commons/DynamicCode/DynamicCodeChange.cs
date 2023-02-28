@@ -713,8 +713,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         t = dataType.GetElementType();
                     }
                 }
-                
-                t.ForeachProperty((item, pt, fieldName) =>
+
+                ForechExtends fe = new ForechExtends();
+                fe.ForeachProperty(t, (item, pt, fieldName) =>
                 {
                     fn_2 = FieldMapping.GetFieldMapping(item);
                     fn = item.Name.ToLower();

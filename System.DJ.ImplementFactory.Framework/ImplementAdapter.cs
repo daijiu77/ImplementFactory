@@ -93,7 +93,7 @@ namespace System.DJ.ImplementFactory
             getTempBin();
             clearTempImplBin();
 
-            TempImpl tempImpl = new TempImpl();
+            TempImplCode tempImpl = new TempImplCode();
             tempImpl.SetRootPath(rootPath);
             tempImpl.IsShowCodeOfDataResourceDLL = dbInfo.IsShowCode;
 
@@ -314,8 +314,8 @@ namespace System.DJ.ImplementFactory
         {
             if (0 < assembliesOfTemp.Count) return;
 
-            string dir = Path.Combine(rootPath, TempImpl.dirName);
-            dir = Path.Combine(dir, TempImpl.libName);
+            string dir = Path.Combine(rootPath, TempImplCode.dirName);
+            dir = Path.Combine(dir, TempImplCode.libName);
 
             if (Directory.Exists(dir))
             {
@@ -550,7 +550,7 @@ namespace System.DJ.ImplementFactory
 
             string unSingleInstanceStr = typeof(IUnSingleInstance).FullName;
 
-            TempImpl temp = new TempImpl();
+            TempImplCode temp = new TempImplCode();
             temp.codeCompiler = codeCompiler;
             temp.IsShowCodeOfAll = sysConfig1.IsShowCode;
 
@@ -596,7 +596,7 @@ namespace System.DJ.ImplementFactory
                     {
                         try
                         {
-                            PropertyInfo pi = impl_type.GetProperty(TempImpl.InterfaceInstanceType);
+                            PropertyInfo pi = impl_type.GetProperty(TempImplCode.InterfaceInstanceType);
                             if (null != pi)
                             {
                                 t1 = pi.PropertyType;
@@ -1021,7 +1021,7 @@ namespace System.DJ.ImplementFactory
                 type1 = null;
                 try
                 {
-                    PropertyInfo pi = t.GetProperty(TempImpl.InterfaceInstanceType);
+                    PropertyInfo pi = t.GetProperty(TempImplCode.InterfaceInstanceType);
                     if (null != pi)
                     {
                         type1 = pi.PropertyType;
@@ -1561,8 +1561,8 @@ namespace System.DJ.ImplementFactory
 
         private static void clearTempImplBin()
         {
-            string f = Path.Combine(rootPath, TempImpl.dirName);
-            f = Path.Combine(f, TempImpl.libName);
+            string f = Path.Combine(rootPath, TempImplCode.dirName);
+            f = Path.Combine(f, TempImplCode.libName);
             if (Directory.Exists(f))
             {
                 string[] fs = Directory.GetFiles(f);

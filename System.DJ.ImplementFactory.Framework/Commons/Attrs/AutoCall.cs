@@ -962,11 +962,12 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             {
                 DataEntity<DataElement> dataElements = new DataEntity<DataElement>();
                 object _obj = null;
+                ForechExtends fe = new ForechExtends();
                 foreach (Para item in method.paraList)
                 {
                     if (DJTools.IsBaseType(item.ParaType)) continue;
                     _obj = item.ParaValue;
-                    _obj.ForeachProperty((pi, type, fn, fv) =>
+                    fe.ForeachProperty(_obj, (pi, type, fn, fv) =>
                     {
                         dataElements.Add(fn, fv);
                     });

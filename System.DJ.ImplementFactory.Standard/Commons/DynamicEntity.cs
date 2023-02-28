@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.Reflection;
