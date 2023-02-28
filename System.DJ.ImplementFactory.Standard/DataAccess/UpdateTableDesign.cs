@@ -75,7 +75,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 type1 = type;
                 mbool = true;
             }
-                        
+            else if (type.IsEnum)
+            {
+                type1 = typeof(int);
+                mbool = true;
+            }
+
             return mbool;
         }
 

@@ -209,17 +209,14 @@ namespace System.DJ.ImplementFactory
                 }
                 dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
                 task = Task.Run(() =>
-                  {
-                      new MultiTablesExec(dbInfo, dbHelper1);
-                  });
-                if (null != dbTableScheme && dbInfo.UpdateTableDesign)
                 {
-                    UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
-                    Task.Run(() =>
+                    new MultiTablesExec(dbInfo, dbHelper1);
+                    if (null != dbTableScheme && dbInfo.UpdateTableDesign)
                     {
+                        UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
                         updateTableDesign.TableScheme();
-                    });
-                }
+                    }
+                });                
             }
             IsDbUsed = dbInfo.IsDbUsed;
         }
