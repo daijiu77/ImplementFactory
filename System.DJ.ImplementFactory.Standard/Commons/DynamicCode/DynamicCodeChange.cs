@@ -713,13 +713,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         t = dataType.GetElementType();
                     }
                 }
-                PropertyInfo[] piArr = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                foreach (PropertyInfo item in piArr)
+                
+                t.ForeachProperty((item, pt, fieldName) =>
                 {
                     fn_2 = FieldMapping.GetFieldMapping(item);
                     fn = item.Name.ToLower();
                     action(item.Name, fn_2, fn, item);
-                }
+                });
             }
 
             if (!string.IsNullOrEmpty(insertFields1))

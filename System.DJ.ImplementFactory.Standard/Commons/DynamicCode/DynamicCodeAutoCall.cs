@@ -94,12 +94,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
             }
             else if (null != para.ParaType.FullName)
-            {
-                PropertyInfo[] piArr = para.ParaType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                foreach (PropertyInfo pi in piArr)
+            {                
+                para.ParaType.ForeachProperty((pi, pt, fieldName) =>
                 {
-                    if (!pi.Name.ToLower().Equals(fn)) continue;
-                    if (!DJTools.IsBaseType(pi.PropertyType)) continue;
+                    if (!pi.Name.ToLower().Equals(fn)) return true;
+                    if (!DJTools.IsBaseType(pi.PropertyType)) return true;
                     code = func(new FuncPara()
                     {
                         sqlVarName1 = sqlVarName,
@@ -110,9 +109,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         ValueType = pi.PropertyType.FullName,
                         propertyInfo1 = pi
                     });
-                    //method.append(ref code, LeftSpaceLevel.one, "{0} = {0}.Replace(\"{{1}}\", {2}.{3}.ToString());", sqlVarName, FieldName, para.ParaName, pi.Name);
-                    break;
-                }
+                    return false;
+                });
             }
             return code;
         }
@@ -839,7 +837,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                 Func<string, LeftSpaceLevel, string, string> declearVar = (code1, leftSpaceLevel, typeName1) =>
                 {
-                    method.append(ref code1, leftSpaceLevel, "System.Reflection.PropertyInfo[] piArr = typeof({0}).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);", typeName1);
+                    //method.append(ref code1, leftSpaceLevel, "System.Reflection.PropertyInfo[] piArr = typeof({0}).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);", typeName1);
                     method.append(ref code1, leftSpaceLevel, "string fieldName = \"\";");
                     method.append(ref code1, leftSpaceLevel, "string fieldMapping = \"\";");
                     method.append(ref code1, leftSpaceLevel, "string attrName = \"\";");
@@ -988,7 +986,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 method.append(ref code, LeftSpaceLevel.four, "entity = ({0})Activator.CreateInstance(typeof({0}));", typeName);
                             }
 
-                            DataRowToEntity(method, LeftSpaceLevel.four, ref code);
+                            DataRowToEntity(method, LeftSpaceLevel.four, typeName, ref code);
 
                             if (returnType.BaseType == typeof(Array))
                             {
@@ -1053,7 +1051,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                         code = declearVar(code, LeftSpaceLevel.four, typeName);
 
-                        DataRowToEntity(method, LeftSpaceLevel.four, ref code);
+                        DataRowToEntity(method, LeftSpaceLevel.four, typeName, ref code);
 
                         method.append(ref code, LeftSpaceLevel.four, "{0} = entity;", resultVarName1);
 
@@ -1085,9 +1083,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, leftSpaceLevel, "}"); //foreach (System.Data.DataColumn dc in dt.Columns)
         }
 
-        void DataRowToEntity(MethodInformation method, LeftSpaceLevel leftSpaceLevel, ref string code)
+        void DataRowToEntity(MethodInformation method, LeftSpaceLevel leftSpaceLevel, string typeName, ref string code)
         {
-            method.append(ref code, leftSpaceLevel, "foreach (System.Reflection.PropertyInfo pi in piArr)");
+            //method.append(ref code, leftSpaceLevel, "foreach (System.Reflection.PropertyInfo pi in piArr)");
+            method.append(ref code, leftSpaceLevel, "typeof({0}).ForeachProperty((pi, pt, fn) =>", typeName);
             method.append(ref code, leftSpaceLevel, "{");
             if ((method.methodComponent.IsAsync || method.methodComponent.EnabledBuffer)
                 && 0 < method.methodComponent.Interval)
@@ -1120,7 +1119,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, leftSpaceLevel + 1, "{");
             method.append(ref code, leftSpaceLevel + 2, "v = dr[fieldName];");
             method.append(ref code, leftSpaceLevel + 2, "v = DJTools.ConvertTo(v, pi.PropertyType);");
-            method.append(ref code, leftSpaceLevel + 2, "if(Convert.IsDBNull(v)) continue;");
+            method.append(ref code, leftSpaceLevel + 2, "if(Convert.IsDBNull(v)) return;");
             method.append(ref code, leftSpaceLevel + 2, "try");
             method.append(ref code, leftSpaceLevel + 2, "{");
             method.append(ref code, leftSpaceLevel + 3, "entity.GetType().GetProperty(attrName).SetValue(entity, v, null);");
@@ -1143,7 +1142,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, leftSpaceLevel + 2, "}");
             //method.append(ref code, leftSpaceLevel + 2, "");
             method.append(ref code, leftSpaceLevel + 1, "}"); //if (!string.IsNullOrEmpty(fieldName))
-            method.append(ref code, leftSpaceLevel, "}"); //foreach (System.Reflection.PropertyInfo pi in piArr)
+            method.append(ref code, leftSpaceLevel, "});"); //foreach (System.Reflection.PropertyInfo pi in piArr)
         }
 
 

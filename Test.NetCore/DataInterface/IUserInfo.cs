@@ -8,7 +8,7 @@ using Test.NetCore.Entities;
 
 namespace Test.NetCore.DataInterface
 {
-    public interface IUserInfo
+    public interface IUserInfo : IBaseData<UserInfo>
     {
         /// <summary>
         /// {T} 泛型实体类名作为表名,
@@ -38,12 +38,6 @@ namespace Test.NetCore.DataInterface
         /// <returns></returns>
         [AutoSelect("select top 1 * from UserInfo order by cdatetime desc")]
         DataEntity<DataElement> dynamicQuery();
-
-        [AutoInsert("insert into UserInfo {userInfo}",
-            fields: new string[] { "id", "cdatetime" },
-            fieldsType: FieldsType.Exclude,
-            EnabledBuffer: true)]
-        int insert(UserInfo userInfo);
 
         [AutoInsert("insert into UserInfo {userInfo}",
             fields: new string[] { "id", "cdatetime" },

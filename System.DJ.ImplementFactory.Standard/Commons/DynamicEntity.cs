@@ -364,6 +364,13 @@ namespace System.DJ.ImplementFactory.Commons
                 (field, db_tag) =>
                 {
                     object v = dataElements[field].value;
+                    if(null != v)
+                    {
+                        if (v.GetType().IsEnum)
+                        {
+                            v = DJTools.ConvertTo(v, typeof(int));
+                        }
+                    }
                     dbParameters.Add(field, v);
                 });
             }

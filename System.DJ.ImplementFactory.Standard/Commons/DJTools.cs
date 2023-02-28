@@ -69,12 +69,13 @@ namespace System.DJ.ImplementFactory.Commons
                 if (type == typeof(int))
                 {
                     vEnum = (int)value;
+                    return vEnum;
                 }
                 else if (type == typeof(string))
                 {
                     vEnum = Enum.GetName(value.GetType(), value);
-                }
-                return vEnum;
+                    return vEnum;
+                }                
             }
             if (!IsBaseType(value.GetType())) return value;
             if (type.IsEnum)

@@ -366,6 +366,16 @@ namespace Test.Framework
 
             public void test_user()
             {
+                UserInfo userInfo = new UserInfo()
+                {
+                    id = Guid.NewGuid(),
+                    name = "LS-abc",
+                    age = 13,
+                    address = "Szsf",
+                    userType = UserType.TOP,
+                    cdatetime = DateTime.Now
+                };
+                userInfo3.insert(userInfo);
                 List<UserInfo> userInfos = userInfo3.query(new UserInfo()
                 {
                     name = "SZ"

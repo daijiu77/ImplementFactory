@@ -1,6 +1,7 @@
 using System;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using Test.Framework.DataInterface;
 
 namespace Test.Framework.Entities
 {
@@ -12,7 +13,7 @@ namespace Test.Framework.Entities
         TOP
     }
 
-    public class UserInfo: AbsDataModel
+    public class UserInfo : AbsDataModel
     {
         public Guid id { get; set; }
 
