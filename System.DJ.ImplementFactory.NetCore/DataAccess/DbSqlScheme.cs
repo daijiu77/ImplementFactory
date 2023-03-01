@@ -115,7 +115,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     catch (Exception ex)
                     {
+                        try
+                        {
+                            ele.SetPropertyValue(pi.Name, arr);
+                        }
+                        catch (Exception)
+                        {
 
+                            //throw;
+                        }
                         //throw;
                     }
                 }
@@ -136,7 +144,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     catch (Exception ex)
                     {
+                        try
+                        {
+                            ele.SetPropertyValue(pi.Name, list);
+                        }
+                        catch (Exception)
+                        {
 
+                            //throw;
+                        }
                         //throw;
                     }
                 }
@@ -154,7 +170,15 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 catch (Exception ex)
                 {
+                    try
+                    {
+                        ele.SetPropertyValue(pi.Name, md);
+                    }
+                    catch (Exception)
+                    {
 
+                        //throw;
+                    }
                     //throw;
                 }
             }
@@ -165,16 +189,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             object _vObj = null;
             if (null == ele) return _vObj;
             string _field = "";
-            PropertyInfo[] piArr = ele.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo pi in piArr)
+            ele.GetType().ForeachProperty((pi, pt, fieldName) =>
             {
                 _field = sqlAnalysis.GetLegalName(pi.Name);
                 _field = _field.ToLower();
                 GetConstraintData(pi, dr, ele, dic);
-                if (!dic.ContainsKey(_field)) continue;
+                if (!dic.ContainsKey(_field)) return;
                 _vObj = dr[dic[_field]];
-                if (System.DBNull.Value == _vObj) continue;
-                if (null == _vObj) continue;
+                if (System.DBNull.Value == _vObj) return;
+                if (null == _vObj) return;
                 if (typeof(ICollection).IsAssignableFrom(pi.PropertyType))
                 {
                     Type type = null;
@@ -187,8 +210,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                         s = pi.PropertyType.TypeToString(true);
                         s = s.Replace("[]", "");
                         type = Type.GetType(s);
-                        if (null == type) continue;
-                        if (!type.IsBaseType()) continue;                        
+                        if (null == type) return;
+                        if (!type.IsBaseType()) return;
                         int n = 0;
                         arr = _vObj.ToString().Split(',');
                         list = ExtCollection.createArrayByType(type, arr.Length);
@@ -204,9 +227,9 @@ namespace System.DJ.ImplementFactory.DataAccess
                     else if (typeof(IList).IsAssignableFrom(pi.PropertyType))
                     {
                         Type[] types = pi.PropertyType.GetGenericArguments();
-                        if (1 != types.Length) continue;
+                        if (1 != types.Length) return;
                         type = types[0];
-                        if (!type.IsBaseType()) continue;
+                        if (!type.IsBaseType()) return;
                         list = ExtCollection.createListByType(type);
                         arr = _vObj.ToString().Split(',');
                         foreach (var item in arr)
@@ -219,13 +242,29 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     else
                     {
-                        continue;
+                        return;
                     }
                 }
                 if (pi.PropertyType.IsBaseType()) _vObj = _vObj.ConvertTo(pi.PropertyType);
-                if (null == _vObj) continue;
-                pi.SetValue(ele, _vObj);
-            }
+                if (null == _vObj) return;
+                try
+                {
+                    pi.SetValue(ele, _vObj);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        ele.SetPropertyValue(pi.Name, _vObj);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                    //throw;
+                }
+            });
             return _vObj;
         }
 
@@ -329,7 +368,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             IDbHelper dbHelper = DbHelper;
             Dictionary<string, string> dic = new Dictionary<string, string>();
             DataRow dr = null;
-            string field = "";
             string k = "";
             object v = null;
             foreach (SqlDataItem item in list)

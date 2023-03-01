@@ -419,7 +419,23 @@ namespace System.DJ.ImplementFactory.DataAccess
                        if (null == _pi) return;
                        _pv = DJTools.ConvertTo(_pv, _pi.PropertyType);
                        if (null == _pv) return;
-                       _pi.SetValue(_cObj, _pv);
+                       try
+                       {
+                           _pi.SetValue(_cObj, _pv);
+                       }
+                       catch (Exception)
+                       {
+                           try
+                           {
+                               _cObj.SetPropertyValue(_pi.Name, _pv);
+                           }
+                           catch (Exception)
+                           {
+
+                               //throw;
+                           }
+                           //throw;
+                       }                       
                    }
                };
 
@@ -470,10 +486,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             tbName = funcTbName(dataModel.GetType());
             fromUnitAction(dataModel, tbName, wherePart);
             if (null == propertyAction) return;
-            Constraint constraint = null;
+            Constraint constraint = null;            
             dataModel.ForeachProperty((pi, type, fn, fv) =>
             {
                 if (null == fv) return;
+                object v2 = fv;
                 if (!DJTools.IsBaseType(type))
                 {
                     Type eleType = null;
@@ -537,7 +554,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                         return;
                     }                    
                 }
-
+                else if(type.IsEnum)
+                {
+                    v2 = (int)fv;
+                }
                 field = fn.ToLower();
                 if (0 < dicContains.Count)
                 {
@@ -549,7 +569,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (dicExcludes.ContainsKey(field)) field = "";
                 }
                 if (string.IsNullOrEmpty(field)) return;
-                propertyAction(fn, fv, constraint, pi);
+                propertyAction(fn, v2, constraint, pi);
             });
             if (null != propEndAction) propEndAction();
         }

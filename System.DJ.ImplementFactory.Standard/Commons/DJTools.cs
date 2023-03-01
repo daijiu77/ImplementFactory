@@ -1197,7 +1197,7 @@ namespace System.DJ.ImplementFactory.Commons
             }
             catch (Exception ex)
             {
-                string methodName = "Set" + propertyName;
+                string methodName = "Set" + propertyName.Substring(0, 1).ToUpper() + propertyName.Substring(1);
                 MethodInfo mi = entity.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
                 if (null == mi) throw ex;
                 try
