@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -7,7 +7,7 @@
     <ProjectGuid>{B12E488F-0521-4E23-8767-A749378AE6CE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>System.DJ.ImplementFactory.Framework</RootNamespace>
+    <RootNamespace>System.DJ.ImplementFactory</RootNamespace>
     <AssemblyName>System.DJ.ImplementFactory.Framework</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -107,6 +107,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\Attrs\DataCache.cs" />
+    <Compile Include="Commons\Attrs\AbsDataCache.cs" />
+    <Compile Include="Commons\DataCacheImpl.cs" />
+    <Compile Include="Pipelines\IDataCache.cs" />
     <Compile Include="Commons\TempImplCode.cs" />
     <Compile Include="Commons\ForechExtends.cs" />
     <Compile Include="Pipelines\IMSAllot.cs" />

@@ -49,7 +49,7 @@ namespace Test.NetCore
             }
             return c;
         }
-
+                
         int ICalculate.Sum(int a, int b)
         {
             return a + b;

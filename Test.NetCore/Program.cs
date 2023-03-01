@@ -91,7 +91,7 @@ namespace Test.NetCore
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
-            //QueryData();
+            QueryData();
             TestObj testObj = new TestObj();
             testObj.test_user();
             string un = testObj.VisitService();
@@ -100,8 +100,30 @@ namespace Test.NetCore
 
             SetWindowPositionCenter();
 
+
+
             Console.WriteLine("Hello World!");
             Console.ReadKey(true);
+        }
+
+        private static void DriverInfo()
+        {
+            PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    cpuCounter.NextValue();
+                    Thread.Sleep(1000);
+                    var cpuUsage = cpuCounter.NextValue();
+                    string cpuUsageStr = string.Format("{0:f2} %", cpuUsage);
+                    var ramAvailable = ramCounter.NextValue();
+                    string ramAvaiableStr = string.Format("{0} MB", ramAvailable);
+                    Console.WriteLine($"CPU:{cpuUsageStr}   RAM:{ramAvaiableStr}");
+                }
+            });
         }
 
         static void QueryData()
@@ -113,7 +135,7 @@ namespace Test.NetCore
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddHours(2)
             };
-
+            
             DbVisitor db = new DbVisitor();
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
             sqlScheme.dbSqlBody.Where(ConditionItem.Me.And("PName", ConditionRelation.Contain, "play"));
@@ -366,6 +388,11 @@ namespace Test.NetCore
 
             public void test_user()
             {
+                List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1);
+                uiList = userInfo3.query<UserInfo>("abc", 1);
+                uiList = userInfo3.query<UserInfo>("abc", 1);
+                uiList = userInfo3.query<UserInfo>("abc", 1);
+
                 UserInfo userInfo = new UserInfo()
                 {
                     id = Guid.NewGuid(),

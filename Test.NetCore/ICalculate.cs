@@ -12,6 +12,7 @@ namespace Test.NetCore
 
         string PropertyTest { get; set; }
 
+        [DataCache]
         int Sum(int a, int b);
 
         /// <summary>

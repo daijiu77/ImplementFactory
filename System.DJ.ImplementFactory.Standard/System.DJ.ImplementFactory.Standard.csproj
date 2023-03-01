@@ -8,11 +8,12 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.0.95</AssemblyVersion>
-    <FileVersion>1.0.0.95</FileVersion>
-    <Version>1.0.0.95</Version>
+    <AssemblyVersion>1.0.0.96</AssemblyVersion>
+    <FileVersion>1.0.0.96</FileVersion>
+    <Version>1.0.0.96</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
     <Authors>DJ</Authors>
+    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Standard", ""))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

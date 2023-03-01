@@ -677,7 +677,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string autCall = method.AutoCallVarName;
 
             enabledBuffer = method.methodComponent.IsAsync ? "true" : enabledBuffer;
-
+                        
             DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
             string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
 
@@ -807,6 +807,19 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             if (null != method.methodComponent.ActionType)
             {
+                if (typeof(void) == method.methodInfo.ReturnType)
+                {
+                    DataCache dataCache = DataCache.GetDataCache(method.methodInfo);
+                    if (null != dataCache)
+                    {
+                        //数据缓存代码实现 DataCache
+                        method.append(ref code, LeftSpaceLevel.three, "");
+                        method.append(ref code, LeftSpaceLevel.three, "if (null != ({0}))", mc.ResultVariantName);
+                        method.append(ref code, LeftSpaceLevel.three, "{");
+                        method.append(ref code, LeftSpaceLevel.three + 1, "((IDataCache)_dataCacheImpl).Set(cacheKey, {0}, {1});", mc.ResultVariantName, dataCache.CacheTime.ToString());
+                        method.append(ref code, LeftSpaceLevel.three, "}");
+                    }
+                }
                 method.append(ref code, LeftSpaceLevel.two + 1, "");
                 method.append(ref code, LeftSpaceLevel.two + 1, "{0}({1});", method.methodComponent.ActionParaName, mc.ResultVariantName);
             }

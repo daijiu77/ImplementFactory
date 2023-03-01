@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -360,7 +361,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 else if (p.ParameterType.GetInterface("IEnumerable") == typeof(IEnumerable) && typeof(string) != p.ParameterType)
                 {
                     s = p.ParameterType.TypeToString(true);
-                    
+
                     s = s.Replace("+", ".");
                     paraStr += "," + s + " " + p.Name;
                     mInfo.append(ref lists, LeftSpaceLevel.four, "{2}.Add(new Para(Guid.NewGuid()){ParaType=typeof({0}),ParaTypeName=\"{0}\",ParaName=\"{1}\",ParaValue={1}});", s, p.Name, paraListVarName);
@@ -627,7 +628,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 implNamespace = implementType.Namespace;
                 implName = DJTools.GetClassName(implementType);
-                implName1 = implementType.Name;                
+                implName1 = implementType.Name;
             }
             else
             {
@@ -734,9 +735,46 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             bool isAsync = false;
             AbsDataInterface absData = null;
             Type actionType = null;
+            DataCache dataCache = null;
+            DataCacheImpl dataCacheImpl = new DataCacheImpl();
             int msInterval = 0;
 
             IsDataInterface = false;
+
+
+            Func<string, MethodInfo, string> funcResultStr = (result_Var, _m) =>
+            {
+                string sr = "";
+                if (_m.ReturnType != typeof(void) && null != absData)
+                {
+                    //如果接口方法返回类型不为 void
+                    if (DataOptType.select != ((IDataOperateAttribute)absData).dataOptType && DataOptType.procedure != ((IDataOperateAttribute)absData).dataOptType)
+                    {
+                        Type actionType1 = null == actionType ? _m.ReturnType : actionType;
+                        if (typeof(bool) == _m.ReturnType && typeof(int) == actionType1)
+                        {
+                            sr = string.Format("0 < {0}", result_Var);
+                        }
+                        else if (typeof(int) == _m.ReturnType && typeof(bool) == actionType1)
+                        {
+                            sr = string.Format("{0} ? 1 : 0", result_Var);
+                        }
+                        else
+                        {
+                            sr = result_Var;
+                        }
+                    }
+                    else
+                    {
+                        sr = result_Var;
+                    }
+                }
+                else
+                {
+                    sr = result_Var;
+                }
+                return sr;
+            };
 
             Action<Type, MethodInfo[]> actionFunction = (objType, methods) =>
             {
@@ -751,7 +789,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     autoCall = null;
-                    //notDataMethod = NotDataMethod.getDJNormal(m);
+                    dataCache = null;
 
                     EnabledBuffer = false;
                     isDynamicEntity = false;
@@ -840,11 +878,53 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         mInfo.append(ref code, "");
                     }
 
+                    EList<CKeyValue> pvList = null;
                     if ((m.ReturnType != typeof(void) || null != actionType))
                     {
+                        #region 数据缓存代码实现 DataCache
+                        dataCache = DataCache.GetDataCache(m);
+                        if (null != dataCache)
+                        {
+                            mInfo.append(ref code, LeftSpaceLevel.four, "DataCacheImpl _dataCacheImpl = new DataCacheImpl();");
+                            mInfo.append(ref code, LeftSpaceLevel.four, "string cacheKey = \"null\";");
+                            pvList = dataCacheImpl.GetParaNameList(m);
+                            if (null != pvList)
+                            {
+                                //mInfo.append(ref code, LeftSpaceLevel.four, "");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "EList<CKeyValue> paraInfoList = new EList<CKeyValue>();");
+                                foreach (var item in pvList)
+                                {
+                                    mInfo.append(ref code, LeftSpaceLevel.four, "paraInfoList.Add(new CKeyValue(){Key = \"{0}\", " +
+                                        "Value = {0}, ValueType = typeof({1})});", item.Key, item.ValueType.TypeToString(true));
+                                }
+                                mInfo.append(ref code, LeftSpaceLevel.four, "");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCacheImpl.GetParaKey(paraInfoList);");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCacheImpl).Get(cacheKey);");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "");
+                            }
+                        }
+                        #endregion
+
                         //声明方法返回值变量
                         if (null != actionType && null != autoCall)
                         {
+                            if (null != pvList)
+                            {
+                                //数据缓存代码实现 DataCache
+                                mInfo.append(ref code, LeftSpaceLevel.four, "if (null != dataCacheVal)");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(dataCacheVal);", actionParaName);
+                                if (m.ReturnType != typeof(void))
+                                {
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", return_type);
+                                }
+                                else
+                                {
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "return;");
+                                }
+                                mInfo.append(ref code, LeftSpaceLevel.four, "}");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "");
+                            }
                             uskv.Add(new CKeyValue() { Key = actionType.Namespace });
                             return_type = actionType.TypeToString();
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", return_type, DJTools.getDefaultByType(actionType));
@@ -853,6 +933,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                         else if (m.ReturnType != typeof(void))
                         {
+                            if (null != pvList)
+                            {
+                                //数据缓存代码实现 DataCache
+                                mInfo.append(ref code, LeftSpaceLevel.four, "if (null != dataCacheVal)");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", return_type);
+                                mInfo.append(ref code, LeftSpaceLevel.four, "}");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "");
+                            }
                             uskv.Add(new CKeyValue() { Key = m.ReturnType.Namespace });
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", return_type, DJTools.getDefaultByType(m.ReturnType));
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", return_type);
@@ -874,40 +963,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     mInfo.append(ref code, "");
                     #endregion
 
-                    Func<string, string> funcResultStr = (result_Var) =>
-                    {
-                        string sr = "";
-                        if (m.ReturnType != typeof(void) && null != absData)
-                        {
-                            //如果接口方法返回类型不为 void
-                            if (DataOptType.select != ((IDataOperateAttribute)absData).dataOptType && DataOptType.procedure != ((IDataOperateAttribute)absData).dataOptType)
-                            {
-                                Type actionType1 = null == actionType ? m.ReturnType : actionType;
-                                if (typeof(bool) == m.ReturnType && typeof(int) == actionType1)
-                                {
-                                    sr = string.Format("0 < {0}", result_Var);
-                                }
-                                else if (typeof(int) == m.ReturnType && typeof(bool) == actionType1)
-                                {
-                                    sr = string.Format("{0} ? 1 : 0", result_Var);
-                                }
-                                else
-                                {
-                                    sr = result_Var;
-                                }
-                            }
-                            else
-                            {
-                                sr = result_Var;
-                            }
-                        }
-                        else
-                        {
-                            sr = result_Var;
-                        }
-                        return sr;
-                    };
-
                     #region ExecuteBeforeFilter -- 执行接口方法之前
                     mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace1 = new StackTrace();");
                     mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame1 = trace1.GetFrame(1);");
@@ -915,7 +970,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteBeforeFilter(typeof({1}),{2},\"{3}\",{4}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
                     mInfo.append(ref code, LeftSpaceLevel.four + 1, "|| false == {0}.ExecuteBeforeFilter(typeof({1}),methodBase1,{2},\"{3}\",{4}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
-                    defaultV = m.ReturnType != typeof(void) ? (" " + funcResultStr("result1")) : "";
+                    defaultV = m.ReturnType != typeof(void) ? (" " + funcResultStr("result1", m)) : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "}"); //ExecuteBeforeFilter end
                     mInfo.append(ref code, "");
@@ -998,7 +1053,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "|| false == {0}.ExecuteAfterFilter(typeof({1}),methodBase1,{2},\"{3}\",{4},{5}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
-                    defaultV = m.ReturnType != typeof(void) ? " " + funcResultStr("result1") : "";
+                    defaultV = m.ReturnType != typeof(void) ? " " + funcResultStr("result1", m) : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "}"); //ExecuteBeforeFilter end
                     mInfo.append(ref code, "");
@@ -1006,8 +1061,17 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     if (m.ReturnType != typeof(void))
                     {
+                        string resultStr = funcResultStr("result", m);
+                        if (null != dataCache)
+                        {
+                            //数据缓存代码实现 DataCache
+                            mInfo.append(ref code, LeftSpaceLevel.four, "if (null != ({0}))", resultStr);
+                            mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCacheImpl).Set(cacheKey, {0}, {1});", resultStr, dataCache.CacheTime.ToString());
+                            mInfo.append(ref code, LeftSpaceLevel.four, "}");
+                        }
                         //如果接口方法返回类型不为 void                        
-                        mInfo.append(ref code, LeftSpaceLevel.four, "return {0};", funcResultStr("result"));
+                        mInfo.append(ref code, LeftSpaceLevel.four, "return {0};", resultStr);
                     }
 
                     mInfo.append(ref code, LeftSpaceLevel.three, "}");//method end
@@ -1189,7 +1253,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     if (false == impl_name1.Equals("null"))
                     {
                         impl_name = interfaceType.Name + "_01";
-                        mInfo.append(ref privateVarNameCode, LeftSpaceLevel.three, "private {0} {1} = null;", interfaceName, impl_name);                        
+                        mInfo.append(ref privateVarNameCode, LeftSpaceLevel.three, "private {0} {1} = null;", interfaceName, impl_name);
                     }
                 }
 

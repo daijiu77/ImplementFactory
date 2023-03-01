@@ -102,5 +102,8 @@
 
         private string _UpdateTableDesign = "是否开启更新数据表设计";
         public bool UpdateTableDesign { get; set; }
+
+        private string _CacheTime_Second = "数据缓存生命周期, 默认为1小时,即: 3600秒";
+        public int CacheTime_Second { get; set; } = 3600;
     }
 }
