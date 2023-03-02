@@ -898,10 +898,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                         "Value = {0}, ValueType = typeof({1})});", item.Key, item.ValueType.TypeToString(true));
                                 }
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(cacheKey);");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");                                
                             }
+                            mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(cacheKey);");
+                            mInfo.append(ref code, LeftSpaceLevel.four, "");
                         }
                         #endregion
 
