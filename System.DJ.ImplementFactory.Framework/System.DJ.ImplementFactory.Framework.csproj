@@ -107,6 +107,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entities\DataCacheTable.cs" />
+    <Compile Include="Commons\PersistenceCache.cs" />
     <Compile Include="Commons\DllPathDataCollection.cs" />
     <Compile Include="Commons\DataCachePool.cs" />
     <Compile Include="Commons\AssembliesData.cs" />

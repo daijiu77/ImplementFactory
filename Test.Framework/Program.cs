@@ -91,12 +91,12 @@ namespace Test.Framework
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
-            QueryData();
+            //QueryData();
             TestObj testObj = new TestObj();
             testObj.test_user();
-            string un = testObj.VisitService();
-            bool mbool = testObj.Compare();
-            TestDataTableByteArray();
+            //string un = testObj.VisitService();
+            //bool mbool = testObj.Compare();
+            //TestDataTableByteArray();
 
             SetWindowPositionCenter();
 
@@ -388,6 +388,10 @@ namespace Test.Framework
 
             public void test_user()
             {
+                Console.WriteLine("Please input [ok]:");
+                string msg = Console.ReadLine();
+                if (string.IsNullOrEmpty(msg)) msg = "";
+                if (!msg.ToLower().Equals("ok")) return;
                 List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1);
                 uiList = userInfo3.query<UserInfo>("abc", 1);
                 uiList = userInfo3.query<UserInfo>("abc", 1);
@@ -402,7 +406,7 @@ namespace Test.Framework
                     userType = UserType.TOP,
                     cdatetime = DateTime.Now
                 };
-                userInfo3.insert(userInfo);
+                //userInfo3.insert(userInfo);
                 List<UserInfo> userInfos = userInfo3.query(new UserInfo()
                 {
                     name = "SZ"

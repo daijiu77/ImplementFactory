@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -74,6 +75,11 @@ namespace System.DJ.ImplementFactory.Commons
             string namespace1 = methodBase.DeclaringType.Namespace;
             string clsName = methodBase.DeclaringType.Name;
             string methodName = methodBase.Name;
+            Regex rg = new Regex(@"^(?<cName>[a-z0-9_]+)_[0-9]{14}_[0-9]+", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(clsName))
+            {
+                clsName = rg.Match(clsName).Groups["cName"].Value;
+            }
             return namespace1 + "-" + clsName + "-" + methodName;
         }
 
@@ -89,13 +95,28 @@ namespace System.DJ.ImplementFactory.Commons
 
         void IDataCache.Set(string key, object value)
         {
-            ((IDataCache)this).Set(key, value, cacheTime);
+            ((IDataCache)this).Set(key, value, cacheTime, false);
         }
 
         void IDataCache.Set(string key, object value, int cacheTime)
         {
+            ((IDataCache)this).Set(key, value, cacheTime, false);
+        }
+
+        void IDataCache.Set(string key, object value, int cacheTime, bool persistenceCache)
+        {
             string methodPath = GetMethodPath();
             bool mbool = SetValue(methodPath, key, value, cacheTime);
+            string id = "";
+            if (persistenceCache)
+            {
+                PersistenceCache persistence = new PersistenceCache();
+                Guid guid = persistence.Set(methodPath, key, value, value.GetType(), cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
+                if (Guid.Empty != guid)
+                {
+                    id = guid.ToString();
+                }
+            }
             if (mbool) return;
 
             MethodItem mItem = null;
@@ -114,8 +135,32 @@ namespace System.DJ.ImplementFactory.Commons
                 cacheDic.Add(methodPath, mItem);
             }
 
+            mItem.Set(key, value).SetDataType(value.GetType());
+            mItem[key].SetId(id);
+        }
+
+        public void Put(string methodPath, string key, object value, string dataType, int cacheTime, DateTime start, DateTime end)
+        {
+            MethodItem mItem = null;
+            if (cacheDic.ContainsKey(methodPath))
+            {
+                mItem = cacheDic[methodPath];
+                if (null != mItem[key])
+                {
+                    ((IDisposable)mItem[key]).Dispose();
+                    mItem.Remove(key);
+                }
+            }
+            else
+            {
+                Type type = Type.GetType(dataType);
+                mItem = new MethodItem(methodPath, cacheTime);
+                mItem.SetDataType(type);
+                cacheDic.Add(methodPath, mItem);
+            }
+
             mItem.Set(key, value);
-            //throw new NotImplementedException();
+            mItem[key].SetStartTime(start).SetEnd(end);
         }
 
         public EList<CKeyValue> GetParaNameList(MethodInfo methodInfo)
@@ -192,6 +237,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             private string methodPath = "";
             private int cacheTime = 0;
+            private Type dataType = null;
             private Dictionary<string, DataItem> dic = new Dictionary<string, DataItem>();
 
             public MethodItem(string methodPath, int cacheTime)
@@ -211,7 +257,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
-            public void Set(string key, object value)
+            public MethodItem Set(string key, object value)
             {
                 lock (this)
                 {
@@ -221,6 +267,7 @@ namespace System.DJ.ImplementFactory.Commons
                         dic.Remove(key);
                     }
                     dic[key] = new DataItem(key, value, cacheTime);
+                    return this;
                 }
             }
 
@@ -232,11 +279,18 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
-            public void Remove(string key)
+            public MethodItem Remove(string key)
             {
                 lock (this)
                 {
+                    string id = dic[key].GetId();
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        PersistenceCache persistence = new PersistenceCache();
+                        persistence.Remove(id);
+                    }
                     dic.Remove(key);
+                    return this;
                 }
             }
 
@@ -251,6 +305,12 @@ namespace System.DJ.ImplementFactory.Commons
             public string MethodPath
             {
                 get { return methodPath; }
+            }
+
+            public MethodItem SetDataType(Type dataType)
+            {
+                this.dataType = dataType;
+                return this;
             }
 
             void IDisposable.Dispose()
@@ -268,6 +328,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         private class DataItem : IDisposable
         {
+            private string id = "";
             private string key = "";
             private object value = null;
             private int cacheTime = 0;
@@ -288,6 +349,11 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 start = DateTime.Now;
                 end = start.AddSeconds(cacheTime);
+                if (!string.IsNullOrEmpty(id))
+                {
+                    PersistenceCache persistence = new PersistenceCache();
+                    persistence.UpdateTime(id, start, end);
+                }
                 return value;
             }
 
@@ -297,8 +363,32 @@ namespace System.DJ.ImplementFactory.Commons
                 return start < end;
             }
 
+            public DataItem SetStartTime(DateTime start)
+            {
+                this.start = start;
+                return this;
+            }
+
+            public DataItem SetEnd(DateTime end)
+            {
+                this.end = end;
+                return this;
+            }
+
+            public DataItem SetId(string id)
+            {
+                this.id = id;
+                return this;
+            }
+
+            public string GetId()
+            {
+                return id;
+            }
+
             void IDisposable.Dispose()
             {
+                if (null == value) return;
                 if (typeof(IDisposable).IsAssignableFrom(value.GetType()))
                 {
                     ((IDisposable)value).Dispose();

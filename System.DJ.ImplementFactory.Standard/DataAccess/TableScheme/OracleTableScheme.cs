@@ -21,6 +21,8 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
         private string getFieldType(FieldMapping fieldMapping)
         {
             string ft = "";
+            if (null == fieldMapping.FieldType) return ft;
+            if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
             if (typeof(string) == fieldMapping.FieldType)
             {
                 ft = "varchar({0})";
@@ -63,7 +65,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             }
             else if (typeof(byte[]) == fieldMapping.FieldType)
             {
-                ft = "binary({0})";
+                ft = "varbinary({0})";
                 ft = ft.ExtFormat(fieldMapping.Length.ToString());
             }
             return ft;

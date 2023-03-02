@@ -19,7 +19,7 @@ namespace Test.NetCore.DataInterface
         /// <param name="name"></param>
         /// <returns></returns>
         [AutoSelect("select * from {T} where name like '%{name}%'")]
-        [DataCache()]
+        [DataCache(true)]
         List<T> query<T>(string name, int age);
 
         [AutoSelect("select top 1 * from {T} order by cdatetime desc")]

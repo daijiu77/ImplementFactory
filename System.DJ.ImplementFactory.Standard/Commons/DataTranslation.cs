@@ -19,7 +19,19 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (null == dt) return "";
             string v = Encoding.UTF8.GetString(dt);
-            if (-1 != v.IndexOf("\0")) v = v.Substring(0, v.IndexOf("\0"));
+            int n = v.IndexOf("\0");
+            if (0 < n) v = v.Substring(0, n);
+            char[] c = v.ToCharArray();
+            n = c.Length - 1;
+            while ('\0' == c[n])
+            {
+                n--;
+            }
+            if ((n + 1) < c.Length)
+            {
+                n++;
+                v = v.Substring(0, n);
+            }
             return v;
         }
 
@@ -159,6 +171,10 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 arr = item.Split(unitSplit);
                 type = Type.GetType(arr[1]);
+                if (null == type)
+                {
+                    type = DJTools.GetTypeByFullName(arr[1]);
+                }
                 dt.Columns.Add(arr[0], type);
             }
 
@@ -207,8 +223,10 @@ namespace System.DJ.ImplementFactory.Commons
         public static byte[] ListToByteArray<T>(this List<T> list)
         {
             if (DJTools.IsBaseType(typeof(T))) return null;
+            if (0 == list.Count) return null;
+            Type type = list[0].GetType();
             DataTable dt = new DataTable();
-            typeof(T).ForeachProperty((pi, pt, fn) =>
+            type.ForeachProperty((pi, pt, fn) =>
             {
                 dt.Columns.Add(fn, pi.PropertyType);
             });

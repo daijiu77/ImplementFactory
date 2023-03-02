@@ -30,13 +30,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 foreach (Type tp in types)
                 {
                     if (tp.IsAbstract || tp.IsInterface || tp.IsEnum) continue;
-                    if (typeof(AbsDataModel).IsAssignableFrom(tp))
-                    {
-                        absDataModels.Add(tp);
-                    }
+                    if (typeof(ImplementAdapter).IsAssignableFrom(tp)) continue;
+                    if (!typeof(AbsDataModel).IsAssignableFrom(tp)) continue;
+                    if (absDataModels.Contains(tp)) continue;
+                    absDataModels.Add(tp);
                 }
             }
-
         }
 
         private bool IsEnabledType(Type type, ref Type type1, ref int length)
@@ -47,7 +46,13 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (typeof(System.Collections.ICollection).IsAssignableFrom(type))
             {
                 Type tp = null;
-                if (type.IsArray)
+                if(typeof(byte[]) == type)
+                {
+                    tp = type;
+                    type1 = type;
+                    mbool = true;
+                }
+                else if (type.IsArray)
                 {
                     string ts = type.TypeToString(true);
                     ts = ts.Replace("[]", "");
@@ -82,6 +87,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
 
             return mbool;
+        }
+
+        public UpdateTableDesign AddTable(Type tableType)
+        {
+            if (null == tableType) return this;
+            if (!typeof(AbsDataModel).IsAssignableFrom(tableType)) return this;
+            if (absDataModels.Contains(tableType)) return this;
+            absDataModels.Add(tableType);
+            return this;
         }
 
         public void TableScheme()

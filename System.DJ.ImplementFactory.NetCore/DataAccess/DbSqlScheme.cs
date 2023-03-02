@@ -198,7 +198,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                 _vObj = dr[dic[_field]];
                 if (System.DBNull.Value == _vObj) return;
                 if (null == _vObj) return;
-                if (typeof(ICollection).IsAssignableFrom(pi.PropertyType))
+                if (typeof(byte[]) == pi.PropertyType)
+                {
+                    _vObj = (byte[])_vObj;
+                }
+                else if (typeof(ICollection).IsAssignableFrom(pi.PropertyType))
                 {
                     Type type = null;
                     object list = null;
@@ -323,7 +327,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             DataTable dt = ((IDbSqlScheme)this).ToDataTable();
             IList<T> list = new List<T>();
-            IList<object> results= GetList(dt, typeof(T));
+            IList<object> results = GetList(dt, typeof(T));
             if (null != results)
             {
                 foreach (var item in results)

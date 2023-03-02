@@ -84,6 +84,12 @@ namespace System.DJ.ImplementFactory.Commons
             if (type.IsEnum)
             {
                 object enumV = null;
+                int num = 0;
+                if (int.TryParse(value.ToString(), out num))
+                {
+                    value = num;
+                }
+
                 if (value.GetType() == typeof(string))
                 {
                     string[] ns = Enum.GetNames(type);
@@ -101,7 +107,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (value.GetType() == typeof(int))
                 {
-                    int num = Convert.ToInt32(value);
+                    num = Convert.ToInt32(value);
                     Array arr = Enum.GetValues(type);
                     foreach (var item in arr)
                     {
@@ -190,7 +196,20 @@ namespace System.DJ.ImplementFactory.Commons
         {
             bool isSuccess = false;
             T t = default(T);
+            if (null == value) return t;
             Type type = typeof(T);
+            if (typeof(IList).IsAssignableFrom(typeof(T)))
+            {
+                Type[] ts = type.GetGenericArguments();
+                object list = ExtCollection.createListByType(ts[0]);
+                IList vList = value as IList;
+                foreach (var item in vList)
+                {
+                    ExtCollection.listAdd(list, item);
+                }
+                return (T)list;
+            }
+
             object v = ConvertTo(value, type, ref isSuccess);
             if (null != v) t = (T)v;
             return t;
@@ -199,14 +218,16 @@ namespace System.DJ.ImplementFactory.Commons
         public static bool IsBaseType(this Type type)
         {
             byte[] arr = type.Assembly.GetName().GetPublicKeyToken();
-            if (0 == arr.Length) return false;
+            if (0 == arr.Length)
+            {
+                return type.IsEnum;
+            }
             bool mbool = ((typeof(ValueType) == type.BaseType)
                 || (typeof(string) == type))
                 || typeof(Guid) == type
                 || typeof(Guid?) == type
                 || typeof(DateTime) == type
-                || typeof(DateTime?) == type
-                || type.IsEnum;
+                || typeof(DateTime?) == type;
 
             return mbool;
         }
@@ -1188,7 +1209,24 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         vObj = ConvertTo(vObj, tp);
                     }
-                    pi.SetValue(ele, vObj);
+
+                    try
+                    {
+                        pi.SetValue(ele, vObj);
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            ele.SetPropertyValue(pi.Name, vObj);
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                        //throw;
+                    }
                 });
                 list.Add(ele);
             }

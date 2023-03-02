@@ -435,7 +435,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                                //throw;
                            }
                            //throw;
-                       }                       
+                       }
                    }
                };
 
@@ -486,12 +486,16 @@ namespace System.DJ.ImplementFactory.DataAccess
             tbName = funcTbName(dataModel.GetType());
             fromUnitAction(dataModel, tbName, wherePart);
             if (null == propertyAction) return;
-            Constraint constraint = null;            
+            Constraint constraint = null;
             dataModel.ForeachProperty((pi, type, fn, fv) =>
             {
                 if (null == fv) return;
                 object v2 = fv;
-                if (!DJTools.IsBaseType(type))
+                if (typeof(byte[]) == type)
+                {
+                    v2 = (byte[])fv;
+                }
+                else if (!DJTools.IsBaseType(type))
                 {
                     Type eleType = null;
                     if (typeof(IList).IsAssignableFrom(type))
@@ -501,7 +505,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         {
                             eleType = types[0];
                             if (!eleType.IsBaseType()) eleType = null;
-                        }                        
+                        }
                     }
                     else if (type.IsArray)
                     {
@@ -533,7 +537,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         att = dataModel.GetType().GetCustomAttribute(typeof(Constraint));
                         if (null == att) return;
                         constraint = (Constraint)att;
-                                                
+
                         if (typeof(IEnumerable).IsAssignableFrom(type))
                         {
                             IEnumerable collect = (IEnumerable)fv;
@@ -552,9 +556,9 @@ namespace System.DJ.ImplementFactory.DataAccess
                             GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
                         }
                         return;
-                    }                    
+                    }
                 }
-                else if(type.IsEnum)
+                else if (type.IsEnum)
                 {
                     v2 = (int)fv;
                 }
@@ -713,7 +717,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     dataItem.parameters.Add(para);
                     return;
                 }
-                
+
                 fields += ", " + sqlAnalysis.GetFieldName(_fn);
                 vals += ", " + dbTag + _fn;
                 para = ImplementAdapter.dataServerProvider.CreateDbParameter(_fn, _fv);

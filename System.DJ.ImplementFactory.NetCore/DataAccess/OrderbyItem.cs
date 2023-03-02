@@ -30,10 +30,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             Rule = rule;
         }
 
-        public void Set(string fieldName, OrderByRule rule)
+        public OrderbyItem Set(string fieldName, OrderByRule rule)
         {
             FieldName = fieldName;
             Rule = rule;
+            return this;
         }
 
         public string FieldName { get; set; }

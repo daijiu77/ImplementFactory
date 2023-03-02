@@ -813,7 +813,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     paraList.Clear();
 
-                    return_type = m.ReturnType.TypeToString();
+                    return_type = m.ReturnType.TypeToString(true);
 
                     paraStr = "";
                     lists = "";
@@ -905,18 +905,34 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                         #endregion
 
+                        string eleT = "";
                         //声明方法返回值变量
                         if (null != actionType && null != autoCall)
                         {
-                            if (null != pvList)
+                            uskv.Add(new CKeyValue() { Key = actionType.Namespace });
+                            string action_type = actionType.TypeToString(true);
+
+                            if (null != dataCache)
                             {
-                                //数据缓存代码实现 DataCache
+                                //数据缓存代码实现 DataCache  
                                 mInfo.append(ref code, LeftSpaceLevel.four, "if (null != dataCacheVal)");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(dataCacheVal);", actionParaName);
+                                if (typeof(IList).IsAssignableFrom(actionType))
+                                {
+                                    eleT = actionType.GetGenericArguments()[0].TypeToString(true);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "List<{0}> rtnList = new List<{0}>();", eleT);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "System.Collections.IList _ilist2 = (System.Collections.IList)dataCacheVal;");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "foreach(var listItem in _ilist2)");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "{");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 3, "rtnList.Add(({0})listItem);", eleT);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "}");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "dataCacheVal = rtnList;");
+                                }
+                                
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(({1})dataCacheVal);", actionParaName, action_type);
                                 if (m.ReturnType != typeof(void))
                                 {
-                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", return_type);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", action_type);
                                 }
                                 else
                                 {
@@ -925,19 +941,30 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 mInfo.append(ref code, LeftSpaceLevel.four, "}");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
                             }
-                            uskv.Add(new CKeyValue() { Key = actionType.Namespace });
-                            return_type = actionType.TypeToString();
-                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", return_type, DJTools.getDefaultByType(actionType));
-                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", return_type);
+
+                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", action_type, DJTools.getDefaultByType(actionType));
+                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", action_type);
                             mInfo.append(ref code, "");
                         }
                         else if (m.ReturnType != typeof(void))
                         {
-                            if (null != pvList)
+                            if (null != dataCache)
                             {
-                                //数据缓存代码实现 DataCache
+                                //数据缓存代码实现 DataCache                                
                                 mInfo.append(ref code, LeftSpaceLevel.four, "if (null != dataCacheVal)");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                                if (typeof(IList).IsAssignableFrom(m.ReturnType))
+                                {
+                                    eleT = m.ReturnType.GetGenericArguments()[0].TypeToString(true);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "List<{0}> rtnList = new List<{0}>();", eleT);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "System.Collections.IList _ilist2 = (System.Collections.IList)dataCacheVal;");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "foreach(var listItem in _ilist2)");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "{");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 3, "rtnList.Add(({0})listItem);", eleT);
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "}");
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 2, "dataCacheVal = rtnList;");
+                                }
+                                
                                 mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", return_type);
                                 mInfo.append(ref code, LeftSpaceLevel.four, "}");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
@@ -1067,7 +1094,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             //数据缓存代码实现 DataCache
                             mInfo.append(ref code, LeftSpaceLevel.four, "if (null != ({0}))", resultStr);
                             mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(cacheKey, {0}, {1});", resultStr, dataCache.CacheTime.ToString());
+                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(cacheKey, {0}, {1}, {2});",
+                                resultStr, dataCache.CacheTime.ToString(), dataCache.PersistenceCache.ToString().ToLower());
                             mInfo.append(ref code, LeftSpaceLevel.four, "}");
                         }
                         //如果接口方法返回类型不为 void                        

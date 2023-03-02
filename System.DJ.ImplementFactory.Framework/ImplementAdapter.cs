@@ -46,6 +46,7 @@ namespace System.DJ.ImplementFactory
 
         public static readonly SysConfig sysConfig1 = new SysConfig();
         public static Task task = null;
+        public static Task task1 = null;
         public static Type dataCache = null;
 
         static ImplementAdapter()
@@ -221,12 +222,15 @@ namespace System.DJ.ImplementFactory
                      * 不能与上面的 MultiTablesExec 放在同一个 Task 里，
                      * 因为 updateTableDesign.TableScheme() 需要等待上边的 task 执行完毕才能工作
                      * **/
-                    Task.Run(() =>
+                    task1 = Task.Run(() =>
                     {
                         UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
+                        updateTableDesign.AddTable(typeof(DataCacheTable));
                         updateTableDesign.TableScheme();
                     });
                 }
+
+                new PersistenceCache();
             }
             IsDbUsed = dbInfo.IsDbUsed;
         }
