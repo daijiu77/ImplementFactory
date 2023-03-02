@@ -26,6 +26,7 @@ namespace System.DJ.ImplementFactory.Commons
             while ('\0' == c[n])
             {
                 n--;
+                if (0 > n) break;
             }
             if ((n + 1) < c.Length)
             {
