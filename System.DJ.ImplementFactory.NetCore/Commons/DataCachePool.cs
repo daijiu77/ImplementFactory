@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {
-    public class DataCacheImpl : IDataCache
+    public class DataCachePool : IDataCache
     {
         private static Dictionary<string, MethodItem> cacheDic = new Dictionary<string, MethodItem>();
         private static int cacheTime = 0;
 
-        static DataCacheImpl()
+        static DataCachePool()
         {
             cacheTime = ImplementAdapter.dbInfo1.CacheTime_Second;
             Task.Run(() =>
@@ -80,6 +80,9 @@ namespace System.DJ.ImplementFactory.Commons
         object IDataCache.Get(string key)
         {
             string methodPath = GetMethodPath();
+            object vObj = GetValueByKey(methodPath, key);
+            if (null != vObj) return vObj;
+
             if (!cacheDic.ContainsKey(methodPath)) return null;
             return cacheDic[methodPath].GetValue(key);
         }
@@ -92,6 +95,9 @@ namespace System.DJ.ImplementFactory.Commons
         void IDataCache.Set(string key, object value, int cacheTime)
         {
             string methodPath = GetMethodPath();
+            bool mbool = SetValue(methodPath, key, value, cacheTime);
+            if (mbool) return;
+
             MethodItem mItem = null;
             if (cacheDic.ContainsKey(methodPath))
             {
@@ -154,9 +160,19 @@ namespace System.DJ.ImplementFactory.Commons
                 if (!string.IsNullOrEmpty(s))
                 {
                     key = s.Substring(1);
-                }                
+                }
             }
             return key;
+        }
+
+        public virtual object GetValueByKey(string key1, string key2)
+        {
+            return null;
+        }
+
+        public virtual bool SetValue(string key1, string key2, object value, int cacheCycle_second)
+        {
+            return false;
         }
 
         private void GetKeyBy(Type paraType, string fn, object dt, ref string s1)

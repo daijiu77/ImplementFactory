@@ -736,7 +736,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             AbsDataInterface absData = null;
             Type actionType = null;
             DataCache dataCache = null;
-            DataCacheImpl dataCacheImpl = new DataCacheImpl();
+            DataCachePool dataCacheImpl = new DataCachePool();
             int msInterval = 0;
 
             IsDataInterface = false;
@@ -885,7 +885,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         dataCache = DataCache.GetDataCache(m);
                         if (null != dataCache)
                         {
-                            mInfo.append(ref code, LeftSpaceLevel.four, "DataCacheImpl _dataCacheImpl = new DataCacheImpl();");
+                            mInfo.append(ref code, LeftSpaceLevel.four, "DataCachePool _dataCachePool = (DataCachePool)Activator.CreateInstance(ImplementAdapter.dataCache);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "string cacheKey = \"null\";");
                             pvList = dataCacheImpl.GetParaNameList(m);
                             if (null != pvList)
@@ -898,8 +898,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                         "Value = {0}, ValueType = typeof({1})});", item.Key, item.ValueType.TypeToString(true));
                                 }
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCacheImpl.GetParaKey(paraInfoList);");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCacheImpl).Get(cacheKey);");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(cacheKey);");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
                             }
                         }
@@ -1067,7 +1067,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             //数据缓存代码实现 DataCache
                             mInfo.append(ref code, LeftSpaceLevel.four, "if (null != ({0}))", resultStr);
                             mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCacheImpl).Set(cacheKey, {0}, {1});", resultStr, dataCache.CacheTime.ToString());
+                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(cacheKey, {0}, {1});", resultStr, dataCache.CacheTime.ToString());
                             mInfo.append(ref code, LeftSpaceLevel.four, "}");
                         }
                         //如果接口方法返回类型不为 void                        

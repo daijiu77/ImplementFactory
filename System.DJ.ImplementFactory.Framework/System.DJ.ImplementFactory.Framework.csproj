@@ -107,9 +107,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\DllPathDataCollection.cs" />
+    <Compile Include="Commons\DataCachePool.cs" />
+    <Compile Include="Commons\AssembliesData.cs" />
     <Compile Include="Commons\Attrs\DataCache.cs" />
     <Compile Include="Commons\Attrs\AbsDataCache.cs" />
-    <Compile Include="Commons\DataCacheImpl.cs" />
     <Compile Include="Pipelines\IDataCache.cs" />
     <Compile Include="Commons\TempImplCode.cs" />
     <Compile Include="Commons\ForechExtends.cs" />

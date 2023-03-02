@@ -45,8 +45,8 @@ namespace System.DJ.ImplementFactory
         private static Dictionary<string, InstanceObj> interfaceImplements = new Dictionary<string, InstanceObj>();
 
         public static readonly SysConfig sysConfig1 = new SysConfig();
-
         public static Task task = null;
+        public static Type dataCache = null;
 
         static ImplementAdapter()
         {
@@ -68,7 +68,6 @@ namespace System.DJ.ImplementFactory
             }
 
             if (null == UserType) UserType = typeof(ImplementAdapter);
-            //loadSysInstance();
             init();
         }
 
@@ -193,6 +192,9 @@ namespace System.DJ.ImplementFactory
             DbAdapter.IsPrintSQLToTrace = dbInfo.IsPrintSQLToTrace;
             DbAdapter.IsPrintSqlToLog = dbInfo.IsPrintSqlToLog;
 
+            dataCache = typeof(DataCachePool).GetTypeByParentType(typeof(DataCachePool));
+            if (null == dataCache) dataCache = typeof(DataCachePool);
+
             if (null != dbHelper1)
             {
                 dbHelper1.connectString = dbInfo.ConnectionString;
@@ -210,16 +212,20 @@ namespace System.DJ.ImplementFactory
                 dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
                 task = Task.Run(() =>
                 {
-                    new MultiTablesExec(dbInfo, dbHelper1);                    
+                    new MultiTablesExec(dbInfo, dbHelper1);
                 });
 
                 if (null != dbTableScheme && dbInfo.UpdateTableDesign)
                 {
+                    /**
+                     * 不能与上面的 MultiTablesExec 放在同一个 Task 里，
+                     * 因为 updateTableDesign.TableScheme() 需要等待上边的 task 执行完毕才能工作
+                     * **/
                     Task.Run(() =>
                     {
                         UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
                         updateTableDesign.TableScheme();
-                    });                    
+                    });
                 }
             }
             IsDbUsed = dbInfo.IsDbUsed;
@@ -874,7 +880,7 @@ namespace System.DJ.ImplementFactory
             lock (_SetAssembliesOfTemp)
             {
                 assembliesOfTemp.Add(implNew.Assembly);
-            }            
+            }
         }
 
         private static object _adapterOfImplement = new object();

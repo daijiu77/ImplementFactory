@@ -530,8 +530,31 @@ namespace System.DJ.ImplementFactory.Commons
             return root_path;
         }
 
+        private static string getKeyByExcludes(string[] excludes)
+        {
+            string key = "null";
+            if (null != excludes)
+            {
+                foreach (var item in excludes)
+                {
+                    key += "-" + item;
+                }
+                if (key.Substring(0, 1).Equals("-")) key = key.Substring(1);
+            }
+            return key;
+        }
+
+        private static Dictionary<string, DllPathDataCollection> dllPathDic = new Dictionary<string, DllPathDataCollection>();
         static List<string> GetDllPathCollection(string rootPath, string[] excludes)
         {
+            string key = getKeyByExcludes(excludes);
+            DllPathDataCollection ddc = null;
+            if (dllPathDic.ContainsKey(rootPath))
+            {
+                ddc = dllPathDic[rootPath];
+                if (null != ddc[key]) return ddc[key];
+            }
+
             List<string> anList = new List<string>();
 
             string[] dlls = Directory.GetFiles(rootPath, "*.dll");
@@ -589,6 +612,13 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
+            if (null == ddc)
+            {
+                ddc = new DllPathDataCollection();
+                dllPathDic.Add(rootPath, ddc);
+            }
+
+            ddc.Add(key, anList);
             return anList;
         }
 
@@ -597,8 +627,18 @@ namespace System.DJ.ImplementFactory.Commons
             return GetAssemblyCollection(rootPath, null);
         }
 
+        private static Dictionary<string, AssembliesData> assesdic = new Dictionary<string, AssembliesData>();
         public static List<Assembly> GetAssemblyCollection(string rootPath, string[] excludes)
         {
+            string key = getKeyByExcludes(excludes);
+
+            AssembliesData ad = null;
+            if (assesdic.ContainsKey(rootPath))
+            {
+                ad = assesdic[rootPath];
+                if (null != ad[key]) return ad[key];
+            }
+
             List<Assembly> assemblies = new List<Assembly>();
             string root_path = GetDllRootPath(rootPath);
             List<string> dllPathCollection = GetDllPathCollection(root_path, excludes);
@@ -614,6 +654,13 @@ namespace System.DJ.ImplementFactory.Commons
                 catch { }
             }
 
+            if (null == ad)
+            {
+                ad = new AssembliesData();
+                assesdic[rootPath] = ad;
+            }
+
+            ad.Add(key, assemblies);
             return assemblies;
         }
 
@@ -958,6 +1005,36 @@ namespace System.DJ.ImplementFactory.Commons
         public static Type GetTypeByFullName(this string fullName)
         {
             return fullName.GetClassTypeByPath();
+        }
+
+        public static Type GetTypeByParentType(this Type parentType, params Type[] excludeTypes)
+        {
+            Type type = null;
+            Type[] types = null;
+            List<Assembly> assemblies = GetAssemblyCollection(RootPath);
+            Dictionary<string, Type> map = new Dictionary<string, Type>();
+            if (null != excludeTypes)
+            {
+                foreach (Type excludeType in excludeTypes)
+                {
+                    if (map.ContainsKey(excludeType.FullName)) continue;
+                    map.Add(excludeType.FullName, excludeType);
+                }
+            }
+
+            foreach (Assembly item in assemblies)
+            {
+                types = item.GetTypes();
+                foreach (Type t in types)
+                {
+                    if (!parentType.IsAssignableFrom(t)) continue;
+                    if (map.ContainsKey(t.FullName)) continue;
+                    type = t;
+                    break;
+                }
+                if (null != type) break;
+            }
+            return type;
         }
 
         public static DataEntity<DataElement> GetDynamicEntityBy(this DataRow dataRow)
