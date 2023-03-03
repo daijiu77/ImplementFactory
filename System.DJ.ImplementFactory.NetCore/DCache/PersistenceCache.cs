@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
@@ -9,13 +10,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.DJ.ImplementFactory.Commons
+namespace System.DJ.ImplementFactory.DCache
 {
     public class PersistenceCache
     {
+        public static Task task = null;
         static PersistenceCache()
         {
-            Task.Run(() =>
+            task = Task.Run(() =>
             {
                 ImplementAdapter.task.Wait();
                 if (null != ImplementAdapter.task1) ImplementAdapter.task1.Wait();
@@ -40,7 +42,15 @@ namespace System.DJ.ImplementFactory.Commons
                     foreach (DataCacheTable tb in list)
                     {
                         vObj = ByteArrayToObject(tb.Data, tb.DataType);
-                        cachePool.Put(tb.MethodPath, tb.Key, vObj, tb.DataType, tb.CycleTimeSecond, tb.Start, tb.End);
+                        cachePool.Put(
+                            tb.Id.ToString(),
+                            tb.MethodPath,
+                            tb.Key,
+                            vObj,
+                            tb.DataType,
+                            tb.CycleTimeSecond,
+                            tb.Start,
+                            tb.End);
                         Thread.Sleep(10);
                     }
                     Thread.Sleep(100);
@@ -50,9 +60,9 @@ namespace System.DJ.ImplementFactory.Commons
 
         private static object ByteArrayToObject(byte[] data, string dataType)
         {
-            object vObj = null;
-            if (string.IsNullOrEmpty(dataType)) return vObj;
+            object vObj = null;            
             if (null == data) return vObj;
+            if (string.IsNullOrEmpty(dataType)) return vObj;
             Type type = Type.GetType(dataType);
             if (null == type)
             {
@@ -149,6 +159,7 @@ namespace System.DJ.ImplementFactory.Commons
 
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(tb));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And("Id", ConditionRelation.Equals, id));
             scheme.Delete();
         }
 
@@ -165,6 +176,7 @@ namespace System.DJ.ImplementFactory.Commons
 
             DbVisitor db = new DbVisitor();
             IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(tb));
+            scheme.dbSqlBody.Where(ConditionItem.Me.And("Id", ConditionRelation.Equals, id));
             scheme.dbSqlBody.DataOperateContains("Start", "End");
             scheme.Update();
         }

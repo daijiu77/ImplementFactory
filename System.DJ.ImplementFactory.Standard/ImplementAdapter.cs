@@ -6,6 +6,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.DCache;
 using System.DJ.ImplementFactory.Entities;
 
 using System.DJ.ImplementFactory.Pipelines;
@@ -91,7 +92,7 @@ namespace System.DJ.ImplementFactory
             AutoCall.errorLevels1 = errorLevels1;
 
             getTempBin();
-            clearTempImplBin();
+            if (DJTools.IsDebug(UserType)) clearTempImplBin();
 
             TempImplCode tempImpl = new TempImplCode();
             tempImpl.SetRootPath(rootPath);
@@ -369,6 +370,7 @@ namespace System.DJ.ImplementFactory
                 bool mbool = 0 < dic.Count;
                 Assembly asse = null;
                 string[] fs = Directory.GetFiles(dir, "*.dll");
+                Type[] types = null;
                 foreach (var item in fs)
                 {
                     if (mbool)
@@ -380,6 +382,11 @@ namespace System.DJ.ImplementFactory
                     try
                     {
                         asse = Assembly.LoadFrom(item);
+                        types = asse.GetTypes();
+                        foreach (Type ts in types)
+                        {
+                            DJTools.AddDynamicType(ts);
+                        }
                         assembliesOfTemp.Add(asse);
                     }
                     catch { }

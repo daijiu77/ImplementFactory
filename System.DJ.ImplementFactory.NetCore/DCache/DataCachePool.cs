@@ -1,13 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
+using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.DJ.ImplementFactory.Commons
+namespace System.DJ.ImplementFactory.DCache
 {
     public class DataCachePool : IDataCache
     {
@@ -89,6 +92,7 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = GetValueByKey(methodPath, key);
             if (null != vObj) return vObj;
 
+            PersistenceCache.task.Wait();
             if (!cacheDic.ContainsKey(methodPath)) return null;
             return cacheDic[methodPath].GetValue(key);
         }
@@ -106,12 +110,40 @@ namespace System.DJ.ImplementFactory.Commons
         void IDataCache.Set(string key, object value, int cacheTime, bool persistenceCache)
         {
             string methodPath = GetMethodPath();
-            bool mbool = SetValue(methodPath, key, value, cacheTime);
+            bool mbool = SetValue(methodPath, key, value, cacheTime, persistenceCache);
             string id = "";
             if (persistenceCache)
             {
                 PersistenceCache persistence = new PersistenceCache();
-                Guid guid = persistence.Set(methodPath, key, value, value.GetType(), cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
+                Type tp = value.GetType();
+                Type type = null;
+                object vObj = null;
+                if (typeof(IList).IsAssignableFrom(tp))
+                {
+                    Type[] ts = tp.GetGenericArguments();
+                    type = ts[0];
+                    IList list = (IList)value;
+                    vObj = list[0];
+                }
+                else if (!tp.IsBaseType())
+                {
+                    type = tp;
+                    vObj = value;
+                }
+
+                if (null != type)
+                {
+                    type.ForeachProperty((pi, pt, fn) =>
+                    {
+                        if (fn.Equals(OverrideModel.CopyParentModel))
+                        {
+                            tp = vObj.GetPropertyValue<Type>(fn);
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+                Guid guid = persistence.Set(methodPath, key, value, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
                 if (Guid.Empty != guid)
                 {
                     id = guid.ToString();
@@ -139,7 +171,7 @@ namespace System.DJ.ImplementFactory.Commons
             mItem[key].SetId(id);
         }
 
-        public void Put(string methodPath, string key, object value, string dataType, int cacheTime, DateTime start, DateTime end)
+        public void Put(string id, string methodPath, string key, object value, string dataType, int cacheTime, DateTime start, DateTime end)
         {
             MethodItem mItem = null;
             if (cacheDic.ContainsKey(methodPath))
@@ -160,7 +192,11 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             mItem.Set(key, value);
-            mItem[key].SetStartTime(start).SetEnd(end);
+
+            mItem[key]
+                .SetId(id)
+                .SetStartTime(start)
+                .SetEnd(end);
         }
 
         public EList<CKeyValue> GetParaNameList(MethodInfo methodInfo)
@@ -210,12 +246,12 @@ namespace System.DJ.ImplementFactory.Commons
             return key;
         }
 
-        public virtual object GetValueByKey(string key1, string key2)
+        public virtual object GetValueByKey(string methodPath, string key)
         {
             return null;
         }
 
-        public virtual bool SetValue(string key1, string key2, object value, int cacheCycle_second)
+        public virtual bool SetValue(string methodPath, string key, object value, int cacheCycle_second, bool persistenceCache)
         {
             return false;
         }

@@ -14,9 +14,19 @@ namespace Test.NetCore.Entities
         TOP
     }
 
+    public class ExtFieldMapping : FieldMapping
+    {
+        public ExtFieldMapping(string fieldName,
+            Type fieldType,
+            int length,
+            string defaultVal,
+            bool isPrimaryKey,
+            bool NoNull) : base(fieldName, fieldType, length, defaultVal, isPrimaryKey, NoNull) { }
+    }
+
     public class UserInfo : AbsDataModel
     {
-        [FieldMapping("id", typeof(Guid), 1, "", true, true)]
+        [ExtFieldMapping("id", typeof(Guid), 1, "", true, true)]
         public Guid id { get; set; }
 
         [Condition("like", Condition.WhereIgrons.igroneEmptyNull)]

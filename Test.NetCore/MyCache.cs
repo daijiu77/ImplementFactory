@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.DCache;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;

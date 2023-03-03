@@ -68,6 +68,7 @@ namespace System.DJ.ImplementFactory.Commons
                     try
                     {
                         implType = assObj.GetType(classPath);
+                        DJTools.AddDynamicType(implType);
                         instanceCount++;
                     }
                     catch (Exception ex)

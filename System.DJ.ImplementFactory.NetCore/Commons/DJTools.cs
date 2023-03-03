@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.Exts;
+using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
@@ -20,6 +21,28 @@ namespace System.DJ.ImplementFactory.Commons
     public static class DJTools
     {
         private static ForechExtends forechExtends = new ForechExtends();
+        private static Dictionary<string, Type> dynamicTypes = new Dictionary<string, Type>();
+
+        private static object _dynamicTypesLock = new object();
+        public static void AddDynamicType(Type type)
+        {
+            lock (_dynamicTypesLock)
+            {
+                string name = type.TypeToString(true);
+                if (dynamicTypes.ContainsKey(name)) return;
+                dynamicTypes[name] = type;
+            }
+        }
+
+        public static Type GetDynamicType(string name)
+        {
+            lock (_dynamicTypesLock)
+            {
+                Type type = null;
+                dynamicTypes.TryGetValue(name, out type);
+                return type;
+            }
+        }
 
         public static void append(ref string srcStr, int level, string newstr, char[] splitStr, params string[] arr)
         {
@@ -344,7 +367,17 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     pi.SetValue(targetObj, v, null);
                 }
-                catch { }
+                catch {
+                    try
+                    {
+                        targetObj.SetPropertyValue(fName, v);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
                 return true;
             });
         }
@@ -1009,6 +1042,10 @@ namespace System.DJ.ImplementFactory.Commons
         {
             Type classType = Type.GetType(classPath);
             if (null != classType) return classType;
+
+            classType = GetDynamicType(classPath);
+            if (null != classType) return classType;
+
             if (-1 != classPath.IndexOf("+"))
             {
                 string[] arr = classPath.Split('+');
@@ -1112,6 +1149,26 @@ namespace System.DJ.ImplementFactory.Commons
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
             if (null == pi) return v;
+
+            Attribute attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
+            PropertyInfo pi1 = null;
+            _entityPropertyDic.TryGetValue(OverrideModel.CopyParentModel.ToLower(), out pi1);
+            if (null != attr && null == pi1)
+            {
+                OverrideModel overrideModel = new OverrideModel();
+                object vObj = overrideModel.CreateDataModel(entity.GetType());
+                if (null != vObj)
+                {
+                    vObj.SetPropertyFrom(entity);
+                    PropertyInfo _pi = vObj.GetPropertyInfo(propertyName);
+                    if (null != _pi)
+                    {
+                        object _vObj = _pi.GetValue(vObj, null);
+                        entity.SetPropertyValue(propertyName, _vObj);
+                        return (T) _vObj;
+                    }
+                }
+            }
             object _obj = pi.GetValue(entity, null);
 
             if (null == _obj) return v;

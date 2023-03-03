@@ -55,6 +55,14 @@
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\DataAccess</target>
 		<exclude></exclude>
 	</copy>
+                <!--复制 DCache 目录下的所有文件到Framework项目-->
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\DCache</source>
+		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\DCache</target>
+		<exclude></exclude>
+	</copy>
                 <!--复制 MServiceRoute 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
@@ -161,6 +169,13 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\DataAccess</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\DataAccess</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\DCache</source>
+		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\DCache</target>
 		<exclude></exclude>
 	</copy>
 	<copy ext="cs,csproj,user">

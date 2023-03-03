@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.DCache;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.Linq;
@@ -664,6 +665,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             uskv.Add(new CKeyValue() { Key = autocallImplNamespace });
             //uskv.Add(new CKeyValue() { Key = "" });
 
+            uskv.Add(new CKeyValue() { Key = typeof(DataCachePool).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(CKeyValue).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(EList<CKeyValue>).Namespace });

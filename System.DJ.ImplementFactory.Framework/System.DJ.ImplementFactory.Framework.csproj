@@ -107,10 +107,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DCache\PersistenceCache.cs" />
+    <Compile Include="DCache\DataCachePool.cs" />
     <Compile Include="Entities\DataCacheTable.cs" />
-    <Compile Include="Commons\PersistenceCache.cs" />
     <Compile Include="Commons\DllPathDataCollection.cs" />
-    <Compile Include="Commons\DataCachePool.cs" />
     <Compile Include="Commons\AssembliesData.cs" />
     <Compile Include="Commons\Attrs\DataCache.cs" />
     <Compile Include="Commons\Attrs\AbsDataCache.cs" />

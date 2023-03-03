@@ -10,6 +10,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 {
     public class OverrideModel
     {
+        public static string CopyParentModel = "CopyParentModel";
+
         private Dictionary<Type, Type> dic = new Dictionary<Type, Type>();
         private enum PropType
         {
@@ -94,13 +96,22 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string newNamespace = dataModelType.Namespace + ".ModelMirror";
             string newClassName = dataModelType.Name + "Copy";
             string typeName = newNamespace + "." + newClassName;
-            Type type1 = null;
+
+            Type type1 = DJTools.GetDynamicType(typeName);
+            if (null != type1)
+            {
+                dtModel = Activator.CreateInstance(type1);
+                return dtModel;
+            }
+
             if (dic.ContainsKey(dataModelType))
             {
                 type1 = dic[dataModelType];
                 dtModel = Activator.CreateInstance(type1);
                 return dtModel;
             }
+
+
             Attribute att = null;
             Constraint constraint = null;
             string code = "";
@@ -288,8 +299,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 DJTools.append(ref code, level, "namespace {0}", newNamespace);
                 DJTools.append(ref code, level, "{");
                 level++;
-                DJTools.append(ref code, level, "public class {0} : {1}", newClassName, dataModelType.TypeToString(true));
+                string dmType = dataModelType.TypeToString(true);
+                DJTools.append(ref code, level, "public class {0} : {1}", newClassName, dmType);
                 DJTools.append(ref code, level, "{");
+                DJTools.append(ref code, level + 1, "public Type {0} { get { return typeof({1}); } }", CopyParentModel, dmType);
+                DJTools.append(ref code, level + 1, "");
                 DJTools.append(ref code, 0, codeBody);
                 DJTools.append(ref code, level, "}");
                 level--;
@@ -319,13 +333,18 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 typeName = newNamespace + "." + newClassName;
                 try
                 {
-                    ImplementAdapter.codeCompiler.SavePathOfDll = "";
+                    string dllPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
+                    dllPath = Path.Combine(dllPath, TempImplCode.libName);
+                    DJTools.InitDirectory(dllPath, true);
+                    dllPath = Path.Combine(dllPath, newClassName + ".dll");
+                    ImplementAdapter.codeCompiler.SavePathOfDll = dllPath;
                     Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
-                    if(!string.IsNullOrEmpty(err)) error = err;
+                    if (!string.IsNullOrEmpty(err)) error = err;
                     if (null != assembly && string.IsNullOrEmpty(err))
                     {
                         Type t = assembly.GetType(typeName);
                         dic.Add(dataModelType, t);
+                        DJTools.AddDynamicType(t);
                         dtModel = Activator.CreateInstance(t);
                     }
                 }

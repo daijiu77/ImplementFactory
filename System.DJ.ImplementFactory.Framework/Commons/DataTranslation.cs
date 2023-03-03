@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -227,18 +228,27 @@ namespace System.DJ.ImplementFactory.Commons
             if (0 == list.Count) return null;
             Type type = list[0].GetType();
             DataTable dt = new DataTable();
+            Attribute attr = null;
+            Dictionary<string, string> dicFn = new Dictionary<string, string>();
             type.ForeachProperty((pi, pt, fn) =>
             {
+                attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
+                if (null != attr) return;
+                if (!pt.IsBaseType()) return;
                 dt.Columns.Add(fn, pi.PropertyType);
+                dicFn.Add(fn.ToLower(), fn);
             });
 
             DataRow dr = null;
+            string field = "";
             foreach (T item in list)
             {
                 dr = dt.NewRow();
                 item.ForeachProperty((pi, pt, fn, fv) =>
                 {
                     if (null == fv) return;
+                    field = fn.ToLower();
+                    if (!dicFn.ContainsKey(field)) return;
                     dr[fn] = DJTools.ConvertTo(fv, pi.PropertyType);
                 });
                 dt.Rows.Add(dr);
