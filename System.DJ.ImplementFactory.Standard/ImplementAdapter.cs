@@ -70,7 +70,7 @@ namespace System.DJ.ImplementFactory
             }
 
             if (null == UserType) UserType = typeof(ImplementAdapter);
-            init();
+            Init();
         }
 
         /// <summary>
@@ -84,8 +84,13 @@ namespace System.DJ.ImplementFactory
             return currentObj;
         }
 
-        static void init()
+        public static void Start() { }
+
+        private static bool _initialization = false;
+        public static void Init()
         {
+            if (_initialization) return;
+            _initialization = true;
             if (string.IsNullOrEmpty(rootPath)) return;
 
             matchRules = MatchRules();
