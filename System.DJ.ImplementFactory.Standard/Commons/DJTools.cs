@@ -367,7 +367,8 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     pi.SetValue(targetObj, v, null);
                 }
-                catch {
+                catch
+                {
                     try
                     {
                         targetObj.SetPropertyValue(fName, v);
@@ -1150,26 +1151,27 @@ namespace System.DJ.ImplementFactory.Commons
             _entityPropertyDic.TryGetValue(fn1, out pi);
             if (null == pi) return v;
 
-            Attribute attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
-            PropertyInfo pi1 = null;
-            _entityPropertyDic.TryGetValue(OverrideModel.CopyParentModel.ToLower(), out pi1);
-            if (null != attr && null == pi1)
+            object _obj = pi.GetValue(entity, null);
+            if (null == _obj)
             {
+                Attribute attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
+                PropertyInfo pi1 = null;
+                _entityPropertyDic.TryGetValue(OverrideModel.CopyParentModel.ToLower(), out pi1);
+                if (null != attr && null == pi1) return v;
+
                 OverrideModel overrideModel = new OverrideModel();
                 object vObj = overrideModel.CreateDataModel(entity.GetType());
-                if (null != vObj)
-                {
-                    vObj.SetPropertyFrom(entity);
-                    PropertyInfo _pi = vObj.GetPropertyInfo(propertyName);
-                    if (null != _pi)
-                    {
-                        object _vObj = _pi.GetValue(vObj, null);
-                        entity.SetPropertyValue(propertyName, _vObj);
-                        return (T) _vObj;
-                    }
-                }
+                if (null != vObj) return v;
+
+                vObj.SetPropertyFrom(entity);
+                PropertyInfo _pi = vObj.GetPropertyInfo(propertyName);
+                if (null != _pi) return v;
+
+                object _vObj = _pi.GetValue(vObj, null);
+                entity.SetPropertyValue(propertyName, _vObj);
+                return (T)_vObj;
             }
-            object _obj = pi.GetValue(entity, null);
+
 
             if (null == _obj) return v;
             if (IsBaseType(pi.PropertyType))
