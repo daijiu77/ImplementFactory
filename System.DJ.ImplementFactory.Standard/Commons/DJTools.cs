@@ -1157,15 +1157,15 @@ namespace System.DJ.ImplementFactory.Commons
                 Attribute attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
                 PropertyInfo pi1 = null;
                 _entityPropertyDic.TryGetValue(OverrideModel.CopyParentModel.ToLower(), out pi1);
-                if (null != attr && null == pi1) return v;
+                if (null == attr || null != pi1) return v;
 
                 OverrideModel overrideModel = new OverrideModel();
                 object vObj = overrideModel.CreateDataModel(entity.GetType());
-                if (null != vObj) return v;
+                if (null == vObj) return v;
 
                 vObj.SetPropertyFrom(entity);
                 PropertyInfo _pi = vObj.GetPropertyInfo(propertyName);
-                if (null != _pi) return v;
+                if (null == _pi) return v;
 
                 object _vObj = _pi.GetValue(vObj, null);
                 entity.SetPropertyValue(propertyName, _vObj);
