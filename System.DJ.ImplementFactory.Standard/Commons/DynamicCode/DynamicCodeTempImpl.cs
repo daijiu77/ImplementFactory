@@ -615,6 +615,65 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.four, "}");
         }
 
+        /// <summary>
+        /// 判断是否是 async Task 方法或 Task 方法，及返回方法值类型
+        /// </summary>
+        /// <param name="mi"></param>
+        /// <param name="isAsyncReturn">Task 方法中是否含有 async 标识</param>
+        /// <param name="isTaskReturn">是否是 Task 方法</param>
+        /// <param name="return_type">方法返回值类型</param>
+        public void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
+        {
+            isAsyncReturn = false;
+            isTaskReturn = false;
+            return_type = null;
+            if (0 < mi.CustomAttributes.Count())
+            {
+                /**
+                 * 判断方法是否是 async Task 方法:
+                 * public async Task UpdateInfo(Guid Id, CustomerInfo) { }
+                 * **/
+                #region 判断方法是否是 async Task 方法
+                IEnumerable<CustomAttributeData> attrs = mi.CustomAttributes;
+                Type attrType = null;
+                List<Type> listTypes = new List<Type>();
+                listTypes.Add(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
+                listTypes.Add(typeof(System.Diagnostics.DebuggerStepThroughAttribute));
+                int n = 0;
+                foreach (CustomAttributeData item in attrs)
+                {
+                    attrType = item.AttributeType;
+                    if (listTypes.Contains(attrType)) n++;
+                }
+
+                if (2 == n)
+                {
+                    isAsyncReturn = true;
+                    isTaskReturn = true;
+                }
+                #endregion
+            }
+
+            Type rtnType = mi.ReturnType;
+            isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");
+            if (isTaskReturn)
+            {
+                /**
+                 * 如果是 Task 方法, 判断 Task 是否带有参数:
+                 * public Task<bool> UpdateInfo(Guid Id, CustomerInfo) { }
+                 * return_type = bool类型
+                 * **/
+                Type[] tys = rtnType.GetGenericArguments();
+                if (0 < tys.Length) return_type = tys[0];
+            }
+            else
+            {
+                return_type = mi.ReturnType;
+            }
+
+            if (typeof(void) == return_type) return_type = null;
+        }
+
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
         {
             MethodInformation mInfo = new MethodInformation();
@@ -887,6 +946,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         dataCache = DataCache.GetDataCache(m);
                         if (null != dataCache)
                         {
+                            mInfo.append(ref methodAttr, LeftSpaceLevel.three, "[DataCache({0}, {1})]", dataCache.CacheTime.ToString(),
+                                    dataCache.PersistenceCache.ToString().ToLower());
+
                             mInfo.append(ref code, LeftSpaceLevel.four, "DataCachePool _dataCachePool = (DataCachePool)Activator.CreateInstance(ImplementAdapter.dataCache);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "string cacheKey = \"null\";");
                             pvList = dataCacheImpl.GetParaNameList(m);
@@ -900,7 +962,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                         "Value = {0}, ValueType = typeof({1})});", item.Key, item.ValueType.TypeToString(true));
                                 }
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
-                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");                                
+                                mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");
                             }
                             mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(cacheKey);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "");
@@ -930,7 +992,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "}");
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "dataCacheVal = rtnList;");
                                 }
-                                
+
                                 mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(({1})dataCacheVal);", actionParaName, action_type);
                                 if (m.ReturnType != typeof(void))
                                 {
@@ -966,7 +1028,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "}");
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "dataCacheVal = rtnList;");
                                 }
-                                
+
                                 mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", return_type);
                                 mInfo.append(ref code, LeftSpaceLevel.four, "}");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
