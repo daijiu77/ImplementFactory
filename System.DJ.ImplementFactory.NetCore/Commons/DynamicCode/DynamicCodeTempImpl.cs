@@ -615,6 +615,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.four, "}");
         }
 
+        /// <summary>
+        /// 判断是否是 async Task 方法或 Task 方法，及返回方法值类型
+        /// </summary>
+        /// <param name="mi"></param>
+        /// <param name="isAsyncReturn">Task 方法中是否含有 async 标识</param>
+        /// <param name="isTaskReturn">是否是 Task 方法</param>
+        /// <param name="return_type">方法返回值类型</param>
         public void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
         {
             isAsyncReturn = false;
