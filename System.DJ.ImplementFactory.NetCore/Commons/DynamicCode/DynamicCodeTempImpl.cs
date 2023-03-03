@@ -615,6 +615,58 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.four, "}");
         }
 
+        public void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
+        {
+            isAsyncReturn = false;
+            isTaskReturn = false;
+            return_type = null;
+            if (0 < mi.CustomAttributes.Count())
+            {
+                /**
+                 * 判断方法是否是 async Task 方法:
+                 * public async Task UpdateInfo(Guid Id, CustomerInfo) { }
+                 * **/
+                #region 判断方法是否是 async Task 方法
+                IEnumerable<CustomAttributeData> attrs = mi.CustomAttributes;
+                Type attrType = null;
+                List<Type> listTypes = new List<Type>();
+                listTypes.Add(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
+                listTypes.Add(typeof(System.Diagnostics.DebuggerStepThroughAttribute));
+                int n = 0;
+                foreach (CustomAttributeData item in attrs)
+                {
+                    attrType = item.AttributeType;
+                    if (listTypes.Contains(attrType)) n++;
+                }
+
+                if (2 == n)
+                {
+                    isAsyncReturn = true;
+                    isTaskReturn = true;
+                }
+                #endregion
+            }
+
+            Type rtnType = mi.ReturnType;
+            isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");
+            if (isTaskReturn)
+            {
+                /**
+                 * 如果是 Task 方法, 判断 Task 是否带有参数:
+                 * public Task<bool> UpdateInfo(Guid Id, CustomerInfo) { }
+                 * return_type = bool类型
+                 * **/
+                Type[] tys = rtnType.GetGenericArguments();
+                if (0 < tys.Length) return_type = tys[0];
+            }
+            else
+            {
+                return_type = mi.ReturnType;
+            }
+
+            if (typeof(void) == return_type) return_type = null;
+        }
+
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
         {
             MethodInformation mInfo = new MethodInformation();
