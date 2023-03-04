@@ -30,7 +30,7 @@
     public class DbInfo
     {
         private string _ConnectionString = "数据库连接字符串";
-        public string ConnectionString { get; set; } = "Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;";
+        public string ConnectionString { get; set; } = "Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;Encrypt=True;TrustServerCertificate=True;";
 
         private string _DatabaseType = "数据库类型:sqlserver,oracle,mysql";
         public string DatabaseType { get; set; } = "sqlserver";
@@ -105,5 +105,8 @@
 
         private string _CacheTime_Second = "数据缓存生命周期, 默认为1小时,即: 3600秒";
         public int CacheTime_Second { get; set; } = 3600;
+
+        private string _PersistenceCylceSync_Second = "缓存持久化周期同步间隔，默认10秒";
+        public int PersistenceCylceSync_Second { get; set; } = 10;
     }
 }

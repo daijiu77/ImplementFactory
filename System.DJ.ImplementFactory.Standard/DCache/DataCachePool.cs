@@ -76,6 +76,9 @@ namespace System.DJ.ImplementFactory.DCache
             Task.Run(() =>
             {
                 PersistenceCache persistence = new PersistenceCache();
+                int cycle = ImplementAdapter.dbInfo1.PersistenceCylceSync_Second;
+                if (0 >= cycle) cycle = 10;
+                int nSleep = cycle * 1000;
                 while (true)
                 {
                     if (execState)
@@ -87,7 +90,7 @@ namespace System.DJ.ImplementFactory.DCache
                         execState = false;
                         idList.Clear();
                     }
-                    Thread.Sleep(5000);
+                    Thread.Sleep(nSleep);
                 }
             });
         }
