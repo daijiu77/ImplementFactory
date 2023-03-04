@@ -520,7 +520,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             else
             {
                 code1 = dynamicCodeChange.GetParametersBySqlParameter(sqlVarName, method, dataOptType, ref sql, ref paraListVarName);
-                appendCode(method, code1, ref code);                
+                appendCode(method, code1, ref code);
             }
             code = code.Replace(sqlExpression, sql);
         }
@@ -555,7 +555,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                     if (DJTools.IsBaseType(item.ParaType)) continue;
                     if ((false == item.ParaType.IsClass) || (true == item.ParaType.IsInterface)) continue;
                 }
-                
+
                 ss = s.Replace("para", item.ParaName);
                 rg = new Regex(ss, RegexOptions.IgnoreCase);
 
@@ -847,7 +847,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             if (null != baseType)
             {
                 isGeneric = baseType.IsGenericType;
-                if(isGeneric) types = baseType.GetGenericArguments();
+                if (isGeneric) types = baseType.GetGenericArguments();
             }
 
             if (method.methodInfo.IsGenericMethod)
@@ -856,7 +856,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             }
 
             if (0 == types.Length) return;
-            
+
             if (string.IsNullOrEmpty(sqlVarName))
             {
                 sqlVarName = "generic_sql";
@@ -868,7 +868,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             int n = 0;
             foreach (Type type in types)
             {
-                item = type.TypeToString(true);                
+                item = type.TypeToString(true);
                 method.append(ref code, leftSpaceLevel, "atts = typeof({0}).GetCustomAttributes(true);", item);
                 method.append(ref code, leftSpaceLevel, "tb_name = {0}.GetTableName(atts);", method.AutoCallVarName);
                 method.append(ref code, leftSpaceLevel, "if(string.IsNullOrEmpty(tb_name))");
@@ -880,7 +880,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 else
                 {
                     method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", typeof({1}).Name);", sqlVarName, item);
-                }                
+                }
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "else");
                 method.append(ref code, leftSpaceLevel, "{");
@@ -891,7 +891,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 else
                 {
                     method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{{1}}\", tb_name);", sqlVarName, item);
-                }                
+                }
                 method.append(ref code, leftSpaceLevel, "}");
                 method.append(ref code, leftSpaceLevel, "");
                 n++;
@@ -919,11 +919,20 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 method.append(ref code, leftSpaceLevel, "method.StartSpace = method.getSpace({0});", ((int)leftSpaceLevel).ToString());
                 method.append(ref code, leftSpaceLevel, "method.paraList = {0};", method.ParaListVarName);
                 method.append(ref code, leftSpaceLevel, "method.AutoCall = {0};", method.AutoCallVarName);
+                method.append(ref code, leftSpaceLevel, "method.methodInfo = thisMethodInfo;");
                 method.append(ref code, leftSpaceLevel, "((AutoCall){0}).ReplaceGenericPara(method, \"{1}\", {2}, ref {1});",
                     method.AutoCallVarName, sqlVarName, paraListVarName);
             }
 
             code += "\r\n";
+        }
+
+        public MethodInfo GetCallMethod()
+        {
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = trace.GetFrame(1);
+            MethodInfo method = (MethodInfo)stackFrame.GetMethod();
+            return method;
         }
 
         /// <summary>
@@ -935,11 +944,8 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// <param name="sql"></param>
         public void ReplaceGenericPara(MethodInformation method, string sqlVarName, DbList<DbParameter> dbParameters1, ref string sql)
         {
-            if (0 == method.paraList.Count) return;
-            StackTrace trace = new StackTrace();
-            StackFrame stackFrame = trace.GetFrame(1);
-            method.methodInfo = (MethodInfo)stackFrame.GetMethod();
-            method.AutoCall = method.methodInfo.GetCustomAttribute(typeof(AutoCall));
+            if (0 == method.paraList.Count) return;           
+            method.AutoCall = method.methodInfo.GetCustomAttribute(typeof(AutoCall), true);
 
             AbsDataInterface absDataInterface = (AbsDataInterface)method.AutoCall;
             method.fields = absDataInterface.fields;
@@ -973,7 +979,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                     });
                     break;
                 }
-                
+
                 DbList<DbParameter> dbParameters = DynamicEntity.GetDbParameters(method, dataElements, ref sql);
                 foreach (var item in dbParameters)
                 {

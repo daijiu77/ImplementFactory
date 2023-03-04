@@ -23,7 +23,7 @@ namespace Test.NetCore
 
         public List<UserInfo> userInfos(string name)
         {
-            return userInfo.query<UserInfo>(name, 0);
+            return userInfo.query<UserInfo>(name, 0).Result;
         }
 
         public List<UserInfo> userInfos(UserInfo userInfo1)

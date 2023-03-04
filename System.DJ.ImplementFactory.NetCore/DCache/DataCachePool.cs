@@ -15,7 +15,9 @@ namespace System.DJ.ImplementFactory.DCache
     public class DataCachePool : IDataCache
     {
         private static Dictionary<string, MethodItem> cacheDic = new Dictionary<string, MethodItem>();
+        private static List<DataItem> idList = new List<DataItem>();
         private static int cacheTime = 0;
+        private static bool execState = false;
 
         static DataCachePool()
         {
@@ -34,6 +36,19 @@ namespace System.DJ.ImplementFactory.DCache
                             {
                                 list2.Add(item.Key);
                             }
+
+                            if (false == execState)
+                            {
+                                if (!string.IsNullOrEmpty(item.Value.GetId()))
+                                {
+                                    idList.Add(item.Value);
+                                }
+                            }
+                        }
+
+                        if (false == execState)
+                        {
+                            execState = 0 < idList.Count;
                         }
 
                         foreach (var k in list2)
@@ -57,24 +72,28 @@ namespace System.DJ.ImplementFactory.DCache
                     Thread.Sleep(1000);
                 }
             });
+
+            Task.Run(() =>
+            {
+                PersistenceCache persistence = new PersistenceCache();
+                while (true)
+                {
+                    if (execState)
+                    {
+                        foreach (var item in idList)
+                        {
+                            persistence.UpdateTime(item.GetId(), item.GetStart(), item.GetEnd());
+                        }
+                        execState = false;
+                        idList.Clear();
+                    }
+                    Thread.Sleep(5000);
+                }
+            });
         }
 
-        private string GetMethodPath()
+        private string GetMethodPath(MethodInfo methodBase)
         {
-            StackTrace trace = new StackTrace();
-            StackFrame stackFrame = trace.GetFrame(2);
-            MethodBase methodBase = stackFrame.GetMethod();
-            int n = 2;
-            const int size = 10;
-            Type typeMe = this.GetType();
-            while (n < size)
-            {
-                stackFrame = trace.GetFrame(n);
-                methodBase = stackFrame.GetMethod();
-                if (methodBase.DeclaringType != typeMe) break;
-                n++;
-            }
-
             string namespace1 = methodBase.DeclaringType.Namespace;
             string clsName = methodBase.DeclaringType.Name;
             string methodName = methodBase.Name;
@@ -86,9 +105,9 @@ namespace System.DJ.ImplementFactory.DCache
             return namespace1 + "-" + clsName + "-" + methodName;
         }
 
-        object IDataCache.Get(string key)
+        object IDataCache.Get(MethodInfo method, string key)
         {
-            string methodPath = GetMethodPath();
+            string methodPath = GetMethodPath(method);
             object vObj = GetValueByKey(methodPath, key);
             if (null != vObj) return vObj;
 
@@ -97,19 +116,19 @@ namespace System.DJ.ImplementFactory.DCache
             return cacheDic[methodPath].GetValue(key);
         }
 
-        void IDataCache.Set(string key, object value)
+        void IDataCache.Set(MethodInfo method, string key, object value)
         {
-            ((IDataCache)this).Set(key, value, cacheTime, false);
+            ((IDataCache)this).Set(method, key, value, cacheTime, false);
         }
 
-        void IDataCache.Set(string key, object value, int cacheTime)
+        void IDataCache.Set(MethodInfo method, string key, object value, int cacheTime)
         {
-            ((IDataCache)this).Set(key, value, cacheTime, false);
+            ((IDataCache)this).Set(method, key, value, cacheTime, false);
         }
 
-        void IDataCache.Set(string key, object value, int cacheTime, bool persistenceCache)
+        void IDataCache.Set(MethodInfo method, string key, object value, int cacheTime, bool persistenceCache)
         {
-            string methodPath = GetMethodPath();
+            string methodPath = GetMethodPath(method);
             bool mbool = SetValue(methodPath, key, value, cacheTime, persistenceCache);
             string id = "";
             if (persistenceCache)
@@ -385,11 +404,6 @@ namespace System.DJ.ImplementFactory.DCache
             {
                 start = DateTime.Now;
                 end = start.AddSeconds(cacheTime);
-                if (!string.IsNullOrEmpty(id))
-                {
-                    PersistenceCache persistence = new PersistenceCache();
-                    persistence.UpdateTime(id, start, end);
-                }
                 return value;
             }
 
@@ -415,6 +429,16 @@ namespace System.DJ.ImplementFactory.DCache
             {
                 this.id = id;
                 return this;
+            }
+
+            public DateTime GetStart()
+            {
+                return start;
+            }
+
+            public DateTime GetEnd()
+            {
+                return end;
             }
 
             public string GetId()

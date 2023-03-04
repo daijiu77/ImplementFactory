@@ -5,10 +5,12 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DCache;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Author: 代久 - Allan
@@ -442,13 +444,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.ParaListVarName = \"{0}\";", dynamicEntityMInfoPara.paraListVarName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.AutoCall = {0};", dynamicEntityMInfoPara.autocall_name);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.autoCallParaValue = {0};", dynamicEntityMInfoPara.autoCallParaName);
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "");
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace = new StackTrace();");
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame = trace.GetFrame(0);");
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodInfo = (MethodInfo)stackFrame.GetMethod();");
-            dynamicEntityMInfoPara.uskv.Add(new CKeyValue() { Key = typeof(StackTrace).Namespace });
-            dynamicEntityMInfoPara.uskv.Add(new CKeyValue() { Key = typeof(MethodBase).Namespace });
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "");
+            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodInfo = thisMethodInfo;");    
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.InstanceVariantName = \"{0}\";", dynamicEntityMInfoPara.impl_name);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.InterfaceMethodName = \"{0}\";", dynamicEntityMInfoPara.methodName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.MethodParas = \"{0}\";", dynamicEntityMInfoPara.plist);
@@ -615,63 +611,66 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.four, "}");
         }
 
-        /// <summary>
-        /// 判断是否是 async Task 方法或 Task 方法，及返回方法值类型
-        /// </summary>
-        /// <param name="mi"></param>
-        /// <param name="isAsyncReturn">Task 方法中是否含有 async 标识</param>
-        /// <param name="isTaskReturn">是否是 Task 方法</param>
-        /// <param name="return_type">方法返回值类型</param>
-        public void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
+        private string CreateTaskCode(MethodInformation mInfo, EMethodInfo em, string code, LeftSpaceLevel spaceLevel, string taskStartTag, string taskEndTag)
         {
-            isAsyncReturn = false;
-            isTaskReturn = false;
-            return_type = null;
-            if (0 < mi.CustomAttributes.Count())
-            {
-                /**
-                 * 判断方法是否是 async Task 方法:
-                 * public async Task UpdateInfo(Guid Id, CustomerInfo) { }
-                 * **/
-                #region 判断方法是否是 async Task 方法
-                IEnumerable<CustomAttributeData> attrs = mi.CustomAttributes;
-                Type attrType = null;
-                List<Type> listTypes = new List<Type>();
-                listTypes.Add(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
-                listTypes.Add(typeof(System.Diagnostics.DebuggerStepThroughAttribute));
-                int n = 0;
-                foreach (CustomAttributeData item in attrs)
-                {
-                    attrType = item.AttributeType;
-                    if (listTypes.Contains(attrType)) n++;
-                }
+            string cs = code;
+            if (!em.IsTaskReturn) return cs;
+            string tsk = "";
+            string s1 = "";
 
-                if (2 == n)
-                {
-                    isAsyncReturn = true;
-                    isTaskReturn = true;
-                }
-                #endregion
-            }
-
-            Type rtnType = mi.ReturnType;
-            isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");
-            if (isTaskReturn)
+            if (em.IsAsyncReturn)
             {
-                /**
-                 * 如果是 Task 方法, 判断 Task 是否带有参数:
-                 * public Task<bool> UpdateInfo(Guid Id, CustomerInfo) { }
-                 * return_type = bool类型
-                 * **/
-                Type[] tys = rtnType.GetGenericArguments();
-                if (0 < tys.Length) return_type = tys[0];
+                if (typeof(void) == em.ReturnType)
+                {
+                    tsk = "return Task.Run(() =>";
+                }
+                else
+                {
+                    tsk = "return await Task.Run(() =>";
+                }
             }
             else
             {
-                return_type = mi.ReturnType;
+                tsk = "return Task.Run(() =>";
             }
 
-            if (typeof(void) == return_type) return_type = null;
+            mInfo.append(ref tsk, spaceLevel, "{");
+
+            string space = mInfo.getSpace(1);
+            string s = code;
+            string line = "";
+            int num = s.IndexOf(taskStartTag) + taskStartTag.Length;
+            cs = s.Substring(0, num);
+            s = s.Substring(num);
+            int ncount = 0;
+            while (true && 2000 > ncount)
+            {
+                s1 = s.Substring(0, 1);
+                if (s1.Equals("\r"))
+                {
+                    s = s.Substring(2);
+                }
+                else if (s1.Equals("\n"))
+                {
+                    s = s.Substring(1);
+                }
+                num = s.IndexOf("\r\n");
+                if (-1 == num) num = s.IndexOf("\n");
+                line = s.Substring(0, num);
+                if (-1 != line.IndexOf(taskEndTag))
+                {
+                    cs += "\r\n" + s;
+                    break;
+                }
+                s = s.Substring(num);
+                line = space + line;
+                cs += "\r\n" + line;
+                ncount++;
+            }
+
+            cs = cs.Replace(taskStartTag, tsk);
+            cs = cs.Replace(taskEndTag, "});");
+            return cs;
         }
 
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
@@ -705,7 +704,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string dt = DateTime.Now.ToString("yyyyMMddHHmmss") + "_" + random.Next(10, 99);
 
             string code = "";
-            string References = "#_References_#";
+            const string implInterfacesTag = "[_implInterfacesTag_]";
+            const string privateVarNameTag = "[_PrivateVarientName_]";
+            const string methodAttrTag = "[_Method_Attribute_]";
+            const string taskRunStartTag = "[_Task.Run-Start_]";
+            const string taskRunEndTag = "[_Task.Run-End_]";
+            const string References = "[_References_]";
+
             bool isNotInheritInterface = false, _isDataOpt = false;
             List<Type> typeList = new List<Type>();
 
@@ -759,13 +764,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 if (false == string.IsNullOrEmpty(interfaceN)) interfaceName = interfaceN;
             }
 
-            string implInterfacesTag = "[_implInterfacesTag_]";
             string implInterfaces = interfaceName;
 
             mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}_{1} : {2}", implName, dt, implInterfacesTag);
             mInfo.append(ref code, LeftSpaceLevel.two, "{"); //class start
 
-            string privateVarName = "[_PrivateVarientName_]";
             string impl_name = "";
             string isDisables_Str = "";
             string impl_name1 = implName1 + "_01";
@@ -776,7 +779,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
                 mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get { return {2}; } }", DJTools.GetClassName(implementType, true), InterfaceInstanceType, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
-                DJTools.append(ref code, privateVarName);
+                DJTools.append(ref code, privateVarNameTag);
             }
             else
             {
@@ -798,6 +801,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             Type actionType = null;
             DataCache dataCache = null;
             DataCachePool dataCacheImpl = new DataCachePool();
+            EMethodInfo eMethod = null;
             int msInterval = 0;
 
             IsDataInterface = false;
@@ -839,14 +843,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             Action<Type, MethodInfo[]> actionFunction = (objType, methods) =>
             {
-                foreach (MethodInfo m in methods)
+                foreach (MethodInfo miItem in methods)
                 {
-                    if (null == m) continue;
+                    if (null == miItem) continue;
 
                     if (isNotInheritInterface)
                     {
-                        if (false == m.IsVirtual) continue;
-                        if (false == m.DeclaringType.Equals(implementType)) continue;
+                        if (false == miItem.IsVirtual) continue;
+                        if (false == miItem.DeclaringType.Equals(implementType)) continue;
                     }
 
                     autoCall = null;
@@ -859,11 +863,22 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     methodAttr = "";
                     msInterval = 0;
 
-                    autoCall = getAutoCall(m, ref isDataOpt, ref absData, ref methodAttr, ref isAsync, ref msInterval, ref EnabledBuffer);
+                    eMethod = new EMethodInfo();
+                    eMethod
+                    .SetCustomAttributes(miItem.CustomAttributes)
+                    .SetReturnType(miItem.ReturnType)
+                    .SetName(miItem.Name)
+                    .SetDeclaringType(miItem.DeclaringType)
+                    .SetCustomAttributes(miItem.GetCustomAttributes(true))
+                    .SetParameters(miItem.GetParameters())
+                    .SetIsGenericMethod(miItem.IsGenericMethod)
+                    .SetGenericArguments(miItem.GetGenericArguments());
+
+                    autoCall = getAutoCall(eMethod, ref isDataOpt, ref absData, ref methodAttr, ref isAsync, ref msInterval, ref EnabledBuffer);
                     if (false == _isDataOpt) _isDataOpt = isDataOpt;
 
-                    methodName = m.Name;
-                    paras = m.GetParameters();
+                    methodName = eMethod.Name;
+                    paras = eMethod.GetParameters();
                     paraStr = "";
                     lists = "";
                     plist = "";
@@ -874,13 +889,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     paraList.Clear();
 
-                    return_type = m.ReturnType.TypeToString(true);
+                    return_type = eMethod.ReturnType.TypeToString(true);
 
                     paraStr = "";
                     lists = "";
                     autoCallPara = "";
                     autoCallParaName = "";
-                    plist = getParaListStr(m, mInfo, uskv, paraList, paraListVarName, ref actionType, ref actionParaName, ref methodName, ref paraStr, ref lists,
+                    plist = getParaListStr(eMethod, mInfo, uskv, paraList, paraListVarName, ref actionType, ref actionParaName, ref methodName, ref paraStr, ref lists,
                         ref isDynamicEntity, ref defaultV, ref outParas, ref autoCallPara, ref autoCallParaName);
 
                     if (!string.IsNullOrEmpty(paraStr))
@@ -893,11 +908,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         plist = plist.Substring(1);
                     }
 
-                    returnType = m.ReturnType == typeof(void) ? "void" : return_type;
+                    returnType = eMethod.ReturnType == null ? "void" : return_type;
                     genericity = "";
-                    if (m.IsGenericMethod)
+                    if (eMethod.IsGenericMethod)
                     {
-                        Type[] gts = m.GetGenericArguments();
+                        Type[] gts = eMethod.GetGenericArguments();
                         foreach (Type item in gts)
                         {
                             if (null != item.FullName)
@@ -917,6 +932,35 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                     }
 
+                    if (eMethod.IsTaskReturn)
+                    {
+                        uskv.Add(new CKeyValue() { Key = typeof(Task).Namespace });
+                        if (eMethod.IsAsyncReturn)
+                        {
+                            if (typeof(void) == eMethod.ReturnType)
+                            {
+                                returnType = "<Task>";
+                            }
+                            else
+                            {
+                                returnType = "<{0}>".ExtFormat(returnType);
+                            }
+                            returnType = "async Task{0}".ExtFormat(returnType);
+                        }
+                        else
+                        {
+                            if (typeof(void) == eMethod.ReturnType)
+                            {
+                                returnType = "";
+                            }
+                            else
+                            {
+                                returnType = "<{0}>".ExtFormat(returnType);
+                            }
+                            returnType = "Task{0}".ExtFormat(returnType);
+                        }
+                    }
+
                     mInfo.append(ref code, "");
                     if (isNotInheritInterface)
                     {
@@ -924,10 +968,18 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                     else
                     {
-                        if (isDataOpt) mInfo.append(ref code, LeftSpaceLevel.three, "[Method_Attribute]");
+                        if (isDataOpt) mInfo.append(ref code, LeftSpaceLevel.three, methodAttrTag);
                         mInfo.append(ref code, LeftSpaceLevel.three, "{0} {1}.{2}{3}({4})", returnType, interfaceName, methodName, genericity, paraStr);
                     }
                     mInfo.append(ref code, LeftSpaceLevel.three, "{");//method start
+
+                    mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace1 = new StackTrace();");
+                    mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame1 = trace1.GetFrame(1);");
+                    mInfo.append(ref code, LeftSpaceLevel.four, "MethodBase methodBase1 = stackFrame1.GetMethod();");
+
+                    mInfo.append(ref code, LeftSpaceLevel.four, "MethodInfo thisMethodInfo = {0}.GetCallMethod();", autocall_name);//当Task方法时，需要此变量获取当前方法信息
+
+                    mInfo.append(ref code, LeftSpaceLevel.four, taskRunStartTag);//Task-start
 
                     if (!string.IsNullOrEmpty(GenericArr))
                         mInfo.append(ref code, LeftSpaceLevel.four, GenericArr);
@@ -940,10 +992,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     EList<CKeyValue> pvList = null;
-                    if ((m.ReturnType != typeof(void) || null != actionType))
+                    if ((eMethod.ReturnType != typeof(void) || null != actionType))
                     {
                         #region 数据缓存代码实现 DataCache
-                        dataCache = DataCache.GetDataCache(m);
+                        dataCache = DataCache.GetDataCache(eMethod);
                         if (null != dataCache)
                         {
                             mInfo.append(ref methodAttr, LeftSpaceLevel.three, "[DataCache({0}, {1})]", dataCache.CacheTime.ToString(),
@@ -951,7 +1003,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             mInfo.append(ref code, LeftSpaceLevel.four, "DataCachePool _dataCachePool = (DataCachePool)Activator.CreateInstance(ImplementAdapter.dataCache);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "string cacheKey = \"null\";");
-                            pvList = dataCacheImpl.GetParaNameList(m);
+                            pvList = dataCacheImpl.GetParaNameList(eMethod);
                             if (null != pvList)
                             {
                                 //mInfo.append(ref code, LeftSpaceLevel.four, "");
@@ -964,7 +1016,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");
                             }
-                            mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(cacheKey);");
+                            mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(thisMethodInfo, cacheKey);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "");
                         }
                         #endregion
@@ -994,7 +1046,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 }
 
                                 mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(({1})dataCacheVal);", actionParaName, action_type);
-                                if (m.ReturnType != typeof(void))
+                                if (eMethod.ReturnType != typeof(void))
                                 {
                                     mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", action_type);
                                 }
@@ -1010,16 +1062,16 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", action_type);
                             mInfo.append(ref code, "");
                         }
-                        else if (m.ReturnType != typeof(void))
+                        else if (eMethod.ReturnType != typeof(void))
                         {
                             if (null != dataCache)
                             {
                                 //数据缓存代码实现 DataCache                                
                                 mInfo.append(ref code, LeftSpaceLevel.four, "if (null != dataCacheVal)");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                                if (typeof(IList).IsAssignableFrom(m.ReturnType))
+                                if (typeof(IList).IsAssignableFrom(eMethod.ReturnType))
                                 {
-                                    eleT = m.ReturnType.GetGenericArguments()[0].TypeToString(true);
+                                    eleT = eMethod.ReturnType.GetGenericArguments()[0].TypeToString(true);
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "List<{0}> rtnList = new List<{0}>();", eleT);
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "System.Collections.IList _ilist2 = (System.Collections.IList)dataCacheVal;");
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "foreach(var listItem in _ilist2)");
@@ -1033,8 +1085,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 mInfo.append(ref code, LeftSpaceLevel.four, "}");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
                             }
-                            uskv.Add(new CKeyValue() { Key = m.ReturnType.Namespace });
-                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", return_type, DJTools.getDefaultByType(m.ReturnType));
+                            uskv.Add(new CKeyValue() { Key = eMethod.ReturnType.Namespace });
+                            mInfo.append(ref code, LeftSpaceLevel.four, "{0} result = {1};", return_type, DJTools.getDefaultByType(eMethod.ReturnType));
                             mInfo.append(ref code, LeftSpaceLevel.four, "{0} result1 = result;", return_type);
                             mInfo.append(ref code, "");
                         }
@@ -1054,14 +1106,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     mInfo.append(ref code, "");
                     #endregion
 
-                    #region ExecuteBeforeFilter -- 执行接口方法之前
-                    mInfo.append(ref code, LeftSpaceLevel.four, "StackTrace trace1 = new StackTrace();");
-                    mInfo.append(ref code, LeftSpaceLevel.four, "StackFrame stackFrame1 = trace1.GetFrame(1);");
-                    mInfo.append(ref code, LeftSpaceLevel.four, "MethodBase methodBase1 = stackFrame1.GetMethod();");
+                    #region ExecuteBeforeFilter -- 执行接口方法之前                    
                     mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteBeforeFilter(typeof({1}),{2},\"{3}\",{4}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
                     mInfo.append(ref code, LeftSpaceLevel.four + 1, "|| false == {0}.ExecuteBeforeFilter(typeof({1}),methodBase1,{2},\"{3}\",{4}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
-                    defaultV = m.ReturnType != typeof(void) ? (" " + funcResultStr("result1", m)) : "";
+                    defaultV = eMethod.ReturnType != typeof(void) ? (" " + funcResultStr("result1", eMethod)) : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "}"); //ExecuteBeforeFilter end
                     mInfo.append(ref code, "");
@@ -1078,7 +1127,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     #region 执行接口方法   
                     if (isDynamicEntity)
                     {
-                        mInfo.methodInfo = m;
+                        mInfo.methodInfo = eMethod;
                         DynamicEntityMInfoPara dynamicEntityMInfoPara = new DynamicEntityMInfoPara()
                         {
                             autoCall = autoCall,
@@ -1102,7 +1151,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             autoCallPara = autoCallPara,
                             autoCallParaName = autoCallParaName
                         };
-                        dynamicEntityMInfo(m, dynamicEntityMInfoPara, ref code, ref return_type);
+                        dynamicEntityMInfo(eMethod, dynamicEntityMInfoPara, ref code, ref return_type);
                     }
                     else
                     {
@@ -1129,7 +1178,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             return_type = return_type,
                             genericity = genericity
                         };
-                        normalEntity(m, normalEntityPara, ref code, ref err);
+                        normalEntity(eMethod, normalEntityPara, ref code, ref err);
 
                         if (!string.IsNullOrEmpty(err))
                         {
@@ -1140,25 +1189,25 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     #endregion
 
                     #region ExecuteAfterFilter -- 执行接口方法之后
-                    defaultV = m.ReturnType != typeof(void) ? "result" : "null";
+                    defaultV = eMethod.ReturnType != typeof(void) ? "result" : "null";
                     mInfo.append(ref code, LeftSpaceLevel.four, "if(false == {0}.ExecuteAfterFilter(typeof({1}),{2},\"{3}\",{4},{5}) ", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "|| false == {0}.ExecuteAfterFilter(typeof({1}),methodBase1,{2},\"{3}\",{4},{5}))", autocall_name, interfaceName, impl_name, methodName, paraListVarName, defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "{"); //ExecuteBeforeFilter start
-                    defaultV = m.ReturnType != typeof(void) ? " " + funcResultStr("result1", m) : "";
+                    defaultV = eMethod.ReturnType != typeof(void) ? " " + funcResultStr("result1", eMethod) : "";
                     mInfo.append(ref code, LeftSpaceLevel.five, "return{0};", defaultV);
                     mInfo.append(ref code, LeftSpaceLevel.four, "}"); //ExecuteBeforeFilter end
                     mInfo.append(ref code, "");
                     #endregion
 
-                    if (m.ReturnType != typeof(void))
+                    if (eMethod.ReturnType != typeof(void))
                     {
-                        string resultStr = funcResultStr("result", m);
+                        string resultStr = funcResultStr("result", eMethod);
                         if (null != dataCache)
                         {
                             //数据缓存代码实现 DataCache
                             mInfo.append(ref code, LeftSpaceLevel.four, "if (null != ({0}))", resultStr);
                             mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(cacheKey, {0}, {1}, {2});",
+                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(thisMethodInfo, cacheKey, {0}, {1}, {2});",
                                 resultStr, dataCache.CacheTime.ToString(), dataCache.PersistenceCache.ToString().ToLower());
                             mInfo.append(ref code, LeftSpaceLevel.four, "}");
                         }
@@ -1166,8 +1215,20 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         mInfo.append(ref code, LeftSpaceLevel.four, "return {0};", resultStr);
                     }
 
+                    mInfo.append(ref code, LeftSpaceLevel.four, taskRunEndTag);//Task-end
+
                     mInfo.append(ref code, LeftSpaceLevel.three, "}");//method end
-                    if (isDataOpt) code = code.Replace("[Method_Attribute]", methodAttr);
+                    if (isDataOpt) code = code.Replace(methodAttrTag, methodAttr);
+
+                    if (eMethod.IsTaskReturn)
+                    {
+                        code = CreateTaskCode(mInfo, eMethod, code, LeftSpaceLevel.four, taskRunStartTag, taskRunEndTag);
+                    }
+                    else
+                    {
+                        code = code.Replace(taskRunStartTag, "");
+                        code = code.Replace(taskRunEndTag, "");
+                    }
                 }
             };
 
@@ -1402,7 +1463,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             if (_isDataOpt && (-1 == implInterfaces.IndexOf("IDataInterface"))) implInterfaces += ", IDataInterface";
 
             code = code.Replace(References, referencesCode);
-            code = code.Replace(privateVarName, privateVarNameCode);
+            code = code.Replace(privateVarNameTag, privateVarNameCode);
             code = code.Replace(implInterfacesTag, implInterfaces);
             code = code.Replace(PublicAutoCall, autocall_name);
 

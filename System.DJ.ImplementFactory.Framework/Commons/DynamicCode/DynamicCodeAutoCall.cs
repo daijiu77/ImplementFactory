@@ -816,7 +816,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         method.append(ref code, LeftSpaceLevel.three, "");
                         method.append(ref code, LeftSpaceLevel.three, "if (null != ({0}))", mc.ResultVariantName);
                         method.append(ref code, LeftSpaceLevel.three, "{");
-                        method.append(ref code, LeftSpaceLevel.three + 1, "((IDataCache)_dataCachePool).Set(cacheKey, {0}, {1}, {2});", 
+                        method.append(ref code, LeftSpaceLevel.three + 1, "((IDataCache)_dataCachePool).Set(thisMethodInfo, cacheKey, {0}, {1}, {2});", 
                             mc.ResultVariantName, dataCache.CacheTime.ToString(), dataCache.PersistenceCache.ToString().ToLower());
                         method.append(ref code, LeftSpaceLevel.three, "}");
                     }

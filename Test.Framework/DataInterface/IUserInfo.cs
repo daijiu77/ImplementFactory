@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.Text;
+using System.Threading.Tasks;
 using Test.Framework.Entities;
 
 namespace Test.Framework.DataInterface
@@ -20,7 +21,7 @@ namespace Test.Framework.DataInterface
         /// <returns></returns>
         [AutoSelect("select * from {T} where name like '%{name}%'")]
         [DataCache(true)]
-        List<T> query<T>(string name, int age);
+        Task<List<T>> query<T>(string name, int age);
 
         [AutoSelect("select top 1 * from {T} order by cdatetime desc")]
         T query<T>();

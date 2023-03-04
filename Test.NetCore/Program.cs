@@ -135,7 +135,7 @@ namespace Test.NetCore
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now.AddHours(2)
             };
-            
+
             DbVisitor db = new DbVisitor();
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<Plan>());
             sqlScheme.dbSqlBody.Where(ConditionItem.Me.And("PName", ConditionRelation.Contain, "play"));
@@ -386,16 +386,40 @@ namespace Test.NetCore
                 return un;
             }
 
+            private Task task1()
+            {
+                return Task.Run(() => { });
+            }
+
+            private async Task<Task> task2()
+            {
+                return Task.Run(() =>
+                {
+                    int i = 0;
+                });
+            }
+
+            private async Task<int> task3()
+            {
+                return await Task.Run(() => { return 2; });
+            }
+
+            private Task<int> task4()
+            {
+                return Task.Run(() => { return 2; });
+            }
+
             public void test_user()
             {
                 Console.WriteLine("Please input [ok]:");
                 string msg = Console.ReadLine();
                 if (string.IsNullOrEmpty(msg)) msg = "";
                 if (!msg.ToLower().Equals("ok")) return;
-                List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1);
-                uiList = userInfo3.query<UserInfo>("abc", 1);
-                uiList = userInfo3.query<UserInfo>("abc", 1);
-                uiList = userInfo3.query<UserInfo>("abc", 1);
+
+                List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
 
                 UserInfo userInfo = new UserInfo()
                 {
