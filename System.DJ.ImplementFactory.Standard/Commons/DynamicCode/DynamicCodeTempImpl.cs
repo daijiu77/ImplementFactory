@@ -865,7 +865,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     eMethod = new EMethodInfo();
                     eMethod
-                    .SetCustomAttributes(miItem.CustomAttributes)
+                    .SetCustomAttributeDatas(miItem.CustomAttributes)
                     .SetReturnType(miItem.ReturnType)
                     .SetName(miItem.Name)
                     .SetDeclaringType(miItem.DeclaringType)

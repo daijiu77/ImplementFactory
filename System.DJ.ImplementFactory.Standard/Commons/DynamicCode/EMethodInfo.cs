@@ -35,7 +35,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public bool IsTaskReturn { get { return _isTaskReturn; } }
 
-        public EMethodInfo SetCustomAttributes(IEnumerable<CustomAttributeData> customAttributeDatas)
+        public EMethodInfo SetCustomAttributeDatas(IEnumerable<CustomAttributeData> customAttributeDatas)
         {
             if (null == customAttributeDatas) return this;
             foreach (CustomAttributeData customData in customAttributeDatas)
