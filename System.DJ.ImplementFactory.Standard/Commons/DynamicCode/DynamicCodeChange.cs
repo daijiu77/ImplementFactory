@@ -70,12 +70,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 string unit1 = "";
                 Match match = null;
                 int n = 0;
-                while(rg.IsMatch(sql1) && paraMaxQuantity > n)
+                while (rg.IsMatch(sql1) && paraMaxQuantity > n)
                 {
-                    match = rg.Match(sql1);                    
+                    match = rg.Match(sql1);
                     if (func(match))
                     {
-                        FieldName = match.Groups["FieldName"].Value;                                                
+                        FieldName = match.Groups["FieldName"].Value;
                         action(FieldName, DbTag);
 
                         _dbTag = match.Groups["DbTag"].Value;
@@ -87,7 +87,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             unit = match.Groups[0].Value;
                             unit1 = LeftSign + DbTag + FieldName + EndSign;
                             sql = sql.Replace(unit, unit1);
-                        }                        
+                        }
                     }
                     sql1 = sql1.Replace(match.Groups[0].Value, "");
                     sql1 = EndSign + sql1;
@@ -138,8 +138,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, LeftSpaceLevel.one, "IDbHelper {0} = ImplementAdapter.DbHelper;", dbHelperVarName);
 
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
-            {                
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);                
+            {
+                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
                 string autoCallName = method.AutoCallVarName;
 
                 EList<CKeyValue> sqlParaList1 = new EList<CKeyValue>();
@@ -150,12 +150,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     method.append(ref code, LeftSpaceLevel.one, "{0}.Add(new CKeyValue(){ Key = \"{1}\", Value = \"{2}\", other = \"{3}\" });", sqlParasVarName, field.ToLower(), field, db_tag);
                     sqlParaList1.Add(new CKeyValue() { Key = field.ToLower(), Value = field, other = db_tag });
                 });
-                
+
                 Regex rg1 = new Regex(@"\`[0-9]+\[");
                 CKeyValue kv = null;
                 PList<Para> paraList = method.paraList;
                 string paraClassName = ""; //DJTools.GetParamertClassNameByDbTag(DbTag);
-                
+
                 foreach (Para para in paraList)
                 {
                     if (para.ParaType.BaseType == typeof(System.MulticastDelegate) && rg1.IsMatch(para.ParaType.ToString())) continue;
@@ -164,14 +164,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         //方法参数为基本类型 string, int, bool 等
                         kv = sqlParaList1[para.ParaName.ToLower()];
                         if (null == kv) continue;
-                        if(para.ParaType.IsEnum)
+                        if (para.ParaType.IsEnum)
                         {
                             method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\", DJTools.ConvertTo({3}, typeof(int));", dbParaListVarName, paraClassName, kv.Value.ToString(), para.ParaName);
                         }
                         else
                         {
                             method.append(ref code, LeftSpaceLevel.one, "{0}.Add(\"{2}\", {3});", dbParaListVarName, paraClassName, kv.Value.ToString(), para.ParaName);
-                        }                        
+                        }
                     }
                     else
                     {
@@ -184,7 +184,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             method.append(ref code, LeftSpaceLevel.one, "System.Collections.ICollection collection = (System.Collections.ICollection){0};", para.ParaName);
 
                             method.append(ref code, LeftSpaceLevel.one, "");
-                            
+
                             if (null != para.ParaType.GetInterface("IDictionary"))
                             {
                                 method.append(ref code, leftSpaceLevel, "//键值对情况");
@@ -206,7 +206,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             }
                             else if (null != para.ParaType.GetInterface("IList") || para.ParaType.IsArray)
                             {
-                                leftSpace = method.StartSpace + method.getSpace((int)leftSpaceLevel);                                
+                                leftSpace = method.StartSpace + method.getSpace((int)leftSpaceLevel);
                                 method.append(ref code, leftSpaceLevel, "//List集合情况 或 数组情况");
                                 method.append(ref code, leftSpaceLevel, "foreach (var item in collection)");
                                 method.append(ref code, leftSpaceLevel, "{");
@@ -618,18 +618,22 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             FieldsType fieldsType = method.fieldsType;
             _fields = null == _fields ? new string[] { } : _fields;
 
+            Attribute attr = null;
+            Dictionary<string, string> fDic = new Dictionary<string, string>();
+            foreach (string field in _fields)
+            {
+                if (fDic.ContainsKey(field)) continue;
+                fDic.Add(field.ToLower(), field);
+            }
+
             Action<string, string, string, PropertyInfo> action = (fn1, fn2, fn_lower, pi) =>
             {
-                mbool = true;
-                foreach (string e in _fields)
-                {
-                    if (e.ToLower().Equals(fn_lower))
-                    {
-                        mbool = false;
-                        break;
-                    }
-                }
+                attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
+                if (null != attr) return;
 
+                mbool = true;
+                if (fDic.ContainsKey(fn_lower)) mbool = false;
+                
                 if (FieldsType.Contain == fieldsType && 0 < _fields.Length)
                 {
                     mbool = !mbool;
@@ -650,13 +654,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         insertFields1 += "," + fn2;
                         insertParas1 += "," + dbTag + fn1;
                     }
-                    
-                    if(IgnoreField.IgnoreType.Update != (ignoreType & IgnoreField.IgnoreType.Update))
+
+                    if (IgnoreField.IgnoreType.Update != (ignoreType & IgnoreField.IgnoreType.Update))
                     {
                         updateSets1 += "," + fn2 + "=" + dbTag + fn1;
                     }
 
-                    if(IgnoreField.IgnoreType.Procedure != (ignoreType & IgnoreField.IgnoreType.Procedure))
+                    if (IgnoreField.IgnoreType.Procedure != (ignoreType & IgnoreField.IgnoreType.Procedure))
                     {
                         procParas1 += "," + procParaSign + fn2 + "=" + dbTag + fn1;
                     }
@@ -694,7 +698,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     action(item.name, fn_2, fn, null);
                 }
             }
-            else if(null != dataType.GetInterface("IDictionary"))
+            else if (null != dataType.GetInterface("IDictionary"))
             {
                 //
             }
@@ -778,9 +782,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             if (DataOptType.select == method.sqlExecType || (DataOptType.procedure == dataOptType && DJTools.IsBaseType(method.methodComponent.ResultType)))
             {
                 string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
-                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, procParaSign, dbTag);                
+                method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, procParaSign, dbTag);
                 method.append(ref code, leftSpaceLevel + 1, "{4}.query({0}, {1}, {2}, {3}, dataTable =>", autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
-                method.append(ref code, leftSpaceLevel + 1, "{");                
+                method.append(ref code, leftSpaceLevel + 1, "{");
                 #region ***** action
                 method.append(ref code, leftSpaceLevel + 2, "dataTable = null == dataTable ? new System.Data.DataTable() : dataTable;");
                 method.append(ref code, leftSpaceLevel + 2, "if(0 < dataTable.Rows.Count)");
