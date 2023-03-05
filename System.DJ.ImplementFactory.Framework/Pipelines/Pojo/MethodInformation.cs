@@ -91,7 +91,7 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
             string s = "";
             for (int i = 0; i < tabNum; i++)
             {
-                s += "    ";
+                s += DJTools.UnitSpace;
             }
             return s;
         }

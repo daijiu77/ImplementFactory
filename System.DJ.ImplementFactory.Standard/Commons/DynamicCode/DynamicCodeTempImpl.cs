@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Org.BouncyCastle.Crypto;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
@@ -444,7 +445,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.ParaListVarName = \"{0}\";", dynamicEntityMInfoPara.paraListVarName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.AutoCall = {0};", dynamicEntityMInfoPara.autocall_name);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.autoCallParaValue = {0};", dynamicEntityMInfoPara.autoCallParaName);
-            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodInfo = thisMethodInfo;");    
+            dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodInfo = thisMethodInfo;");
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.InstanceVariantName = \"{0}\";", dynamicEntityMInfoPara.impl_name);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.InterfaceMethodName = \"{0}\";", dynamicEntityMInfoPara.methodName);
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "method_info.methodComponent.MethodParas = \"{0}\";", dynamicEntityMInfoPara.plist);
@@ -611,13 +612,172 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.four, "}");
         }
 
+        class SpaceManage
+        {
+            private SpaceManage Child = null;
+            private SpaceManage Parent = null;
+
+            private int MyNumber = 0;
+            private string MySpace = "";
+
+            public SpaceManage InitLine(ref string line)
+            {
+                string s = line.Trim();
+                string sp = DJTools.UnitSpace;
+                int sLen = sp.Length;
+                SpaceManage sm = this;
+                if (!string.IsNullOrEmpty(s))
+                {
+                    if (s.Equals("{") || s.Substring(s.Length - 1) == "{")
+                    {
+                        if (null == Child)
+                        {
+                            Child = new SpaceManage();
+                            Child.MyNumber = MyNumber + 1;
+                            Child.MySpace = MySpace + sp;
+                            Child.Parent = this;
+                        }
+                        sm = Child;
+                        line = MySpace + line.TrimStart();
+                    }
+                    else if (s.Substring(0, 1).Equals("}"))
+                    {
+                        if (null != Parent)
+                        {
+                            sm = Parent;
+                        }
+                        line = sm.MySpace + line.TrimStart();
+                    }
+                    else
+                    {
+                        if (0 == MyNumber)
+                        {
+                            string s1 = s.Substring(0, 1);
+                            int n = line.IndexOf(s1);
+                            s = line.Substring(0, n);
+                            n = s.Length;
+                            MyNumber = n / sLen;
+                            MySpace = s;
+                        }
+                        s = MySpace + line.TrimStart();
+                        line = s;
+                    }
+                }
+                return sm;
+            }
+        }
+
+        /// <summary>
+        /// 初始化每一行代码,删除多余的空行,整理代码行缩进
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="findTags"></param>
+        /// <param name="funcResult">
+        /// string参数: 行字符串, 
+        /// Dictionary<string, bool>参数: 传入的 findTags 数组元素是否已经找到, 为 true 表示曾经找到
+        /// string参数: 返回行字符串
+        /// </param>
+        public void InitCode(ref string code, string[] findTags, Func<string, Dictionary<string, bool>, string> funcResult)
+        {
+            if (string.IsNullOrEmpty(code)) return;
+            string s = "";
+            string s1 = code;
+            string s2 = "";
+            string rt = "\r\n";
+            string line = "";
+            const int max = 2000;
+            int pos = 0;
+            int num = 0;
+            int spaceCount = 0;
+            int nbool = 0;
+            Dictionary<string, bool> dicKv = new Dictionary<string, bool>();
+            if (null != findTags)
+            {
+                foreach (string tag in findTags)
+                {
+                    if (dicKv.ContainsKey(tag)) continue;
+                    dicKv.Add(tag, false);
+                    nbool++;
+                }
+            }
+
+            SpaceManage sm = new SpaceManage();
+            while (max >= num)
+            {
+                num++;
+                if (s1.Substring(0, 2).Equals("\r\n")) s1 = s1.Substring(2);
+                if (s1.Substring(0, 1).Equals("\n")) s1 = s1.Substring(1);
+                pos = s1.IndexOf(rt);
+                if (-1 == pos) pos = s1.Length;
+                line = s1.Substring(0, pos);
+                s1 = s1.Substring(pos);
+                sm = sm.InitLine(ref line);
+
+                if (0 < nbool)
+                {
+                    foreach (var kv in dicKv)
+                    {
+                        if (kv.Value) continue;
+                        if (-1 != line.IndexOf(kv.Key))
+                        {
+                            dicKv[kv.Key] = true;
+                            nbool--;
+                        }
+                    }
+                }
+
+                if (null != funcResult)
+                {
+                    line = funcResult(line, dicKv);
+                }
+
+                s2 = line.Trim();
+                if (string.IsNullOrEmpty(s2))
+                {
+                    spaceCount++;
+                }
+                else
+                {
+                    spaceCount = 0;
+                }
+
+                if (1 >= spaceCount)
+                {
+                    if (string.IsNullOrEmpty(s))
+                    {
+                        s = line;
+                    }
+                    else
+                    {
+                        s += rt + line;
+                    }
+                }
+                if (string.IsNullOrEmpty(s1)) break;
+            }
+            code = s;
+        }
+
         private string CreateTaskCode(MethodInformation mInfo, EMethodInfo em, string code, LeftSpaceLevel spaceLevel, string taskStartTag, string taskEndTag)
         {
-            string cs = code;
-            if (!em.IsTaskReturn) return cs;
-            string tsk = "";
-            string s1 = "";
+            string scode = code;
+            bool isTask = false;
+            InitCode(ref scode, new string[] { taskStartTag, taskEndTag }, (line, kv) =>
+            {
+                if (kv[taskEndTag])
+                {
+                    isTask = false;
+                }
 
+                if (isTask) line = DJTools.UnitSpace + line;
+
+                if (!kv[taskEndTag])
+                {
+                    isTask = kv[taskStartTag];
+                }
+                return line;
+            });
+
+            string tsk = "";
             if (em.IsAsyncReturn)
             {
                 if (typeof(void) == em.ReturnType)
@@ -636,41 +796,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             mInfo.append(ref tsk, spaceLevel, "{");
 
-            string space = mInfo.getSpace(1);
-            string s = code;
-            string line = "";
-            int num = s.IndexOf(taskStartTag) + taskStartTag.Length;
-            cs = s.Substring(0, num);
-            s = s.Substring(num);
-            int ncount = 0;
-            while (true && 2000 > ncount)
-            {
-                s1 = s.Substring(0, 1);
-                if (s1.Equals("\r"))
-                {
-                    s = s.Substring(2);
-                }
-                else if (s1.Equals("\n"))
-                {
-                    s = s.Substring(1);
-                }
-                num = s.IndexOf("\r\n");
-                if (-1 == num) num = s.IndexOf("\n");
-                line = s.Substring(0, num);
-                if (-1 != line.IndexOf(taskEndTag))
-                {
-                    cs += "\r\n" + s;
-                    break;
-                }
-                s = s.Substring(num);
-                line = space + line;
-                cs += "\r\n" + line;
-                ncount++;
-            }
+            scode = scode.Replace(taskStartTag, tsk);
+            scode = scode.Replace(taskEndTag, "});");
 
-            cs = cs.Replace(taskStartTag, tsk);
-            cs = cs.Replace(taskEndTag, "});");
-            return cs;
+            return scode;
         }
 
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
@@ -863,8 +992,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     methodAttr = "";
                     msInterval = 0;
 
-                    eMethod = new EMethodInfo();
-                    eMethod
+                    eMethod = new EMethodInfo()
                     .SetCustomAttributeDatas(miItem.CustomAttributes)
                     .SetReturnType(miItem.ReturnType)
                     .SetName(miItem.Name)
@@ -978,6 +1106,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     mInfo.append(ref code, LeftSpaceLevel.four, "MethodBase methodBase1 = stackFrame1.GetMethod();");
 
                     mInfo.append(ref code, LeftSpaceLevel.four, "MethodInfo thisMethodInfo = {0}.GetCallMethod();", autocall_name);//当Task方法时，需要此变量获取当前方法信息
+                    mInfo.append(ref code, "");
 
                     mInfo.append(ref code, LeftSpaceLevel.four, taskRunStartTag);//Task-start
 

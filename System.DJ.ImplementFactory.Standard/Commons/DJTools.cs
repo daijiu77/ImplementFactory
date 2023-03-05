@@ -24,6 +24,9 @@ namespace System.DJ.ImplementFactory.Commons
         private static Dictionary<string, Type> dynamicTypes = new Dictionary<string, Type>();
 
         private static object _dynamicTypesLock = new object();
+        
+        public const string UnitSpace = "    ";
+
         public static void AddDynamicType(Type type)
         {
             lock (_dynamicTypesLock)
@@ -49,7 +52,7 @@ namespace System.DJ.ImplementFactory.Commons
             string space = "";
             for (int i = 0; i < level; i++)
             {
-                space += "    ";
+                space += UnitSpace;
             }
 
             if (null == arr) arr = new string[] { };
