@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\SqlAnalysisImpl\AbsSqlAnalysis.cs" />
     <Compile Include="Commons\DynamicCode\EMethodInfo.cs" />
     <Compile Include="DCache\PersistenceCache.cs" />
     <Compile Include="DCache\DataCachePool.cs" />

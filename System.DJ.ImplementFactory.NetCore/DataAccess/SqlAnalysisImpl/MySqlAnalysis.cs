@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
-    public class MySqlAnalysis : ISqlAnalysis
+    public class MySqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
         private string GetRuleSign(ConditionRelation relation)
         {
@@ -102,9 +102,15 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 }
                 else
                 {
-                    Regex rg = new Regex(@"(^[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^[\-\+][0-9]$)|(^[\-\+][1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]*[0-9]$)|(^[1-9][0-9]+\.[0-9]*[0-9]$)|(^[\-\+][0-9]\.[0-9]*[0-9]$)|(^[\-\+][1-9][0-9]+\.[0-9]*[0-9]$)|(^true$)|(^false$)|(^null$)", RegexOptions.IgnoreCase);
                     s = fieldValueOfBaseValue.ToString();
-                    if (!rg.IsMatch(s))
+                    string alias = "";
+                    string field = "";
+                    bool mbool = IsChars(s, ref alias, ref field);
+                    if (!mbool)
+                    {
+                        s = ((ISqlAnalysis)this).GetFieldName(s);
+                    }
+                    else if (!specialRg.IsMatch(s))
                     {
                         if (false == s.Substring(0, 1).Equals("'") && false == s.Substring(s.Length - 1).Equals("'")
                             && false == s.Substring(0, 1).Equals("\"") && false == s.Substring(s.Length - 1).Equals("\""))
@@ -385,7 +391,15 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.GetFieldName(string fieldName)
         {
             ISqlAnalysis sqlAnalysis = this;
-            if ("`" == fieldName.Substring(0, 1) && "`" == fieldName.Substring(fieldName.Length - 1))
+            string alias = "";
+            string field = "";
+            string sfield = fieldName;
+            bool mbool = IsChars(sfield, ref alias, ref field);
+            if (!mbool)
+            {
+                return alias + ".`" + field + "`";
+            }
+            else if ("`" == fieldName.Substring(0, 1) && "`" == fieldName.Substring(fieldName.Length - 1))
             {
                 string s = fieldName.Substring(1);
                 s = s.Substring(0, s.Length - 1);                

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 {
@@ -25,7 +27,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 
         public SqlFromUnit From(object dataModel)
         {
-            if(null == (dataModel as AbsDataModel))
+            if (null == (dataModel as AbsDataModel))
             {
                 throw new Exception(objErr);
             }
@@ -94,6 +96,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             modelType = typeof(T);
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -107,6 +110,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             modelType = dataModel.GetType();
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -115,6 +119,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             modelType = typeof(T);
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -127,6 +132,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             this.modelType = modelType;
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -140,6 +146,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
             }
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -157,6 +164,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
             }
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -169,6 +177,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
             }
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -185,6 +194,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
             }
+            InitConditionItem(modelType, alias, conditions);
             return this;
         }
 
@@ -236,6 +246,25 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
                 this.funcCondition = dm => { return funcCondition(dm); };
             }
             return this;
+        }
+
+        private void InitConditionItem(Type mType, string alias, ConditionItem[] conditions)
+        {
+            if (string.IsNullOrEmpty(alias)) return;
+            if (null == conditions) return;
+            Dictionary<string, string> kvDic = new Dictionary<string, string>();
+            mType.ForeachProperty((pi, pt, fn) =>
+            {
+                kvDic[fn.ToLower()] = fn;
+            });
+            string s = "^(" + alias + @")\.(([a-z0-9_]+)|([\[\`""][a-z0-9_]+)[\]\`""])";
+            Regex rg = new Regex(s, RegexOptions.IgnoreCase);
+            foreach (ConditionItem item in conditions)
+            {
+                if (!kvDic.ContainsKey(item.FieldName.ToLower())) continue;
+                if (rg.IsMatch(item.FieldName)) continue;
+                item.FieldName = alias + "." + item.FieldName;
+            }
         }
 
         public AbsDataModel dataModel { get; set; }
