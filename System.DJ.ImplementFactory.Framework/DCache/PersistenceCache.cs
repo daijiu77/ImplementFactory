@@ -34,6 +34,8 @@ namespace System.DJ.ImplementFactory.DCache
                 sqlScheme.dbSqlBody.Orderby(OrderbyItem.Me.Set("MethodPath", OrderByRule.Asc));
                 IList<DataCacheTable> list = null;
                 DataCachePool cachePool = new DataCachePool();
+                List<Guid> ids = new List<Guid>();
+                
                 for (int i = 0; i < pageCount; i++)
                 {
                     pageIndex = i + 1;
@@ -41,6 +43,11 @@ namespace System.DJ.ImplementFactory.DCache
                     list = sqlScheme.ToList<DataCacheTable>();
                     foreach (DataCacheTable tb in list)
                     {
+                        if (tb.End < DateTime.Now)
+                        {
+                            ids.Add(tb.Id);
+                            continue;
+                        }
                         vObj = ByteArrayToObject(tb.Data, tb.DataType);
                         cachePool.Put(
                             tb.Id.ToString(),
@@ -52,9 +59,16 @@ namespace System.DJ.ImplementFactory.DCache
                             tb.Start,
                             tb.End);
                         Thread.Sleep(10);
-                    }
+                    }                    
                     Thread.Sleep(100);
                 }
+
+                PersistenceCache persistenceCache = new PersistenceCache();
+                foreach (Guid guid in ids)
+                {
+                    persistenceCache.Remove(guid.ToString());
+                }
+                ids.Clear();
             });
         }
 

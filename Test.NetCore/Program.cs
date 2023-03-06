@@ -430,7 +430,7 @@ namespace Test.NetCore
                     userType = UserType.TOP,
                     cdatetime = DateTime.Now
                 };
-                //userInfo3.insert(userInfo);
+                userInfo3.insert(userInfo);
                 List<UserInfo> userInfos = userInfo3.query(new UserInfo()
                 {
                     name = "SZ"

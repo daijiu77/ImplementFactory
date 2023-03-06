@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Google.Protobuf.WellKnownTypes;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -16,12 +17,17 @@ namespace System.DJ.ImplementFactory.DCache
     {
         private static Dictionary<string, MethodItem> cacheDic = new Dictionary<string, MethodItem>();
         private static List<DataItem> idList = new List<DataItem>();
+        private static List<WaitUpdateItem> waitUpdateItems = new List<WaitUpdateItem>();
         private static int cacheTime = 0;
         private static bool execState = false;
 
         static DataCachePool()
         {
             cacheTime = ImplementAdapter.dbInfo1.CacheTime_Second;
+            waitUpdateItems.Add(new WaitUpdateItem());
+            waitUpdateItems.Add(new WaitUpdateItem());
+            waitUpdateItems.Add(new WaitUpdateItem());
+
             Task.Run(() =>
             {
                 List<string> list1 = new List<string>();
@@ -90,9 +96,68 @@ namespace System.DJ.ImplementFactory.DCache
                         execState = false;
                         idList.Clear();
                     }
+                    UpdateToDb();
                     Thread.Sleep(nSleep);
                 }
             });
+        }
+
+        private static void UpdateToDb()
+        {
+            WaitUpdateItem waitUpdate = null;
+            foreach (var item in waitUpdateItems)
+            {
+                if (0 < item.dataItems.Count)
+                {
+                    waitUpdate = item;
+                    item.IsUsed = true;
+                    break;
+                }
+            }
+
+            if (null == waitUpdate) return;
+            
+            PersistenceCache persistence = new PersistenceCache();
+            object val = null;
+            foreach (var item in waitUpdate.dataItems)
+            {
+                val = item.GetValue();
+                Type tp = val.GetType();
+                Type type = null;
+                object vObj = null;
+                if (typeof(IList).IsAssignableFrom(tp))
+                {
+                    Type[] ts = tp.GetGenericArguments();
+                    type = ts[0];
+                    IList list = (IList)val;
+                    vObj = list[0];
+                }
+                else if (!tp.IsBaseType())
+                {
+                    type = tp;
+                    vObj = val;
+                }
+
+                if (null != type)
+                {
+                    type.ForeachProperty((pi, pt, fn) =>
+                    {
+                        if (fn.Equals(OverrideModel.CopyParentModel))
+                        {
+                            tp = vObj.GetPropertyValue<Type>(fn);
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+                Guid guid = persistence.Set(item.GetMethodPath(), item.GetKey(), val, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
+                if (Guid.Empty != guid)
+                {
+                    item.SetId(guid.ToString());
+                }
+            }
+            waitUpdate.dataItems.Clear();
+            waitUpdate.IsUsed = false;
         }
 
         private string GetMethodPath(MethodInfo methodBase)
@@ -111,12 +176,7 @@ namespace System.DJ.ImplementFactory.DCache
         object IDataCache.Get(MethodInfo method, string key)
         {
             string methodPath = GetMethodPath(method);
-            object vObj = GetValueByKey(methodPath, key);
-            if (null != vObj) return vObj;
-
-            PersistenceCache.task.Wait();
-            if (!cacheDic.ContainsKey(methodPath)) return null;
-            return cacheDic[methodPath].GetValue(key);
+            return GetValueByKey(methodPath, key);
         }
 
         void IDataCache.Set(MethodInfo method, string key, object value)
@@ -132,65 +192,7 @@ namespace System.DJ.ImplementFactory.DCache
         void IDataCache.Set(MethodInfo method, string key, object value, int cacheTime, bool persistenceCache)
         {
             string methodPath = GetMethodPath(method);
-            bool mbool = SetValue(methodPath, key, value, cacheTime, persistenceCache);
-            string id = "";
-            if (persistenceCache)
-            {
-                PersistenceCache persistence = new PersistenceCache();
-                Type tp = value.GetType();
-                Type type = null;
-                object vObj = null;
-                if (typeof(IList).IsAssignableFrom(tp))
-                {
-                    Type[] ts = tp.GetGenericArguments();
-                    type = ts[0];
-                    IList list = (IList)value;
-                    vObj = list[0];
-                }
-                else if (!tp.IsBaseType())
-                {
-                    type = tp;
-                    vObj = value;
-                }
-
-                if (null != type)
-                {
-                    type.ForeachProperty((pi, pt, fn) =>
-                    {
-                        if (fn.Equals(OverrideModel.CopyParentModel))
-                        {
-                            tp = vObj.GetPropertyValue<Type>(fn);
-                            return false;
-                        }
-                        return true;
-                    });
-                }
-                Guid guid = persistence.Set(methodPath, key, value, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
-                if (Guid.Empty != guid)
-                {
-                    id = guid.ToString();
-                }
-            }
-            if (mbool) return;
-
-            MethodItem mItem = null;
-            if (cacheDic.ContainsKey(methodPath))
-            {
-                mItem = cacheDic[methodPath];
-                if (null != mItem[key])
-                {
-                    ((IDisposable)mItem[key]).Dispose();
-                    mItem.Remove(key);
-                }
-            }
-            else
-            {
-                mItem = new MethodItem(methodPath, cacheTime);
-                cacheDic.Add(methodPath, mItem);
-            }
-
-            mItem.Set(key, value).SetDataType(value.GetType());
-            mItem[key].SetId(id);
+            SetValue(methodPath, key, value, cacheTime, persistenceCache);
         }
 
         public void Put(string id, string methodPath, string key, object value, string dataType, int cacheTime, DateTime start, DateTime end)
@@ -270,12 +272,40 @@ namespace System.DJ.ImplementFactory.DCache
 
         public virtual object GetValueByKey(string methodPath, string key)
         {
-            return null;
+            PersistenceCache.task.Wait();
+            if (!cacheDic.ContainsKey(methodPath)) return null;
+            return cacheDic[methodPath].GetValue(key);
         }
 
-        public virtual bool SetValue(string methodPath, string key, object value, int cacheCycle_second, bool persistenceCache)
+        public virtual void SetValue(string methodPath, string key, object value, int cacheCycle_second, bool persistenceCache)
         {
-            return false;
+            MethodItem mItem = null;
+            if (cacheDic.ContainsKey(methodPath))
+            {
+                mItem = cacheDic[methodPath];
+                if (null != mItem[key])
+                {
+                    ((IDisposable)mItem[key]).Dispose();
+                    mItem.Remove(key);
+                }
+            }
+            else
+            {
+                mItem = new MethodItem(methodPath, cacheTime);
+                cacheDic.Add(methodPath, mItem);
+            }
+
+            mItem.Set(key, value).SetDataType(value.GetType());
+            mItem[key].SetMethodPath(methodPath);
+            if (persistenceCache)
+            {
+                foreach (var item in waitUpdateItems)
+                {
+                    if (item.IsUsed) continue;
+                    item.dataItems.Add(mItem[key]);
+                    break;
+                }
+            }
         }
 
         private void GetKeyBy(Type paraType, string fn, object dt, ref string s1)
@@ -387,6 +417,7 @@ namespace System.DJ.ImplementFactory.DCache
         private class DataItem : IDisposable
         {
             private string id = "";
+            private string methodPath = "";
             private string key = "";
             private object value = null;
             private int cacheTime = 0;
@@ -401,6 +432,22 @@ namespace System.DJ.ImplementFactory.DCache
                 this.cacheTime = cacheTime;
                 start = DateTime.Now;
                 end = start.AddSeconds(cacheTime);
+            }
+
+            public DataItem SetMethodPath(string methodPath)
+            {
+                this.methodPath = methodPath;
+                return this;
+            }
+
+            public string GetMethodPath()
+            {
+                return methodPath;
+            }
+
+            public string GetKey()
+            {
+                return key;
             }
 
             public object GetValue()
@@ -458,6 +505,14 @@ namespace System.DJ.ImplementFactory.DCache
                 }
                 value = null;
             }
+        }
+
+        private class WaitUpdateItem
+        {
+            private List<DataItem> list = new List<DataItem>();
+            public List<DataItem> dataItems { get { return list; } }
+
+            public bool IsUsed { get; set; }
         }
     }
 }

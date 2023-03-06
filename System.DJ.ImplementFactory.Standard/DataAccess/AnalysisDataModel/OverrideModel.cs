@@ -10,7 +10,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 {
     public class OverrideModel
     {
-        public static string CopyParentModel = "CopyParentModel";
+        public const string CopyParentModel = "CopyParentModel";
 
         private Dictionary<Type, Type> dic = new Dictionary<Type, Type>();
         private enum PropType
