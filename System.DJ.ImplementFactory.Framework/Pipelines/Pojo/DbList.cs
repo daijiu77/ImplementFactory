@@ -36,12 +36,13 @@ namespace System.DJ.ImplementFactory.Pipelines.Pojo
                 throw new Exception("ImplementAdapter.dataServerProvider 不能为空");
             }
             T dbP = this[name];
+            object v = null == value ? DBNull.Value : value;
             if (null != dbP)
             {
-                dbP.Value = value;
+                dbP.Value = v;
                 return;
             }
-            dbP = (T)dataServerProvider.CreateDbParameter(name, value);
+            dbP = (T)dataServerProvider.CreateDbParameter(name, v);
             this.Add(dbP);
         }
 

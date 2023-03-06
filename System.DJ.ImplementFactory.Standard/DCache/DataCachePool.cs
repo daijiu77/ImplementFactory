@@ -91,7 +91,7 @@ namespace System.DJ.ImplementFactory.DCache
                     {
                         foreach (var item in idList)
                         {
-                            persistence.UpdateTime(item.GetId(), item.GetStart(), item.GetEnd());
+                            //persistence.UpdateTime(item.GetId(), item.GetStart(), item.GetEnd());
                         }
                         execState = false;
                         idList.Clear();

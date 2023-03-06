@@ -750,25 +750,114 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// <summary>
         /// 根据数据实体(接口方法参数中包含)和带参数的sql语句中包含的参数集合来创建DbParameter集合
         /// </summary>
+        /// <param name="methodInfo">所属方法(父方法)</param>
         /// <param name="entity">数据实体(接口方法参数)</param>
+        /// <param name="entityParaName">实体对应的参数名称</param>
         /// <param name="dbParas">DbParameter集合</param>
         /// <param name="paraNameList">带参数的sql包含的参数集合</param>
-        public void GetDbParaListByEntity(object entity, DbList<DbParameter> dbParas, EList<CKeyValue> sqlParaNameList)
+        public void GetDbParaListByEntity(MethodInfo methodInfo, object entity, string entityParaName, DbList<DbParameter> dbParas, EList<CKeyValue> sqlParaNameList)
         {
-            if (null == entity) return;
+            Dictionary<string, string> kvDic = new Dictionary<string, string>();
+            if (null != sqlParaNameList)
+            {
+                foreach (var item in sqlParaNameList)
+                {
+                    kvDic.Add(item.Key.ToLower(), item.Value.ToString());
+                }
+            }
+
+            Dictionary<string, DbParameter> pDic = new Dictionary<string, DbParameter>();
+            string fn = "";
+            if (null != dbParas)
+            {
+                foreach (var item in dbParas)
+                {
+                    fn = item.ParameterName.ToLower();
+                    kvDic.Remove(fn);
+                    pDic.Add(fn, item);
+                }
+            }
+
+            Type entityType = null;
+            if (null == entity || DBNull.Value == entity)
+            {
+                Type paraType = null;
+                ParameterInfo[] paramInfos = methodInfo.GetParameters();
+                foreach (var paramInfo in paramInfos)
+                {
+                    if (paramInfo.Name.Equals(entityParaName))
+                    {
+                        paraType = paramInfo.ParameterType;
+                        break;
+                    }
+                }
+
+                if (null == paraType || typeof(object) == paraType)
+                {
+                    foreach (var item in kvDic)
+                    {
+                        dbParas.Add(item.Value, DBNull.Value);
+                    }
+                    return;
+                }
+
+                if (paraType.IsBaseType())
+                {
+                    fn = entityParaName.ToLower();
+                    if (kvDic.ContainsKey(fn))
+                    {
+                        dbParas.Add(kvDic[fn], DBNull.Value);
+                    }
+                    else if (pDic.ContainsKey(fn))
+                    {
+                        pDic[fn].Value = DBNull.Value;
+                    }
+                }
+                else
+                {
+                    entityType = paraType;
+                }
+            }
+            else if (entity.GetType().IsBaseType())
+            {
+                fn = entityParaName.ToLower();
+                if (kvDic.ContainsKey(fn))
+                {
+                    dbParas.Add(kvDic[fn], entity);
+                }
+                else if (pDic.ContainsKey(fn))
+                {
+                    pDic[fn].Value = entity;
+                }
+            }
+            else
+            {
+                entityType = entity.GetType();
+            }
+
+            if (null == entityType) return;
+
             CKeyValue kv = null;
             object vObj = null;
             string paraTypeStr = "";
-            PropertyInfo[] piArr = entity.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            PropertyInfo[] piArr = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
             foreach (PropertyInfo item in piArr)
             {
-                kv = sqlParaNameList[item.Name.ToLower()];
+                fn = item.Name.ToLower();
+                kv = sqlParaNameList[fn];
                 if (null == kv) continue;
                 if (string.IsNullOrEmpty(paraTypeStr))
                 {
                     paraTypeStr = kv.other.ToString();
                 }
 
+                if (!kvDic.ContainsKey(fn))
+                {
+                    if (pDic.ContainsKey(fn))
+                    {
+                        dbParas.Remove(pDic[fn]);
+                    }
+                }
                 //throw new Exception("未引入与[" + paraTypeStr + "]类型相关的程序集");
                 vObj = item.GetValue(entity, null);
 
@@ -944,7 +1033,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         /// <param name="sql"></param>
         public void ReplaceGenericPara(MethodInformation method, string sqlVarName, DbList<DbParameter> dbParameters1, ref string sql)
         {
-            if (0 == method.paraList.Count) return;           
+            if (0 == method.paraList.Count) return;
             method.AutoCall = method.methodInfo.GetCustomAttribute(typeof(AutoCall), true);
 
             AbsDataInterface absDataInterface = (AbsDataInterface)method.AutoCall;

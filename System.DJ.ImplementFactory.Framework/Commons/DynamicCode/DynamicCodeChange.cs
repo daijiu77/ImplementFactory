@@ -145,6 +145,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 EList<CKeyValue> sqlParaList1 = new EList<CKeyValue>();
                 string sqlParasVarName = "sqlParaList";
                 method.append(ref code, LeftSpaceLevel.one, "EList<CKeyValue> {0} = new EList<CKeyValue>();", sqlParasVarName);
+                
                 GetSqlParameter(ref sql, (field, db_tag) =>
                 {
                     method.append(ref code, LeftSpaceLevel.one, "{0}.Add(new CKeyValue(){ Key = \"{1}\", Value = \"{2}\", other = \"{3}\" });", sqlParasVarName, field.ToLower(), field, db_tag);
@@ -214,7 +215,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 method.append(ref code, leftSpaceLevel + 1, "if (null != item.GetType().GetInterface(\"IEnumerable\")) break;");
                                 method.append(ref code, leftSpaceLevel + 1, "//集合元素必须是单体复杂对象(数据实体)");
                                 //object entity, List<DbParameter> dbParas, EList<CKeyValue> paraNameList
-                                method.append(ref code, leftSpaceLevel + 1, "{0}.GetDbParaListByEntity(item,{1},{2});", autoCallName, dbParaListVarName, sqlParasVarName);
+                                method.append(ref code, leftSpaceLevel + 1, "{0}.GetDbParaListByEntity(thisMethodInfo, item, \"{1}\",{2},{3});", autoCallName, para.ParaName, dbParaListVarName, sqlParasVarName);
                                 code += "\r\n" + executeDbHelper;
                                 method.append(ref code, leftSpaceLevel + 1, "");
                                 method.append(ref code, leftSpaceLevel, "}"); //foreach (var item in collection)
@@ -245,11 +246,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                         else
                         {
-                            //单体复杂类型(数据实体)             
-                            //object entity, List<DbParameter> dbParas, EList<CKeyValue> paraNameList
+                            //单体复杂类型(数据实体) 或 基本数据类型的[object]对象
                             method.append(ref code, LeftSpaceLevel.one, "");
                             method.append(ref code, LeftSpaceLevel.one, "//单体复杂类型(数据实体) ");
-                            method.append(ref code, LeftSpaceLevel.one, "{0}.GetDbParaListByEntity({1},{2},{3});", autoCallName, para.ParaName, dbParaListVarName, sqlParasVarName);
+                            method.append(ref code, LeftSpaceLevel.one, "{0}.GetDbParaListByEntity(thisMethodInfo, {1}, \"{1}\",{2},{3});", autoCallName, para.ParaName, dbParaListVarName, sqlParasVarName);
                             method.append(ref code, LeftSpaceLevel.one, "");
                         }
 
