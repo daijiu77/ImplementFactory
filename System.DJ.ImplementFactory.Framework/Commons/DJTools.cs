@@ -449,8 +449,12 @@ namespace System.DJ.ImplementFactory.Commons
             srcObj.ForeachProperty((pi, pt, fn, fv) =>
             {
                 propertyInfo = piDic[fn.ToLower()];
-                if (null == propertyInfo) return;
-                if (propertyInfo.PropertyType != pt) return;
+                if (null == propertyInfo) return true;
+                if (propertyInfo.PropertyType != pt) return true;
+                if (null != func)
+                {
+                    return func(propertyInfo);
+                }
                 try
                 {
                     propertyInfo.SetValue(tObj, fv);
@@ -468,8 +472,14 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     //throw;
                 }
+                return true;
             });
             return tObj;
+        }
+
+        public static T ToObjectFrom<T>(this object srcObj)
+        {
+            return srcObj.ToObjectFrom<T>(null);
         }
 
         /// <summary>
