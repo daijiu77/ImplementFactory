@@ -105,10 +105,10 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                     s = fieldValueOfBaseValue.ToString();
                     string alias = "";
                     string field = "";
-                    bool mbool = IsChars(s, ref alias, ref field);
-                    if (!mbool)
+                    bool mbool = IsAliasField(s, ref alias, ref field);
+                    if (mbool)
                     {
-                        s = ((ISqlAnalysis)this).GetFieldName(s);
+                        s = ((ISqlAnalysis)this).GetFieldName(alias, field);
                     }
                     else if (!specialRg.IsMatch(s))
                     {
@@ -352,25 +352,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetLegalName(string name)
         {
-            string dbn = name;
-            const int size = 60;
-            if (size < name.Length)
-            {
-                string s = "";
-                Regex rg = new Regex(@"[A-Z0-9]+");
-                if (rg.IsMatch(name))
-                {
-                    MatchCollection mc = rg.Matches(name);
-                    foreach (Match item in mc)
-                    {
-                        s += item.Groups[0].Value;
-                    }
-                }
-                int n = size - s.Length - 1;
-                int len = name.Length;
-                dbn = s + "_" + name.Substring(len - n);
-            }
-            return dbn;
+            return LegalName(name);
         }
 
         string ISqlAnalysis.GetTableName(string tableName)
@@ -388,27 +370,39 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return "`" + tableName + "`";
         }
 
-        string ISqlAnalysis.GetFieldName(string fieldName)
+        string ISqlAnalysis.GetFieldName(string alias, string fieldName)
         {
             ISqlAnalysis sqlAnalysis = this;
-            string alias = "";
-            string field = "";
-            string sfield = fieldName;
-            bool mbool = IsChars(sfield, ref alias, ref field);
-            if (!mbool)
+            if (!string.IsNullOrEmpty(alias))
             {
-                return alias + ".`" + field + "`";
+                fieldName = sqlAnalysis.GetLegalName(fieldName);
+                return alias + "." + StandardFieldName(fieldName);
             }
-            else if ("`" == fieldName.Substring(0, 1) && "`" == fieldName.Substring(fieldName.Length - 1))
+            else
             {
-                string s = fieldName.Substring(1);
-                s = s.Substring(0, s.Length - 1);                
-                fieldName = sqlAnalysis.GetLegalName(s);
-                fieldName = "`" + fieldName + "`";
-                return fieldName;
+                string field = "";
+                bool mbool = IsAliasField(fieldName, ref alias, ref field);
+                if (mbool)
+                {
+                    field = sqlAnalysis.GetLegalName(field);
+                    return alias + "." + StandardFieldName(field);
+                }
+                else if ("`" == fieldName.Substring(0, 1) && "`" == fieldName.Substring(fieldName.Length - 1))
+                {
+                    string s = fieldName.Substring(1);
+                    s = s.Substring(0, s.Length - 1);
+                    fieldName = sqlAnalysis.GetLegalName(s);
+                    fieldName = StandardFieldName(fieldName);
+                    return fieldName;
+                }
             }
             fieldName = sqlAnalysis.GetLegalName(fieldName);
-            return "`" + fieldName + "`";
+            return StandardFieldName(fieldName);
+        }
+
+        string ISqlAnalysis.GetFieldName(string fieldName)
+        {
+            return ((ISqlAnalysis)this).GetFieldName(null, fieldName);
         }
 
         string ISqlAnalysis.GetPrimaryKeyValueScheme(string sql, List<string> primaryKeys)
@@ -536,5 +530,11 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return true;
             //throw new NotImplementedException();
         }
+
+        private string StandardFieldName(string fieldName)
+        {
+            return "`" + fieldName + "`";
+        }
+
     }
 }

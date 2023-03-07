@@ -1357,6 +1357,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     {
                         code = code.Replace(taskRunStartTag, "");
                         code = code.Replace(taskRunEndTag, "");
+                        InitCode(ref code, null, (sqlLine, tagDic) => { return sqlLine; });
                     }
                 }
             };
