@@ -846,8 +846,10 @@ namespace System.DJ.ImplementFactory.DataAccess
             orderbyPart = orderbyPart.Trim();
 
             string sql = "";
-            if (0 < pageSize && -1 < pageNumber)
+            if (0 < pageSize)
             {
+                if (1 > pageNumber) throw new Exception("The starting value of the parameter PageNumber is 1, " +
+                    "which must be greater than or equal to 1, that is: 1<=PageNumber.");
                 sql = sqlAnalysis.GetPageChange(selectPart, fromPart, wherePart, groupPart, orderbyPart, pageSize, pageNumber);
             }
             else if (0 < top)
