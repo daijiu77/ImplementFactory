@@ -24,7 +24,7 @@ namespace System.DJ.ImplementFactory.Commons
         private static Dictionary<string, Type> dynamicTypes = new Dictionary<string, Type>();
 
         private static object _dynamicTypesLock = new object();
-        
+
         public const string UnitSpace = "    ";
 
         public static void AddDynamicType(Type type)
@@ -422,6 +422,54 @@ namespace System.DJ.ImplementFactory.Commons
         public static void SetCurrentPropertyFrom<T>(this T targetObj, object srcObj)
         {
             targetObj.SetCurrentPropertyFrom<T>(srcObj, pi => { return true; });
+        }
+
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, bool> func)
+        {
+            T tObj = default(T);
+            if (srcObj.GetType().IsBaseType()) return tObj;
+            Type tp = typeof(T);
+            try
+            {
+                tObj = (T)Activator.CreateInstance(tp);
+            }
+            catch (Exception)
+            {
+                return tObj;
+                //throw;
+            }
+
+            Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
+            tp.ForeachProperty((pi, pt, fn) =>
+            {
+                piDic.Add(fn.ToLower(), pi);
+            });
+
+            PropertyInfo propertyInfo = null;
+            srcObj.ForeachProperty((pi, pt, fn, fv) =>
+            {
+                propertyInfo = piDic[fn.ToLower()];
+                if (null == propertyInfo) return;
+                if (propertyInfo.PropertyType != pt) return;
+                try
+                {
+                    propertyInfo.SetValue(tObj, fv);
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        tObj.SetPropertyValue(propertyInfo.Name, fv);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                    //throw;
+                }
+            });
+            return tObj;
         }
 
         /// <summary>
