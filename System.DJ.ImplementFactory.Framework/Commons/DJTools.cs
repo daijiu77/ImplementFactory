@@ -451,12 +451,12 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 propertyInfo = piDic[fn.ToLower()];
                 if (null == propertyInfo) return true;
-                if (propertyInfo.PropertyType != pt) return true;
                 vObj = fv;
                 if (null != func)
                 {
                     vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
                 }
+
                 try
                 {
                     propertyInfo.SetValue(tObj, vObj);
