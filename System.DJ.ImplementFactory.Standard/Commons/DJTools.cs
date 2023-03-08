@@ -424,7 +424,7 @@ namespace System.DJ.ImplementFactory.Commons
             targetObj.SetCurrentPropertyFrom<T>(srcObj, pi => { return true; });
         }
 
-        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, bool> func)
+        public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
         {
             T tObj = default(T);
             if (srcObj.GetType().IsBaseType()) return tObj;
@@ -446,18 +446,20 @@ namespace System.DJ.ImplementFactory.Commons
             });
 
             PropertyInfo propertyInfo = null;
+            object vObj = null;
             srcObj.ForeachProperty((pi, pt, fn, fv) =>
             {
                 propertyInfo = piDic[fn.ToLower()];
                 if (null == propertyInfo) return true;
                 if (propertyInfo.PropertyType != pt) return true;
+                vObj = fv;
                 if (null != func)
                 {
-                    return func(propertyInfo);
+                    vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
                 }
                 try
                 {
-                    propertyInfo.SetValue(tObj, fv);
+                    propertyInfo.SetValue(tObj, vObj);
                 }
                 catch (Exception)
                 {
