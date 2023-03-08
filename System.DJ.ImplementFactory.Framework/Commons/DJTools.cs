@@ -1439,12 +1439,12 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null == mi) throw ex;
                 try
                 {
-                    mi.Invoke(entity, new object[] { v });
+                    mi.Invoke(entity, new object[] { propertyValue });
                 }
                 catch (Exception)
                 {
 
-                    throw;
+                    //throw;
                 }
                 //throw;
             }
