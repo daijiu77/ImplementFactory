@@ -327,58 +327,103 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, ref newSql);
 
             List<string> sqlList = new List<string>();
-            Action<string, string> action1 = (tbn1, tbn2) =>
+            TableItem tableItem = null;
+            List<TableInfo> list = null;
+            string[] tbs = null;
+            string now_Sql = newSql;
+            int nlen = 0;
+            int size = arr.Length;
+            int num = 0;
+            foreach (var item in arr)
             {
-                string sql1 = "", sql2;
-                string k1 = "";
-                List<TableInfo> list1 = tbDic[tbn1] as List<TableInfo>;
-                List<TableInfo> list2 = null;
-                Regex rg = null;
-                if (!string.IsNullOrEmpty(tbn2))
+                list = tbDic[item] as List<TableInfo>;
+                if (null == list) continue;
+                if (1 == list.Count)
                 {
-                    list2 = tbDic[tbn2] as List<TableInfo>;
+                    now_Sql = now_Sql.Replace(leftStr + item + rightStr, list[0].tbName);
+                    num++;
+                    if (num == size) sqlList.Add(now_Sql);
                 }
-
-                foreach (TableInfo item1 in list1)
+                else if (1 < list.Count)
                 {
-                    k1 = leftStr + tbn1 + rightStr;
-                    sql1 = newSql.Replace(k1, item1.tbName);
-                    if (null != list2)
+                    nlen = list.Count;
+                    tbs = new string[nlen];
+                    for (int i = 0; i < nlen; i++)
                     {
-                        foreach (TableInfo item2 in list2)
-                        {
-                            k1 = leftStr + tbn2 + rightStr;
-                            sql2 = sql1.Replace(k1, item2.tbName);
-                            sqlList.Add(sql2);
-                        }
+                        tbs[i] = list[i].tbName;
+                    }
+
+                    if (null == tableItem)
+                    {
+                        tableItem = new TableItem();
                     }
                     else
                     {
-                        sqlList.Add(sql1);
+                        tableItem.Child = new TableItem();
+                        tableItem.Child.Parent = tableItem;
+                        tableItem = tableItem.Child;
                     }
-                }
-            };
-
-            int nlen = arr.Length;
-            string key1 = "";
-            string key2 = "";
-            for (int i = 0; i < nlen; i++)
-            {
-                key1 = arr[i];
-                if ((i + 1) < nlen)
-                {
-                    for (int ii = i + 1; ii < nlen; ii++)
-                    {
-                        key2 = arr[ii];
-                        action1(key1, key2);
-                    }
-                }
-                else if (0 == i)
-                {
-                    action1(key1, null);
+                    tableItem.key = item;
+                    tableItem.Tables = tbs;
                 }
             }
+
+            if (null != tableItem)
+            {
+                while (null != tableItem.Parent)
+                {
+                    tableItem = tableItem.Parent;
+                }
+
+                ForTableItem(tableItem, leftStr, rightStr, now_Sql, sqlList);
+            }
+
             return sqlList;
+        }
+
+        private void ForTableItem(TableItem tableItem, string leftT, string rightT, string sql, List<string> sqlList)
+        {
+            int nlen = tableItem.Count;
+            string sql1 = "";
+            string key = "";
+            for (int i = 0; i < nlen; i++)
+            {
+                key = tableItem.key;
+                key = leftT + key + rightT;
+                sql1 = sql.Replace(key, tableItem.Tables[i]);
+                if (null != tableItem.Child)
+                {
+                    ForTableItem(tableItem.Child, leftT, rightT, sql1, sqlList);
+                }
+                else
+                {
+                    sqlList.Add(sql1);
+                }
+            }
+        }
+
+        class TableItem
+        {
+            private string[] tbs = null;
+
+            public int Count { get; private set; }
+            public string[] Tables
+            {
+                get { return tbs; }
+                set
+                {
+                    tbs = value;
+                    if (null != tbs)
+                    {
+                        Count = tbs.Length;
+                    }
+                }
+            }
+
+            public string key { get; set; }
+
+            public TableItem Parent { get; set; }
+            public TableItem Child { get; set; }
         }
 
         private void WaitExecResult(Action resultAction)
