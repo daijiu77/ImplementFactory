@@ -19,7 +19,7 @@ namespace Test.NetCore.DataInterface
         /// <param name="data"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        [AutoSelect("select ui.* from {T} ui, WorkInfo wi where ui.Id=wi.UserInfoID and ui.name like '%{name}%' order by ui.age")]
+        [AutoSelect("select * from (select ui.* from {T} ui, WorkInfo wi where ui.Id=wi.UserInfoID and ui.name like '%{name}%' order by ui.age, ui.cdatetime desc,ui.userType) tb")]
         [DataCache(true)]
         Task<List<T>> query<T>(string name, int age);
 

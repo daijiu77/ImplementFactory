@@ -462,7 +462,10 @@ namespace Test.NetCore
                     IsDesc = true
                 });
                 list.Sort();
-                SqlItem[] arr=list.ToArray();
+                foreach (SqlItem item in list)
+                {
+                    Trace.WriteLine(item.TableName);
+                }
                 Console.WriteLine("Please input [ok]:");
                 string msg = Console.ReadLine();
                 if (string.IsNullOrEmpty(msg)) msg = "";

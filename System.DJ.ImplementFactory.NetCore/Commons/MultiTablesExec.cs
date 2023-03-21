@@ -346,7 +346,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
             string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, AliasTbNameDic, ref newSql);
 
-            TList tableOrderBies = new TList();
+            TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
             List<string> sqlList = new List<string>();
             TableItem tableItem = null;
             List<TableInfo> list = null;
@@ -610,6 +610,54 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         private TList getOrderBy(string sql, Dictionary<string, string> AliasTbNameDic)
         {
             TList tableOrderBies = new TList();
+            string tbName = "";
+            if (0 == AliasTbNameDic.Count)
+            {
+                Regex rg1 = new Regex(@"\sfrom\s+[^a-z0-9_\s]?(?<tbName>[a-z0-9_]+)", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(sql))
+                {
+                    tbName = rg1.Match(sql).Groups["tbName"].Value;
+                }
+            }
+            Regex rg = new Regex(@"[^a-z0-9_]order\s+by\s+[a-z0-9_\.]+(\s+((desc)|(asc)))?(\s*\,\s*[a-z0-9_\.]+(\s+((desc)|(asc)))?)*", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(sql))
+            {
+                string s = rg.Match(sql).Groups[0].Value;
+                rg = new Regex(@"[^a-z0-9_]order\s+by\s+", RegexOptions.IgnoreCase);
+                s = s.Replace(rg.Match(s).Groups[0].Value, "");
+                string Fields = "";
+                string OrderName = "";
+                string alias = "";
+                string tbn = "";
+                bool isDesc = false;
+                int n = 0;
+                rg = new Regex(@"(?<Fields>(((?!\sdesc\s)(?!\sasc\s)(?!\s)(?!\,)).)+)(\s+(?<OrderName>(desc)|(asc)))?", RegexOptions.IgnoreCase);
+                MatchCollection mc = rg.Matches(s);
+                foreach (Match m in mc)
+                {
+                    alias = "";
+                    tbn = "";
+                    Fields = m.Groups["Fields"].Value;
+                    OrderName = m.Groups["OrderName"].Value;
+                    if (string.IsNullOrEmpty(OrderName)) OrderName = "asc";
+                    OrderName = OrderName.ToLower();
+                    n = Fields.IndexOf(".");
+                    if (-1 != n)
+                    {
+                        alias = Fields.Substring(0, n).ToLower();
+                        Fields = Fields.Substring(n + 1);
+                    }
+
+                    if (!string.IsNullOrEmpty(alias))
+                    {
+                        AliasTbNameDic.TryGetValue(alias, out tbn);
+                    }
+
+                    if (string.IsNullOrEmpty(tbn)) tbn = tbName;
+                    isDesc = OrderName.Equals("desc");
+                    tableOrderBies.Add(tbn, isDesc);
+                }
+            }
             return tableOrderBies;
         }
 
