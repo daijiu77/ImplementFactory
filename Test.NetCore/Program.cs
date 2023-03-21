@@ -11,6 +11,7 @@ using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -409,8 +410,59 @@ namespace Test.NetCore
                 return Task.Run(() => { return 2; });
             }
 
+            class SqlItem : IComparable<SqlItem>
+            {
+                public string TableName { get; set; }
+                public string Sql { get; set; }
+
+                public override string ToString()
+                {
+                    return this.Sql;
+                }
+
+                public bool IsDesc { get; set; }
+
+                int IComparable<SqlItem>.CompareTo(SqlItem other)
+                {
+                    string[] arr = new string[] { TableName, other.TableName };
+                    string[] arr1 = null;
+                    if (IsDesc)
+                    {
+                        arr1 = arr.OrderByDescending(x => x).ToArray();
+                    }
+                    else
+                    {
+                        arr1 = arr.OrderBy(x => x).ToArray();
+                    }
+
+                    if (arr1[0].Equals(TableName))
+                    {
+                        return -1;
+                    }
+                    else if (arr1[0].Equals(other.TableName))
+                    {
+                        return 1;
+                    }
+                    return 0;
+                    //throw new NotImplementedException();
+                }
+            }
+
             public void test_user()
             {
+                List<SqlItem> list=new List<SqlItem>();
+                list.Add(new SqlItem
+                {
+                    TableName = "UserInfo-20230321-10",
+                    IsDesc = true
+                });
+                list.Add(new SqlItem
+                {
+                    TableName = "UserInfo-20230321-21",
+                    IsDesc = true
+                });
+                list.Sort();
+                SqlItem[] arr=list.ToArray();
                 Console.WriteLine("Please input [ok]:");
                 string msg = Console.ReadLine();
                 if (string.IsNullOrEmpty(msg)) msg = "";

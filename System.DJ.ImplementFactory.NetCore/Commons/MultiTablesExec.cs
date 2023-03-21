@@ -6,6 +6,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -216,7 +217,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         object ISingleInstance.Instance { get; set; }
 
-        private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, ref string new_sql)
+        private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, Dictionary<string, string> AliasTbNameDic, ref string new_sql)
         {
             //dic tableName key:Lower, value:self
             Dictionary<string, string> dic = new Dictionary<string, string>();
@@ -225,10 +226,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string _sql = sql;
             List<Regex> rgList = new List<Regex>();
             int n = 0;
-            const int max = 50;
+            const int max = 10;
             foreach (KeyValuePair<string, object> item in tbDic)
             {
-                s1 += @"|(\s[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
+                s1 += @"|((\s|\,)[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
                 n++;
                 if (max == n)
                 {
@@ -259,6 +260,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     MatchCollection mc1 = _rg.Matches(_sql);
                     MatchCollection mc2 = null;
                     Regex rg3 = new Regex(@"^(?<LeftS>[^a-z0-9_\s])[a-z0-9_]+(?<RightS>[^a-z0-9_\s])$", RegexOptions.IgnoreCase);
+                    Regex rg4 = null;
                     Match m3 = null;
                     string LeftS = "", RightS = "";
                     foreach (Match m1 in mc1)
@@ -282,6 +284,23 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                     RightS = m3.Groups["RightS"].Value;
                                     tb = tb.Substring(1);
                                     tb = tb.Substring(0, tb.Length - 1);
+                                }
+                                if (string.IsNullOrEmpty(LeftS))
+                                {
+                                    if (tb.Substring(0, 1).Equals(","))
+                                    {
+                                        LeftS = tb.Substring(0, 1);
+                                        tb = tb.Substring(1);
+                                    }
+                                }
+                                rg4 = new Regex(@"(\s|\,)" + tb + @"\s+(as\s+)?(?<tbAlias>[a-z0-9_]+)", RegexOptions.IgnoreCase);
+                                if (rg4.IsMatch(s))
+                                {
+                                    string alias = rg4.Match(s).Groups["tbAlias"].Value.ToLower();
+                                    if (!AliasTbNameDic.ContainsKey(alias))
+                                    {
+                                        AliasTbNameDic.Add(alias, tb);
+                                    }
                                 }
                                 tbn = tb.ToLower();
                                 ss = ss.Replace(m2.Groups["TbName"].Value, " " + LeftS + leftStr + tbn + rightStr + RightS + " ");
@@ -324,8 +343,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             //newSql 带有替换标识符的sql语句,例: select * from |#UserInfo#| order by createdate desc;
             string newSql = "";
-            string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, ref newSql);
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, AliasTbNameDic, ref newSql);
 
+            TList tableOrderBies = new TList();
             List<string> sqlList = new List<string>();
             TableItem tableItem = null;
             List<TableInfo> list = null;
@@ -334,8 +355,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             int nlen = 0;
             int size = arr.Length;
             int num = 0;
+            SqlItemList sqlItemList = new SqlItemList();
             foreach (var item in arr)
             {
+                if (null != tableOrderBies[item])
+                {
+                    sqlItemList.Add(item, null);
+                }
                 list = tbDic[item] as List<TableInfo>;
                 if (null == list) continue;
                 if (1 == list.Count)
@@ -343,6 +369,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     now_Sql = now_Sql.Replace(leftStr + item + rightStr, list[0].tbName);
                     num++;
                     if (num == size) sqlList.Add(now_Sql);
+                    if (null != sqlItemList[item]) sqlItemList[item].SqlItems.Add(new SqlItem() { TableName = item, IsDesc = tableOrderBies[item].IsDesc });
                 }
                 else if (1 < list.Count)
                 {
@@ -351,6 +378,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     for (int i = 0; i < nlen; i++)
                     {
                         tbs[i] = list[i].tbName;
+                        if (null != sqlItemList[item]) sqlItemList[item].SqlItems.Add(new SqlItem() { TableName = tbs[i], IsDesc = tableOrderBies[item].IsDesc });
                     }
 
                     if (null == tableItem)
@@ -402,6 +430,140 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             }
         }
 
+        class TableOrderBy
+        {
+            public string TableName { get; set; }
+            public string Alias { get; set; }
+            public bool IsDesc { get; set; }
+        }
+
+        class TList : List<TableOrderBy>
+        {
+            private Dictionary<string, int> dic = new Dictionary<string, int>();
+            public TableOrderBy this[string tableName]
+            {
+                get
+                {
+                    TableOrderBy tableOrderBy = null;
+                    string key = tableName.ToLower();
+                    if (dic.ContainsKey(key))
+                    {
+                        int n = dic[key];
+                        tableOrderBy = this[n];
+                    }
+                    return tableOrderBy;
+                }
+            }
+
+            public void Add(string tableName, bool isDesc)
+            {
+                string key = tableName.ToLower();
+                if (dic.ContainsKey(key)) return;
+                dic.Add(key, this.Count);
+                this.Add(new TableOrderBy()
+                {
+                    TableName = tableName,
+                    IsDesc = isDesc
+                });
+            }
+        }
+
+        class SqlItemList
+        {
+            private Dictionary<string, SqlItemCollection> _dic = new Dictionary<string, SqlItemCollection>();
+            public SqlItemCollection this[string tableName]
+            {
+                get
+                {
+                    SqlItemCollection sqlItemCollection = null;
+                    string key = tableName.ToLower();
+                    _dic.TryGetValue(key, out sqlItemCollection);
+                    return sqlItemCollection;
+                }
+            }
+
+            public void Add(string tableName, string sql)
+            {
+                SqlItemCollection sqlItemCollection = null;
+                string key = tableName.ToLower();
+                if (_dic.ContainsKey(key))
+                {
+                    sqlItemCollection = _dic[key];
+                }
+                else
+                {
+                    sqlItemCollection = new SqlItemCollection()
+                    {
+                        TableName = tableName
+                    };
+                    _dic.Add(key, sqlItemCollection);
+                }
+
+                sqlItemCollection.SqlItems.Add(new SqlItem()
+                {
+                    TableName = tableName,
+                    Sql = sql
+                });
+            }
+
+            public List<SqlItem> GetSqlItem()
+            {
+                List<SqlItem> sqlItems = new List<SqlItem>();
+                foreach (var item in _dic)
+                {
+                    foreach (var item1 in item.Value.SqlItems)
+                    {
+                        sqlItems.Add(item1);
+                    }
+                }
+                return sqlItems;
+            }
+        }
+
+        class SqlItemCollection
+        {
+            private List<SqlItem> sqlList = new List<SqlItem>();
+            public string TableName { get; set; }
+            public List<SqlItem> SqlItems { get { return sqlList; } }
+        }
+
+        class SqlItem : IComparable<SqlItem>
+        {
+            public string TableName { get; set; }
+            public string Sql { get; set; }
+
+            public override string ToString()
+            {
+                return this.Sql;
+            }
+
+            public bool IsDesc { get; set; }
+
+            int IComparable<SqlItem>.CompareTo(SqlItem other)
+            {
+                string[] arr = new string[] { TableName, other.TableName };
+                string[] arr1 = null;
+                if (IsDesc)
+                {
+                    arr1 = arr.OrderByDescending(x => x).ToArray();
+                }
+                else
+                {
+                    arr1 = arr.OrderBy(x => x).ToArray();
+                }
+
+                if (arr1[0].Equals(TableName))
+                {
+                    return -1;
+                }
+                else if (arr1[0].Equals(other.TableName))
+                {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+
         class TableItem
         {
             private string[] tbs = null;
@@ -443,6 +605,12 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             //}
             Task.WaitAll(tasks.ToArray());
             resultAction();
+        }
+
+        private TList getOrderBy(string sql, Dictionary<string, string> AliasTbNameDic)
+        {
+            TList tableOrderBies = new TList();
+            return tableOrderBies;
         }
 
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
