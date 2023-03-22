@@ -8,6 +8,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.IO;
@@ -450,6 +451,16 @@ namespace Test.NetCore
 
             public void test_user()
             {
+                string page_size = "PageSize";
+                string page_number = "PageNumber";
+                page_size = @"\{" + page_size + @"\}";
+                page_number = @"\{" + page_number + @"\}";
+                Regex rg1 = new Regex(@"\sand\s+[a-z0-9_\.]+\s*\=\s*[^a-z0-9_\s]?" + page_size, RegexOptions.IgnoreCase);
+                Regex rg2 = new Regex(@"[a-z0-9_\\.]+\\s*\\=\\s*[^a-z0-9_\\s]?" + page_size + @"\s+and\s", RegexOptions.IgnoreCase);
+
+                string _sql = "select * from (select row_number over(order by id) row_num, * from UserInfo) t where t.row_num<=({PageSize}*{PageNumber}) and t.row_num>({PageSize}*({PageNumber}-1))";
+
+
                 List<SqlItem> list=new List<SqlItem>();
                 list.Add(new SqlItem
                 {

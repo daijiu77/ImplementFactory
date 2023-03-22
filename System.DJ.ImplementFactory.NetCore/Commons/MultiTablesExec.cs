@@ -339,15 +339,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return arr;
         }
 
-        private List<string> getSqlByTables(string sql, string leftStr, string rightStr)
+        private List<SqlItem> getSqlByTables(string sql, string leftStr, string rightStr, Dictionary<string, string> AliasTbNameDic)
         {
             //newSql 带有替换标识符的sql语句,例: select * from |#UserInfo#| order by createdate desc;
             string newSql = "";
-            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
             string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, AliasTbNameDic, ref newSql);
 
-            TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
-            List<string> sqlList = new List<string>();
+            List<SqlItem> sqlList = new List<SqlItem>();
             TableItem tableItem = null;
             List<TableInfo> list = null;
             string[] tbs = null;
@@ -355,21 +353,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             int nlen = 0;
             int size = arr.Length;
             int num = 0;
-            SqlItemList sqlItemList = new SqlItemList();
             foreach (var item in arr)
             {
-                if (null != tableOrderBies[item])
-                {
-                    sqlItemList.Add(item, null);
-                }
                 list = tbDic[item] as List<TableInfo>;
                 if (null == list) continue;
                 if (1 == list.Count)
                 {
                     now_Sql = now_Sql.Replace(leftStr + item + rightStr, list[0].tbName);
                     num++;
-                    if (num == size) sqlList.Add(now_Sql);
-                    if (null != sqlItemList[item]) sqlItemList[item].SqlItems.Add(new SqlItem() { TableName = item, IsDesc = tableOrderBies[item].IsDesc });
+                    if (num == size) sqlList.Add(new SqlItem() { Sql = now_Sql });
                 }
                 else if (1 < list.Count)
                 {
@@ -378,7 +370,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     for (int i = 0; i < nlen; i++)
                     {
                         tbs[i] = list[i].tbName;
-                        if (null != sqlItemList[item]) sqlItemList[item].SqlItems.Add(new SqlItem() { TableName = tbs[i], IsDesc = tableOrderBies[item].IsDesc });
                     }
 
                     if (null == tableItem)
@@ -403,189 +394,53 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     tableItem = tableItem.Parent;
                 }
 
-                ForTableItem(tableItem, leftStr, rightStr, now_Sql, sqlList);
+                ForTableItem(tableItem, leftStr, rightStr, now_Sql, sqlList, null);
             }
 
             return sqlList;
         }
 
-        private void ForTableItem(TableItem tableItem, string leftT, string rightT, string sql, List<string> sqlList)
+        private void ForTableItem(TableItem tableItem, string leftT, string rightT, string sql, List<SqlItem> sqlList, SqlItem sqlItem)
         {
             int nlen = tableItem.Count;
             string sql1 = "";
             string key = "";
+            TableInfo[] arr = null;
+            SqlItem sqlItem1 = null;
+            if (null != sqlItem)
+            {
+                arr = sqlItem.Tables.ToArray();
+            }
+
             for (int i = 0; i < nlen; i++)
             {
                 key = tableItem.key;
                 key = leftT + key + rightT;
                 sql1 = sql.Replace(key, tableItem.Tables[i]);
+
+                sqlItem1 = new SqlItem();
+                if (null != arr)
+                {
+                    foreach (TableInfo item in arr)
+                    {
+                        sqlItem1.Tables.Add(item);
+                    }
+                }
+                sqlItem1.Tables.Add(new TableInfo()
+                {
+                    tbName = tableItem.Tables[i],
+                    srcName = tableItem.key
+                });
                 if (null != tableItem.Child)
                 {
-                    ForTableItem(tableItem.Child, leftT, rightT, sql1, sqlList);
+                    ForTableItem(tableItem.Child, leftT, rightT, sql1, sqlList, sqlItem1);
                 }
                 else
                 {
-                    sqlList.Add(sql1);
+                    sqlItem1.Sql = sql1;
+                    sqlList.Add(sqlItem1);
                 }
             }
-        }
-
-        class TableOrderBy
-        {
-            public string TableName { get; set; }
-            public string Alias { get; set; }
-            public bool IsDesc { get; set; }
-        }
-
-        class TList : List<TableOrderBy>
-        {
-            private Dictionary<string, int> dic = new Dictionary<string, int>();
-            public TableOrderBy this[string tableName]
-            {
-                get
-                {
-                    TableOrderBy tableOrderBy = null;
-                    string key = tableName.ToLower();
-                    if (dic.ContainsKey(key))
-                    {
-                        int n = dic[key];
-                        tableOrderBy = this[n];
-                    }
-                    return tableOrderBy;
-                }
-            }
-
-            public void Add(string tableName, bool isDesc)
-            {
-                string key = tableName.ToLower();
-                if (dic.ContainsKey(key)) return;
-                dic.Add(key, this.Count);
-                this.Add(new TableOrderBy()
-                {
-                    TableName = tableName,
-                    IsDesc = isDesc
-                });
-            }
-        }
-
-        class SqlItemList
-        {
-            private Dictionary<string, SqlItemCollection> _dic = new Dictionary<string, SqlItemCollection>();
-            public SqlItemCollection this[string tableName]
-            {
-                get
-                {
-                    SqlItemCollection sqlItemCollection = null;
-                    string key = tableName.ToLower();
-                    _dic.TryGetValue(key, out sqlItemCollection);
-                    return sqlItemCollection;
-                }
-            }
-
-            public void Add(string tableName, string sql)
-            {
-                SqlItemCollection sqlItemCollection = null;
-                string key = tableName.ToLower();
-                if (_dic.ContainsKey(key))
-                {
-                    sqlItemCollection = _dic[key];
-                }
-                else
-                {
-                    sqlItemCollection = new SqlItemCollection()
-                    {
-                        TableName = tableName
-                    };
-                    _dic.Add(key, sqlItemCollection);
-                }
-
-                sqlItemCollection.SqlItems.Add(new SqlItem()
-                {
-                    TableName = tableName,
-                    Sql = sql
-                });
-            }
-
-            public List<SqlItem> GetSqlItem()
-            {
-                List<SqlItem> sqlItems = new List<SqlItem>();
-                foreach (var item in _dic)
-                {
-                    foreach (var item1 in item.Value.SqlItems)
-                    {
-                        sqlItems.Add(item1);
-                    }
-                }
-                return sqlItems;
-            }
-        }
-
-        class SqlItemCollection
-        {
-            private List<SqlItem> sqlList = new List<SqlItem>();
-            public string TableName { get; set; }
-            public List<SqlItem> SqlItems { get { return sqlList; } }
-        }
-
-        class SqlItem : IComparable<SqlItem>
-        {
-            public string TableName { get; set; }
-            public string Sql { get; set; }
-
-            public override string ToString()
-            {
-                return this.Sql;
-            }
-
-            public bool IsDesc { get; set; }
-
-            int IComparable<SqlItem>.CompareTo(SqlItem other)
-            {
-                string[] arr = new string[] { TableName, other.TableName };
-                string[] arr1 = null;
-                if (IsDesc)
-                {
-                    arr1 = arr.OrderByDescending(x => x).ToArray();
-                }
-                else
-                {
-                    arr1 = arr.OrderBy(x => x).ToArray();
-                }
-
-                if (arr1[0].Equals(TableName))
-                {
-                    return -1;
-                }
-                else if (arr1[0].Equals(other.TableName))
-                {
-                    return 1;
-                }
-                return 0;
-            }
-        }
-
-        class TableItem
-        {
-            private string[] tbs = null;
-
-            public int Count { get; private set; }
-            public string[] Tables
-            {
-                get { return tbs; }
-                set
-                {
-                    tbs = value;
-                    if (null != tbs)
-                    {
-                        Count = tbs.Length;
-                    }
-                }
-            }
-
-            public string key { get; set; }
-
-            public TableItem Parent { get; set; }
-            public TableItem Child { get; set; }
         }
 
         private void WaitExecResult(Action resultAction)
@@ -613,10 +468,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string tbName = "";
             if (0 == AliasTbNameDic.Count)
             {
-                Regex rg1 = new Regex(@"\sfrom\s+[^a-z0-9_\s]?(?<tbName>[a-z0-9_]+)", RegexOptions.IgnoreCase);
+                Regex rg1 = new Regex(@"\sfrom\s+(?<tbName>[^\s\)]+)", RegexOptions.IgnoreCase);
                 if (rg1.IsMatch(sql))
                 {
                     tbName = rg1.Match(sql).Groups["tbName"].Value;
+                    int index = tbName.LastIndexOf(".");
+                    if (-1 != index)
+                    {
+                        tbName = tbName.Substring(index + 1);
+                    }
                 }
             }
             Regex rg = new Regex(@"[^a-z0-9_]order\s+by\s+[a-z0-9_\.]+(\s+((desc)|(asc)))?(\s*\,\s*[a-z0-9_\.]+(\s+((desc)|(asc)))?)*", RegexOptions.IgnoreCase);
@@ -631,6 +491,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 string tbn = "";
                 bool isDesc = false;
                 int n = 0;
+                Regex rg2 = new Regex(@"(date)|(time)", RegexOptions.IgnoreCase);
                 rg = new Regex(@"(?<Fields>(((?!\sdesc\s)(?!\sasc\s)(?!\s)(?!\,)).)+)(\s+(?<OrderName>(desc)|(asc)))?", RegexOptions.IgnoreCase);
                 MatchCollection mc = rg.Matches(s);
                 foreach (Match m in mc)
@@ -661,26 +522,160 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return tableOrderBies;
         }
 
+        private TList getOrderByDataPages(DataPage dataPage, string sql, Dictionary<string, string> AliasTbNameDic)
+        {
+            TList tableOrderBies = new TList();
+            string tbName = "";
+            Regex rg = null;
+            if (0 == AliasTbNameDic.Count)
+            {
+                rg = new Regex(@"\sfrom\s+(?<tbName>[^\s\)]+)", RegexOptions.IgnoreCase);
+                if (rg.IsMatch(sql))
+                {
+                    tbName = rg.Match(sql).Groups["tbName"].Value;
+                    int index = tbName.LastIndexOf(".");
+                    if (-1 != index)
+                    {
+                        tbName = tbName.Substring(index + 1);
+                    }
+                }
+            }
+
+            string tb = "";
+            string Alias = "";
+            rg = new Regex(@"((?<Alias>[a-z0-9_]+)\.)?[a-z0-9_]*((date)|(time))[a-z0-9_]*", RegexOptions.IgnoreCase);
+            foreach (DataPage.PageOrderBy item in dataPage.OrderBy)
+            {
+                if (!rg.IsMatch(item.FieldName)) continue;
+                Alias = rg.Match(item.FieldName).Groups["Alias"].Value;
+                if (!string.IsNullOrEmpty(Alias))
+                {
+                    Alias = Alias.ToLower();
+                    AliasTbNameDic.TryGetValue(Alias, out tb);
+                    if (string.IsNullOrEmpty(tb)) tb = tbName;
+                }
+                tableOrderBies.Add(tb, item.IsDesc);
+            }
+            return tableOrderBies;
+        }
+
+        private void ResetTableIndex(TList tableOrderBies, List<SqlItem> sqlList, DataPage dataPage)
+        {
+            if (null == tableOrderBies) return;
+            if (0 == tableOrderBies.Count) return;
+            TableOrderBy tableOrderBy = tableOrderBies[0];
+            string s = tableOrderBy.TableName.ToLower();
+            string srcTb = "";
+            string tb = "";
+            bool mbool = true;
+            bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
+            Func<string, int> func = (_sql) =>
+            {
+                int recordCount = 0;
+                string page_size = dataPage.PageSizeSignOfSql;
+                string page_number = dataPage.PageNumberSignOfSql;
+                if (isPara)
+                {
+                    page_size = dataPage.PageSizeDbParameterName;
+                    page_number = dataPage.PageNumberDbParameterName;
+                }
+                else
+                {
+                    if (page_size.Substring(0, 1).Equals("{") && page_size.Substring(page_size.Length - 1).Equals("}"))
+                    {
+                        page_size = page_size.Substring(1);
+                        page_size = page_size.Substring(0, page_size.Length - 1);
+                    }
+                    page_size = @"\{" + page_size + @"\}";
+
+                    if (page_number.Substring(0, 1).Equals("{") && page_number.Substring(page_number.Length - 1).Equals("}"))
+                    {
+                        page_number = page_number.Substring(1);
+                        page_number = page_number.Substring(0, page_number.Length - 1);
+                    }
+                    page_number = @"\{" + page_number + @"\}";
+                }
+                Regex rg1 = new Regex(@"\sand\s+[a-z0-9_\.]+\s*\=\s*[^a-z0-9_\s]?" + page_size, RegexOptions.IgnoreCase);
+                Regex rg2 = new Regex(@"[a-z0-9_\\.]+\\s*\\=\\s*[^a-z0-9_\\s]?" + page_size + @"\s+and\s", RegexOptions.IgnoreCase);
+
+                Regex rg3 = new Regex(@"\sand\s+[a-z0-9_\.]+\s*\=\s*[^a-z0-9_\s]?" + page_number, RegexOptions.IgnoreCase);
+                Regex rg4 = new Regex(@"[a-z0-9_\\.]+\\s*\\=\\s*[^a-z0-9_\\s]?" + page_number + @"\s+and\s", RegexOptions.IgnoreCase);
+                string s = rg1.Replace(_sql, "");
+                s = rg1.Replace(s, "");
+                return recordCount;
+            };
+            foreach (SqlItem item in sqlList)
+            {
+                srcTb = "";
+                tb = "";
+                foreach (TableInfo info in item.Tables)
+                {
+                    if (info.srcName.ToLower().Equals(s))
+                    {
+                        srcTb = info.srcName;
+                        tb = info.tbName;
+                        break;
+                    }
+                }
+                if (string.IsNullOrEmpty(tb))
+                {
+                    mbool = false;
+                    break;
+                }
+                item.TableName = tb;
+                item.SrcTableName = srcTb;
+                item.IsDesc = tableOrderBy.IsDesc;
+                item.RecordCount = func(item.Sql);
+            }
+
+            if (mbool)
+            {
+                sqlList.Sort();
+            }
+        }
+
+        private void getPageData(List<SqlItem> sqlList, DataPage dataPage, List<DbParameter> parameters, Action<object> action)
+        {
+            ThreadOpt threadOpt = new ThreadOpt(this);
+            int pageSize = dataPage.PageSize;
+            int pageNumber = dataPage.PageNumber;
+            string sql = "";
+            foreach (SqlItem item in sqlList)
+            {
+                sql = item.ToString();
+                threadOpt.query(autoCall, sql, parameters);
+                threadOpt.task.Wait();
+                if (0 < queryDatas.Rows.Count)
+                {
+                    pageSize -= queryDatas.Rows.Count;
+                    pageNumber = 1;
+                }
+
+                if (0 >= pageSize) break;
+            }
+        }
+
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
             OptDatas = 0;
             threadDic.Clear();
             tasks.Clear();
-            ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
-            List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
             if (0 == sqlList.Count)
             {
-                sqlList.Add(sql);
+                sqlList.Add(new SqlItem() { Sql = sql });
             }
 
             ThreadOpt threadOpt = null;
-            foreach (string item in sqlList)
+            foreach (SqlItem item in sqlList)
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.oparete(autoCall, item, parameters);
+                threadOpt.oparete(autoCall, item.ToString(), parameters);
                 if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
@@ -728,26 +723,36 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
-        void IMultiTablesExec.Query(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        void IMultiTablesExec.Query(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             queryDatas = new DataTable();
             threadDic.Clear();
             tasks.Clear();
-            ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
-            List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
             if (0 == sqlList.Count)
             {
-                sqlList.Add(sql);
+                sqlList.Add(new SqlItem() { Sql = sql });
+            }
+
+            //TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
+            if (null != dataPage)
+            {
+                TList tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
+                ResetTableIndex(tableOrderBies, sqlList, dataPage);
+                getPageData(sqlList, dataPage, parameters, action);
+                return;
             }
 
             ThreadOpt threadOpt = null;
-            foreach (string item in sqlList)
+            foreach (SqlItem item in sqlList)
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.query(autoCall, item, parameters);
+                threadOpt.query(autoCall, item.ToString(), parameters);
                 if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
@@ -899,7 +904,118 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             public string tbName { get; set; }
 
+            public string srcName { get; set; }
+
+            public string alias { get; set; }
+
             public int recordQuantity { get; set; }
         }
+
+        class TableOrderBy
+        {
+            public string TableName { get; set; }
+            public string Alias { get; set; }
+            public bool IsDesc { get; set; }
+        }
+
+        class TList : List<TableOrderBy>
+        {
+            private Dictionary<string, int> dic = new Dictionary<string, int>();
+            public TableOrderBy this[string tableName]
+            {
+                get
+                {
+                    TableOrderBy tableOrderBy = null;
+                    string key = tableName.ToLower();
+                    if (dic.ContainsKey(key))
+                    {
+                        int n = dic[key];
+                        tableOrderBy = this[n];
+                    }
+                    return tableOrderBy;
+                }
+            }
+
+            public void Add(string tableName, bool isDesc)
+            {
+                string key = tableName.ToLower();
+                if (dic.ContainsKey(key)) return;
+                dic.Add(key, this.Count);
+                this.Add(new TableOrderBy()
+                {
+                    TableName = tableName,
+                    IsDesc = isDesc
+                });
+            }
+        }
+
+        class SqlItem : IComparable<SqlItem>
+        {
+            public string SrcTableName { get; set; }
+            public string TableName { get; set; }
+            public string Sql { get; set; }
+
+            public int RecordCount { get; set; }
+
+            private List<TableInfo> list = new List<TableInfo>();
+            public List<TableInfo> Tables { get { return list; } }
+
+            public override string ToString()
+            {
+                return this.Sql;
+            }
+
+            public bool IsDesc { get; set; }
+
+            int IComparable<SqlItem>.CompareTo(SqlItem other)
+            {
+                if (string.IsNullOrEmpty(TableName) || string.IsNullOrEmpty(other.TableName)) return 0;
+                string[] arr = new string[] { TableName, other.TableName };
+                string[] arr1 = null;
+                if (IsDesc)
+                {
+                    arr1 = arr.OrderByDescending(x => x).ToArray();
+                }
+                else
+                {
+                    arr1 = arr.OrderBy(x => x).ToArray();
+                }
+
+                if (arr1[0].Equals(TableName))
+                {
+                    return -1;
+                }
+                else if (arr1[0].Equals(other.TableName))
+                {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+
+        class TableItem
+        {
+            private string[] tbs = null;
+
+            public int Count { get; private set; }
+            public string[] Tables
+            {
+                get { return tbs; }
+                set
+                {
+                    tbs = value;
+                    if (null != tbs)
+                    {
+                        Count = tbs.Length;
+                    }
+                }
+            }
+
+            public string key { get; set; }
+
+            public TableItem Parent { get; set; }
+            public TableItem Child { get; set; }
+        }
+
     }
 }
