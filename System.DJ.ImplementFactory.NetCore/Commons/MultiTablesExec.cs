@@ -29,6 +29,7 @@ namespace System.DJ.ImplementFactory.Commons
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
         private int OptDatas = 0;
+        private int RecordQuantity = 0;
         private List<Task> tasks = new List<Task>();
 
         private string leftStr = "|#";
@@ -601,9 +602,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     {
                         m = rg1.Match(page_size);
                         sign = m.Groups["sign"].Value;
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         page_size = page_size.Substring(0, page_size.Length - sign.Length);
-                        rg1 = new Regex(@"\s" + page_size + @"\s*"+ sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                        rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
                     {
@@ -616,14 +617,14 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     {
                         m = rg1.Match(start_quantity);
                         sign = m.Groups["sign"].Value;
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
                     {
                         rg1 = new Regex(@"\s" + start_quantity + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
-                    }                    
+                    }
                     rgs.Add(rg1);
                     rg2 = new Regex(@"\slimit\s+[0-9]+(\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
                 }
@@ -648,7 +649,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         if (dr.Read())
                         {
                             object v = dr[0];
-                            num = Convert.ToInt32(v);
+                            if (null != v) num = Convert.ToInt32(v);
                         }
                     }
                     catch (Exception)
@@ -683,6 +684,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 item.SrcTableName = srcTb;
                 item.IsDesc = tableOrderBy.IsDesc;
                 item.RecordCount = func(item.Sql);
+                RecordQuantity += item.RecordCount;
             }
 
             if (mbool)
@@ -740,8 +742,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     {
                         m = rg1.Match(page_size);
                         sign = m.Groups["sign"].Value;
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         page_size = page_size.Substring(0, page_size.Length - sign.Length);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
@@ -762,8 +764,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     {
                         m = rg1.Match(start_quantity);
                         sign = m.Groups["sign"].Value;
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
                         rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
@@ -891,6 +893,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             queryDatas = new DataTable();
             threadDic.Clear();
             tasks.Clear();
+            RecordQuantity = 0;
             if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
@@ -942,11 +945,19 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                             {
                                 queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
                             }
+                            if (0 < RecordQuantity)
+                            {
+                                queryDatas.Columns.Add("_RecordCount", typeof(int));
+                            }
                         }
                         DataRow dr = queryDatas.NewRow();
                         foreach (DataColumn dc in dt.Columns)
                         {
                             dr[dc.ColumnName] = item[dc.ColumnName];
+                        }
+                        if (0 < RecordQuantity)
+                        {
+                            dr["_RecordCount"] = RecordQuantity;
                         }
                         queryDatas.Rows.Add(dr);
                     }
@@ -977,6 +988,36 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             if (null == dbAdapter) return;
             ((IDisposable)dbAdapter).Dispose();
+        }
+
+        void IMultiTablesExec.Count(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        {
+            OptDatas = 0;
+            threadDic.Clear();
+            tasks.Clear();
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
+            if (0 == tbDic.Count) return;
+
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
+            if (0 == sqlList.Count)
+            {
+                sqlList.Add(new SqlItem() { Sql = sql });
+            }
+
+            ThreadOpt threadOpt = null;
+            foreach (SqlItem item in sqlList)
+            {
+                threadOpt = new ThreadOpt(this);
+                threadDic.Add(threadOpt.ID, threadOpt);
+                threadOpt.count(autoCall, item.ToString(), parameters);
+                if (null != threadOpt.task) tasks.Add(threadOpt.task);
+            }
+
+            WaitExecResult(() =>
+            {
+                action(OptDatas);
+            });
         }
 
         ~MultiTablesExec()
@@ -1039,6 +1080,40 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         {
                             return cmd.ExecuteNonQuery();
                         });
+                    err = _err;
+                    multiTablesExec.OperateResult(this, num);
+                });
+            }
+
+            public void count(object autoCall, string sql, List<DbParameter> parameters)
+            {
+                task = Task.Run(() =>
+                {
+                    int num = 0;
+                    AutoCall autoCall1 = autoCall as AutoCall;
+                    string _err = "";
+                    dbAdapter.ExecSql(autoCall1, sql, parameters, ref _err, val =>
+                    {
+                        num = Convert.ToInt32(val);
+                    }, cmd =>
+                    {
+                        int n = 0;
+                        try
+                        {
+                            var dr = cmd.ExecuteReader();
+                            if (dr.Read())
+                            {
+                                object v = dr[0];
+                                if (null != v) n = Convert.ToInt32(v);
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                        return n;
+                    });
                     err = _err;
                     multiTablesExec.OperateResult(this, num);
                 });

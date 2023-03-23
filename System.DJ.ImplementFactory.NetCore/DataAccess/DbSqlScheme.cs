@@ -54,6 +54,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                     StartQuantitySignOfSql = StartQuantitySignOfSql
                 };
 
+                if (0 < top)
+                {
+                    dataPage.PageSize = top;
+                    dataPage.StartQuantity = 0;
+                }
+
                 foreach (var item in orderbyItems)
                 {
                     dataPage.OrderBy.Add(new DataPage.PageOrderBy()

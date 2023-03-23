@@ -860,6 +860,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             else if (0 < top)
             {
                 sql = sqlAnalysis.GetTop(selectPart, fromPart, wherePart, groupPart, orderbyPart, top);
+                PageSizeSignOfSql = sqlAnalysis.PageSizeSignOfSql;
+                StartQuantitySignOfSql = sqlAnalysis.StartQuantitySignOfSql;
             }
             else
             {

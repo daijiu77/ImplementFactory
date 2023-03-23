@@ -68,10 +68,18 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 string sign = rg.Match(sql).Groups[0].Value.Trim().ToLower();
                 if (isQuery) sign = "select";
+                if (sign.Equals("select"))
+                {
+                    rg = new Regex(@"^select\s+count\([a-z0-9_\.]+\)", RegexOptions.IgnoreCase);
+                    if (rg.IsMatch(sql)) sign = "count";
+                }
                 switch (sign)
                 {
                     case "select":
                         multiTablesExec.Query(autoCall, sql, dataPage, parameters, ref err, action, func);
+                        break;
+                    case "count":
+                        multiTablesExec.Count(autoCall, sql, parameters, ref err, action, func);
                         break;
                     case "insert":
                         multiTablesExec.Insert(autoCall, sql, parameters, ref err, action, func);

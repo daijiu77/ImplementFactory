@@ -451,15 +451,17 @@ namespace Test.NetCore
 
             public void test_user()
             {
-                string page_size = "PageSize";
-                string page_number = "PageNumber";
-                page_size = @"\{" + page_size + @"\}";
-                page_number = @"\{" + page_number + @"\}";
-                Regex rg1 = new Regex(@"\sand\s+[a-z0-9_\.]+\s*\=\s*[^a-z0-9_\s]?" + page_size, RegexOptions.IgnoreCase);
-                Regex rg2 = new Regex(@"[a-z0-9_\\.]+\\s*\\=\\s*[^a-z0-9_\\s]?" + page_size + @"\s+and\s", RegexOptions.IgnoreCase);
-
-                string _sql = "select * from (select row_number over(order by id) row_num, * from UserInfo) t where t.row_num<=({PageSize}*{PageNumber}) and t.row_num>({PageSize}*({PageNumber}-1))";
-
+                string page_size = "PageSize<=";
+                string page_number = "PageNumber>";
+                string sign = "<=";
+                page_size = page_size.Substring(0, page_size.Length - sign.Length);
+                sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                Regex rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                string sql = "select * from abs where PageSize<=32 and PageNumber>10";
+                if (rg1.IsMatch(sql))
+                {
+                    sql = rg1.Replace(sql, " 1=1");
+                }
 
                 List<SqlItem> list=new List<SqlItem>();
                 list.Add(new SqlItem
