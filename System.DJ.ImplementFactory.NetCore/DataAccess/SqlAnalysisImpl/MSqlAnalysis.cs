@@ -10,6 +10,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public class MSqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
+        string ISqlAnalysis.PageSizeSignOfSql { get; set; }
+        string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
+
         private string GetRuleSign(ConditionRelation relation)
         {
             string sign = "";
@@ -243,6 +246,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             Random rnd = new Random();
             string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
             string sql = "select {0} from (select ROW_NUMBER() OVER({1}) rowNumber,{0} from {2}{3}{4}) {5} where {5}.rowNumber>{6} and {5}.rowNumber<={7}";
+            ISqlAnalysis sqlAnalysis = this;
+            sqlAnalysis.PageSizeSignOfSql = "{0}.rowNumber<=".ExtFormat(tb);
+            sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNumber>".ExtFormat(tb);
             sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
             return sql;
             //throw new NotImplementedException();

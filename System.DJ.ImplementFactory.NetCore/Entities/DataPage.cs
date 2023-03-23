@@ -9,12 +9,12 @@ namespace System.DJ.ImplementFactory.Entities
     public class DataPage
     {
         public int PageSize { get; set; }
-        public int PageNumber {  get; set; }
+        public int StartQuantity {  get; set; }
         public string PageSizeSignOfSql { get; set; }
-        public string PageNumberSignOfSql { get; set; }
+        public string StartQuantitySignOfSql { get; set; }
 
         public string PageSizeDbParameterName { get; set; }
-        public string PageNumberDbParameterName { get; set; }
+        public string StartQuantityDbParameterName { get; set; }
         
         private List<PageOrderBy> _orderby = new List<PageOrderBy>();
         public List<PageOrderBy> OrderBy { get {  return _orderby; } }

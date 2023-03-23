@@ -10,6 +10,8 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
 {
     public interface ISqlAnalysis
     {
+        string PageSizeSignOfSql { get; set; }
+        string StartQuantitySignOfSql { get; set; }
         string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue);
         string GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection);
         string GetConditionOfDbSqlBody(string fieldName, ConditionRelation relation, string fieldValueOfSql);

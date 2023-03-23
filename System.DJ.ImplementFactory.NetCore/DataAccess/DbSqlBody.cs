@@ -45,7 +45,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        private List<OrderbyItem> orderbyItems = new List<OrderbyItem>();
+        protected List<OrderbyItem> orderbyItems = new List<OrderbyItem>();
         public DbSqlBody Orderby(params OrderbyItem[] orderbyItems)
         {
             if (null != orderbyItems)
@@ -809,6 +809,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             return sql;
         }
 
+        protected string PageSizeSignOfSql { get; set; }
+        protected string StartQuantitySignOfSql { get; set; }
+
         private string GetTop(int start, int top)
         {
             string wherePart = "";
@@ -851,6 +854,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (1 > pageNumber) throw new Exception("The starting value of the parameter PageNumber is 1, " +
                     "which must be greater than or equal to 1, that is: 1<=PageNumber.");
                 sql = sqlAnalysis.GetPageChange(selectPart, fromPart, wherePart, groupPart, orderbyPart, pageSize, pageNumber);
+                PageSizeSignOfSql = sqlAnalysis.PageSizeSignOfSql;
+                StartQuantitySignOfSql = sqlAnalysis.StartQuantitySignOfSql;
             }
             else if (0 < top)
             {

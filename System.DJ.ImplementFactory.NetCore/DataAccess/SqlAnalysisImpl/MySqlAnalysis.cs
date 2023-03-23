@@ -11,6 +11,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public class MySqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
+        string ISqlAnalysis.PageSizeSignOfSql { get; set; }
+        string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
+
         private string GetRuleSign(ConditionRelation relation)
         {
             string sign = "";

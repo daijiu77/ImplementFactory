@@ -43,7 +43,27 @@ namespace System.DJ.ImplementFactory.DataAccess
             string sql = GetSql();
             DataTable dt = null;
             IDbHelper dbHelper = DbHelper;
-            dbHelper.query(autoCall, sql, false, data =>
+            DataPage dataPage = null;
+            if (0 < pageSize)
+            {
+                dataPage = new DataPage()
+                {
+                    PageSize = pageSize,
+                    StartQuantity = (pageNumber - 1) * pageSize,
+                    PageSizeSignOfSql = PageSizeSignOfSql,
+                    StartQuantitySignOfSql = StartQuantitySignOfSql
+                };
+
+                foreach (var item in orderbyItems)
+                {
+                    dataPage.OrderBy.Add(new DataPage.PageOrderBy()
+                    {
+                        FieldName = item.FieldName,
+                        IsDesc = OrderByRule.Desc == item.Rule
+                    });
+                }                
+            }
+            dbHelper.query(autoCall, sql, dataPage, false, data =>
             {
                 dt = data;
             }, ref err);

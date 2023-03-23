@@ -11,6 +11,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public class OracleSqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
+        string ISqlAnalysis.PageSizeSignOfSql { get; set; }
+        string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
+
         private string GetRuleSign(ConditionRelation relation)
         {
             string sign = "";
@@ -244,6 +247,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             Random rnd = new Random();
             string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
             string sql = "select {0} from (select {0} from {2}{3}{4}) {5} where {5}.ROWNUM>{6} and {5}.ROWNUM<={7}";
+            ISqlAnalysis sqlAnalysis = this;
+            sqlAnalysis.PageSizeSignOfSql = "{0}.ROWNUM<=".ExtFormat(tb);
+            sqlAnalysis.StartQuantitySignOfSql = "{0}.ROWNUM>".ExtFormat(tb);
             sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
             return sql;
             //throw new NotImplementedException();
