@@ -955,9 +955,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         {
                             dr[dc.ColumnName] = item[dc.ColumnName];
                         }
+
                         if (0 < RecordQuantity)
                         {
-                            dr["_RecordCount"] = RecordQuantity;
+                            if (0 == queryDatas.Rows.Count) dr["_RecordCount"] = RecordQuantity;
                         }
                         queryDatas.Rows.Add(dr);
                     }
