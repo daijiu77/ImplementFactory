@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
-using System.Text;
 using System.Threading.Tasks;
 using Test.NetCore.Entities;
 
@@ -19,7 +18,7 @@ namespace Test.NetCore.DataInterface
         /// <param name="data"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        [AutoSelect("select * from (select ui.* from {T} ui, WorkInfo wi where ui.Id=wi.UserInfoID and ui.name like '%{name}%' order by ui.age, ui.cdatetime desc,ui.userType) tb")]
+        [AutoSelect("select * from (select ui.* from {T} ui where ui.name like '%{name}%') tb order by ui.age, ui.cdatetime desc,ui.userType")]
         [DataCache(true)]
         Task<List<T>> query<T>(string name, int age);
 

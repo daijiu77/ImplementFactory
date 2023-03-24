@@ -35,6 +35,8 @@ namespace System.DJ.ImplementFactory.Commons
         private string leftStr = "|#";
         private string rightStr = "#|";
 
+        public const string RecordQuantityFN = "_RecordQuantity";
+
         public MultiTablesExec() { }
 
         public MultiTablesExec(IDbHelper dbHelper)
@@ -531,7 +533,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             Regex rg = null;
             if (0 == AliasTbNameDic.Count)
             {
-                rg = new Regex(@"\sfrom\s+(?<tbName>[^\s\)]+)", RegexOptions.IgnoreCase);
+                rg = new Regex(@"\sfrom\s+(?<tbName>[^\s\(\)]+)", RegexOptions.IgnoreCase);
                 if (rg.IsMatch(sql))
                 {
                     tbName = rg.Match(sql).Groups["tbName"].Value;
@@ -539,6 +541,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     if (-1 != index)
                     {
                         tbName = tbName.Substring(index + 1);
+                    }
+                    rg = new Regex(@"^[^a-z0-9\.\s](?<fName>[a-z0-9_]+)[^a-z0-9\.\s]$", RegexOptions.IgnoreCase);
+                    if (rg.IsMatch(tbName))
+                    {
+                        tbName = rg.Match(tbName).Groups["fName"].Value;
                     }
                 }
             }
@@ -554,113 +561,121 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 {
                     Alias = Alias.ToLower();
                     AliasTbNameDic.TryGetValue(Alias, out tb);
-                    if (string.IsNullOrEmpty(tb)) tb = tbName;
                 }
+                if (string.IsNullOrEmpty(tb)) tb = tbName;
                 tableOrderBies.Add(tb, item.IsDesc);
             }
             return tableOrderBies;
+        }
+
+        private int getRecordQuantity(string _sql, DataPage dataPage, List<DbParameter> parameters)
+        {
+            int recordCount = 0;
+            string page_size = dataPage.PageSizeSignOfSql;
+            string start_quantity = dataPage.StartQuantitySignOfSql;
+            List<Regex> rgs = new List<Regex>();
+
+            bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
+            Regex rg1 = null;
+            Regex rg2 = null;
+            if (isPara)
+            {
+                page_size = dataPage.PageSizeDbParameterName;
+                start_quantity = dataPage.StartQuantityDbParameterName;
+                rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
+                rgs.Add(rg1);
+                rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + start_quantity, RegexOptions.IgnoreCase);
+                rgs.Add(rg1);
+                rg2 = new Regex(@"\slimit\s+[\@\?\:]?" + start_quantity + @"\s*\,\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                page_size = dataPage.PageSizeSignOfSql.Trim();
+                start_quantity = dataPage.StartQuantitySignOfSql.Trim();
+                string sign = "";
+                Match m = null;
+                rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(page_size))
+                {
+                    m = rg1.Match(page_size);
+                    sign = m.Groups["sign"].Value;
+                    page_size = page_size.Substring(0, page_size.Length - sign.Length);
+                    sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                    rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                else
+                {
+                    rg1 = new Regex(@"\s" + page_size + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                rgs.Add(rg1);
+
+                rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(start_quantity))
+                {
+                    m = rg1.Match(start_quantity);
+                    sign = m.Groups["sign"].Value;
+                    start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
+                    sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                    rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                else
+                {
+                    rg1 = new Regex(@"\s" + start_quantity + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                rgs.Add(rg1);
+                rg2 = new Regex(@"\slimit\s+[0-9]+(\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
+            }
+
+            string s = _sql;
+            foreach (Regex rg in rgs)
+            {
+                s = rg.Replace(s, " 1=1");
+            }
+            s = rg2.Replace(s, "");
+
+            rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
+            if (rg1.IsMatch(s))
+            {
+                s = rg1.Replace(s, "");
+            }
+
+            string s1 = "select count(1) ncount from ({0}) t".ExtFormat(s);
+            string err = "";
+            initBasicExecForSQL(dbAdapter, dbHelper);
+            dbAdapter.ExecSql(autoCall, s1, parameters, ref err, resultObj =>
+            {
+                recordCount = (int)resultObj;
+            }, cmd =>
+            {
+                int num = 0;
+                try
+                {
+                    var dr = cmd.ExecuteReader();
+                    if (dr.Read())
+                    {
+                        object v = dr[0];
+                        if (null != v) num = Convert.ToInt32(v);
+                    }
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+                return num;
+            });
+            return recordCount;
         }
 
         private void ResetTableIndex(TList tableOrderBies, List<SqlItem> sqlList, DataPage dataPage, List<DbParameter> parameters)
         {
             if (null == tableOrderBies) return;
             if (0 == tableOrderBies.Count) return;
-            DbAdapter dbAdapter = DbAdapter.Instance;
             TableOrderBy tableOrderBy = tableOrderBies[0];
             string s = tableOrderBy.TableName.ToLower();
             string srcTb = "";
             string tb = "";
             bool mbool = true;
-            bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
-
-            Func<string, int> func = (_sql) =>
-            {
-                int recordCount = 0;
-                string page_size = dataPage.PageSizeSignOfSql;
-                string start_quantity = dataPage.StartQuantitySignOfSql;
-                List<Regex> rgs = new List<Regex>();
-                Regex rg1 = null;
-                Regex rg2 = null;
-                if (isPara)
-                {
-                    page_size = dataPage.PageSizeDbParameterName;
-                    start_quantity = dataPage.StartQuantityDbParameterName;
-                    rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
-                    rgs.Add(rg1);
-                    rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + start_quantity, RegexOptions.IgnoreCase);
-                    rgs.Add(rg1);
-                    rg2 = new Regex(@"\slimit\s+[\@\?\:]?" + start_quantity + @"\s*\,\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
-                }
-                else
-                {
-                    page_size = dataPage.PageSizeSignOfSql.Trim();
-                    start_quantity = dataPage.StartQuantitySignOfSql.Trim();
-                    string sign = "";
-                    Match m = null;
-                    rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
-                    if (rg1.IsMatch(page_size))
-                    {
-                        m = rg1.Match(page_size);
-                        sign = m.Groups["sign"].Value;
-                        page_size = page_size.Substring(0, page_size.Length - sign.Length);
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
-                        rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
-                    }
-                    else
-                    {
-                        rg1 = new Regex(@"\s" + page_size + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
-                    }
-                    rgs.Add(rg1);
-
-                    rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
-                    if (rg1.IsMatch(start_quantity))
-                    {
-                        m = rg1.Match(start_quantity);
-                        sign = m.Groups["sign"].Value;
-                        start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
-                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
-                        rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
-                    }
-                    else
-                    {
-                        rg1 = new Regex(@"\s" + start_quantity + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
-                    }
-                    rgs.Add(rg1);
-                    rg2 = new Regex(@"\slimit\s+[0-9]+(\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
-                }
-
-                string s = _sql;
-                foreach (Regex rg in rgs)
-                {
-                    s = rg.Replace(s, " 1=1");
-                }
-                s = rg2.Replace(s, "");
-                string s1 = "select count(1) ncount from ({0}) t".ExtFormat(s);
-                string err = "";
-                dbAdapter.ExecSql(autoCall, s1, parameters, ref err, resultObj =>
-                {
-                    recordCount = (int)resultObj;
-                }, cmd =>
-                {
-                    int num = 0;
-                    try
-                    {
-                        var dr = cmd.ExecuteReader();
-                        if (dr.Read())
-                        {
-                            object v = dr[0];
-                            if (null != v) num = Convert.ToInt32(v);
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
-                    return num;
-                });
-                return recordCount;
-            };
 
             foreach (SqlItem item in sqlList)
             {
@@ -683,8 +698,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 item.TableName = tb;
                 item.SrcTableName = srcTb;
                 item.IsDesc = tableOrderBy.IsDesc;
-                item.RecordCount = func(item.Sql);
-                RecordQuantity += item.RecordCount;
+                //item.RecordCount = func(item.Sql);
+                //RecordQuantity += item.RecordCount;
             }
 
             if (mbool)
@@ -695,23 +710,22 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         private void getPageData(List<SqlItem> sqlList, DataPage dataPage, List<DbParameter> parameters, Action<object> action)
         {
-            ThreadOpt threadOpt = new ThreadOpt(this);
+            ThreadOpt threadOpt = null;
             int pageSize = dataPage.PageSize;
             int startQuantity = dataPage.StartQuantity;
+            int pgSize = pageSize;
             int record = 0;
+            int start = 0;
+            int end = 0;
             bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
             string sql = "";
-            Func<string, string> func = (_sql) =>
+            Func<string, int, int, string> func = (_sql, _start, _end) =>
             {
                 string _s = _sql;
                 string page_size = "";
                 string start_quantity = "";
                 List<Regex> rgs = new List<Regex>();
                 Regex rg1 = null;
-                Regex rg2 = null;
-                int start = startQuantity;
-                if (0 < record) start = 0;
-                int end = start + pageSize;
                 if (isPara)
                 {
                     page_size = dataPage.PageSizeDbParameterName.Trim();
@@ -727,8 +741,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         pn = item.ParameterName;
                         if (rg1.IsMatch(pn)) pn = pn.Substring(1);
                         pn = pn.ToLower();
-                        if (pn.Equals(page_size)) item.Value = end;
-                        if (pn.Equals(start_quantity)) item.Value = start;
+                        if (pn.Equals(page_size)) item.Value = _end;
+                        if (pn.Equals(start_quantity)) item.Value = _start;
                     }
                 }
                 else
@@ -744,7 +758,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         sign = m.Groups["sign"].Value;
                         page_size = page_size.Substring(0, page_size.Length - sign.Length);
                         sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
-                        rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                        rg1 = new Regex(@"\s" + page_size + @"\s*(?<sign>" + sign + @")\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
                     {
@@ -754,8 +768,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     if (rg1.IsMatch(_s))
                     {
                         m = rg1.Match(_s);
-                        if (string.IsNullOrEmpty(sign)) sign = m.Groups["sign"].Value;
-                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + end);
+                        sign = m.Groups["sign"].Value;
+                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + _end);
                     }
 
                     sign = "";
@@ -766,7 +780,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         sign = m.Groups["sign"].Value;
                         start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
                         sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
-                        rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                        rg1 = new Regex(@"\s" + start_quantity + @"\s*(?<sign>" + sign + @")\s*[0-9]+", RegexOptions.IgnoreCase);
                     }
                     else
                     {
@@ -776,8 +790,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     if (rg1.IsMatch(_s))
                     {
                         m = rg1.Match(_s);
-                        if (string.IsNullOrEmpty(sign)) sign = m.Groups["sign"].Value;
-                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + start);
+                        sign = m.Groups["sign"].Value;
+                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + _start);
                     }
                     rg1 = new Regex(@"\slimit\s+[0-9]+(?<sign>\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
                     if (rg1.IsMatch(_s))
@@ -790,7 +804,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         }
                         else
                         {
-                            _s = _s.Replace(m.Groups[0].Value, " LIMIT " + start + "," + page_size);
+                            _s = _s.Replace(m.Groups[0].Value, " LIMIT " + _start + "," + page_size);
                         }
                     }
                 }
@@ -801,23 +815,32 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 record += item.RecordCount;
                 if (0 == item.RecordCount) continue;
-                if (record < startQuantity) continue;
+                if (record <= startQuantity) continue;
                 n++;
-                sql = item.ToString();
-                if (1 < n)
+                if (1 == n)
                 {
-                    sql = func(sql);
+                    start = item.RecordCount - (record - startQuantity);
                 }
+                else
+                {
+                    start = 0;
+                }
+                end = start + pageSize;
+                sql = item.ToString();
+                sql = func(sql, start, end);
+                threadOpt = new ThreadOpt(this);
+                threadDic.Add(threadOpt.ID, threadOpt);
                 threadOpt.query(autoCall, sql, parameters);
                 threadOpt.task.Wait();
                 if (0 < queryDatas.Rows.Count)
                 {
-                    pageSize -= queryDatas.Rows.Count;
-                    startQuantity += queryDatas.Rows.Count;
+                    startQuantity += (pgSize - queryDatas.Rows.Count);
+                    pageSize = (pgSize - queryDatas.Rows.Count);
                 }
 
                 if (0 >= pageSize) break;
             }
+            action(queryDatas);
         }
 
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
@@ -907,6 +930,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             //TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
             if (null != dataPage)
             {
+                foreach (SqlItem sqlItem in sqlList)
+                {
+                    sqlItem.RecordCount = getRecordQuantity(sqlItem.Sql, dataPage, parameters);
+                    RecordQuantity += sqlItem.RecordCount;
+                }
                 TList tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
                 ResetTableIndex(tableOrderBies, sqlList, dataPage, parameters);
                 getPageData(sqlList, dataPage, parameters, action);
@@ -926,69 +954,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 action(queryDatas);
             });
-        }
-
-        private object _QueryResult = new object();
-        private void QueryResult(ThreadOpt threadOpt, object data)
-        {
-            lock (_QueryResult)
-            {
-                string id = threadOpt.ID;
-                if ((null != data) && threadDic.ContainsKey(id))
-                {
-                    DataTable dt = data as DataTable;
-                    foreach (DataRow item in dt.Rows)
-                    {
-                        if (0 == queryDatas.Columns.Count)
-                        {
-                            foreach (DataColumn dc in dt.Columns)
-                            {
-                                queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
-                            }
-                            if (0 < RecordQuantity)
-                            {
-                                queryDatas.Columns.Add("_RecordCount", typeof(int));
-                            }
-                        }
-                        DataRow dr = queryDatas.NewRow();
-                        foreach (DataColumn dc in dt.Columns)
-                        {
-                            dr[dc.ColumnName] = item[dc.ColumnName];
-                        }
-
-                        if (0 < RecordQuantity)
-                        {
-                            if (0 == queryDatas.Rows.Count) dr["_RecordCount"] = RecordQuantity;
-                        }
-                        queryDatas.Rows.Add(dr);
-                    }
-                }
-
-                ((IDisposable)threadOpt).Dispose();
-                threadDic.Remove(id);
-            }
-        }
-
-        private object _OperateResult = new object();
-        private void OperateResult(ThreadOpt threadOpt, object data)
-        {
-            lock (_OperateResult)
-            {
-                if (null != data)
-                {
-                    int n = (int)data;
-                    OptDatas += n;
-                }
-                string id = threadOpt.ID;
-                ((IDisposable)threadOpt).Dispose();
-                threadDic.Remove(id);
-            }
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (null == dbAdapter) return;
-            ((IDisposable)dbAdapter).Dispose();
         }
 
         void IMultiTablesExec.Count(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
@@ -1019,6 +984,69 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 action(OptDatas);
             });
+        }
+
+        private object _QueryResult = new object();
+        private void QueryResult(ThreadOpt threadOpt, object data)
+        {
+            lock (_QueryResult)
+            {
+                string id = threadOpt.ID;
+                if ((null != data) && threadDic.ContainsKey(id))
+                {
+                    DataTable dt = data as DataTable;
+                    foreach (DataRow item in dt.Rows)
+                    {
+                        if (0 == queryDatas.Columns.Count)
+                        {
+                            foreach (DataColumn dc in dt.Columns)
+                            {
+                                queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
+                            }
+                            if (0 < RecordQuantity)
+                            {
+                                queryDatas.Columns.Add(RecordQuantityFN, typeof(int));
+                            }
+                        }
+                        DataRow dr = queryDatas.NewRow();
+                        foreach (DataColumn dc in dt.Columns)
+                        {
+                            dr[dc.ColumnName] = item[dc.ColumnName];
+                        }
+
+                        if (0 < RecordQuantity)
+                        {
+                            if (0 == queryDatas.Rows.Count) dr[RecordQuantityFN] = RecordQuantity;
+                        }
+                        queryDatas.Rows.Add(dr);
+                    }
+                }
+
+                ((IDisposable)threadOpt).Dispose();
+                threadDic.Remove(id);
+            }
+        }
+
+        private object _OperateResult = new object();
+        private void OperateResult(ThreadOpt threadOpt, object data)
+        {
+            lock (_OperateResult)
+            {
+                if (null != data)
+                {
+                    int n = (int)data;
+                    OptDatas += n;
+                }
+                string id = threadOpt.ID;
+                ((IDisposable)threadOpt).Dispose();
+                threadDic.Remove(id);
+            }
+        }
+
+        void IDisposable.Dispose()
+        {
+            if (null == dbAdapter) return;
+            ((IDisposable)dbAdapter).Dispose();
         }
 
         ~MultiTablesExec()

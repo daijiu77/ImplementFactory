@@ -10,6 +10,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public class MSqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
+        string ISqlAnalysis.PageSizeSignOfSql { get; set; }
+        string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
+
         private string GetRuleSign(ConditionRelation relation)
         {
             string sign = "";
@@ -243,6 +246,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             Random rnd = new Random();
             string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
             string sql = "select {0} from (select ROW_NUMBER() OVER({1}) rowNumber,{0} from {2}{3}{4}) {5} where {5}.rowNumber>{6} and {5}.rowNumber<={7}";
+            ISqlAnalysis sqlAnalysis = this;
+            sqlAnalysis.PageSizeSignOfSql = "{0}.rowNumber<=".ExtFormat(tb);
+            sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNumber>".ExtFormat(tb);
             sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
             return sql;
             //throw new NotImplementedException();
@@ -261,8 +267,12 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
             orderByPart = orderByPart.Trim();
             if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
-            string sql = "select top {0} {1} from {2}{3}{4}{5}";
+            //string sql = "select top {0} {1} from {2}{3}{4}{5}";
+            string sql = "select * from (select row_number() over({5}) rowNum, {1} from {2}{3}{4}) tb where tb.rowNum<={0} and tb.rowNum>0";
             sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
+            ISqlAnalysis sqlAnalysis = this;
+            sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<=";
+            sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>";
             return sql;
             //throw new NotImplementedException();
         }
@@ -283,6 +293,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             int end = startNumber + length;
             string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
             sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
+            ISqlAnalysis sqlAnalysis = this;
+            sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<";
+            sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>=";
             return sql;
             //throw new NotImplementedException();
         }

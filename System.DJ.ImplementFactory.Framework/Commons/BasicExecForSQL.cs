@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Commons;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
@@ -55,7 +56,7 @@ namespace System.DJ.ImplementFactory.Commons
             dbAdapter.ExecSql(autoCall, sql, parameters, ref err, action, func);
         }
 
-        public void Exec(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        public void Exec(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             StackTrace trace = new StackTrace();
             StackFrame stackFrame = trace.GetFrame(1);
@@ -67,10 +68,18 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 string sign = rg.Match(sql).Groups[0].Value.Trim().ToLower();
                 if (isQuery) sign = "select";
+                if (sign.Equals("select"))
+                {
+                    rg = new Regex(@"^select\s+count\([a-z0-9_\.]+\)", RegexOptions.IgnoreCase);
+                    if (rg.IsMatch(sql)) sign = "count";
+                }
                 switch (sign)
                 {
                     case "select":
-                        multiTablesExec.Query(autoCall, sql, parameters, ref err, action, func);
+                        multiTablesExec.Query(autoCall, sql, dataPage, parameters, ref err, action, func);
+                        break;
+                    case "count":
+                        multiTablesExec.Count(autoCall, sql, parameters, ref err, action, func);
                         break;
                     case "insert":
                         multiTablesExec.Insert(autoCall, sql, parameters, ref err, action, func);
@@ -87,6 +96,11 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 ExecSql(autoCall, sql, parameters, ref err, action, func);
             }
+        }
+
+        public void Exec(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        {
+            Exec(autoCall, sql, null, parameters, ref err, action, func);
         }
 
         void IDisposable.Dispose()

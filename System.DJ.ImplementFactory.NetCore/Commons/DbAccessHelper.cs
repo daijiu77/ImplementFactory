@@ -280,7 +280,7 @@ namespace System.DJ.ImplementFactory.Commons
             return num;
         }
 
-        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
             DataTable dt = new DataTable();
             if (string.IsNullOrEmpty(sql)) return dt;
@@ -294,7 +294,22 @@ namespace System.DJ.ImplementFactory.Commons
                 basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
                 basicExecForSQL1.Exec(autoCall_1, sql, dataPage, parameters, ref msg, result =>
                 {
-                    dt = result as DataTable;
+                    if (null != result)
+                    {
+                        if (result.GetType() == typeof(int))
+                        {
+                            dt = new DataTable();
+                            dt.Columns.Add(MultiTablesExec.RecordQuantityFN, typeof(int));
+                            DataRow dataRow = dt.NewRow();
+                            dataRow[MultiTablesExec.RecordQuantityFN] = result;
+                            dt.Rows.Add(dataRow);
+                        }
+                        else
+                        {
+                            dt = result as DataTable;
+                        }
+                    }  
+
                     if (null != resultAction && isExec)
                     {
                         isExec = false;
@@ -373,17 +388,17 @@ namespace System.DJ.ImplementFactory.Commons
 
         DataTable IDbHelper.query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
-            return ((IDbHelper)this).query(autoCall, sql, null, parameters, EnabledBuffer, resultAction, ref err);
+            return ((IDbHelper)this).query(autoCall, sql, null, false, parameters, EnabledBuffer, resultAction, ref err);
         }
 
-        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, bool isDataPage, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
-            return ((IDbHelper)this).query(autoCall, sql, dataPage, null, EnabledBuffer, resultAction, ref err);
+            return ((IDbHelper)this).query(autoCall, sql, dataPage, true, null, EnabledBuffer, resultAction, ref err);
         }
 
         DataTable IDbHelper.query(object autoCall, string sql, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
         {
-            return ((IDbHelper)this).query(autoCall, sql, null, null, EnabledBuffer, resultAction, ref err);
+            return ((IDbHelper)this).query(autoCall, sql, null, false, null, EnabledBuffer, resultAction, ref err);
         }
 
         int IDbHelper.update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err)

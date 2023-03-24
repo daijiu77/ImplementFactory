@@ -54,9 +54,9 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// </summary>
         long splitTablesRecordQuantity { get; set; }
 
-        DataTable query(object autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
+        DataTable query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
-        DataTable query(object autoCall, string sql, DataPage dataPage, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
+        DataTable query(object autoCall, string sql, DataPage dataPage, bool isDataPage, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         int insert(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err);
         int update(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<int> resultAction, ref string err);

@@ -411,74 +411,22 @@ namespace Test.NetCore
                 return Task.Run(() => { return 2; });
             }
 
-            class SqlItem : IComparable<SqlItem>
-            {
-                public string TableName { get; set; }
-                public string Sql { get; set; }
-
-                public override string ToString()
-                {
-                    return this.Sql;
-                }
-
-                public bool IsDesc { get; set; }
-
-                int IComparable<SqlItem>.CompareTo(SqlItem other)
-                {
-                    string[] arr = new string[] { TableName, other.TableName };
-                    string[] arr1 = null;
-                    if (IsDesc)
-                    {
-                        arr1 = arr.OrderByDescending(x => x).ToArray();
-                    }
-                    else
-                    {
-                        arr1 = arr.OrderBy(x => x).ToArray();
-                    }
-
-                    if (arr1[0].Equals(TableName))
-                    {
-                        return -1;
-                    }
-                    else if (arr1[0].Equals(other.TableName))
-                    {
-                        return 1;
-                    }
-                    return 0;
-                    //throw new NotImplementedException();
-                }
-            }
-
             public void test_user()
             {
-                string page_size = "PageSize<=";
-                string page_number = "PageNumber>";
-                string sign = "<=";
-                page_size = page_size.Substring(0, page_size.Length - sign.Length);
-                sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
-                Regex rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
-                string sql = "select * from abs where PageSize<=32 and PageNumber>10";
-                if (rg1.IsMatch(sql))
+                string s = "select * from (select top 1 * from UserInfo where name like '%abc%') tb order by age";
+                Regex rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
+                if(rg1.IsMatch(s))
                 {
-                    sql = rg1.Replace(sql, " 1=1");
+                    s = "";
                 }
+                DbVisitor db = new DbVisitor();
+                IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(2, 5).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                IList<UserInfo> users = scheme.ToList<UserInfo>();
+                int ncount = scheme.Count();
+                int recordCount = scheme.RecordCount;
+                int pageCount = scheme.PageCount;
 
-                List<SqlItem> list=new List<SqlItem>();
-                list.Add(new SqlItem
-                {
-                    TableName = "UserInfo-20230321-10",
-                    IsDesc = true
-                });
-                list.Add(new SqlItem
-                {
-                    TableName = "UserInfo-20230321-21",
-                    IsDesc = true
-                });
-                list.Sort();
-                foreach (SqlItem item in list)
-                {
-                    Trace.WriteLine(item.TableName);
-                }
                 Console.WriteLine("Please input [ok]:");
                 string msg = Console.ReadLine();
                 if (string.IsNullOrEmpty(msg)) msg = "";

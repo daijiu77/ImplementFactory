@@ -19,9 +19,18 @@ namespace System.DJ.ImplementFactory.DataAccess
         private OverrideModel overrideModel = new OverrideModel();
         private AutoCall autoCall = new AutoCall();
         private string err = "";
+        private int _recordCount = 0;
+        private int _pageCount = 0;
+
         DbSqlBody IDbSqlScheme.dbSqlBody => this;
 
         string IDbSqlScheme.error => err;
+
+        AbsDataModel IDbSqlScheme.parentModel { get; set; }
+
+        int IDbSqlScheme.RecordCount => _recordCount;
+
+        int IDbSqlScheme.PageCount => _pageCount;
 
         public DbSqlScheme() { }
 
@@ -41,14 +50,58 @@ namespace System.DJ.ImplementFactory.DataAccess
         DataTable IDbSqlScheme.ToDataTable()
         {
             string sql = GetSql();
+            _recordCount = 0;
+            _pageCount = 0;
             DataTable dt = null;
             IDbHelper dbHelper = DbHelper;
-            dbHelper.query(autoCall, sql, false, data =>
+            DataPage dataPage = null;
+            if (0 < pageSize)
+            {
+                dataPage = new DataPage()
+                {
+                    PageSize = pageSize,
+                    StartQuantity = (pageNumber - 1) * pageSize,
+                    PageSizeSignOfSql = PageSizeSignOfSql,
+                    StartQuantitySignOfSql = StartQuantitySignOfSql
+                };
+
+                if (0 < top)
+                {
+                    dataPage.PageSize = top;
+                    dataPage.StartQuantity = 0;
+                }
+
+                foreach (var item in orderbyItems)
+                {
+                    dataPage.OrderBy.Add(new DataPage.PageOrderBy()
+                    {
+                        FieldName = item.FieldName,
+                        IsDesc = OrderByRule.Desc == item.Rule
+                    });
+                }
+            }
+            dbHelper.query(autoCall, sql, dataPage, true, false, data =>
             {
                 dt = data;
             }, ref err);
             ImplementAdapter.Destroy(dbHelper);
             if (null == dt) dt = new DataTable();
+            if (0 < dt.Rows.Count && null != dataPage)
+            {
+                foreach (DataColumn item in dt.Columns)
+                {
+                    if (item.ColumnName.Equals(MultiTablesExec.RecordQuantityFN))
+                    {
+                        _recordCount = Convert.ToInt32(dt.Rows[0][item.ColumnName]);
+                        if (0 < _recordCount)
+                        {
+                            _pageCount = _recordCount / dataPage.PageSize;
+                            if (0 < (_recordCount % dataPage.PageSize)) _pageCount++;
+                        }
+                        break;
+                    }
+                }
+            }
             return dt;
             //throw new NotImplementedException();
         }

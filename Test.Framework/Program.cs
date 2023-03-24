@@ -8,9 +8,11 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -411,6 +413,20 @@ namespace Test.Framework
 
             public void test_user()
             {
+                string s = "select * from (select top 1 * from UserInfo where name like '%abc%') tb order by age";
+                Regex rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
+                if(rg1.IsMatch(s))
+                {
+                    s = "";
+                }
+                DbVisitor db = new DbVisitor();
+                IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(2, 5).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                IList<UserInfo> users = scheme.ToList<UserInfo>();
+                int ncount = scheme.Count();
+                int recordCount = scheme.RecordCount;
+                int pageCount = scheme.PageCount;
+
                 Console.WriteLine("Please input [ok]:");
                 string msg = Console.ReadLine();
                 if (string.IsNullOrEmpty(msg)) msg = "";

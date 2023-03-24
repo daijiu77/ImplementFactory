@@ -6,6 +6,8 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Drawing.Printing;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,10 +29,13 @@ namespace System.DJ.ImplementFactory.Commons
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
         private int OptDatas = 0;
+        private int RecordQuantity = 0;
         private List<Task> tasks = new List<Task>();
 
         private string leftStr = "|#";
         private string rightStr = "#|";
+
+        public const string RecordQuantityFN = "_RecordQuantity";
 
         public MultiTablesExec() { }
 
@@ -216,7 +221,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         object ISingleInstance.Instance { get; set; }
 
-        private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, ref string new_sql)
+        private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, Dictionary<string, string> AliasTbNameDic, ref string new_sql)
         {
             //dic tableName key:Lower, value:self
             Dictionary<string, string> dic = new Dictionary<string, string>();
@@ -225,10 +230,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string _sql = sql;
             List<Regex> rgList = new List<Regex>();
             int n = 0;
-            const int max = 50;
+            const int max = 10;
             foreach (KeyValuePair<string, object> item in tbDic)
             {
-                s1 += @"|(\s[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
+                s1 += @"|((\s|\,)[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
                 n++;
                 if (max == n)
                 {
@@ -259,6 +264,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     MatchCollection mc1 = _rg.Matches(_sql);
                     MatchCollection mc2 = null;
                     Regex rg3 = new Regex(@"^(?<LeftS>[^a-z0-9_\s])[a-z0-9_]+(?<RightS>[^a-z0-9_\s])$", RegexOptions.IgnoreCase);
+                    Regex rg4 = null;
                     Match m3 = null;
                     string LeftS = "", RightS = "";
                     foreach (Match m1 in mc1)
@@ -282,6 +288,23 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                     RightS = m3.Groups["RightS"].Value;
                                     tb = tb.Substring(1);
                                     tb = tb.Substring(0, tb.Length - 1);
+                                }
+                                if (string.IsNullOrEmpty(LeftS))
+                                {
+                                    if (tb.Substring(0, 1).Equals(","))
+                                    {
+                                        LeftS = tb.Substring(0, 1);
+                                        tb = tb.Substring(1);
+                                    }
+                                }
+                                rg4 = new Regex(@"(\s|\,)" + tb + @"\s+(as\s+)?(?<tbAlias>[a-z0-9_]+)", RegexOptions.IgnoreCase);
+                                if (rg4.IsMatch(s))
+                                {
+                                    string alias = rg4.Match(s).Groups["tbAlias"].Value.ToLower();
+                                    if (!AliasTbNameDic.ContainsKey(alias))
+                                    {
+                                        AliasTbNameDic.Add(alias, tb);
+                                    }
                                 }
                                 tbn = tb.ToLower();
                                 ss = ss.Replace(m2.Groups["TbName"].Value, " " + LeftS + leftStr + tbn + rightStr + RightS + " ");
@@ -320,13 +343,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             return arr;
         }
 
-        private List<string> getSqlByTables(string sql, string leftStr, string rightStr)
+        private List<SqlItem> getSqlByTables(string sql, string leftStr, string rightStr, Dictionary<string, string> AliasTbNameDic)
         {
             //newSql 带有替换标识符的sql语句,例: select * from |#UserInfo#| order by createdate desc;
             string newSql = "";
-            string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, ref newSql);
+            string[] arr = getTableNamesWithSql(sql, leftStr, rightStr, AliasTbNameDic, ref newSql);
 
-            List<string> sqlList = new List<string>();
+            List<SqlItem> sqlList = new List<SqlItem>();
             TableItem tableItem = null;
             List<TableInfo> list = null;
             string[] tbs = null;
@@ -342,7 +365,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 {
                     now_Sql = now_Sql.Replace(leftStr + item + rightStr, list[0].tbName);
                     num++;
-                    if (num == size) sqlList.Add(now_Sql);
+                    if (num == size) sqlList.Add(new SqlItem() { Sql = now_Sql });
                 }
                 else if (1 < list.Count)
                 {
@@ -375,55 +398,53 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     tableItem = tableItem.Parent;
                 }
 
-                ForTableItem(tableItem, leftStr, rightStr, now_Sql, sqlList);
+                ForTableItem(tableItem, leftStr, rightStr, now_Sql, sqlList, null);
             }
 
             return sqlList;
         }
 
-        private void ForTableItem(TableItem tableItem, string leftT, string rightT, string sql, List<string> sqlList)
+        private void ForTableItem(TableItem tableItem, string leftT, string rightT, string sql, List<SqlItem> sqlList, SqlItem sqlItem)
         {
             int nlen = tableItem.Count;
             string sql1 = "";
             string key = "";
+            TableInfo[] arr = null;
+            SqlItem sqlItem1 = null;
+            if (null != sqlItem)
+            {
+                arr = sqlItem.Tables.ToArray();
+            }
+
             for (int i = 0; i < nlen; i++)
             {
                 key = tableItem.key;
                 key = leftT + key + rightT;
                 sql1 = sql.Replace(key, tableItem.Tables[i]);
+
+                sqlItem1 = new SqlItem();
+                if (null != arr)
+                {
+                    foreach (TableInfo item in arr)
+                    {
+                        sqlItem1.Tables.Add(item);
+                    }
+                }
+                sqlItem1.Tables.Add(new TableInfo()
+                {
+                    tbName = tableItem.Tables[i],
+                    srcName = tableItem.key
+                });
                 if (null != tableItem.Child)
                 {
-                    ForTableItem(tableItem.Child, leftT, rightT, sql1, sqlList);
+                    ForTableItem(tableItem.Child, leftT, rightT, sql1, sqlList, sqlItem1);
                 }
                 else
                 {
-                    sqlList.Add(sql1);
+                    sqlItem1.Sql = sql1;
+                    sqlList.Add(sqlItem1);
                 }
             }
-        }
-
-        class TableItem
-        {
-            private string[] tbs = null;
-
-            public int Count { get; private set; }
-            public string[] Tables
-            {
-                get { return tbs; }
-                set
-                {
-                    tbs = value;
-                    if (null != tbs)
-                    {
-                        Count = tbs.Length;
-                    }
-                }
-            }
-
-            public string key { get; set; }
-
-            public TableItem Parent { get; set; }
-            public TableItem Child { get; set; }
         }
 
         private void WaitExecResult(Action resultAction)
@@ -445,26 +466,404 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             resultAction();
         }
 
+        private TList getOrderBy(string sql, Dictionary<string, string> AliasTbNameDic)
+        {
+            TList tableOrderBies = new TList();
+            string tbName = "";
+            if (0 == AliasTbNameDic.Count)
+            {
+                Regex rg1 = new Regex(@"\sfrom\s+(?<tbName>[^\s\)]+)", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(sql))
+                {
+                    tbName = rg1.Match(sql).Groups["tbName"].Value;
+                    int index = tbName.LastIndexOf(".");
+                    if (-1 != index)
+                    {
+                        tbName = tbName.Substring(index + 1);
+                    }
+                }
+            }
+            Regex rg = new Regex(@"[^a-z0-9_]order\s+by\s+[a-z0-9_\.]+(\s+((desc)|(asc)))?(\s*\,\s*[a-z0-9_\.]+(\s+((desc)|(asc)))?)*", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(sql))
+            {
+                string s = rg.Match(sql).Groups[0].Value;
+                rg = new Regex(@"[^a-z0-9_]order\s+by\s+", RegexOptions.IgnoreCase);
+                s = s.Replace(rg.Match(s).Groups[0].Value, "");
+                string Fields = "";
+                string OrderName = "";
+                string alias = "";
+                string tbn = "";
+                bool isDesc = false;
+                int n = 0;
+                Regex rg2 = new Regex(@"(date)|(time)", RegexOptions.IgnoreCase);
+                rg = new Regex(@"(?<Fields>(((?!\sdesc\s)(?!\sasc\s)(?!\s)(?!\,)).)+)(\s+(?<OrderName>(desc)|(asc)))?", RegexOptions.IgnoreCase);
+                MatchCollection mc = rg.Matches(s);
+                foreach (Match m in mc)
+                {
+                    alias = "";
+                    tbn = "";
+                    Fields = m.Groups["Fields"].Value;
+                    OrderName = m.Groups["OrderName"].Value;
+                    if (string.IsNullOrEmpty(OrderName)) OrderName = "asc";
+                    OrderName = OrderName.ToLower();
+                    n = Fields.IndexOf(".");
+                    if (-1 != n)
+                    {
+                        alias = Fields.Substring(0, n).ToLower();
+                        Fields = Fields.Substring(n + 1);
+                    }
+
+                    if (!string.IsNullOrEmpty(alias))
+                    {
+                        AliasTbNameDic.TryGetValue(alias, out tbn);
+                    }
+
+                    if (string.IsNullOrEmpty(tbn)) tbn = tbName;
+                    isDesc = OrderName.Equals("desc");
+                    tableOrderBies.Add(tbn, isDesc);
+                }
+            }
+            return tableOrderBies;
+        }
+
+        private TList getOrderByDataPages(DataPage dataPage, string sql, Dictionary<string, string> AliasTbNameDic)
+        {
+            TList tableOrderBies = new TList();
+            string tbName = "";
+            Regex rg = null;
+            if (0 == AliasTbNameDic.Count)
+            {
+                rg = new Regex(@"\sfrom\s+(?<tbName>[^\s\(\)]+)", RegexOptions.IgnoreCase);
+                if (rg.IsMatch(sql))
+                {
+                    tbName = rg.Match(sql).Groups["tbName"].Value;
+                    int index = tbName.LastIndexOf(".");
+                    if (-1 != index)
+                    {
+                        tbName = tbName.Substring(index + 1);
+                    }
+                    rg = new Regex(@"^[^a-z0-9\.\s](?<fName>[a-z0-9_]+)[^a-z0-9\.\s]$", RegexOptions.IgnoreCase);
+                    if (rg.IsMatch(tbName))
+                    {
+                        tbName = rg.Match(tbName).Groups["fName"].Value;
+                    }
+                }
+            }
+
+            string tb = "";
+            string Alias = "";
+            rg = new Regex(@"((?<Alias>[a-z0-9_]+)\.)?[a-z0-9_]*((date)|(time))[a-z0-9_]*", RegexOptions.IgnoreCase);
+            foreach (DataPage.PageOrderBy item in dataPage.OrderBy)
+            {
+                if (!rg.IsMatch(item.FieldName)) continue;
+                Alias = rg.Match(item.FieldName).Groups["Alias"].Value;
+                if (!string.IsNullOrEmpty(Alias))
+                {
+                    Alias = Alias.ToLower();
+                    AliasTbNameDic.TryGetValue(Alias, out tb);
+                }
+                if (string.IsNullOrEmpty(tb)) tb = tbName;
+                tableOrderBies.Add(tb, item.IsDesc);
+            }
+            return tableOrderBies;
+        }
+
+        private int getRecordQuantity(string _sql, DataPage dataPage, List<DbParameter> parameters)
+        {
+            int recordCount = 0;
+            string page_size = dataPage.PageSizeSignOfSql;
+            string start_quantity = dataPage.StartQuantitySignOfSql;
+            List<Regex> rgs = new List<Regex>();
+
+            bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
+            Regex rg1 = null;
+            Regex rg2 = null;
+            if (isPara)
+            {
+                page_size = dataPage.PageSizeDbParameterName;
+                start_quantity = dataPage.StartQuantityDbParameterName;
+                rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
+                rgs.Add(rg1);
+                rg1 = new Regex(@"\s[a-z0-9_\.]+\s*[\<\>\=]{1,2}\s*[\@\?\:]?" + start_quantity, RegexOptions.IgnoreCase);
+                rgs.Add(rg1);
+                rg2 = new Regex(@"\slimit\s+[\@\?\:]?" + start_quantity + @"\s*\,\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                page_size = dataPage.PageSizeSignOfSql.Trim();
+                start_quantity = dataPage.StartQuantitySignOfSql.Trim();
+                string sign = "";
+                Match m = null;
+                rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(page_size))
+                {
+                    m = rg1.Match(page_size);
+                    sign = m.Groups["sign"].Value;
+                    page_size = page_size.Substring(0, page_size.Length - sign.Length);
+                    sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                    rg1 = new Regex(@"\s" + page_size + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                else
+                {
+                    rg1 = new Regex(@"\s" + page_size + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                rgs.Add(rg1);
+
+                rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(start_quantity))
+                {
+                    m = rg1.Match(start_quantity);
+                    sign = m.Groups["sign"].Value;
+                    start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
+                    sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                    rg1 = new Regex(@"\s" + start_quantity + @"\s*" + sign + @"\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                else
+                {
+                    rg1 = new Regex(@"\s" + start_quantity + @"\s*[\<\>\=]{1,2}\s*[0-9]+", RegexOptions.IgnoreCase);
+                }
+                rgs.Add(rg1);
+                rg2 = new Regex(@"\slimit\s+[0-9]+(\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
+            }
+
+            string s = _sql;
+            foreach (Regex rg in rgs)
+            {
+                s = rg.Replace(s, " 1=1");
+            }
+            s = rg2.Replace(s, "");
+
+            rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
+            if (rg1.IsMatch(s))
+            {
+                s = rg1.Replace(s, "");
+            }
+
+            string s1 = "select count(1) ncount from ({0}) t".ExtFormat(s);
+            string err = "";
+            initBasicExecForSQL(dbAdapter, dbHelper);
+            dbAdapter.ExecSql(autoCall, s1, parameters, ref err, resultObj =>
+            {
+                recordCount = (int)resultObj;
+            }, cmd =>
+            {
+                int num = 0;
+                try
+                {
+                    var dr = cmd.ExecuteReader();
+                    if (dr.Read())
+                    {
+                        object v = dr[0];
+                        if (null != v) num = Convert.ToInt32(v);
+                    }
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+                return num;
+            });
+            return recordCount;
+        }
+
+        private void ResetTableIndex(TList tableOrderBies, List<SqlItem> sqlList, DataPage dataPage, List<DbParameter> parameters)
+        {
+            if (null == tableOrderBies) return;
+            if (0 == tableOrderBies.Count) return;
+            TableOrderBy tableOrderBy = tableOrderBies[0];
+            string s = tableOrderBy.TableName.ToLower();
+            string srcTb = "";
+            string tb = "";
+            bool mbool = true;
+
+            foreach (SqlItem item in sqlList)
+            {
+                srcTb = "";
+                tb = "";
+                foreach (TableInfo info in item.Tables)
+                {
+                    if (info.srcName.ToLower().Equals(s))
+                    {
+                        srcTb = info.srcName;
+                        tb = info.tbName;
+                        break;
+                    }
+                }
+                if (string.IsNullOrEmpty(tb))
+                {
+                    mbool = false;
+                    break;
+                }
+                item.TableName = tb;
+                item.SrcTableName = srcTb;
+                item.IsDesc = tableOrderBy.IsDesc;
+                //item.RecordCount = func(item.Sql);
+                //RecordQuantity += item.RecordCount;
+            }
+
+            if (mbool)
+            {
+                sqlList.Sort();
+            }
+        }
+
+        private void getPageData(List<SqlItem> sqlList, DataPage dataPage, List<DbParameter> parameters, Action<object> action)
+        {
+            ThreadOpt threadOpt = null;
+            int pageSize = dataPage.PageSize;
+            int startQuantity = dataPage.StartQuantity;
+            int pgSize = pageSize;
+            int record = 0;
+            int start = 0;
+            int end = 0;
+            bool isPara = false == string.IsNullOrEmpty(dataPage.PageSizeDbParameterName);
+            string sql = "";
+            Func<string, int, int, string> func = (_sql, _start, _end) =>
+            {
+                string _s = _sql;
+                string page_size = "";
+                string start_quantity = "";
+                List<Regex> rgs = new List<Regex>();
+                Regex rg1 = null;
+                if (isPara)
+                {
+                    page_size = dataPage.PageSizeDbParameterName.Trim();
+                    start_quantity = dataPage.StartQuantityDbParameterName.Trim();
+                    rg1 = new Regex(@"^[^a-z0-9_\s][a-z0-9_]+", RegexOptions.IgnoreCase);
+                    if (rg1.IsMatch(page_size)) page_size = page_size.Substring(1);
+                    if (rg1.IsMatch(start_quantity)) start_quantity = start_quantity.Substring(1);
+                    page_size = page_size.ToLower();
+                    start_quantity = start_quantity.ToLower();
+                    string pn = "";
+                    foreach (DbParameter item in parameters)
+                    {
+                        pn = item.ParameterName;
+                        if (rg1.IsMatch(pn)) pn = pn.Substring(1);
+                        pn = pn.ToLower();
+                        if (pn.Equals(page_size)) item.Value = _end;
+                        if (pn.Equals(start_quantity)) item.Value = _start;
+                    }
+                }
+                else
+                {
+                    page_size = dataPage.PageSizeSignOfSql.Trim();
+                    start_quantity = dataPage.StartQuantitySignOfSql.Trim();
+                    string sign = "";
+                    Match m = null;
+                    rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                    if (rg1.IsMatch(page_size))
+                    {
+                        m = rg1.Match(page_size);
+                        sign = m.Groups["sign"].Value;
+                        page_size = page_size.Substring(0, page_size.Length - sign.Length);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                        rg1 = new Regex(@"\s" + page_size + @"\s*(?<sign>" + sign + @")\s*[0-9]+", RegexOptions.IgnoreCase);
+                    }
+                    else
+                    {
+                        rg1 = new Regex(@"\s" + page_size + @"\s*(?<sign>[\<\>\=]{1,2})\s*[0-9]+", RegexOptions.IgnoreCase);
+                    }
+
+                    if (rg1.IsMatch(_s))
+                    {
+                        m = rg1.Match(_s);
+                        sign = m.Groups["sign"].Value;
+                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + _end);
+                    }
+
+                    sign = "";
+                    rg1 = new Regex(@"[a-z0-9_\.]+\s*(?<sign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+                    if (rg1.IsMatch(start_quantity))
+                    {
+                        m = rg1.Match(start_quantity);
+                        sign = m.Groups["sign"].Value;
+                        start_quantity = start_quantity.Substring(0, start_quantity.Length - sign.Length);
+                        sign = sign.Replace(">", @"\>").Replace("<", @"\<").Replace("=", @"\=");
+                        rg1 = new Regex(@"\s" + start_quantity + @"\s*(?<sign>" + sign + @")\s*[0-9]+", RegexOptions.IgnoreCase);
+                    }
+                    else
+                    {
+                        rg1 = new Regex(@"\s" + start_quantity + @"\s*(?<sign>[\<\>\=]{1,2})\s*[0-9]+", RegexOptions.IgnoreCase);
+                    }
+
+                    if (rg1.IsMatch(_s))
+                    {
+                        m = rg1.Match(_s);
+                        sign = m.Groups["sign"].Value;
+                        _s = _s.Replace(m.Groups[0].Value, " " + page_size + sign + _start);
+                    }
+                    rg1 = new Regex(@"\slimit\s+[0-9]+(?<sign>\s*\,\s*[0-9]+)?", RegexOptions.IgnoreCase);
+                    if (rg1.IsMatch(_s))
+                    {
+                        m = rg1.Match(_s);
+                        sign = m.Groups["sign"].Value;
+                        if (string.IsNullOrEmpty(sign))
+                        {
+                            _s = _s.Replace(m.Groups[0].Value, " LIMIT " + page_size);
+                        }
+                        else
+                        {
+                            _s = _s.Replace(m.Groups[0].Value, " LIMIT " + _start + "," + page_size);
+                        }
+                    }
+                }
+                return _s;
+            };
+            int n = 0;
+            foreach (SqlItem item in sqlList)
+            {
+                record += item.RecordCount;
+                if (0 == item.RecordCount) continue;
+                if (record <= startQuantity) continue;
+                n++;
+                if (1 == n)
+                {
+                    start = item.RecordCount - (record - startQuantity);
+                }
+                else
+                {
+                    start = 0;
+                }
+                end = start + pageSize;
+                sql = item.ToString();
+                sql = func(sql, start, end);
+                threadOpt = new ThreadOpt(this);
+                threadDic.Add(threadOpt.ID, threadOpt);
+                threadOpt.query(autoCall, sql, parameters);
+                threadOpt.task.Wait();
+                if (0 < queryDatas.Rows.Count)
+                {
+                    startQuantity += (pgSize - queryDatas.Rows.Count);
+                    pageSize = (pgSize - queryDatas.Rows.Count);
+                }
+
+                if (0 >= pageSize) break;
+            }
+            action(queryDatas);
+        }
+
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
             OptDatas = 0;
             threadDic.Clear();
             tasks.Clear();
-            ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
-            List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
             if (0 == sqlList.Count)
             {
-                sqlList.Add(sql);
+                sqlList.Add(new SqlItem() { Sql = sql });
             }
 
             ThreadOpt threadOpt = null;
-            foreach (string item in sqlList)
+            foreach (SqlItem item in sqlList)
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.oparete(autoCall, item, parameters);
+                threadOpt.oparete(autoCall, item.ToString(), parameters);
                 if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
@@ -512,32 +911,78 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
-        void IMultiTablesExec.Query(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        void IMultiTablesExec.Query(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             queryDatas = new DataTable();
             threadDic.Clear();
             tasks.Clear();
-            ImplementAdapter.task.Wait();
+            RecordQuantity = 0;
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
             if (0 == tbDic.Count) return;
 
-            List<string> sqlList = getSqlByTables(sql, leftStr, rightStr);
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
             if (0 == sqlList.Count)
             {
-                sqlList.Add(sql);
+                sqlList.Add(new SqlItem() { Sql = sql });
+            }
+
+            //TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
+            if (null != dataPage)
+            {
+                foreach (SqlItem sqlItem in sqlList)
+                {
+                    sqlItem.RecordCount = getRecordQuantity(sqlItem.Sql, dataPage, parameters);
+                    RecordQuantity += sqlItem.RecordCount;
+                }
+                TList tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
+                ResetTableIndex(tableOrderBies, sqlList, dataPage, parameters);
+                getPageData(sqlList, dataPage, parameters, action);
+                return;
             }
 
             ThreadOpt threadOpt = null;
-            foreach (string item in sqlList)
+            foreach (SqlItem item in sqlList)
             {
                 threadOpt = new ThreadOpt(this);
                 threadDic.Add(threadOpt.ID, threadOpt);
-                threadOpt.query(autoCall, item, parameters);
+                threadOpt.query(autoCall, item.ToString(), parameters);
                 if (null != threadOpt.task) tasks.Add(threadOpt.task);
             }
 
             WaitExecResult(() =>
             {
                 action(queryDatas);
+            });
+        }
+
+        void IMultiTablesExec.Count(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        {
+            OptDatas = 0;
+            threadDic.Clear();
+            tasks.Clear();
+            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
+            if (0 == tbDic.Count) return;
+
+            Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
+            List<SqlItem> sqlList = getSqlByTables(sql, leftStr, rightStr, AliasTbNameDic);
+            if (0 == sqlList.Count)
+            {
+                sqlList.Add(new SqlItem() { Sql = sql });
+            }
+
+            ThreadOpt threadOpt = null;
+            foreach (SqlItem item in sqlList)
+            {
+                threadOpt = new ThreadOpt(this);
+                threadDic.Add(threadOpt.ID, threadOpt);
+                threadOpt.count(autoCall, item.ToString(), parameters);
+                if (null != threadOpt.task) tasks.Add(threadOpt.task);
+            }
+
+            WaitExecResult(() =>
+            {
+                action(OptDatas);
             });
         }
 
@@ -558,11 +1003,20 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                             {
                                 queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
                             }
+                            if (0 < RecordQuantity)
+                            {
+                                queryDatas.Columns.Add(RecordQuantityFN, typeof(int));
+                            }
                         }
                         DataRow dr = queryDatas.NewRow();
                         foreach (DataColumn dc in dt.Columns)
                         {
                             dr[dc.ColumnName] = item[dc.ColumnName];
+                        }
+
+                        if (0 < RecordQuantity)
+                        {
+                            if (0 == queryDatas.Rows.Count) dr[RecordQuantityFN] = RecordQuantity;
                         }
                         queryDatas.Rows.Add(dr);
                     }
@@ -660,6 +1114,40 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 });
             }
 
+            public void count(object autoCall, string sql, List<DbParameter> parameters)
+            {
+                task = Task.Run(() =>
+                {
+                    int num = 0;
+                    AutoCall autoCall1 = autoCall as AutoCall;
+                    string _err = "";
+                    dbAdapter.ExecSql(autoCall1, sql, parameters, ref _err, val =>
+                    {
+                        num = Convert.ToInt32(val);
+                    }, cmd =>
+                    {
+                        int n = 0;
+                        try
+                        {
+                            var dr = cmd.ExecuteReader();
+                            if (dr.Read())
+                            {
+                                object v = dr[0];
+                                if (null != v) n = Convert.ToInt32(v);
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                        return n;
+                    });
+                    err = _err;
+                    multiTablesExec.OperateResult(this, num);
+                });
+            }
+
             public string err { get; set; }
 
             void IDisposable.Dispose()
@@ -683,7 +1171,118 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
             public string tbName { get; set; }
 
+            public string srcName { get; set; }
+
+            public string alias { get; set; }
+
             public int recordQuantity { get; set; }
         }
+
+        class TableOrderBy
+        {
+            public string TableName { get; set; }
+            public string Alias { get; set; }
+            public bool IsDesc { get; set; }
+        }
+
+        class TList : List<TableOrderBy>
+        {
+            private Dictionary<string, int> dic = new Dictionary<string, int>();
+            public TableOrderBy this[string tableName]
+            {
+                get
+                {
+                    TableOrderBy tableOrderBy = null;
+                    string key = tableName.ToLower();
+                    if (dic.ContainsKey(key))
+                    {
+                        int n = dic[key];
+                        tableOrderBy = this[n];
+                    }
+                    return tableOrderBy;
+                }
+            }
+
+            public void Add(string tableName, bool isDesc)
+            {
+                string key = tableName.ToLower();
+                if (dic.ContainsKey(key)) return;
+                dic.Add(key, this.Count);
+                this.Add(new TableOrderBy()
+                {
+                    TableName = tableName,
+                    IsDesc = isDesc
+                });
+            }
+        }
+
+        class SqlItem : IComparable<SqlItem>
+        {
+            public string SrcTableName { get; set; }
+            public string TableName { get; set; }
+            public string Sql { get; set; }
+
+            public int RecordCount { get; set; }
+
+            private List<TableInfo> list = new List<TableInfo>();
+            public List<TableInfo> Tables { get { return list; } }
+
+            public override string ToString()
+            {
+                return this.Sql;
+            }
+
+            public bool IsDesc { get; set; }
+
+            int IComparable<SqlItem>.CompareTo(SqlItem other)
+            {
+                if (string.IsNullOrEmpty(TableName) || string.IsNullOrEmpty(other.TableName)) return 0;
+                string[] arr = new string[] { TableName, other.TableName };
+                string[] arr1 = null;
+                if (IsDesc)
+                {
+                    arr1 = arr.OrderByDescending(x => x).ToArray();
+                }
+                else
+                {
+                    arr1 = arr.OrderBy(x => x).ToArray();
+                }
+
+                if (arr1[0].Equals(TableName))
+                {
+                    return -1;
+                }
+                else if (arr1[0].Equals(other.TableName))
+                {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+
+        class TableItem
+        {
+            private string[] tbs = null;
+
+            public int Count { get; private set; }
+            public string[] Tables
+            {
+                get { return tbs; }
+                set
+                {
+                    tbs = value;
+                    if (null != tbs)
+                    {
+                        Count = tbs.Length;
+                    }
+                }
+            }
+
+            public string key { get; set; }
+
+            public TableItem Parent { get; set; }
+            public TableItem Child { get; set; }
+        }
+
     }
 }
