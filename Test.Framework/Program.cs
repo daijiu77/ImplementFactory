@@ -415,7 +415,7 @@ namespace Test.Framework
             {
                 string s = "select * from (select top 1 * from UserInfo where name like '%abc%') tb order by age";
                 Regex rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
-                if(rg1.IsMatch(s))
+                if (rg1.IsMatch(s))
                 {
                     s = "";
                 }
@@ -432,10 +432,10 @@ namespace Test.Framework
                 if (string.IsNullOrEmpty(msg)) msg = "";
                 if (!msg.ToLower().Equals("ok")) return;
 
-                List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1).Result;
-                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
-                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
-                uiList = userInfo3.query<UserInfo>("abc", 1).Result;
+                List<UserInfo> uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
+                uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
 
                 UserInfo userInfo = new UserInfo()
                 {

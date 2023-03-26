@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DCache;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -397,30 +398,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return plist;
         }
 
-        class DynamicEntityMInfoPara
-        {
-            public AutoCall autoCall { get; set; }
-            public MethodInformation mInfo { get; set; }
-            public EList<CKeyValue> uskv { get; set; }
-            public Type implementType { get; set; }
-            public Type objType { get; set; }
-            public Type actionType { get; set; }
-            public bool isAsync { get; set; }
-            public bool EnabledBuffer { get; set; }
-            public bool isNotInheritInterface { get; set; }
-            public int msInterval { get; set; }
-            public string autocall_name { get; set; }
-            public string paraListVarName { get; set; }
-            public string genericity { get; set; }
-            public string interfaceName { get; set; }
-            public string impl_name { get; set; }
-            public string methodName { get; set; }
-            public string plist { get; set; }
-            public string actionParaName { get; set; }
-            public string autoCallPara { get; set; }
-            public string autoCallParaName { get; set; }
-        }
-
         void dynamicEntityMInfo(MethodInfo m, DynamicEntityMInfoPara dynamicEntityMInfoPara, ref string code, ref string return_type)
         {
             if (!string.IsNullOrEmpty(dynamicEntityMInfoPara.autoCallPara))
@@ -527,29 +504,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             dynamicEntityMInfoPara.mInfo.append(ref code, LeftSpaceLevel.four, "");
         }
 
-        class NormalEntityPara
-        {
-            public AutoCall autoCall { get; set; }
-            public AutoCall autoCall_Impl { get; set; }
-            public Type implementType { get; set; }
-            public Type objType { get; set; }
-            public Type actionType { get; set; }
-            public PList<Para> paraList { get; set; }
-            public bool EnabledBuffer { get; set; }
-            public bool isNotInheritInterface { get; set; }
-            public string autocall_name { get; set; }
-            public string paraListVarName { get; set; }
-            public string impl_name { get; set; }
-            public string interfaceName { get; set; }
-            public string methodName { get; set; }
-            public string plist { get; set; }
-            public bool isAsync { get; set; }
-            public int msInterval { get; set; }
-            public string actionParaName { get; set; }
-            public string return_type { get; set; }
-            public string genericity { get; set; }
-        }
-
         void normalEntity(MethodInfo m, NormalEntityPara normalEntityPara, ref string code, ref string err)
         {
             MethodInformation method_info = new MethodInformation();
@@ -610,61 +564,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method_info.append(ref code, LeftSpaceLevel.five, "{0}.ExecuteException(typeof({1}),{2},\"{3}\",{4},ex);",
                 normalEntityPara.autocall_name, normalEntityPara.interfaceName, normalEntityPara.impl_name, normalEntityPara.methodName, normalEntityPara.paraListVarName);
             method_info.append(ref code, LeftSpaceLevel.four, "}");
-        }
-
-        class SpaceManage
-        {
-            private SpaceManage Child = null;
-            private SpaceManage Parent = null;
-
-            private int MyNumber = 0;
-            private string MySpace = "";
-
-            public SpaceManage InitLine(ref string line)
-            {
-                string s = line.Trim();
-                string sp = DJTools.UnitSpace;
-                int sLen = sp.Length;
-                SpaceManage sm = this;
-                if (!string.IsNullOrEmpty(s))
-                {
-                    if (s.Equals("{") || s.Substring(s.Length - 1) == "{")
-                    {
-                        if (null == Child)
-                        {
-                            Child = new SpaceManage();
-                            Child.MyNumber = MyNumber + 1;
-                            Child.MySpace = MySpace + sp;
-                            Child.Parent = this;
-                        }
-                        sm = Child;
-                        line = MySpace + line.TrimStart();
-                    }
-                    else if (s.Substring(0, 1).Equals("}"))
-                    {
-                        if (null != Parent)
-                        {
-                            sm = Parent;
-                        }
-                        line = sm.MySpace + line.TrimStart();
-                    }
-                    else
-                    {
-                        if (0 == MyNumber)
-                        {
-                            string s1 = s.Substring(0, 1);
-                            int n = line.IndexOf(s1);
-                            s = line.Substring(0, n);
-                            n = s.Length;
-                            MyNumber = n / sLen;
-                            MySpace = s;
-                        }
-                        s = MySpace + line.TrimStart();
-                        line = s;
-                    }
-                }
-                return sm;
-            }
         }
 
         /// <summary>
@@ -861,6 +760,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             uskv.Add(new CKeyValue() { Key = typeof(DataCachePool).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(CKeyValue).Namespace });
+            uskv.Add(new CKeyValue() { Key = typeof(DataPage).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(EList<CKeyValue>).Namespace });
 
             //append(ref code, "");
@@ -931,6 +831,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             DataCache dataCache = null;
             DataCachePool dataCacheImpl = new DataCachePool();
             EMethodInfo eMethod = null;
+            Regex rgPageNumber = new Regex(@"^page((index)|(number))", RegexOptions.IgnoreCase);
+            Regex rgPageSize = new Regex(@"^page((size)|(record))", RegexOptions.IgnoreCase);
+            Regex rgPage = null;
+            Match match = null;
+            string pageNumber = "";
+            string pageSize = "";
+            string PSign = "";
+            string sql = "";
             int msInterval = 0;
 
             IsDataInterface = false;
@@ -1011,6 +919,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     lists = "";
                     plist = "";
                     outParas = "";
+                    pageNumber = "";
+                    pageSize = "";
 
                     actionType = null;
                     actionParaName = "null";
@@ -1107,6 +1017,39 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     mInfo.append(ref code, LeftSpaceLevel.four, "MethodInfo thisMethodInfo = {0}.GetCallMethod();", autocall_name);//当Task方法时，需要此变量获取当前方法信息
                     mInfo.append(ref code, "");
+
+                    foreach (Para para in paraList)
+                    {
+                        if (rgPageNumber.IsMatch(para.ParaName))
+                        {
+                            pageNumber = para.ParaName;
+                        }
+                        else if(rgPageSize.IsMatch(para.ParaName))
+                        {
+                            pageSize = para.ParaName;
+                        }
+                    }
+
+                    mInfo.append(ref code, "DataPage dataPage = null;");
+                    if (false == string.IsNullOrEmpty(pageNumber) 
+                        && false == string.IsNullOrEmpty(pageSize)
+                        && null != (autoCall as AutoSelect))
+                    {
+                        mInfo.append(ref code, "dataPage = new DataPage();");
+                        sql = ((AutoSelect)autoCall).sql;
+                        rgPage = new Regex(@"(?<PageNumber>[a-z0-9_\.]+)\s*(?<PSign>[\>\=]{1,2})((((?!\sand\s)(?!\sor\s))[a-z0-9_\$\(\)\{\}\*\+\-\/\s])+)?" + pageNumber + @"((((?!\sand\s)(?!\sor\s))[a-z0-9_\$\(\)\{\}\*\+\-\/\s])+)?", RegexOptions.IgnoreCase);
+                        match = rgPage.Match(sql);
+                        pageNumber = match.Groups["PageNumber"].Value;
+                        PSign = match.Groups["PSign"].Value;
+                        mInfo.append(ref code, LeftSpaceLevel.four, "dataPage.StartQuantitySignOfSql = \"{0}{1}\";", pageNumber, PSign);
+
+                        rgPage = new Regex(@"(?<PageSize>[a-z0-9_\.]+)\s*(?<PSign>[\<\=]{1,2})((((?!\sand\s)(?!\sor\s))[a-z0-9_\$\(\)\{\}\*\+\-\/\s])+)?" + pageSize + @"((((?!\sand\s)(?!\sor\s))[a-z0-9_\$\(\)\{\}\*\+\-\/\s])+)?", RegexOptions.IgnoreCase);
+                        match = rgPage.Match(sql);
+                        pageSize = match.Groups["PageSize"].Value;
+                        PSign = match.Groups["PSign"].Value;
+                        mInfo.append(ref code, LeftSpaceLevel.four, "dataPage.PageSizeSignOfSql = \"{0}{1}\";", pageSize, PSign);
+                        mInfo.append(ref code, "");
+                    }
 
                     mInfo.append(ref code, LeftSpaceLevel.four, taskRunStartTag);//Task-start
 

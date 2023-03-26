@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.NetCore.Commons;
 using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;

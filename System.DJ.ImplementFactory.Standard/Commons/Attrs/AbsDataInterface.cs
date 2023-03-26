@@ -134,7 +134,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         public string sql
         {
             get { return _sql; }
-            set { _sql = value; }
+            protected set { _sql = value; }
         }
 
         DataOptType IDataOperateAttribute.dataOptType { get; set; } = DataOptType.none;

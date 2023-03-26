@@ -724,7 +724,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 string _s = _sql;
                 string page_size = "";
                 string start_quantity = "";
-                List<Regex> rgs = new List<Regex>();
                 Regex rg1 = null;
                 if (isPara)
                 {
@@ -843,6 +842,36 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             action(queryDatas);
         }
 
+        private TList initDataPage(string sql, DataPage dataPage, Dictionary<string, string> AliasTbNameDic)
+        {
+            TList tableOrderBies = null;
+            if (0 < dataPage.PageSize) return tableOrderBies;
+            Regex rg1 = new Regex(@"(?<FName>[a-z0-9_\.]+)(?<PSign>[\<\>\=]{1,2})$", RegexOptions.IgnoreCase);
+
+            if (!rg1.IsMatch(dataPage.StartQuantitySignOfSql)) return tableOrderBies;
+            Match m = rg1.Match(dataPage.StartQuantitySignOfSql);
+            string FName = m.Groups["FName"].Value;
+            string PSign = m.Groups["PSign"].Value;
+
+            Regex rg2 = new Regex(@"\s" + FName + @"\s*" + PSign + @"\s*(?<PNum>[0-9]+)", RegexOptions.IgnoreCase);
+            if(!rg2.IsMatch(sql)) return tableOrderBies;
+            string startQuantity = rg2.Match(sql).Groups["PNum"].Value;
+            dataPage.StartQuantity = Convert.ToInt32(startQuantity);
+
+            if (!rg1.IsMatch(dataPage.PageSizeSignOfSql)) return tableOrderBies;
+            m = rg1.Match(dataPage.PageSizeSignOfSql);
+            FName = m.Groups["FName"].Value;
+            PSign = m.Groups["PSign"].Value;
+
+            rg2 = new Regex(@"\s" + FName + @"\s*" + PSign + @"\s*(?<PNum>[0-9]+)", RegexOptions.IgnoreCase);
+            if (!rg2.IsMatch(sql)) return tableOrderBies;
+            string pageSize = rg2.Match(sql).Groups["PNum"].Value;
+            dataPage.PageSize = Convert.ToInt32(pageSize);
+
+            tableOrderBies = getOrderBy(sql, AliasTbNameDic);
+            return tableOrderBies;
+        }
+
         private void DataOpt(object autoCall, string sql, List<DbParameter> parameters, Action<object> resultAction, ref string err)
         {
             OptDatas = 0;
@@ -930,12 +959,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             //TList tableOrderBies = getOrderBy(sql, AliasTbNameDic);
             if (null != dataPage)
             {
+                TList tableOrderBies = initDataPage(sql, dataPage, AliasTbNameDic);
+                if (0 >= dataPage.PageSize) throw new Exception("Invalid paging query, no number of page records specified (PageSize must be greater than zero).");
+
                 foreach (SqlItem sqlItem in sqlList)
                 {
                     sqlItem.RecordCount = getRecordQuantity(sqlItem.Sql, dataPage, parameters);
                     RecordQuantity += sqlItem.RecordCount;
                 }
-                TList tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
+                if (null == tableOrderBies) tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
                 ResetTableIndex(tableOrderBies, sqlList, dataPage, parameters);
                 getPageData(sqlList, dataPage, parameters, action);
                 return;

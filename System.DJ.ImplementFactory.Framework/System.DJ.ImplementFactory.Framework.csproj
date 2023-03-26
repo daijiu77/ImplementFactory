@@ -107,6 +107,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\DynamicCode\SpaceManage.cs" />
+    <Compile Include="Commons\DynamicCode\NormalEntityPara.cs" />
+    <Compile Include="Commons\DynamicCode\DynamicEntityMInfoPara.cs" />
     <Compile Include="Entities\DataPage.cs" />
     <Compile Include="DataAccess\SqlAnalysisImpl\AbsSqlAnalysis.cs" />
     <Compile Include="Commons\DynamicCode\EMethodInfo.cs" />

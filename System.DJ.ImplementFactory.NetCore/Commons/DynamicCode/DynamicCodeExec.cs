@@ -10,7 +10,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
     {
         private static IMixedCalculate mixedCalculate = new MixedCalculate();
 
-        private static string[] calculate = new string[] { "$calculate(", "$cal(" };
+        private static string[] calculate = new string[] { "$calculate(", "$cal(", "$c(" };
 
         private static List<UnitEle> getUnit(string sql, string[] signs)
         {

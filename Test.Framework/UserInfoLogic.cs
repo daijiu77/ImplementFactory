@@ -23,7 +23,7 @@ namespace Test.Framework
 
         public List<UserInfo> userInfos(string name)
         {
-            return userInfo.query<UserInfo>(name, 0).Result;
+            return userInfo.query<UserInfo>(name, 0, 5, 1).Result;
         }
 
         public List<UserInfo> userInfos(UserInfo userInfo1)

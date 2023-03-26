@@ -686,7 +686,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, LeftSpaceLevel.one, "if(null != dbHelper)");
             method.append(ref code, LeftSpaceLevel.one, "{");
             method.append(ref code, LeftSpaceLevel.two, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, dynamicCodeChange.procParaSign, dbTag);
-            method.append(ref code, LeftSpaceLevel.two, "{5}.{0}({1}, {2}, {3}, {4}, dtTable =>", methodNameOfIDbHelper, autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
+            method.append(ref code, LeftSpaceLevel.two, "{5}.{0}({1}, {2}, dataPage, true, {3}, {4}, dtTable =>", methodNameOfIDbHelper, autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
             method.append(ref code, LeftSpaceLevel.two, "{");
             #region ***** action
             method.append(ref code, LeftSpaceLevel.two + 1, "object vObj = dtTable;");

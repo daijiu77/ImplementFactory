@@ -18,9 +18,10 @@ namespace Test.Framework.DataInterface
         /// <param name="data"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        [AutoSelect("select * from (select ui.* from {T} ui where ui.name like '%{name}%') tb order by ui.age, ui.cdatetime desc,ui.userType")]
+        [AutoSelect("select * from (select row_number() over(order by ui.age) rowNum,ui.* from {T} ui where ui.name like '%{name}%') tb " +
+            "where rowNum>$c({pageSize}*({pageIndex}-1)) and rowNum<=$c({pageSize}*{pageIndex})")]
         [DataCache(true)]
-        Task<List<T>> query<T>(string name, int age);
+        Task<List<T>> query<T>(string name, int age, int pageSize, int pageIndex);
 
         [AutoSelect("select top 1 * from {T} order by cdatetime desc")]
         T query<T>();
