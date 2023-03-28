@@ -178,7 +178,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             }
 
             Type rtnType = mi.ReturnType;
-            isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");
+            if (false == isTaskReturn) isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");
             if (isTaskReturn)
             {
                 /**
