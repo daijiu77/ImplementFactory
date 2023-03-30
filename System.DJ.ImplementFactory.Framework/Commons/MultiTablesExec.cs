@@ -35,7 +35,7 @@ namespace System.DJ.ImplementFactory.Commons
         private string leftStr = "|#";
         private string rightStr = "#|";
 
-        public const string RecordQuantityFN = "_RecordQuantity";
+        public const string RecordQuantityFN = "_RecordQuantityCount";
 
         public MultiTablesExec() { }
 
@@ -221,6 +221,36 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         object ISingleInstance.Instance { get; set; }
 
+        private string getNormalName(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            Regex rg0 = new Regex(@"^[\[""\`](?<NName>[a-z0-9_]+)[\]""\`]$", RegexOptions.IgnoreCase);
+            if (rg0.IsMatch(s))
+            {
+                s = rg0.Match(s).Groups["NName"].Value;
+            }
+            return s;
+        }
+
+        private string getTbNameFromSql(string sql)
+        {
+            string tbName = "";
+            if (string.IsNullOrEmpty(sql)) return tbName;
+            Regex rg1 = new Regex(@"\sfrom\s+(?<tbName>[^\s\(\)]+)", RegexOptions.IgnoreCase);
+            if (rg1.IsMatch(sql))
+            {
+                tbName = rg1.Match(sql).Groups["tbName"].Value;
+                int index = tbName.LastIndexOf(".");
+                if (-1 != index)
+                {
+                    tbName = tbName.Substring(index + 1);
+                }
+
+                tbName = getNormalName(tbName);
+            }
+            return tbName;
+        }
+
         private string[] getTableNamesWithSql(string sql, string leftStr, string rightStr, Dictionary<string, string> AliasTbNameDic, ref string new_sql)
         {
             //dic tableName key:Lower, value:self
@@ -233,7 +263,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             const int max = 10;
             foreach (KeyValuePair<string, object> item in tbDic)
             {
-                s1 += @"|((\s|\,)[^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
+                s1 += @"|([\s\,][^a-z0-9_\s]?" + item.Key + @"[^a-z0-9_\s]?\s)";
                 n++;
                 if (max == n)
                 {
@@ -260,10 +290,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     string s = null;
                     string ss = "";
                     string tb = "";
+                    string tb1 = "";
                     string tbn = "";
                     MatchCollection mc1 = _rg.Matches(_sql);
                     MatchCollection mc2 = null;
-                    Regex rg3 = new Regex(@"^(?<LeftS>[^a-z0-9_\s])[a-z0-9_]+(?<RightS>[^a-z0-9_\s])$", RegexOptions.IgnoreCase);
+                    Regex rg3 = new Regex(@"^(?<LeftS>[^a-z0-9_\s])(?<tbName>[a-z0-9_]+)(?<RightS>[^a-z0-9_\s])$", RegexOptions.IgnoreCase);
                     Regex rg4 = null;
                     Match m3 = null;
                     string LeftS = "", RightS = "";
@@ -281,23 +312,26 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                 tb = m2.Groups["TbName"].Value.Trim();
                                 LeftS = "";
                                 RightS = "";
+
+                                if (tb.Substring(0, 1).Equals(","))
+                                {
+                                    LeftS = tb.Substring(0, 1);
+                                    tb = tb.Substring(1);
+                                    tb = tb.Trim();
+                                }
+                                tb1 = tb;
+
                                 if (rg3.IsMatch(tb))
                                 {
                                     m3 = rg3.Match(tb);
                                     LeftS = m3.Groups["LeftS"].Value;
                                     RightS = m3.Groups["RightS"].Value;
-                                    tb = tb.Substring(1);
-                                    tb = tb.Substring(0, tb.Length - 1);
+                                    tb = m3.Groups["tbName"].Value;
                                 }
-                                if (string.IsNullOrEmpty(LeftS))
-                                {
-                                    if (tb.Substring(0, 1).Equals(","))
-                                    {
-                                        LeftS = tb.Substring(0, 1);
-                                        tb = tb.Substring(1);
-                                    }
-                                }
-                                rg4 = new Regex(@"(\s|\,)" + tb + @"\s+(as\s+)?(?<tbAlias>[a-z0-9_]+)", RegexOptions.IgnoreCase);
+
+                                tbn = tb.ToLower();
+
+                                rg4 = new Regex(@"[\s\,]" + tb1 + @"\s+(as\s+)?(?<tbAlias>[a-z0-9_]+)", RegexOptions.IgnoreCase);
                                 if (rg4.IsMatch(s))
                                 {
                                     string alias = rg4.Match(s).Groups["tbAlias"].Value.ToLower();
@@ -306,7 +340,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                         AliasTbNameDic.Add(alias, tb);
                                     }
                                 }
-                                tbn = tb.ToLower();
+                                else if (!AliasTbNameDic.ContainsKey(tbn))
+                                {
+                                    AliasTbNameDic.Add(tbn, tb);
+                                }
+
                                 ss = ss.Replace(m2.Groups["TbName"].Value, " " + LeftS + leftStr + tbn + rightStr + RightS + " ");
                                 if (dic.ContainsKey(tbn)) continue;
                                 dic.Add(tbn, tb);
@@ -449,19 +487,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         private void WaitExecResult(Action resultAction)
         {
-            const int sleepNum = 100;
-            int maxNum = 100;
-            //int num = 0;
-            if (0 < dbInfo.splitTable.MaxWaitIntervalOfS)
-            {
-                maxNum = dbInfo.splitTable.MaxWaitIntervalOfS * 1000 / sleepNum;
-            }
-
-            //while (0 < threadDic.Count && num <= maxNum)
-            //{
-            //    num++;
-            //    Thread.Sleep(sleepNum);
-            //}
             Task.WaitAll(tasks.ToArray());
             resultAction();
         }
@@ -472,46 +497,40 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string tbName = "";
             if (0 == AliasTbNameDic.Count)
             {
-                Regex rg1 = new Regex(@"\sfrom\s+(?<tbName>[^\s\)]+)", RegexOptions.IgnoreCase);
-                if (rg1.IsMatch(sql))
-                {
-                    tbName = rg1.Match(sql).Groups["tbName"].Value;
-                    int index = tbName.LastIndexOf(".");
-                    if (-1 != index)
-                    {
-                        tbName = tbName.Substring(index + 1);
-                    }
-                }
+                tbName = getTbNameFromSql(sql);
             }
-            Regex rg = new Regex(@"[^a-z0-9_]order\s+by\s+[a-z0-9_\.]+(\s+((desc)|(asc)))?(\s*\,\s*[a-z0-9_\.]+(\s+((desc)|(asc)))?)*", RegexOptions.IgnoreCase);
+            Regex rg = new Regex(@"[^a-z0-9_]order\s+by\s+[a-z0-9_\.\[\]""\`]+(\s+((desc)|(asc)))?(\s*\,\s*[a-z0-9_\.\[\]""\`]+(\s+((desc)|(asc)))?)*", RegexOptions.IgnoreCase);
             if (rg.IsMatch(sql))
             {
                 string s = rg.Match(sql).Groups[0].Value;
                 rg = new Regex(@"[^a-z0-9_]order\s+by\s+", RegexOptions.IgnoreCase);
                 s = s.Replace(rg.Match(s).Groups[0].Value, "");
-                string Fields = "";
+                string FieldName = "";
                 string OrderName = "";
                 string alias = "";
                 string tbn = "";
                 bool isDesc = false;
                 int n = 0;
                 Regex rg2 = new Regex(@"(date)|(time)", RegexOptions.IgnoreCase);
-                rg = new Regex(@"(?<Fields>(((?!\sdesc\s)(?!\sasc\s)(?!\s)(?!\,)).)+)(\s+(?<OrderName>(desc)|(asc)))?", RegexOptions.IgnoreCase);
+                rg = new Regex(@"(?<FieldName>(((?!\sdesc\s)(?!\sasc\s)(?!\s)(?!\,)).)+)(\s+(?<OrderName>(desc)|(asc)))?", RegexOptions.IgnoreCase);
                 MatchCollection mc = rg.Matches(s);
                 foreach (Match m in mc)
                 {
                     alias = "";
                     tbn = "";
-                    Fields = m.Groups["Fields"].Value;
+                    FieldName = m.Groups["FieldName"].Value;
                     OrderName = m.Groups["OrderName"].Value;
                     if (string.IsNullOrEmpty(OrderName)) OrderName = "asc";
                     OrderName = OrderName.ToLower();
-                    n = Fields.IndexOf(".");
+                    n = FieldName.IndexOf(".");
                     if (-1 != n)
                     {
-                        alias = Fields.Substring(0, n).ToLower();
-                        Fields = Fields.Substring(n + 1);
+                        alias = FieldName.Substring(0, n).ToLower();
+                        FieldName = FieldName.Substring(n + 1);
                     }
+
+                    alias = getNormalName(alias);
+                    FieldName = getNormalName(FieldName);
 
                     if (!string.IsNullOrEmpty(alias))
                     {
@@ -533,30 +552,17 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             Regex rg = null;
             if (0 == AliasTbNameDic.Count)
             {
-                rg = new Regex(@"\sfrom\s+(?<tbName>[^\s\(\)]+)", RegexOptions.IgnoreCase);
-                if (rg.IsMatch(sql))
-                {
-                    tbName = rg.Match(sql).Groups["tbName"].Value;
-                    int index = tbName.LastIndexOf(".");
-                    if (-1 != index)
-                    {
-                        tbName = tbName.Substring(index + 1);
-                    }
-                    rg = new Regex(@"^[^a-z0-9\.\s](?<fName>[a-z0-9_]+)[^a-z0-9\.\s]$", RegexOptions.IgnoreCase);
-                    if (rg.IsMatch(tbName))
-                    {
-                        tbName = rg.Match(tbName).Groups["fName"].Value;
-                    }
-                }
+                tbName = getTbNameFromSql(sql);
             }
 
             string tb = "";
             string Alias = "";
-            rg = new Regex(@"((?<Alias>[a-z0-9_]+)\.)?[a-z0-9_]*((date)|(time))[a-z0-9_]*", RegexOptions.IgnoreCase);
+            rg = new Regex(@"((?<Alias>[a-z0-9_\[\]""\`]+)\.)?[a-z0-9_\[""\`]*((date)|(time))[a-z0-9_\]""\`]*", RegexOptions.IgnoreCase);
             foreach (DataPage.PageOrderBy item in dataPage.OrderBy)
             {
                 if (!rg.IsMatch(item.FieldName)) continue;
                 Alias = rg.Match(item.FieldName).Groups["Alias"].Value;
+                Alias = getNormalName(Alias);
                 if (!string.IsNullOrEmpty(Alias))
                 {
                     Alias = Alias.ToLower();
@@ -854,7 +860,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string PSign = m.Groups["PSign"].Value;
 
             Regex rg2 = new Regex(@"\s" + FName + @"\s*" + PSign + @"\s*(?<PNum>[0-9]+)", RegexOptions.IgnoreCase);
-            if(!rg2.IsMatch(sql)) return tableOrderBies;
+            if (!rg2.IsMatch(sql)) return tableOrderBies;
             string startQuantity = rg2.Match(sql).Groups["PNum"].Value;
             dataPage.StartQuantity = Convert.ToInt32(startQuantity);
 
@@ -1048,7 +1054,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
                         if (0 < RecordQuantity)
                         {
-                            if (0 == queryDatas.Rows.Count) dr[RecordQuantityFN] = RecordQuantity;
+                            //if (0 == queryDatas.Rows.Count) 
+                            dr[RecordQuantityFN] = RecordQuantity;
                         }
                         queryDatas.Rows.Add(dr);
                     }

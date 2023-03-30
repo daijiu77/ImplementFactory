@@ -901,11 +901,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     msInterval = 0;
 
                     eMethod = new EMethodInfo()
+                    .SetCustomAttributes(miItem.GetCustomAttributes(true))
                     .SetCustomAttributeDatas(miItem.CustomAttributes)
                     .SetReturnType(miItem.ReturnType)
                     .SetName(miItem.Name)
                     .SetDeclaringType(miItem.DeclaringType)
-                    .SetCustomAttributes(miItem.GetCustomAttributes(true))
                     .SetParameters(miItem.GetParameters())
                     .SetIsGenericMethod(miItem.IsGenericMethod)
                     .SetGenericArguments(miItem.GetGenericArguments());

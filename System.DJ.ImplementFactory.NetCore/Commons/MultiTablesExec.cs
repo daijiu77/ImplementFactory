@@ -35,7 +35,7 @@ namespace System.DJ.ImplementFactory.Commons
         private string leftStr = "|#";
         private string rightStr = "#|";
 
-        public const string RecordQuantityFN = "_RecordQuantity";
+        public const string RecordQuantityFN = "_RecordQuantityCount";
 
         public MultiTablesExec() { }
 
@@ -340,7 +340,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                         AliasTbNameDic.Add(alias, tb);
                                     }
                                 }
-                                else if(!AliasTbNameDic.ContainsKey(tbn))
+                                else if (!AliasTbNameDic.ContainsKey(tbn))
                                 {
                                     AliasTbNameDic.Add(tbn, tb);
                                 }
@@ -1054,7 +1054,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
                         if (0 < RecordQuantity)
                         {
-                            if (0 == queryDatas.Rows.Count) dr[RecordQuantityFN] = RecordQuantity;
+                            //if (0 == queryDatas.Rows.Count) 
+                            dr[RecordQuantityFN] = RecordQuantity;
                         }
                         queryDatas.Rows.Add(dr);
                     }
