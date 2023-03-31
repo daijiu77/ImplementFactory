@@ -10,7 +10,15 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
     {
         private static IMixedCalculate mixedCalculate = new MixedCalculate();
 
-        private static string[] calculate = new string[] { "$calculate(", "$cal(", "$c(" };
+        private static string[] calculate = new string[] 
+        {
+            "$calculate(",
+            "$cal(",
+            "$c(",
+            "$execute(",
+            "$exec(",
+            "$e("
+        };
 
         private static List<UnitEle> getUnit(string sql, string[] signs)
         {
@@ -34,7 +42,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             if (!rg0.IsMatch(sql)) return null;
             Regex rg1 = new Regex(s, RegexOptions.IgnoreCase);
             Regex rg2 = new Regex(@"\([^\(\)]+\)", RegexOptions.IgnoreCase);
-                        
+
             string rp = "_cs[n]_";
             string signStr = "";
             string eleStr = "";
@@ -78,7 +86,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     n++;
                     m = rg2.Match(sql);
                     s = m.Groups[0].Value;
-                    s1 = rp.Replace("[n]", n.ToString());                    
+                    s1 = rp.Replace("[n]", n.ToString());
                     dic.Add(s1, s);
                     sql = sql.Replace(s, s1);
                 }

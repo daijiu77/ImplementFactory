@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
@@ -7,8 +9,26 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     public class MSFilter : ActionFilterAttribute
     {
         private static Dictionary<string, string> _kvDic = new Dictionary<string, string>();
-        public override void OnActionExecuting(ActionExecutingContext context)
+
+        private static IMSService _mSService = null;
+
+        public MSFilter()
         {
+            //
+        }
+
+        public static void SetMSServiceInstance(IMSService mSService)
+        {
+            _mSService = mSService;
+            List<string> ips = _mSService.IPAddrSources();
+            foreach (var item in ips)
+            {
+                _kvDic[item] = item;
+            }
+        }
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {            
             string ip = GetIP(context);
             if(!_kvDic.ContainsKey(ip))
             {
