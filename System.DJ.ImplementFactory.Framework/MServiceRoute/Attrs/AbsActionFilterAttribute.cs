@@ -1,72 +1,56 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons.Attrs;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Linq;
+using System.Web;
+using System.Web.Mvc;
 
-namespace System.DJ.ImplementFactory.MServiceRoute
+namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
-    public class MSFilter : ActionFilterAttribute
+    public abstract class AbsActionFilterAttribute : ActionFilterAttribute
     {
-        private static Dictionary<string, string> _kvDic = new Dictionary<string, string>();
+        protected static Dictionary<string, string> _kvDic = new Dictionary<string, string>();
 
-        private static IMSService _mSService = null;
-
-        public MSFilter()
-        {
-            //
-        }
+        protected static IMSService _mSService = null;
 
         public static void SetMSServiceInstance(IMSService mSService)
         {
             _mSService = mSService;
             List<string> ips = _mSService.IPAddrSources();
+            if (null == ips) return;
             foreach (var item in ips)
             {
                 _kvDic[item] = item;
             }
         }
 
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {            
-            string ip = GetIP(context);
-            if(!_kvDic.ContainsKey(ip))
-            {
-                throw new Exception("Illegal access");
-            }
-            base.OnActionExecuting(context);
-        }
-
-        private string GetIP(ActionExecutingContext context)
+        protected string GetIP(ActionExecutingContext context)
         {
             // ip
             string ip = "";
-            string type = "";
 
             // context 是 从过滤器拿的ActionExecutingContext 
             try
             {
+                HttpRequestBase request = context.HttpContext.Request;
                 if (string.IsNullOrEmpty(ip))
                 {
-                    ip = context.HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-                    type = "X-Real-IP";
+                    ip = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
                 }
+
                 if (string.IsNullOrEmpty(ip))
                 {
-                    ip = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                    type = "X-Forwarded-For";
+                    ip = request.ServerVariables["REMOTE_ADDR"];
                 }
+
                 if (string.IsNullOrEmpty(ip))
                 {
-                    ip = context.HttpContext.Connection.RemoteIpAddress.ToString();
-                    type = "RemoteIp";
+                    ip = request.UserHostAddress;
                 }
 
                 // 判断是否多个ip
                 if (ip.IndexOf(",") != -1)
                 {
                     //有“,”，估计多个代理。取最后一个的IP。  
-                    string[] temparyip = ip.Split(",");
+                    string[] temparyip = ip.Split(',');
                     ip = temparyip[temparyip.Length - 1].Trim();
                 }
 
@@ -79,13 +63,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (string.IsNullOrEmpty(ip))
                 {
                     ip = "NoGet";
-                    type = "NoGet";
                 }
             }
             catch
             {
                 ip = "NoGet";
-                type = "NoGet";
             }
             string dIP = "127.0.0.1";
             if (null == ip) ip = dIP;

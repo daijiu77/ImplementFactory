@@ -9,6 +9,7 @@ using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.DCache;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -170,7 +171,7 @@ namespace System.DJ.ImplementFactory
             
             IMSService mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
             if (null == mSService) mSService = new MSServiceImpl();
-            MSFilter.SetMSServiceInstance(mSService);
+            AbsActionFilterAttribute.SetMSServiceInstance(mSService);
 
             string dsFlag = "ms";
             if (db_dialect.mysql == DataAdapter.dbDialect)

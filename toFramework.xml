@@ -69,7 +69,64 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute</source>
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\MServiceRoute</target>
+		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSEnabledTimeAction.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs\MSEnabledTimeAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs</target>
 		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using Microsoft.AspNetCore.Mvc.Filters;</source>
+				<target>using System.Web.Mvc;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionArguments;</source>
+				<target>context.ActionParameters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionDescriptor.DisplayName;</source>
+				<target>context.ActionDescriptor.ActionName;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs\MSFilter.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using Microsoft.AspNetCore.Mvc.Filters;</source>
+				<target>using System.Web.Mvc;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs\MSClientRegisterAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using Microsoft.AspNetCore.Mvc.Filters;</source>
+				<target>using System.Web.Mvc;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionArguments;</source>
+				<target>context.ActionParameters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
 	</copy>
                 <!--复制 DJTools.cs 文件到Framework项目-->
 	<copy ext="cs">
@@ -118,6 +175,26 @@
 			<item des="把复制文件内容里的 source 替换为 target">
 				<source>using System.DJ.DotNetCore.CodeCompiler</source>
 				<target>using System.DJ.Standard.CodeCompiler</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>using System.DJ.ImplementFactory.MServiceRoute.Attrs;</source>
+				<target></target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>IMSService mSService =</source>
+				<target>//IMSService mSService =</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>if (null == mSService)</source>
+				<target>//if (null == mSService)</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item des="把复制文件内容里的 source 替换为 target">
+				<source>AbsActionFilterAttribute.SetMSServiceInstance(mSService);</source>
+				<target>//AbsActionFilterAttribute.SetMSServiceInstance(mSService);</target>
 				<extendNames>cs</extendNames>
 			</item>
 		</replaces>
@@ -183,6 +260,6 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\MServiceRoute</target>
-		<exclude></exclude>
+		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSEnabledTimeAction.cs</exclude>
 	</copy>
 </files>
