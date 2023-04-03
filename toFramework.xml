@@ -178,11 +178,6 @@
 				<extendNames>cs</extendNames>
 			</item>
 			<item des="把复制文件内容里的 source 替换为 target">
-				<source>using System.DJ.ImplementFactory.MServiceRoute.Attrs;</source>
-				<target></target>
-				<extendNames>cs</extendNames>
-			</item>
-			<item des="把复制文件内容里的 source 替换为 target">
 				<source>IMSService mSService =</source>
 				<target>//IMSService mSService =</target>
 				<extendNames>cs</extendNames>

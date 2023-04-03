@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.DJ.ImplementFactory;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -13,6 +14,7 @@ namespace Test.NetCoreApi
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            ImplementAdapter.Init();
         }
 
         public IConfiguration Configuration { get; }

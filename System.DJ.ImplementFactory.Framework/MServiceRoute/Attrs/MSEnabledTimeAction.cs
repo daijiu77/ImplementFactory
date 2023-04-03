@@ -1,6 +1,7 @@
 using System.Web.Mvc;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
@@ -12,6 +13,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             base.OnActionExecuting(context);
 
             IDictionary<string, object> dicPara = context.ActionParameters;
+            List<string> list = new List<string>() { "start", "end", "key" };
+            if (0 == dicPara.Count)
+            {
+                dicPara = GetKVListFromBody(context.HttpContext, list, true);
+            }
+
+            if (0 == dicPara.Count)
+            {
+                dicPara = GetKVListFromForm(context.HttpContext, list, true);
+            }
+
+            if (0 == dicPara.Count)
+            {
+                dicPara = GetKVListFromHead(context.HttpContext, list, true);
+            }
             string start = "";
             string end = "";
             string key = "";
@@ -31,14 +47,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 }
             }
 
-            if (string.IsNullOrEmpty(start) || string.IsNullOrEmpty(end) || string.IsNullOrEmpty(key)) 
+            if (string.IsNullOrEmpty(start) || string.IsNullOrEmpty(end) || string.IsNullOrEmpty(key))
             {
                 string displayName = context.ActionDescriptor.ActionName;
                 Regex rg = new Regex(@"controller\.(?<MethodName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
                 string MethodName = "";
                 if (rg.IsMatch(displayName))
                 {
-                    MethodName = rg.Match(displayName).Groups["MethodName"].Value;                    
+                    MethodName = rg.Match(displayName).Groups["MethodName"].Value;
                 }
                 else
                 {
@@ -46,7 +62,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 }
                 MethodName = "(" + MethodName + ") ";
                 string err = "The method {0}parameter must contain and set a valid start time(startTime) and end time(endTime) and contract key(contractKey).".ExtFormat(MethodName);
-                throw new Exception(err); 
+                throw new Exception(err);
             }
 
             DateTime startTime = DateTime.Now;

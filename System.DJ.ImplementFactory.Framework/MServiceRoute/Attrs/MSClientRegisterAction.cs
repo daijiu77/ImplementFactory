@@ -18,6 +18,32 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     break;
                 }
             }
+
+            List<string> list = new List<string>() { contractKey };
+            if (0 == dic.Count)
+            {
+                dic = GetKVListFromBody(context.HttpContext, list, false);
+            }
+
+            if (0 == dic.Count)
+            {
+                dic = GetKVListFromForm(context.HttpContext, list, false);                
+            }
+
+            if (0 == dic.Count)
+            {
+                dic = GetKVListFromHead(context.HttpContext, list, false);
+            }
+
+            if (string.IsNullOrEmpty(key))
+            {
+                foreach (var item in dic)
+                {
+                    key = item.Value.ToString();
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '"+ MSServiceImpl.contractKey + "' is not empty.");
             string ip = GetIP(context);
             _mSService.SaveIPAddr(ip, key);
             base.OnActionExecuting(context);

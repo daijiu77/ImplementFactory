@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -25,7 +26,12 @@ namespace Test.NetCoreApi.Controllers
             return 3;
         }
 
-        [HttpPost, Route("GetUserName")]
+        /// <summary>
+        /// MSFilter 属性网关
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        [HttpPost, MSFilter, Route("GetUserName")]
         public string UserName(string name)
         {
             return name;
@@ -47,6 +53,30 @@ namespace Test.NetCoreApi.Controllers
             string Password = jt["Password"].ToString();
             string AuthCode = jt["AuthCode"].ToString();
             return DJTools.ExtFormat("[{0}] 登录成功！", UserName);
+        }
+
+        /// <summary>
+        /// 对服务设置注册的有效时间和约束key
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="contractKey"></param>
+        /// <returns></returns>
+        [HttpPost, MSEnabledTimeAction, Route("SetMSConfig")]
+        public object SetMSConfig(DateTime startTime, DateTime endTime, string contractKey)
+        {
+            return new { startTime = startTime, endTime = endTime, contractKey = contractKey };
+        }
+
+        /// <summary>
+        /// 向服务注册访问端 ip 地址
+        /// </summary>
+        /// <param name="contractKey"></param>
+        /// <returns></returns>
+        [HttpPost, MSClientRegisterAction, Route("RegisterIP")]
+        public object RegisterIP(string contractKey)
+        {
+            return new { contractKey = contractKey };
         }
 
         private static object _getCode = new object();

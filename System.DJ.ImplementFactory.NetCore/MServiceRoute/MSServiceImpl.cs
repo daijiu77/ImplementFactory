@@ -13,8 +13,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MSServiceImpl : IMSService
     {
+        private Dictionary<string, string> ipDic = new Dictionary<string, string>();
         private const string SvrIPAddressFile = "SvrIPAddr.xml";
-        private readonly Regex rgIP = new Regex(@"^[1-9]{1,3}\:[0-9]{1,3}\:[0-9]{1,3}\:([1-9]{1,3})$", RegexOptions.IgnoreCase);
+        private readonly Regex rgIP = new Regex(@"^[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.([1-9]{1,3})$", RegexOptions.IgnoreCase);
         private string filePath = "";
         public const string startName = "StartTime";
         public const string endName = "EndTime";
@@ -46,7 +47,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             lock (this)
             {
                 SetEnabledTime(startTime, endTime, contractKey);
-            }            
+            }
         }
 
         public virtual List<string> GetIPAddresses()
@@ -115,10 +116,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             DateTime dt = DateTime.Now;
             if (dt < startTime || dt > endTime) throw new Exception("Invalid validity period start or end time.");
 
-            att = ipNodes.Attributes[contractKey];
+            att = ipNodes.Attributes[MSServiceImpl.contractKey];
             if (null == att) throw new Exception("The XmlAttribute(" + MSServiceImpl.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             string key = att.Value.Trim();
-            if (key.Equals(contractKey)) throw new Exception("Invalid contract string.");
+            if (!key.Equals(contractKey)) throw new Exception("Invalid contract string.");
+
+            if (0 == ipDic.Count)
+            {
+                string txt = "";
+                foreach (XmlNode item in ipNodes.ChildNodes)
+                {
+                    txt = item.InnerText.Trim();
+                    if (!rgIP.IsMatch(txt)) continue;
+                    ipDic[txt] = txt;
+                }
+            }
+
+            if (ipDic.ContainsKey(IPAddress)) return;
+            ipDic.Add(IPAddress, IPAddress);
 
             ele = doc.CreateElement("IPAddr");
             ele.InnerText = IPAddress;

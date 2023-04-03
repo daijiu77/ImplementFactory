@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons.Attrs;
-using System.Text;
+﻿using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 
 namespace System.DJ.ImplementFactory.Pipelines
 {
