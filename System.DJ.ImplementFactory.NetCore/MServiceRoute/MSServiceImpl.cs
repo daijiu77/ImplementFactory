@@ -43,7 +43,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         void IMSService.SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
         {
-            SetEnabledTime(startTime, endTime, contractKey);
+            lock (this)
+            {
+                SetEnabledTime(startTime, endTime, contractKey);
+            }            
         }
 
         public virtual List<string> GetIPAddresses()
