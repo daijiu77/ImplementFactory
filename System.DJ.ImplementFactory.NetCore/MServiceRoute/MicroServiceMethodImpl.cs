@@ -1,11 +1,13 @@
 ﻿using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
@@ -26,8 +28,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string code = "{#usingList}";
             string namespaceStr = "System.DJ.MicroService." + TempImplCode.dirName + "." + TempImplCode.libName;
             string controllerName = interfaceType.Name;
+            string actionName = "";
+
+            const string taskRunStartTag = "[_Task.Run-Start_]";
+            const string taskRunEndTag = "[_Task.Run-End_]";
+
             if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
-            
+
             EList<CKeyValue> elist = new EList<CKeyValue>();
             elist.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory" });
             elist.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons" });
@@ -41,30 +48,31 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
             string clssPath = namespaceStr + "." + clssName;
-            MethodInformation mi = new MethodInformation();
-            mi.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);
-            mi.append(ref code, "{");
-            mi.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}", clssName, DJTools.GetClassName(interfaceType, true));
-            mi.append(ref code, LeftSpaceLevel.two, "{");
-            mi.append(ref code, "");
+            MethodInformation mInfo = new MethodInformation();
+            mInfo.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);
+            mInfo.append(ref code, "{");
+            mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}", clssName, DJTools.GetClassName(interfaceType, true));
+            mInfo.append(ref code, LeftSpaceLevel.two, "{");
+            mInfo.append(ref code, "");
 
-            mi.append(ref code, "{#structorMethod}");
-            mi.append(ref code, "");
-            mi.append(ref code, "{#methodList}");
-            mi.append(ref code, LeftSpaceLevel.two, "}");
-            mi.append(ref code, "}");
+            mInfo.append(ref code, "{#structorMethod}");
+            mInfo.append(ref code, "");
+            mInfo.append(ref code, "{#methodList}");
+            mInfo.append(ref code, LeftSpaceLevel.two, "}");
+            mInfo.append(ref code, "}");
 
             string structorMethod = "";
-            mi.append(ref structorMethod, LeftSpaceLevel.three, "public {0}()", clssName);
-            mi.append(ref structorMethod, LeftSpaceLevel.three, "{");
-            //mi.append(ref structorMethod, LeftSpaceLevel.four, "");
-            mi.append(ref structorMethod, LeftSpaceLevel.three, "}");
+            mInfo.append(ref structorMethod, LeftSpaceLevel.three, "public {0}()", clssName);
+            mInfo.append(ref structorMethod, LeftSpaceLevel.three, "{");
+            //mInfo.append(ref structorMethod, LeftSpaceLevel.four, "");
+            mInfo.append(ref structorMethod, LeftSpaceLevel.three, "}");
             code = code.Replace("{#structorMethod}", structorMethod);
 
             Regex rg = new Regex(@"\`[0-9]+\[");
             Attribute attr = null;
             RequestMapping requestMapping = null;
-            string actionName = "";
+            EMethodInfo eMethod = null;
+            DynamicCodeTempImpl tempImp = new DynamicCodeTempImpl();
             MethodInfo[] ms = interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             foreach (MethodInfo miItem in ms)
             {
@@ -74,6 +82,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 actionName = "";
                 requestMapping = null;
                 attr = miItem.GetCustomAttribute(typeof(RequestMapping));
+
+                eMethod = new EMethodInfo()
+                    .SetCustomAttributes(miItem.GetCustomAttributes(true))
+                    .SetCustomAttributeDatas(miItem.CustomAttributes)
+                    .SetReturnType(miItem.ReturnType)
+                    .SetName(miItem.Name)
+                    .SetDeclaringType(miItem.DeclaringType)
+                    .SetParameters(miItem.GetParameters())
+                    .SetIsGenericMethod(miItem.IsGenericMethod)
+                    .SetGenericArguments(miItem.GetGenericArguments());
+
                 if (null != attr)
                 {
                     requestMapping = (RequestMapping)attr;
@@ -102,10 +121,46 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
 
                 methodCode = "";
-                s = typeof(void) == miItem.ReturnType ? "void" : miItem.ReturnType.TypeToString(true);
+                returnType = eMethod.ReturnType == null ? "void" : eMethod.ReturnType.TypeToString(true);
+
+                if (eMethod.IsTaskReturn)
+                {
+                    elist.Add(new CKeyValue() { Key = typeof(Task).Namespace });
+                    if (eMethod.IsAsyncReturn)
+                    {
+                        if (typeof(void) == eMethod.ReturnType)
+                        {
+                            returnType = "<Task>";
+                        }
+                        else
+                        {
+                            returnType = "<{0}>".ExtFormat(returnType);
+                        }
+                        returnType = "async Task{0}".ExtFormat(returnType);
+                    }
+                    else
+                    {
+                        if (typeof(void) == eMethod.ReturnType)
+                        {
+                            returnType = "";
+                        }
+                        else
+                        {
+                            returnType = "<{0}>".ExtFormat(returnType);
+                        }
+                        returnType = "Task{0}".ExtFormat(returnType);
+                    }
+                }
+
+                s = returnType;
                 s += " " + interfaceName + "." + miItem.Name + "(" + paraList + ")";
-                mi.append(ref methodCode, LeftSpaceLevel.three, s);
-                mi.append(ref methodCode, LeftSpaceLevel.three, "{");
+                mInfo.append(ref methodCode, LeftSpaceLevel.three, s);
+                mInfo.append(ref methodCode, LeftSpaceLevel.three, "{");
+
+                if (eMethod.IsTaskReturn)
+                {
+                    mInfo.append(ref methodCode, LeftSpaceLevel.four, taskRunStartTag);
+                }
 
                 if (!string.IsNullOrEmpty(data))
                 {
@@ -114,59 +169,69 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 data = "new { " + data + " }";
 
                 s = "";
-                mi.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
+                mInfo.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
 
-                if (typeof(void) != miItem.ReturnType)
+                if (typeof(void) != eMethod.ReturnType)
                 {
                     if (string.IsNullOrEmpty(actionName)) { actionName = miItem.Name; }
-                    mi.append(ref s, LeftSpaceLevel.four, "MethodTypes methodTypes = MethodTypes.Post;");
+                    mInfo.append(ref s, LeftSpaceLevel.four, "MethodTypes methodTypes = MethodTypes.Post;");
                     if (null != requestMapping)
                     {
                         if (MethodTypes.Get == requestMapping.MethodType)
                         {
-                            mi.append(ref s, LeftSpaceLevel.four, "methodTypes = MethodTypes.Get;");
+                            mInfo.append(ref s, LeftSpaceLevel.four, "methodTypes = MethodTypes.Get;");
                         }
                     }
-                    mi.append(ref s, LeftSpaceLevel.four, "MSDataVisitor dataVisitor = new MSDataVisitor();");
-                    mi.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", \"{1}\", \"{2}\", \"{3}\", methodTypes, {4});",
+                    mInfo.append(ref s, LeftSpaceLevel.four, "MSDataVisitor dataVisitor = new MSDataVisitor();");
+                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", \"{1}\", \"{2}\", \"{3}\", methodTypes, {4});",
                         microServiceRoute.RouteName, microServiceRoute.Uri, controllerName, actionName, data);
-                    mi.append(ref s, LeftSpaceLevel.four, "");
-                    mi.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
-                    mi.append(ref s, LeftSpaceLevel.one, "");
-                    returnType = miItem.ReturnType.TypeToString(true);
-                    if (typeof(Guid) == miItem.ReturnType)
+                    mInfo.append(ref s, LeftSpaceLevel.four, "");
+                    mInfo.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
+                    mInfo.append(ref s, LeftSpaceLevel.one, "");
+                    returnType = eMethod.ReturnType.TypeToString(true);
+                    if (typeof(Guid) == eMethod.ReturnType)
                     {
-                        mi.append(ref s, LeftSpaceLevel.four, "System.Guid guid = Guid.Empty;");
-                        mi.append(ref s, LeftSpaceLevel.four, "Guid.TryParse(responseResult, out guid);");
-                        mi.append(ref s, LeftSpaceLevel.four, "return guid;");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Guid guid = Guid.Empty;");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "Guid.TryParse(responseResult, out guid);");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "return guid;");
                     }
-                    else if (typeof(DateTime) == miItem.ReturnType)
+                    else if (typeof(DateTime) == eMethod.ReturnType)
                     {
-                        mi.append(ref s, LeftSpaceLevel.four, "System.DateTime dateTime = System.DateTime.Now;");
-                        mi.append(ref s, LeftSpaceLevel.four, "System.DateTime.TryParse(responseResult, out dateTime);");
-                        mi.append(ref s, LeftSpaceLevel.four, "return dateTime;");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "System.DateTime dateTime = System.DateTime.Now;");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "System.DateTime.TryParse(responseResult, out dateTime);");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "return dateTime;");
                     }
-                    else if (DJTools.IsBaseType(miItem.ReturnType))
+                    else if (DJTools.IsBaseType(eMethod.ReturnType))
                     {
-                        mi.append(ref s, LeftSpaceLevel.four, "if(typeof(string) == typeof({0})) return responseResult;", returnType);
-                        mi.append(ref s, LeftSpaceLevel.four, "if(string.IsNullOrEmpty(responseResult)) return default({0});", returnType);
-                        mi.append(ref s, LeftSpaceLevel.four, "Object _vObj = DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
-                        mi.append(ref s, LeftSpaceLevel.four, "return ({0})_vObj;", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "if(typeof(string) == typeof({0})) return responseResult;", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "if(string.IsNullOrEmpty(responseResult)) return default({0});", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "Object _vObj = DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})_vObj;", returnType);
                     }
-                    else if (null != miItem.ReturnType.GetInterface("System.Collections.IEnumerable"))
+                    else if (null != eMethod.ReturnType.GetInterface("System.Collections.IEnumerable"))
                     {
-                        mi.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", returnType);
-                        mi.append(ref s, LeftSpaceLevel.four, "return ({0})list;", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})list;", returnType);
                     }
                     else
                     {
-                        mi.append(ref s, LeftSpaceLevel.four, "{0} vObj = responseResult.JsonToEntity<{0}>();", returnType);
-                        mi.append(ref s, LeftSpaceLevel.four, "return vObj;");
+                        mInfo.append(ref s, LeftSpaceLevel.four, "{0} vObj = responseResult.JsonToEntity<{0}>();", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "return vObj;");
                     }
                 }
 
-                mi.append(ref methodCode, s);
-                mi.append(ref methodCode, LeftSpaceLevel.three, "}");
+                if (eMethod.IsTaskReturn)
+                {
+                    mInfo.append(ref s, LeftSpaceLevel.four, taskRunEndTag);//Task-end
+                }
+
+                mInfo.append(ref methodCode, s);
+                mInfo.append(ref methodCode, LeftSpaceLevel.three, "}");
+
+                if (eMethod.IsTaskReturn)
+                {
+                    methodCode = tempImp.CreateTaskCode(mInfo, eMethod, methodCode, LeftSpaceLevel.four, taskRunStartTag, taskRunEndTag);
+                }
 
                 if (string.IsNullOrEmpty(methodList))
                 {
@@ -174,8 +239,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 else
                 {
-                    mi.append(ref methodList, "");
-                    mi.append(ref methodList, methodCode);
+                    mInfo.append(ref methodList, "");
+                    mInfo.append(ref methodList, methodCode);
                 }
             }
 

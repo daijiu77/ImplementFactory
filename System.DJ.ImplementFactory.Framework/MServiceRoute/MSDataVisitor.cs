@@ -78,6 +78,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private string InitUri(string url)
         {
             string s = url.Trim();
+            if (string.IsNullOrEmpty(s)) return s;
             s = s.Replace("\\", "/");
             if (s.Substring(0, 1).Equals("/")) s = s.Substring(1);
             if (s.Substring(s.Length - 1).Equals("/")) s = s.Substring(0, s.Length - 1);

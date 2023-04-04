@@ -7,6 +7,7 @@ using System.DJ.ImplementFactory.MServiceRoute;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Test.Framework.MSVisitor
 {
@@ -14,7 +15,7 @@ namespace Test.Framework.MSVisitor
     public interface IMSUserInfo
     {
         [RequestMapping("/GetUserName?name={name}", MethodTypes.Post)]
-        string UserName(string name);
+        Task<string> UserName(string name);
     }
 
 }

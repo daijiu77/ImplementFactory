@@ -51,10 +51,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 doc.AppendChild(XMLroot);
 
                 XmlElement route = doc.CreateElement("Route");
-                route.SetAttribute("Name", "ServiceRoute1");
-                route.SetAttribute("Uri", "http://127.0.0.1:8080,http://127.0.0.1:8081");
-                route.SetAttribute("RegisterAddr", "/Home/RegisterIP?ContractKey=abc123");
-                route.SetAttribute("RegisterActionType", "get");
+                RouteAttr route_attr = new RouteAttr()
+                {
+                    Name = "ServiceRoute1",
+                    Uri = "http://127.0.0.1:8080,http://127.0.0.1:8081",
+                    RegisterAddr = "/Home/RegisterIP?ContractKey=abc123",
+                    RegisterActionType = MethodTypes.Post
+                };
+                route_attr.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (typeof(MethodTypes) == pt) return;
+                    route.SetAttribute(fn, fv.ToString());
+                });
+                route.SetAttribute("RegisterActionType", "post");
 
                 XMLroot.AppendChild(route);
 
@@ -76,48 +85,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                 if (2 > document.ChildNodes.Count) return;
 
-                string uri = "";
-                string attrName = "";
                 string attrName1 = "";
-                string registerAddr = "";
-                string method = "";
+                RouteAttr routeAttr1 = null;
                 XmlNode node = document.ChildNodes[1];
                 foreach (XmlNode routeItem in node.ChildNodes)
                 {
-                    attrName = "";
-                    uri = "";
-                    registerAddr = "";
-                    method = "get";
+                    routeAttr1 = new RouteAttr();
                     foreach (XmlAttribute item in routeItem.Attributes)
                     {
-                        if (item.Name.ToLower().Equals("name"))
-                        {
-                            attrName = item.Value;
-                        }
-                        else if (item.Name.ToLower().Equals("uri"))
-                        {
-                            uri = item.Value;
-                        }
-                        else if (item.Name.ToLower().Equals("registeraddr"))
-                        {
-                            registerAddr = item.Value;
-                        }
-                        else if (item.Name.ToLower().Equals("method"))
-                        {
-                            method = item.Value;
-                        }
+                        routeAttr1.SetPropertyValue(item.Name, item.Value);
                     }
 
-                    if (false == string.IsNullOrEmpty(attrName) && false == string.IsNullOrEmpty(uri))
+                    if (false == string.IsNullOrEmpty(routeAttr1.Name) && false == string.IsNullOrEmpty(routeAttr1.Uri))
                     {
-                        attrName1 = attrName.ToLower();
-                        if (!dic.ContainsKey(attrName1)) dic.Add(attrName1, new RouteAttr()
-                        {
-                            Name = attrName,
-                            Uri = uri,
-                            RegisterAddr = registerAddr,
-                            RegisterActionType = method.Equals("get") ? MethodTypes.Get : MethodTypes.Post
-                        });
+                        attrName1 = routeAttr1.Name.ToLower();
+                        if (!dic.ContainsKey(attrName1)) dic.Add(attrName1, routeAttr1);
                     }
                 }
             }

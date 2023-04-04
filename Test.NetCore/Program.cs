@@ -9,7 +9,9 @@ using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Entities;
+using System.DJ.ImplementFactory.MServiceRoute;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -90,13 +92,14 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            MService.Start();
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
-            testObj.test_user();
-            //string un = testObj.VisitService();
+            //testObj.test_user();
+            string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 
@@ -382,9 +385,9 @@ namespace Test.NetCore
 
             public string VisitService()
             {
-                string un = userInfo2.UserName("LiShi");
-                un = userInfo2.UserName("LiShi-123");
-                un = userInfo2.UserName("LiShi-321");
+                string un = userInfo2.UserName("LiShi").Result;
+                un = userInfo2.UserName("LiShi-123").Result;
+                un = userInfo2.UserName("LiShi-321").Result;
                 return un;
             }
 

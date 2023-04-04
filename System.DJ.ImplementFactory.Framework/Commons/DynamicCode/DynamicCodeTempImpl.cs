@@ -30,6 +30,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         string dirName = "";
         string PublicAutoCall = "{PublicAutoCall$}";
 
+        public DynamicCodeTempImpl() { }
+
         public DynamicCodeTempImpl(string dirName)
         {
             this.dirName = dirName;
@@ -656,7 +658,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             code = s;
         }
 
-        private string CreateTaskCode(MethodInformation mInfo, EMethodInfo em, string code, LeftSpaceLevel spaceLevel, string taskStartTag, string taskEndTag)
+        public string CreateTaskCode(MethodInformation mInfo, EMethodInfo em, string code, LeftSpaceLevel spaceLevel, string taskStartTag, string taskEndTag)
         {
             string scode = code;
             bool isTask = false;

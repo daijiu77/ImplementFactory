@@ -6,6 +6,7 @@ using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Test.NetCoreApi.Controllers
 {
@@ -32,9 +33,9 @@ namespace Test.NetCoreApi.Controllers
         /// <param name="name"></param>
         /// <returns></returns>
         [HttpPost, MSFilter, Route("GetUserName")]
-        public string UserName(string name)
+        public Task<string> UserName(string name)
         {
-            return name;
+            return Task.FromResult(name);
         }
 
         [HttpPost, Route("GetAuthCode")]

@@ -9,7 +9,7 @@ namespace System.DJ.ImplementFactory.Pipelines
     public interface IMSService
     {
         List<string> IPAddrSources();
-        void SaveIPAddr(string IPAddr, string contractKey);
-        void SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey);
+        bool SaveIPAddr(string IPAddr, string contractKey);
+        bool SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey);
     }
 }

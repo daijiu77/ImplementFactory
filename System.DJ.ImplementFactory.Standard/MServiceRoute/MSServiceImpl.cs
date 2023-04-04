@@ -30,19 +30,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
-        void IMSService.SaveIPAddr(string IPAddr, string contractKey)
+        bool IMSService.SaveIPAddr(string IPAddr, string contractKey)
         {
             lock (this)
             {
-                SaveIPAddress(IPAddr, contractKey);
+                return SaveIPAddress(IPAddr, contractKey);
             }
         }
 
-        void IMSService.SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
+        bool IMSService.SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
         {
             lock (this)
             {
-                SetEnabledTime(startTime, endTime, contractKey);
+                return SetEnabledTime(startTime, endTime, contractKey);
             }
         }
 
@@ -64,11 +64,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return ipAddrs;
         }
 
-        public virtual void SaveIPAddress(string IPAddress, string contractKey)
+        public virtual bool SaveIPAddress(string IPAddress, string contractKey)
         {
-            if (string.IsNullOrEmpty(IPAddress)) return;
+            bool mbool = false;
+            if (string.IsNullOrEmpty(IPAddress)) return mbool;
             string ip = IPAddress.Trim();
-            if (!rgIP.IsMatch(ip)) return;
+            if (!rgIP.IsMatch(ip)) return mbool;
 
             XmlDocument doc = new XmlDocument();
             if (File.Exists(filePath)) doc.Load(filePath);
@@ -128,7 +129,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
             }
 
-            if (ipDic.ContainsKey(IPAddress)) return;
+            if (ipDic.ContainsKey(IPAddress)) return mbool;
             ipDic.Add(IPAddress, IPAddress);
 
             ele = doc.CreateElement("IPAddr");
@@ -136,10 +137,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             ipNodes.AppendChild(ele);
 
             doc.Save(filePath);
+            mbool = true;
+            return mbool;
         }
 
-        public virtual void SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
+        public virtual bool SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
         {
+            bool mbool = false;
             XmlDocument doc = new XmlDocument();
             if (File.Exists(filePath)) doc.Load(filePath);
 
@@ -205,6 +209,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             dic[contractKeyL].Value = contractKey;
 
             doc.Save(filePath);
+            mbool = true;
+            return mbool;
         }
     }
 }
