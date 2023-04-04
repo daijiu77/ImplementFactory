@@ -128,11 +128,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Attrs\MSConfiguratorAction.cs" />
+    <Compile Include="MServiceRoute\MService.cs" />
     <Compile Include="MServiceRoute\Attrs\MSStart.cs" />
     <Compile Include="MServiceRoute\Attrs\MicroServiceRoute.cs" />
     <Compile Include="MServiceRoute\Attrs\MSClientRegisterAction.cs" />
     <Compile Include="MServiceRoute\Attrs\MSFilter.cs" />
-    <Compile Include="MServiceRoute\Attrs\MSEnabledTimeAction.cs" />
     <Compile Include="MServiceRoute\Attrs\AbsActionFilterAttribute.cs" />
     <Compile Include="MServiceRoute\MSServiceImpl.cs" />
     <Compile Include="Pipelines\IMSService.cs" />

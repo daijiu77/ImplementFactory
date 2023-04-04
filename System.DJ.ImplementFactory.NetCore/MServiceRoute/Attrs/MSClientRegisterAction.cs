@@ -32,7 +32,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (0 == dic.Count)
             {
-                dic = GetKVListFromHead(context.HttpContext, list, false);
+                dic = GetKVListFromHeader(context.HttpContext, list, false);
             }
 
             if (string.IsNullOrEmpty(key))

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.DJ.ImplementFactory;
+using System.DJ.ImplementFactory.MServiceRoute;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -15,6 +16,7 @@ namespace Test.NetCoreApi
         {
             Configuration = configuration;
             ImplementAdapter.Init();
+            MService.Start();
         }
 
         public IConfiguration Configuration { get; }

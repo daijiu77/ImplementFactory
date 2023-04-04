@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
-using System.IO;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
-    public class MSEnabledTimeAction : AbsActionFilterAttribute
+    public class MSConfiguratorAction : AbsActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
@@ -26,7 +25,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (0 == dicPara.Count)
             {
-                dicPara = GetKVListFromHead(context.HttpContext, list, true);
+                dicPara = GetKVListFromHeader(context.HttpContext, list, true);
             }
             string start = "";
             string end = "";

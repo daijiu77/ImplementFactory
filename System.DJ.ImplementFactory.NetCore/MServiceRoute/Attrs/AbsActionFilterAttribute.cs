@@ -145,7 +145,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             return dic;
         }
 
-        protected Dictionary<string, object> GetKVListFromHead(HttpContext context, List<string> keys, bool contain)
+        protected Dictionary<string, object> GetKVListFromHeader(HttpContext context, List<string> keys, bool contain)
         {
             Dictionary<string, object> dic = new Dictionary<string, object>();
             if (null == keys) keys = new List<string>();

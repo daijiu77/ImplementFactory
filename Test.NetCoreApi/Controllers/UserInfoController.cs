@@ -62,7 +62,7 @@ namespace Test.NetCoreApi.Controllers
         /// <param name="endTime"></param>
         /// <param name="contractKey"></param>
         /// <returns></returns>
-        [HttpPost, MSEnabledTimeAction, Route("SetMSConfig")]
+        [HttpPost, MSConfiguratorAction, Route("SetMSConfig")]
         public object SetMSConfig(DateTime startTime, DateTime endTime, string contractKey)
         {
             return new { startTime = startTime, endTime = endTime, contractKey = contractKey };
