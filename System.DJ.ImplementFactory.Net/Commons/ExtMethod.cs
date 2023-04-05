@@ -373,8 +373,17 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 if (item.Value.Type == JTokenType.Object || item.Value.Type == JTokenType.Array || item.Value.Type == JTokenType.Property) continue;
                 if (!dic.ContainsKey(item.Name.ToLower())) continue;
+                if (item.Value.Type == JTokenType.None
+                    || item.Value.Type == JTokenType.Object
+                    || item.Value.Type == JTokenType.Array
+                    || item.Value.Type == JTokenType.Constructor
+                    || item.Value.Type == JTokenType.Property
+                    || item.Value.Type == JTokenType.Comment
+                    || item.Value.Type == JTokenType.Null
+                    || item.Value.Type == JTokenType.Undefined
+                    || item.Value.Type == JTokenType.Raw) continue;
                 pi = dic[item.Name.ToLower()];
-                v = DJTools.ConvertTo(item.Value, pi.PropertyType);
+                v = DJTools.ConvertTo(item.Value.ToString(), pi.PropertyType);
                 if (null == v) continue;
                 pi.SetValue(vObj, v);
             }

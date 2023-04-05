@@ -6,10 +6,12 @@
     <Nullable>enable</Nullable>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Net",""))</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
+    <Description>The ImplementFactory component is suitable for .Net &gt;= 6.0 environment.
+The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
 for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</Description>
     <PackageReleaseNotes>The ImplementFactory component is suitable for .Net &gt;= 6.0 environment.</PackageReleaseNotes>
     <PackageId>ImplementFactory.Net</PackageId>
+    <Version>1.0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
