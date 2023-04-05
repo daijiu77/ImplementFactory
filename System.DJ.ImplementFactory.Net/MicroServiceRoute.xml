@@ -1,4 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<MicroServiceRoute>
-	<Route Name="route1" Uri="http://127.0.0.1:80/api" RegisterAddr="/UserInfo/RegisterIP?ContractKey=abc123456" RegisterActionType="get" />
-</MicroServiceRoute>
