@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.MServiceRoute;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -27,7 +28,7 @@ namespace Test.NetCoreApi
             services.AddControllers();
             services.AddMvc(options =>
             {
-                //options.Filters.Add<FilterMvcController>();
+                options.Filters.Add<MSFilter>();
             });
         }
 

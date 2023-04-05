@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace Test.NetCoreApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet, MSUnlimitedAction]
         public IEnumerable<WeatherForecast> Get()
         {
             var rng = new Random();

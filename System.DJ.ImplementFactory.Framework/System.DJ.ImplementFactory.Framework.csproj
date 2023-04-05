@@ -128,6 +128,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Attrs\MSUnlimitedAction.cs" />
     <Compile Include="MServiceRoute\Attrs\MSConfiguratorAction.cs" />
     <Compile Include="MServiceRoute\MService.cs" />
     <Compile Include="MServiceRoute\Attrs\MSStart.cs" />
