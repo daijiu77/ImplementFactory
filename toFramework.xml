@@ -107,6 +107,11 @@
 				<target>using System.Web.Mvc;</target>
 				<extendNames>cs</extendNames>
 			</item>
+			<item>
+				<source>context.ActionDescriptor.DisplayName;</source>
+				<target>context.ActionDescriptor.ActionName;</target>
+				<extendNames>cs</extendNames>
+			</item>
 		</replaces>
 	</copy>
 	<copy ext="cs">

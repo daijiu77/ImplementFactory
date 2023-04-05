@@ -93,6 +93,11 @@
 				<target>using Microsoft.AspNetCore.Mvc.Filters;</target>
 				<extendNames>cs</extendNames>
 			</item>
+			<item>
+				<source>context.ActionDescriptor.ActionName;</source>
+				<target>context.ActionDescriptor.DisplayName;</target>
+				<extendNames>cs</extendNames>
+			</item>
 		</replaces>
 	</copy>
 	<copy ext="cs">
