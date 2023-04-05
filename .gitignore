@@ -20,6 +20,7 @@
 /System.DJ.ImplementFactory.Framework/bin/
 /System.DJ.MicroService.Framework/bin/
 /System.DJ.ImplementFactory.NetCore/bin/
+/System.DJ.ImplementFactory.Net/bin/
 /System.DJ.ImplementFactory.Standard/bin/
 /System.DJ.MicroService.NetCore/bin/
 /MicroService.Web/bin/
@@ -37,6 +38,7 @@
 /System.DJ.ImplementFactory.Framework/obj/
 /System.DJ.MicroService.Framework/obj/
 /System.DJ.ImplementFactory.NetCore/obj/
+/System.DJ.ImplementFactory.Net/obj/
 /System.DJ.ImplementFactory.Standard/obj/
 /System.DJ.MicroService.NetCore/obj/
 /System.DJ.MicroService.Standard/obj/

@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.DJ.ImplementFactory.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Standard", "Test.Standard\Test.Standard.csproj", "{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.ImplementFactory.Net", "System.DJ.ImplementFactory.Net\System.DJ.ImplementFactory.Net.csproj", "{1D78BECE-2A54-437E-B9EC-D15D98014AB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.DJ.ImplementFactory.Net", "System.DJ.ImplementFactory.Net\System.DJ.ImplementFactory.Net.csproj", "{902B11FD-165F-44E0-9234-EDBC7D0DE1C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,10 +73,10 @@ Global
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{902B11FD-165F-44E0-9234-EDBC7D0DE1C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{902B11FD-165F-44E0-9234-EDBC7D0DE1C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{902B11FD-165F-44E0-9234-EDBC7D0DE1C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{902B11FD-165F-44E0-9234-EDBC7D0DE1C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
