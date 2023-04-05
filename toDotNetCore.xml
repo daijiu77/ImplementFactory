@@ -160,6 +160,147 @@
 		</replaces>
 	</copy>
 
+               <!--把 Framework 项目的文件复制到 Net 项目-->
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\ImplementAdapter.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net</target>
+		<exclude></exclude>
+		<replaces>
+		  <item des="把复制文件内容里的 source 替换为 target">
+			<source>using System.DJ.Framework.CodeCompiler</source>
+			<target>using System.DJ.Net.CodeCompiler</target>
+			<extendNames>cs</extendNames>
+		  </item>
+		</replaces>
+	</copy>
+	<copy ext="xml">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\ImplementFactory.xml</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Pipelines</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\Pipelines</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Entities</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\Entities</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\DataAccess</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\DataAccess</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\DCache</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\DCache</target>
+		<exclude></exclude>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\MServiceRoute</target>
+		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSConfiguratorAction.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSConfiguratorAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Web.Mvc;</source>
+				<target>using Microsoft.AspNet.Mvc.Filters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionParameters;</source>
+				<target>context.ActionArguments;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionDescriptor.ActionName;</source>
+				<target>context.ActionDescriptor.DisplayName;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSFilter.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Web.Mvc;</source>
+				<target>using Microsoft.AspNet.Mvc.Filters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionDescriptor.ActionName;</source>
+				<target>context.ActionDescriptor.DisplayName;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSClientRegisterAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Web.Mvc;</source>
+				<target>using Microsoft.AspNet.Mvc.Filters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionParameters;</source>
+				<target>context.ActionArguments;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\Commons</target>
+		<exclude>ExtCollection.cs,DJTools.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons\DJTools.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Net\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>System.Web.HttpContext.Current</source>
+				<target>null</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+
                <!--以下替换 Standard 模块-->
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->

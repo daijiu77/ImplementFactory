@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "restore": {
+    "H:\\Projects\\GitHub\\daijiu77\\ImplementFactory\\System.DJ.ImplementFactory.Net\\System.DJ.ImplementFactory.Net.csproj": {}
+  },
+  "projects": {
+    "H:\\Projects\\GitHub\\daijiu77\\ImplementFactory\\System.DJ.ImplementFactory.Net\\System.DJ.ImplementFactory.Net.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "H:\\Projects\\GitHub\\daijiu77\\ImplementFactory\\System.DJ.ImplementFactory.Net\\System.DJ.ImplementFactory.Net.csproj",
+        "projectName": "ImplementFactory.Net",
+        "projectPath": "H:\\Projects\\GitHub\\daijiu77\\ImplementFactory\\System.DJ.ImplementFactory.Net\\System.DJ.ImplementFactory.Net.csproj",
+        "packagesPath": "C:\\Users\\DJ-PC01\\.nuget\\packages\\",
+        "outputPath": "H:\\Projects\\GitHub\\daijiu77\\ImplementFactory\\System.DJ.ImplementFactory.Net\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\DJ-PC01\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Mvc.Core": {
+              "target": "Package",
+              "version": "[2.2.5, )"
+            },
+            "Microsoft.CodeAnalysis.CSharp": {
+              "target": "Package",
+              "version": "[4.5.0, )"
+            },
+            "Microsoft.Data.SqlClient": {
+              "target": "Package",
+              "version": "[5.1.1, )"
+            },
+            "MySql.Data": {
+              "target": "Package",
+              "version": "[8.0.32.1, )"
+            },
+            "Oracle.ManagedDataAccess.Core": {
+              "target": "Package",
+              "version": "[3.21.90, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

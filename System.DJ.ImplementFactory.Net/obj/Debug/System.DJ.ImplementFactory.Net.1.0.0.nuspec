@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>System.DJ.ImplementFactory.Net</id>
+    <version>1.0.0</version>
+    <authors>System.DJ.ImplementFactory.Net</authors>
+    <description>The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
+for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</description>
+    <releaseNotes>The ImplementFactory component is suitable for .Net &gt;= 6.0 environment.</releaseNotes>
+    <dependencies>
+      <group targetFramework="net6.0">
+        <dependency id="Microsoft.AspNetCore.Mvc.Core" version="2.2.5" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.CodeAnalysis.CSharp" version="4.5.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Data.SqlClient" version="5.1.1" exclude="Build,Analyzers" />
+        <dependency id="MySql.Data" version="8.0.32.1" exclude="Build,Analyzers" />
+        <dependency id="Oracle.ManagedDataAccess.Core" version="3.21.90" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="H:\Projects\GitHub\daijiu77\ImplementFactory\System.DJ.ImplementFactory.Net\bin\Debug\net6.0\System.DJ.ImplementFactory.Net.dll" target="lib\net6.0\System.DJ.ImplementFactory.Net.dll" />
+  </files>
+</package>

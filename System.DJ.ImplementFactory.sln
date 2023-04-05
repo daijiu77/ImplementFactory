@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.DJ.ImplementFactory.NetCore", "System.DJ.ImplementFactory.NetCore\System.DJ.ImplementFactory.NetCore.csproj", "{ACF15AE7-C150-4BE8-9B0C-34BBC21ACC59}"
 EndProject
@@ -21,9 +21,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.FrameworkApi", "Test.F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NetCoreApi", "Test.NetCoreApi\Test.NetCoreApi.csproj", "{F13D0837-D2FD-4531-93A6-B4358F43222B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.ImplementFactory.Standard", "System.DJ.ImplementFactory.Standard\System.DJ.ImplementFactory.Standard.csproj", "{9097A56A-0C3C-46B2-8E7C-F5D8A444BD32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.DJ.ImplementFactory.Standard", "System.DJ.ImplementFactory.Standard\System.DJ.ImplementFactory.Standard.csproj", "{9097A56A-0C3C-46B2-8E7C-F5D8A444BD32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Standard", "Test.Standard\Test.Standard.csproj", "{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Standard", "Test.Standard\Test.Standard.csproj", "{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.DJ.ImplementFactory.Net", "System.DJ.ImplementFactory.Net\System.DJ.ImplementFactory.Net.csproj", "{1D78BECE-2A54-437E-B9EC-D15D98014AB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,10 @@ Global
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96ED1EFB-087E-44B0-8C8F-1E92747FA7E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D78BECE-2A54-437E-B9EC-D15D98014AB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
