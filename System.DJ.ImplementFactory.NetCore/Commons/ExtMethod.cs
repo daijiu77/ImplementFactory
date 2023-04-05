@@ -371,8 +371,6 @@ namespace System.DJ.ImplementFactory.Commons
             IEnumerable<JProperty> ps = jo.Properties();
             foreach (JProperty item in ps)
             {
-                if (item.Value.Type == JTokenType.Object || item.Value.Type == JTokenType.Array || item.Value.Type == JTokenType.Property) continue;
-                if (!dic.ContainsKey(item.Name.ToLower())) continue;
                 if (item.Value.Type == JTokenType.None
                     || item.Value.Type == JTokenType.Object
                     || item.Value.Type == JTokenType.Array
@@ -382,10 +380,11 @@ namespace System.DJ.ImplementFactory.Commons
                     || item.Value.Type == JTokenType.Null
                     || item.Value.Type == JTokenType.Undefined
                     || item.Value.Type == JTokenType.Raw) continue;
+                if (!dic.ContainsKey(item.Name.ToLower())) continue;
                 pi = dic[item.Name.ToLower()];
                 v = DJTools.ConvertTo(item.Value.ToString(), pi.PropertyType);
                 if (null == v) continue;
-                pi.SetValue(vObj, v);
+                vObj.SetPropertyValue(pi.Name, v);
             }
 
             return vObj;
