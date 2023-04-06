@@ -7,7 +7,6 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
@@ -123,35 +122,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 methodCode = "";
                 returnType = eMethod.ReturnType == null ? "void" : eMethod.ReturnType.TypeToString(true);
 
-                if (eMethod.IsTaskReturn)
-                {
-                    elist.Add(new CKeyValue() { Key = typeof(Task).Namespace });
-                    if (eMethod.IsAsyncReturn)
-                    {
-                        if (typeof(void) == eMethod.ReturnType)
-                        {
-                            returnType = "<Task>";
-                        }
-                        else
-                        {
-                            returnType = "<{0}>".ExtFormat(returnType);
-                        }
-                        returnType = "async Task{0}".ExtFormat(returnType);
-                    }
-                    else
-                    {
-                        if (typeof(void) == eMethod.ReturnType)
-                        {
-                            returnType = "";
-                        }
-                        else
-                        {
-                            returnType = "<{0}>".ExtFormat(returnType);
-                        }
-                        returnType = "Task{0}".ExtFormat(returnType);
-                    }
-                }
-
+                tempImp.GetTaskReturnTypeStr(eMethod, elist, ref returnType);
+                
                 s = returnType;
                 s += " " + interfaceName + "." + miItem.Name + "(" + paraList + ")";
                 mInfo.append(ref methodCode, LeftSpaceLevel.three, s);

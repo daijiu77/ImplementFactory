@@ -703,6 +703,38 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return scode;
         }
 
+        public void GetTaskReturnTypeStr(EMethodInfo eMethod, EList<CKeyValue> elist, ref string returnType)
+        {
+            if (eMethod.IsTaskReturn)
+            {
+                elist.Add(new CKeyValue() { Key = typeof(Task).Namespace });
+                if (eMethod.IsAsyncReturn)
+                {
+                    if (typeof(void) == eMethod.ReturnType)
+                    {
+                        returnType = "<Task>";
+                    }
+                    else
+                    {
+                        returnType = "<{0}>".ExtFormat(returnType);
+                    }
+                    returnType = "async Task{0}".ExtFormat(returnType);
+                }
+                else
+                {
+                    if (typeof(void) == eMethod.ReturnType)
+                    {
+                        returnType = "";
+                    }
+                    else
+                    {
+                        returnType = "<{0}>".ExtFormat(returnType);
+                    }
+                    returnType = "Task{0}".ExtFormat(returnType);
+                }
+            }
+        }
+
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
         {
             MethodInformation mInfo = new MethodInformation();
@@ -972,35 +1004,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         }
                     }
 
-                    if (eMethod.IsTaskReturn)
-                    {
-                        uskv.Add(new CKeyValue() { Key = typeof(Task).Namespace });
-                        if (eMethod.IsAsyncReturn)
-                        {
-                            if (typeof(void) == eMethod.ReturnType)
-                            {
-                                returnType = "<Task>";
-                            }
-                            else
-                            {
-                                returnType = "<{0}>".ExtFormat(returnType);
-                            }
-                            returnType = "async Task{0}".ExtFormat(returnType);
-                        }
-                        else
-                        {
-                            if (typeof(void) == eMethod.ReturnType)
-                            {
-                                returnType = "";
-                            }
-                            else
-                            {
-                                returnType = "<{0}>".ExtFormat(returnType);
-                            }
-                            returnType = "Task{0}".ExtFormat(returnType);
-                        }
-                    }
-
+                    GetTaskReturnTypeStr(eMethod, uskv, ref returnType);
+                    
                     mInfo.append(ref code, "");
                     if (isNotInheritInterface)
                     {

@@ -7,7 +7,7 @@ using Test.NetCore.Entities;
 
 namespace Test.NetCore
 {
-    [MicroServiceRoute("route1")]
+    [MicroServiceRoute("route1", "UserInfo")]
     public interface IApiUserInfo
     {
         UserInfo GetUserInfo(string id);
