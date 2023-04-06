@@ -7,27 +7,33 @@ using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
+    /// <summary>
+    /// Enable data caching mechanism.
+    /// </summary>
     public class DataCache : AbsDataCache
     {
         private int cacheTime = ImplementAdapter.dbInfo1.CacheTime_Second;
         private bool persistenceCache = false;
 
+        /// <summary>
+        /// Enable data caching mechanism.
+        /// </summary>
         public DataCache() { }
 
         /// <summary>
-        /// 数据缓存
+        /// Enable data caching mechanism.
         /// </summary>
-        /// <param name="cacheTime_Second">数据缓存生命周期,单位:秒</param>
+        /// <param name="cacheTime_Second">Data cache lifecycle, in seconds</param>
         public DataCache(int cacheTime_Second)
         {
             this.cacheTime = cacheTime_Second;
         }
 
         /// <summary>
-        /// 数据缓存
+        /// Enable data caching mechanism.
         /// </summary>
-        /// <param name="cacheTime_Second">数据缓存生命周期,单位:秒</param>
-        /// <param name="persistenceCache">开启缓存持久化</param>
+        /// <param name="cacheTime_Second">Data cache lifecycle, in seconds</param>
+        /// <param name="persistenceCache">Whether to enable the data cache persistence mechanism</param>
         public DataCache(int cacheTime_Second, bool persistenceCache)
         {
             this.cacheTime = cacheTime_Second;
@@ -35,9 +41,9 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 数据缓存
+        /// Enable data caching mechanism.
         /// </summary>
-        /// <param name="persistenceCache">开启缓存持久化</param>
+        /// <param name="persistenceCache">Whether to enable the data cache persistence mechanism</param>
         public DataCache(bool persistenceCache)
         {
             this.persistenceCache = persistenceCache;

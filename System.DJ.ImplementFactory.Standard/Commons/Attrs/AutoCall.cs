@@ -22,6 +22,10 @@ using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
     public delegate string getDllAbsolutePathByRelativePath(string relativePath);
+
+    /// <summary>
+    /// Enable dependency injection mechanism.
+    /// </summary>
     public class AutoCall : Attribute
     {
         DynamicCodeAutoCall dynamicCodeAutoCall = new DynamicCodeAutoCall();
@@ -34,14 +38,26 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
         static AutoCall _autoCall = null;
 
+        /// <summary>
+        /// Enable dependency injection mechanism.
+        /// </summary>
         public AutoCall() { }
 
+        /// <summary>
+        /// Enable dependency injection mechanism.
+        /// </summary>
+        /// <param name="MatchRuleOrClassName">Set object name matching rules or specify class names</param>
+        /// <param name="IgnoreCase">Ignore class name capitalization</param>
         public AutoCall(string MatchRuleOrClassName, bool IgnoreCase)
         {
             this.MatchRuleOrClassName = MatchRuleOrClassName;
             this.IgnoreCase = IgnoreCase ? IgnoreLU.is_true : IgnoreLU.is_false;
         }
 
+        /// <summary>
+        /// Enable dependency injection mechanism.
+        /// </summary>
+        /// <param name="MatchRuleOrClassName">Set object name matching rules or specify class names</param>
         public AutoCall(string MatchRuleOrClassName)
         {
             this.MatchRuleOrClassName = MatchRuleOrClassName;

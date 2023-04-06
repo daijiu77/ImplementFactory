@@ -12,6 +12,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
+        /// <summary>
+        /// Start the service registration mechanism, which should be executed at project startup.
+        /// </summary>
         public static void Start()
         {
             Task.Run(() =>

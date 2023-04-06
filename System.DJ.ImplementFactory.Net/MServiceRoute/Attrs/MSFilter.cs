@@ -4,9 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
+    /// <summary>
+    /// The service gateway filter requires the use of the 'MSClientRegisterAction' attribute to specify the interface method used to accept client registration
+    /// </summary>
     public class MSFilter : AbsActionFilterAttribute
     {
-
+        /// <summary>
+        /// The service gateway filter requires the use of the 'MSClientRegisterAction' attribute to specify the interface method used to accept client registration
+        /// </summary>
         public MSFilter()
         {
             //

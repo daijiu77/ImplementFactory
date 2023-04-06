@@ -12,10 +12,12 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <Copyright>DJ</Copyright>
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
-    <Version>1.1.12.24</Version>
+    <Version>1.1.12.25</Version>
     <PackageReleaseNotes>The ImplementFactory component is suitable for .Net core &gt;=3.1 environment.</PackageReleaseNotes>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".NetCore",""))</RootNamespace>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <ItemGroup>

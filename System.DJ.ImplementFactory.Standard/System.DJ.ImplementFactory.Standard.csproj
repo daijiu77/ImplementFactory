@@ -9,10 +9,11 @@ for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</De
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1.24</Version>
+    <Version>1.0.1.25</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
     <Authors>DJ</Authors>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Standard", ""))</RootNamespace>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

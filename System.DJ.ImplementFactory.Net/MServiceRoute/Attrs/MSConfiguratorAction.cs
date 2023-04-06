@@ -5,8 +5,16 @@ using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
+    /// <summary>
+    /// A method for setting the registration permission of client 'IP', which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
+    /// </summary>
     public class MSConfiguratorAction : AbsActionFilterAttribute
     {
+        /// <summary>
+        /// A method for setting the registration permission of client 'IP', which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
+        /// </summary>
+        public MSConfiguratorAction() { }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);

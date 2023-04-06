@@ -6,6 +6,9 @@ using System.Xml;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
+    /// <summary>
+    /// Service interface local mapping interface class identifier
+    /// </summary>
     public class MicroServiceRoute : Attribute
     {
         private string _routeName = "";
@@ -20,11 +23,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             msr(null, null, null);
         }
 
+        /// <summary>
+        /// Service interface local mapping interface class identifier
+        /// </summary>
+        /// <param name="RouteName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
+        /// <param name="ControllerName">Remote Service Interface Controller Name</param>
         public MicroServiceRoute(string RouteName, string ControllerName)
         {
             msr(this, RouteName, ControllerName);
         }
 
+        /// <summary>
+        /// Service interface local mapping interface class identifier,The default current interface class name is the remote service interface controller name.
+        /// </summary>
+        /// <param name="RouteName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
         public MicroServiceRoute(string RouteName)
         {
             msr(this, RouteName, null);

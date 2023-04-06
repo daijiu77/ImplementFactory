@@ -3,8 +3,16 @@ using System.Collections.Generic;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
+    /// <summary>
+    /// Identify the client registration method, which must have a 'ContractKey' parameter of character type
+    /// </summary>
     public class MSClientRegisterAction : AbsActionFilterAttribute
     {
+        /// <summary>
+        /// Identify the client registration method, which must have a 'ContractKey' parameter of character type.
+        /// </summary>
+        public MSClientRegisterAction() { }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             IDictionary<string, object> dic = context.ActionArguments;
