@@ -6,12 +6,13 @@
     <PackageId>ImplementFactory.NetCore</PackageId>
     <Authors>DJ</Authors>
     <Product>ImplementFactory.NetCore</Product>
-    <Description>The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
+    <Description>The ImplementFactory component is suitable for .Net core &gt;=3.1 environment.
+The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
 for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</Description>
     <Copyright>DJ</Copyright>
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
-    <Version>1.1.12.23</Version>
+    <Version>1.1.12.24</Version>
     <PackageReleaseNotes>The ImplementFactory component is suitable for .Net core &gt;=3.1 environment.</PackageReleaseNotes>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".NetCore",""))</RootNamespace>

@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Description>The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
+    <Description>The ImplementFactory component is suitable for .Standard &gt;=2.1 environment.
+The ImplementFactory component automatically scans interface type members, automatically assembles interface instances for interface type members, Convenient and quick implementation of dependency injection (IoC inversion control) mechanism , interface-oriented operation data sources, implements interface instance loading interception, interface method invocation interception, and corresponding exception interception and provides an effective solution.
 for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</Description>
     <PackageReleaseNotes>The ImplementFactory component is suitable for .Standard &gt;=2.1 environment.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/daijiu77/ImplementFactory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/daijiu77/ImplementFactory</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1.23</Version>
+    <Version>1.0.1.24</Version>
     <PackageId>ImplementFactory.Standard</PackageId>
     <Authors>DJ</Authors>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Standard", ""))</RootNamespace>
