@@ -589,12 +589,14 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             int spaceCount = 0;
             int nbool = 0;
             Dictionary<string, bool> dicKv = new Dictionary<string, bool>();
+            List<string> listK = new List<string>();
             if (null != findTags)
             {
                 foreach (string tag in findTags)
                 {
                     if (dicKv.ContainsKey(tag)) continue;
                     dicKv.Add(tag, false);
+                    listK.Add(tag);
                     nbool++;
                 }
             }
@@ -613,12 +615,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                 if (0 < nbool)
                 {
-                    foreach (var kv in dicKv)
+                    foreach (var k in listK)
                     {
-                        if (kv.Value) continue;
-                        if (-1 != line.IndexOf(kv.Key))
+                        if (dicKv[k]) continue;
+                        if (-1 != line.IndexOf(k))
                         {
-                            dicKv[kv.Key] = true;
+                            dicKv[k] = true;
                             nbool--;
                         }
                     }
@@ -652,6 +654,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 }
                 if (string.IsNullOrEmpty(s1)) break;
             }
+
             code = s;
         }
 
