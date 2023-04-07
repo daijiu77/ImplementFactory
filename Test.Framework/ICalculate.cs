@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.Text;
+using System.DJ.ImplementFactory.DCache.Attrs;
 
 namespace Test.Framework
 {

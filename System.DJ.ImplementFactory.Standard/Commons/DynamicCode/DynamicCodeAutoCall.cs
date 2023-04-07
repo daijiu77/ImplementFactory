@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.DCache.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
