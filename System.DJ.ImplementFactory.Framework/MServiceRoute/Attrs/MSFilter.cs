@@ -21,6 +21,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             bool mbool = false;
             Type type = context.Controller.GetType();
+            Attribute attr = type.GetCustomAttribute(typeof(MSUnlimited), true);
+            if (null != attr)
+            {
+                base.OnActionExecuting(context);
+                return;
+            }
             string displayName = context.ActionDescriptor.ActionName;
             Regex rg = new Regex(@"controller\.(?<MethodName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
             string MethodName = "";
@@ -37,11 +43,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 Attribute atr1 = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
                 Attribute atr2 = mi.GetCustomAttribute(typeof(MSConfiguratorAction), true);
-                Attribute atr3 = mi.GetCustomAttribute(typeof(MSUnlimitedAction), true);
+                Attribute atr3 = mi.GetCustomAttribute(typeof(MSUnlimited), true);
                 if (null != atr1 || null != atr2 || null != atr3) mbool = true;
             }
 
-            if(!mbool)
+            if (!mbool)
             {
                 string ip = GetIP(context);
                 if (!_kvDic.ContainsKey(ip))
@@ -49,9 +55,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     throw new Exception("Illegal access");
                 }
             }
-            
+
             base.OnActionExecuting(context);
         }
-
     }
 }

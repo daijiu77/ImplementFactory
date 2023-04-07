@@ -10,6 +10,7 @@ namespace Test.NetCoreApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [MSUnlimited]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -24,7 +25,7 @@ namespace Test.NetCoreApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet, MSUnlimitedAction]
+        [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
             var rng = new Random();

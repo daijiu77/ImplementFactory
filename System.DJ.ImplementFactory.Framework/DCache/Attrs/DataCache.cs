@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
-namespace System.DJ.ImplementFactory.Commons.Attrs
+namespace System.DJ.ImplementFactory.DCache.Attrs
 {
     /// <summary>
     /// Enable data caching mechanism.

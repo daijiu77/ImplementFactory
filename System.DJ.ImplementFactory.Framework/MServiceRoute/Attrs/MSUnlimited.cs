@@ -3,11 +3,11 @@
     /// <summary>
     /// Identify an external interface method without gateway 'MSFilter' restrictions
     /// </summary>
-    public class MSUnlimitedAction : Attribute
+    public class MSUnlimited : Attribute
     {
         /// <summary>
         /// Identify an external interface method without gateway 'MSFilter' restrictions.
         /// </summary>
-        public MSUnlimitedAction() { }
+        public MSUnlimited() { }
     }
 }
