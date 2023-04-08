@@ -9,28 +9,37 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 /// </summary>
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
+    /// <summary>
+    /// Removes the data SQL statement expression attribute identification.
+    /// </summary>
     public class AutoDelete: AbsDataInterface
     {
         /// <summary>
-        /// 执行 delete 操作
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
-        /// <param name="deleteExpression">delete 语句表达式</param>
+        /// <param name="deleteExpression">A valid delete statement expression</param>
         public AutoDelete(string deleteExpression): base()
         {
             sql = deleteExpression;
         }
 
         /// <summary>
-        /// 执行 delete 操作
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
-        /// <param name="deleteExpression">delete 语句表达式</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="deleteExpression">A valid delete statement expression</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoDelete(string deleteExpression, DataOptType sqlExecType) : base()
         {
             sql = deleteExpression;
             this.sqlExecType = sqlExecType;
         }
 
+        /// <summary>
+        /// Removes the data SQL statement expression attribute identification.
+        /// </summary>
+        /// <param name="deleteExpression">A valid delete statement expression</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoDelete(string deleteExpression, DataOptType sqlExecType, bool EnabledBuffer) : base()
         {
             sql = deleteExpression;
@@ -39,10 +48,10 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 delete 操作
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
         /// <param name="deleteExpression">delete 语句表达式</param>
-        /// <param name="EnabledBuffer">是否启用缓存机制, 默认为 false(不启用)</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoDelete(string deleteExpression, bool EnabledBuffer) : base()
         {
             sql = deleteExpression;
@@ -50,10 +59,10 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
         public AutoDelete(string dataProviderNamespace, string dataProviderClassName) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;
@@ -61,11 +70,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoDelete(string dataProviderNamespace, string dataProviderClassName, DataOptType sqlExecType) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;
@@ -74,11 +83,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// Removes the data SQL statement expression attribute identification.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
-        /// <param name="EnabledBuffer">是否启用缓存机制, 默认为 false(不启用)</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoDelete(string dataProviderNamespace, string dataProviderClassName, bool EnabledBuffer) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;

@@ -792,6 +792,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             //uskv.Add(new CKeyValue() { Key = "" });
 
             uskv.Add(new CKeyValue() { Key = typeof(DataCachePool).Namespace });
+            uskv.Add(new CKeyValue() { Key = typeof(DataCache).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(CKeyValue).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(DataPage).Namespace });
@@ -1076,7 +1077,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         #region 数据缓存代码实现 DataCache
                         dataCache = DataCache.GetDataCache(eMethod);
                         if (null != dataCache)
-                        {
+                        {                            
                             mInfo.append(ref methodAttr, LeftSpaceLevel.three, "[DataCache({0}, {1})]", dataCache.CacheTime.ToString(),
                                     dataCache.PersistenceCache.ToString().ToLower());
 

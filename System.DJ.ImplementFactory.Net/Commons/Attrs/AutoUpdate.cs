@@ -9,18 +9,26 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 /// </summary>
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
+    /// <summary>
+    /// The identifier of the SQL statement expression property that performs the Update data operation.
+    /// </summary>
     public class AutoUpdate: AbsDataInterface
     {
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
         public AutoUpdate(string updateExpression) : base()
         {
             sql = updateExpression;
         }
 
+        /// <summary>
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
+        /// </summary>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoUpdate(string updateExpression, bool EnabledBuffer) : base()
         {
             sql = updateExpression;
@@ -28,16 +36,22 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoUpdate(string updateExpression, DataOptType sqlExecType) : base()
         {
             sql = updateExpression;
             this.sqlExecType = sqlExecType;
         }
 
+        /// <summary>
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
+        /// </summary>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoUpdate(string updateExpression, DataOptType sqlExecType, bool EnabledBuffer) : base()
         {
             sql = updateExpression;
@@ -46,12 +60,12 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="fields">执行 update 操作时必须排除的字段名称</param>
-        /// <param name="fieldsType">指示字段名称集合类型是 Exclude(排除) 或 Contain(包含), 默认为 Exclude</param>
-        /// <param name="EnabledBuffer">是否启用缓存机制, 默认为 false(不启用)</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation.</param>
+        /// <param name="fieldsType">Indicates whether each data element (field name) contained in the field name array is Exclude or Contain when performing data operations, which defaults to Exclude.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoUpdate(string updateExpression, string[] fields, FieldsType fieldsType, bool EnabledBuffer) : base()
         {
             sql = updateExpression;
@@ -61,11 +75,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="fields">执行 update 操作时必须排除的字段名称</param>
-        /// <param name="fieldsType">指示字段名称集合类型是 Exclude(排除) 或 Contain(包含), 默认为 Exclude</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation,default is exclude.</param>
+        /// <param name="fieldsType">Indicates whether each data element (field name) contained in the field name array is Exclude or Contain when performing data operations, which defaults to Exclude.</param>
         public AutoUpdate(string updateExpression, string[] fields, FieldsType fieldsType) : base()
         {
             sql = updateExpression;
@@ -74,12 +88,12 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="fields">执行 update 操作时必须排除的字段名称</param>
-        /// <param name="fieldsType">指示字段名称集合类型是 Exclude(排除) 或 Contain(包含), 默认为 Exclude</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation.</param>
+        /// <param name="fieldsType">Indicates whether each data element (field name) contained in the field name array is Exclude or Contain when performing data operations, which defaults to Exclude.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoUpdate(string updateExpression, string[] fields, FieldsType fieldsType, DataOptType sqlExecType) : base()
         {
             sql = updateExpression;
@@ -89,16 +103,22 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="fields">执行 update 操作时必须排除的字段名称</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation,default is exclude.</param>
         public AutoUpdate(string updateExpression, string[] fields) : base()
         {
             sql = updateExpression;
             this.fields = fields;
         }
 
+        /// <summary>
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
+        /// </summary>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation,default is exclude.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoUpdate(string updateExpression, string[] fields, bool EnabledBuffer) : base()
         {
             sql = updateExpression;
@@ -107,11 +127,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 执行 update 操作
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="updateExpression">执行 update 操作的sql语句</param>
-        /// <param name="fields">执行 update 操作时必须排除的字段名称</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="updateExpression">A valid SQL statement expression that performs an update data operation.</param>
+        /// <param name="fields">An array of valid field name strings. Field names that must be excludedincluded when performing the update data operation,default is exclude.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoUpdate(string updateExpression, string[] fields, DataOptType sqlExecType) : base()
         {
             sql = updateExpression;
@@ -120,10 +140,10 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
         public AutoUpdate(string dataProviderNamespace, string dataProviderClassName) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;
@@ -131,11 +151,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
-        /// <param name="sqlExecType">sql 表达式执行类型</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
+        /// <param name="sqlExecType">SQL expression execution type.</param>
         public AutoUpdate(string dataProviderNamespace, string dataProviderClassName, DataOptType sqlExecType) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;
@@ -144,11 +164,11 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
         }
 
         /// <summary>
-        /// 指定一个生成sql语句的提供者类, 需要指定该所在的命名空间及类名
+        /// The identifier of the SQL statement expression property that performs the Update data operation.
         /// </summary>
-        /// <param name="dataProviderNamespace">提供sql语句类所在的命名空间</param>
-        /// <param name="dataProviderClassName">提供sql语句类的类名</param>
-        /// <param name="EnabledBuffer">是否启用缓存机制, 默认为 false(不启用)</param>
+        /// <param name="dataProviderNamespace">SQL query statements provide the namespace in which the class resides.</param>
+        /// <param name="dataProviderClassName">The sql query statement provides the class name of the class, which must inherit the ISqlExpressionProvider interface class.</param>
+        /// <param name="EnabledBuffer">Whether to enable caching, default is false (not enabled)</param>
         public AutoUpdate(string dataProviderNamespace, string dataProviderClassName, bool EnabledBuffer) : base()
         {
             this.dataProviderNamespace = dataProviderNamespace;
