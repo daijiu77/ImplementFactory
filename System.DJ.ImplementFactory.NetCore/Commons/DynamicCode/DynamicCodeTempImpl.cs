@@ -1006,7 +1006,9 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     GetTaskReturnTypeStr(eMethod, uskv, ref returnType);
-                    
+
+                    if (returnType.ToLower().Equals("system.void")) returnType = "void";
+
                     mInfo.append(ref code, "");
                     if (isNotInheritInterface)
                     {
