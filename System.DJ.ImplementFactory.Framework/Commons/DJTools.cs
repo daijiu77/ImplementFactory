@@ -105,7 +105,19 @@ namespace System.DJ.ImplementFactory.Commons
                     vEnum = Enum.GetName(value.GetType(), value);
                     return vEnum;
                 }
+                else if(type.IsEnum)
+                {
+                    if(value.GetType() == type)
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
             }
+
             if (!IsBaseType(value.GetType())) return value;
             if (type.IsEnum)
             {
@@ -143,6 +155,10 @@ namespace System.DJ.ImplementFactory.Commons
                             break;
                         }
                     }
+                }
+                else if (value.GetType() == type)
+                {
+                    enumV = value;
                 }
 
                 isSuccess = null != enumV;
