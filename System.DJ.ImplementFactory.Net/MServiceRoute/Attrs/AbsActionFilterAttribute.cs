@@ -226,25 +226,26 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             // ip
             string ip = "";
-            string type = "";
 
             // context 是 从过滤器拿的ActionExecutingContext 
             try
             {
-                if (string.IsNullOrEmpty(ip))
+                const string _XRealIP = "X-Real-IP";
+                const string _XForwardedFor = "X-Forwarded-For";
+
+                if (context.HttpContext.Request.Headers.ContainsKey(_XRealIP))
                 {
-                    ip = context.HttpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-                    type = "X-Real-IP";
+                    ip = context.HttpContext.Request.Headers[_XRealIP].FirstOrDefault();
                 }
-                if (string.IsNullOrEmpty(ip))
+
+                if (context.HttpContext.Request.Headers.ContainsKey(_XForwardedFor))
                 {
-                    ip = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                    type = "X-Forwarded-For";
+                    ip = context.HttpContext.Request.Headers[_XForwardedFor].FirstOrDefault();
                 }
+
                 if (string.IsNullOrEmpty(ip))
                 {
                     ip = context.HttpContext.Connection.RemoteIpAddress.ToString();
-                    type = "RemoteIp";
                 }
 
                 // 判断是否多个ip
@@ -260,20 +261,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     ip = ip.Substring(7);
                 }
-
-                if (string.IsNullOrEmpty(ip))
-                {
-                    ip = "NoGet";
-                    type = "NoGet";
-                }
             }
             catch
             {
-                ip = "NoGet";
-                type = "NoGet";
+                //ip = "NoGet";
             }
             string dIP = "127.0.0.1";
-            if (null == ip) ip = dIP;
+            if (string.IsNullOrEmpty(ip)) ip = dIP;
             if (ip.Equals("::1")) ip = dIP;
             return ip;
         }

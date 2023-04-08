@@ -123,7 +123,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 returnType = eMethod.ReturnType == null ? "void" : eMethod.ReturnType.TypeToString(true);
 
                 tempImp.GetTaskReturnTypeStr(eMethod, elist, ref returnType);
-                
+
                 s = returnType;
                 s += " " + interfaceName + "." + miItem.Name + "(" + paraList + ")";
                 mInfo.append(ref methodCode, LeftSpaceLevel.three, s);
@@ -185,7 +185,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         mInfo.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})list;", returnType);
                     }
-                    else
+                    else if ((typeof(void) != eMethod.ReturnType)
+                        && eMethod.ReturnType.IsClass
+                        && (false == eMethod.ReturnType.IsInterface)
+                        && (false == eMethod.ReturnType.IsAbstract)
+                        && (false == eMethod.ReturnType.IsBaseType()))
                     {
                         mInfo.append(ref s, LeftSpaceLevel.four, "{0} vObj = responseResult.JsonToEntity<{0}>();", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "return vObj;");

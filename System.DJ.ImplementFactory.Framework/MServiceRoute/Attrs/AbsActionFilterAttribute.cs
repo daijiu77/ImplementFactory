@@ -230,14 +230,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             try
             {
                 HttpRequestBase request = context.HttpContext.Request;
-                if (string.IsNullOrEmpty(ip))
+                Dictionary<string, string> dic = new Dictionary<string, string>();
+                foreach (string item in request.ServerVariables.AllKeys)
                 {
-                    ip = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                    if (dic.ContainsKey(item)) continue;
+                    dic[item] = item;
                 }
 
-                if (string.IsNullOrEmpty(ip))
+                const string _HTTP_X_FORWARDED_FOR = "HTTP_X_FORWARDED_FOR";
+                const string _REMOTE_ADDR = "REMOTE_ADDR";
+
+                if (dic.ContainsKey(_HTTP_X_FORWARDED_FOR))
                 {
-                    ip = request.ServerVariables["REMOTE_ADDR"];
+                    ip = request.ServerVariables[_HTTP_X_FORWARDED_FOR];
+                }
+
+                if (dic.ContainsKey(_REMOTE_ADDR))
+                {
+                    ip = request.ServerVariables[_REMOTE_ADDR];
                 }
 
                 if (string.IsNullOrEmpty(ip))
@@ -258,18 +268,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     ip = ip.Substring(7);
                 }
-
-                if (string.IsNullOrEmpty(ip))
-                {
-                    ip = "NoGet";
-                }
             }
             catch
             {
-                ip = "NoGet";
+
             }
             string dIP = "127.0.0.1";
-            if (null == ip) ip = dIP;
+            if (string.IsNullOrEmpty(ip)) ip = dIP;
             if (ip.Equals("::1")) ip = dIP;
             return ip;
         }
