@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Attrs\RequestMapping.cs" />
     <Compile Include="DCache\Attrs\DataCache.cs" />
     <Compile Include="DCache\Attrs\AbsDataCache.cs" />
     <Compile Include="MServiceRoute\Attrs\MSUnlimited.cs" />
@@ -156,7 +157,6 @@
     <Compile Include="Commons\TempImplCode.cs" />
     <Compile Include="Commons\ForechExtends.cs" />
     <Compile Include="Pipelines\IMSAllot.cs" />
-    <Compile Include="Commons\Attrs\RequestMapping.cs" />
     <Compile Include="Commons\ExtMethod.cs" />
     <Compile Include="Entities\ResultData.cs" />
     <Compile Include="Commons\ColorTranslation.cs" />
