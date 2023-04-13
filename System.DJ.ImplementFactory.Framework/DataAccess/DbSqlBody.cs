@@ -752,7 +752,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         }
                     }
                     if (!sqlAnalysis.IsLegalCaseDefaultValueWhenInsert(tableName, fv, pi, fm, ref dFv)) return;
-                    fv = dFv;
+                    fv = null == dFv ? fv : dFv;
                 }
                 kvAction(fn, fv, pi);
             }, () =>
