@@ -1324,13 +1324,13 @@ namespace System.DJ.ImplementFactory.Commons
             return datas;
         }
 
-        public static void SetPropertyValue(this object entity, string propertyName, object propertyValue)
+        public static bool SetPropertyValue(this object entity, string propertyName, object propertyValue)
         {
             initPropertyDic(entity);
             PropertyInfo pi = null;
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
-            if (null == pi) return;
+            if (null == pi) return false;
             object v = null;
 
             if (pi.PropertyType.IsEnum)
@@ -1388,6 +1388,7 @@ namespace System.DJ.ImplementFactory.Commons
             try
             {
                 pi.SetValue(entity, v, null);
+                return true;
             }
             catch (Exception ex)
             {
@@ -1397,6 +1398,7 @@ namespace System.DJ.ImplementFactory.Commons
                 try
                 {
                     mi.Invoke(entity, new object[] { propertyValue });
+                    return true;
                 }
                 catch (Exception)
                 {
@@ -1405,6 +1407,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 //throw;
             }
+            return false;
         }
 
         public static bool InitDirectory(this string path, bool isDirectory)
