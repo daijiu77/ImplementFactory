@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {
@@ -389,5 +390,110 @@ namespace System.DJ.ImplementFactory.Commons
 
             return vObj;
         }
+
+        public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
+        {
+            T tObj = default(T);
+            if (srcObj.GetType().IsBaseType()) return tObj;
+            Type tp = typeof(T);
+            try
+            {
+                tObj = (T)Activator.CreateInstance(tp);
+            }
+            catch (Exception)
+            {
+                return tObj;
+                //throw;
+            }
+
+            Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
+            tp.ForeachProperty((pi, pt, fn) =>
+            {
+                piDic.Add(fn.ToLower(), pi);
+            });
+
+            PropertyInfo propertyInfo = null;
+            object vObj = null;
+            srcObj.ForeachProperty((pi, pt, fn, fv) =>
+            {
+                propertyInfo = piDic[fn.ToLower()];
+                if (null == propertyInfo) return true;
+                vObj = fv;
+                if (null != func)
+                {
+                    vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
+                }
+
+                try
+                {
+                    propertyInfo.SetValue(tObj, vObj);
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        tObj.SetPropertyValue(propertyInfo.Name, fv);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                    //throw;
+                }
+                return true;
+            });
+            return tObj;
+        }
+
+        public static T ToObjectFrom<T>(this object srcObj)
+        {
+            return srcObj.ToObjectFrom<T>(null);
+        }
+
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj)
+        {
+            T t = srcObj.ToObjectFrom<T>(null);
+            return Task.FromResult(t);
+        }
+
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
+        {
+            T t = srcObj.ToObjectFrom<T>(func);
+            return Task.FromResult(t);
+        }
+
+        public static IList<T> ToListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        {
+            IList<T> list = null;
+            if (null == srcList) return list;
+            if (0 == srcList.Count) return list;
+            list = new List<T>();
+            T t = default(T);
+            foreach (TT item in srcList)
+            {
+                t = item.ToObjectFrom<T>(func);
+                list.Add(t);
+            }
+            return list;
+        }
+
+        public static IList<T> ToListFrom<T, TT>(this IList<TT> srcList)
+        {
+            return srcList.ToListFrom<T, TT>(null);
+        }
+
+        public static Task<IList<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        {
+            IList<T> list = srcList.ToListFrom<T, TT>(func);
+            return Task.FromResult(list);
+        }
+
+        public static Task<IList<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList)
+        {
+            IList<T> list = srcList.ToListFrom<T, TT>(null);
+            return Task.FromResult(list);
+        }
+
     }
 }

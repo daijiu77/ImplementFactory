@@ -90,7 +90,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item.Key] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -134,7 +134,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item.Key] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -178,7 +178,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item.Key] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -215,14 +215,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             string FValue = "";
             foreach (Match item in mc)
             {
-                FKey = item.Groups["FKey"].Value;
+                FKey = item.Groups["FKey"].Value.ToLower();
                 FValue = item.Groups["FValue"].Value;
                 dic[FKey] = FValue;
             }
             return dic;
         }
 
-        protected string GetIP(ActionExecutingContext context)
+        protected string GetIP(HttpContext context)
         {
             // ip
             string ip = "";
@@ -233,19 +233,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 const string _XRealIP = "X-Real-IP";
                 const string _XForwardedFor = "X-Forwarded-For";
 
-                if (context.HttpContext.Request.Headers.ContainsKey(_XRealIP))
+                if (context.Request.Headers.ContainsKey(_XRealIP))
                 {
-                    ip = context.HttpContext.Request.Headers[_XRealIP].FirstOrDefault();
+                    ip = context.Request.Headers[_XRealIP].FirstOrDefault();
                 }
 
-                if (context.HttpContext.Request.Headers.ContainsKey(_XForwardedFor))
+                if (context.Request.Headers.ContainsKey(_XForwardedFor))
                 {
-                    ip = context.HttpContext.Request.Headers[_XForwardedFor].FirstOrDefault();
+                    ip = context.Request.Headers[_XForwardedFor].FirstOrDefault();
                 }
 
                 if (string.IsNullOrEmpty(ip))
                 {
-                    ip = context.HttpContext.Connection.RemoteIpAddress.ToString();
+                    ip = context.Connection.RemoteIpAddress.ToString();
                 }
 
                 // 判断是否多个ip

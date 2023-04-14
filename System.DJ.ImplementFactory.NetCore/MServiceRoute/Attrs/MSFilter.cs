@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -9,12 +11,47 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// </summary>
     public class MSFilter : AbsActionFilterAttribute
     {
+        private static string tokenKeyName = "token";
+
+        private static Dictionary<string, string> tokenKV = new Dictionary<string, string>();
+        private static MSFilter mSFilter = new MSFilter();
         /// <summary>
         /// The service gateway filter requires the use of the 'MSClientRegisterAction' attribute to specify the interface method used to accept client registration
         /// </summary>
         public MSFilter()
         {
             //
+        }
+
+        private static object _SetToken = new object();
+
+        /// <summary>
+        /// Set up token filtering (ignore IP registration)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="tokenKeyName">Set the keyName of the key-value pair Token in the parameters of the front-end HTTP request</param>
+        /// <param name="token">The value of the token is set in the background for gateway filtering</param>
+        public static void SetToken(HttpContext context, string tokenKeyName, string token)
+        {
+            lock (_SetToken)
+            {
+                MSFilter.tokenKeyName = tokenKeyName;
+                string ip = mSFilter.GetIP(context);
+                tokenKV[token] = ip;
+            }
+        }
+
+        private string GetIP_Token(string token)
+        {
+            lock (_SetToken)
+            {
+                string ip = "";
+                if (tokenKV.ContainsKey(token))
+                {
+                    ip = tokenKV[token];
+                }
+                return ip;
+            }
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -49,7 +86,25 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (!mbool)
             {
-                string ip = GetIP(context);
+                List<string> keys = new List<string>() { tokenKeyName };
+                Dictionary<string, object> kvDic = GetKVListFromHeader(context.HttpContext, keys, false);
+                if (0 == kvDic.Count)
+                {
+                    kvDic = GetKVListFromQuery(context.HttpContext, keys, false);
+                }
+
+                if (0 < kvDic.Count)
+                {
+                    string token = kvDic[tokenKeyName.ToLower()].ToString();
+                    string ip1 = GetIP_Token(token);
+                    string ip2 = GetIP(context.HttpContext);
+                    mbool = ip2.Equals(ip1);
+                }
+            }
+
+            if (!mbool)
+            {
+                string ip = GetIP(context.HttpContext);
                 if (!_kvDic.ContainsKey(ip))
                 {
                     throw new Exception("Illegal access");

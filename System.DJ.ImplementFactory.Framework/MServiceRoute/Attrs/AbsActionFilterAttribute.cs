@@ -89,7 +89,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -133,7 +133,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -177,7 +177,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             }
                         }
                     }
-                    if (mbool) dic[item] = kv;
+                    if (mbool) dic[kn] = kv;
                 }
             }
             catch (Exception)
@@ -214,14 +214,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             string FValue = "";
             foreach (Match item in mc)
             {
-                FKey = item.Groups["FKey"].Value;
+                FKey = item.Groups["FKey"].Value.ToLower();
                 FValue = item.Groups["FValue"].Value;
                 dic[FKey] = FValue;
             }
             return dic;
         }
 
-        protected string GetIP(ActionExecutingContext context)
+        protected string GetIP(HttpContextBase context)
         {
             // ip
             string ip = "";
@@ -229,7 +229,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             // context 是 从过滤器拿的ActionExecutingContext 
             try
             {
-                HttpRequestBase request = context.HttpContext.Request;
+                HttpRequestBase request = context.Request;
                 Dictionary<string, string> dic = new Dictionary<string, string>();
                 foreach (string item in request.ServerVariables.AllKeys)
                 {

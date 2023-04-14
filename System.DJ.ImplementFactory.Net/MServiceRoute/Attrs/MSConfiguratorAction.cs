@@ -40,15 +40,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             string key = "";
             foreach (var item in dicPara)
             {
-                if (-1 != item.Key.ToLower().IndexOf("start"))
+                if (-1 != item.Key.IndexOf("start"))
                 {
                     if (null != item.Value) start = item.Value.ToString();
                 }
-                else if (-1 != item.Key.ToLower().IndexOf("end"))
+                else if (-1 != item.Key.IndexOf("end"))
                 {
                     if (null != item.Value) end = item.Value.ToString();
                 }
-                else if (-1 != item.Key.ToLower().IndexOf("key"))
+                else if (-1 != item.Key.IndexOf("key"))
                 {
                     if (null != item.Value) key = item.Value.ToString();
                 }

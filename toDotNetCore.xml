@@ -94,6 +94,16 @@
 				<extendNames>cs</extendNames>
 			</item>
 			<item>
+				<source>using System.Web;</source>
+				<target>using Microsoft.AspNetCore.Http;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>SetToken(HttpContextBase context</source>
+				<target>SetToken(HttpContext context</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
 				<source>context.ActionDescriptor.ActionName;</source>
 				<target>context.ActionDescriptor.DisplayName;</target>
 				<extendNames>cs</extendNames>

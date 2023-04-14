@@ -8,6 +8,7 @@ using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -105,9 +106,9 @@ namespace System.DJ.ImplementFactory.Commons
                     vEnum = Enum.GetName(value.GetType(), value);
                     return vEnum;
                 }
-                else if(type.IsEnum)
+                else if (type.IsEnum)
                 {
-                    if(value.GetType() == type)
+                    if (value.GetType() == type)
                     {
                         return value;
                     }
@@ -438,66 +439,6 @@ namespace System.DJ.ImplementFactory.Commons
         public static void SetCurrentPropertyFrom<T>(this T targetObj, object srcObj)
         {
             targetObj.SetCurrentPropertyFrom<T>(srcObj, pi => { return true; });
-        }
-
-        public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
-        {
-            T tObj = default(T);
-            if (srcObj.GetType().IsBaseType()) return tObj;
-            Type tp = typeof(T);
-            try
-            {
-                tObj = (T)Activator.CreateInstance(tp);
-            }
-            catch (Exception)
-            {
-                return tObj;
-                //throw;
-            }
-
-            Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
-            tp.ForeachProperty((pi, pt, fn) =>
-            {
-                piDic.Add(fn.ToLower(), pi);
-            });
-
-            PropertyInfo propertyInfo = null;
-            object vObj = null;
-            srcObj.ForeachProperty((pi, pt, fn, fv) =>
-            {
-                propertyInfo = piDic[fn.ToLower()];
-                if (null == propertyInfo) return true;
-                vObj = fv;
-                if (null != func)
-                {
-                    vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
-                }
-
-                try
-                {
-                    propertyInfo.SetValue(tObj, vObj);
-                }
-                catch (Exception)
-                {
-                    try
-                    {
-                        tObj.SetPropertyValue(propertyInfo.Name, fv);
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
-                    //throw;
-                }
-                return true;
-            });
-            return tObj;
-        }
-
-        public static T ToObjectFrom<T>(this object srcObj)
-        {
-            return srcObj.ToObjectFrom<T>(null);
         }
 
         /// <summary>
