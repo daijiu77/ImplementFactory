@@ -465,10 +465,9 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static IList<T> ToListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
         {
-            IList<T> list = null;
+            IList<T> list = new List<T>();
             if (null == srcList) return list;
-            if (0 == srcList.Count) return list;
-            list = new List<T>();
+            if (0 == srcList.Count) return list;            
             T t = default(T);
             foreach (TT item in srcList)
             {
@@ -483,15 +482,27 @@ namespace System.DJ.ImplementFactory.Commons
             return srcList.ToListFrom<T, TT>(null);
         }
 
-        public static Task<IList<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(func);
             return Task.FromResult(list);
         }
 
-        public static Task<IList<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList)
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        {
+            List<T> list = (List<T>)srcList.ToListFrom<T, TT>(func);
+            return Task.FromResult(list);
+        }
+
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(null);
+            return Task.FromResult(list);
+        }
+
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList)
+        {
+            List<T> list = (List<T>)srcList.ToListFrom<T, TT>(null);
             return Task.FromResult(list);
         }
 
