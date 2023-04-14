@@ -1,14 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -1222,106 +1220,6 @@ namespace System.DJ.ImplementFactory.Commons
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
             return pi;
-        }
-
-        public static List<object> DataTableToList(this DataTable dataTable, Type type)
-        {
-            List<object> list = new List<object>();
-            if (null == dataTable) return list;
-            if (0 == dataTable.Rows.Count) return list;
-            Dictionary<string, string> dic = new Dictionary<string, string>();
-            foreach (DataColumn item in dataTable.Columns)
-            {
-                dic.Add(item.ColumnName.ToLower(), item.ColumnName);
-            }
-
-            object ele = null;
-            object vObj = null;
-            string field = "";
-            string fn1 = "";
-            string ft = "";
-            Type type1 = null;
-            bool isArr = false;
-            Attribute att = null;
-            foreach (DataRow dr in dataTable.Rows)
-            {
-                ele = Activator.CreateInstance(type);
-                type.ForeachProperty((pi, tp, fn) =>
-                {
-                    isArr = false;
-                    if (!IsBaseType(tp))
-                    {
-                        if (tp.IsArray)
-                        {
-                            ft = tp.TypeToString(true);
-                            ft = ft.Replace("[]", "");
-                            type1 = Type.GetType(ft);
-                            if (null != type1)
-                            {
-                                isArr = IsBaseType(type1);
-                            }
-                            if (!isArr) return;
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    }
-                    field = "";
-                    fn1 = fn.ToLower();
-                    if (dic.ContainsKey(fn1)) field = dic[fn1];
-                    if (string.IsNullOrEmpty(field))
-                    {
-                        att = pi.GetCustomAttribute(typeof(FieldMapping));
-                        if (null != att)
-                        {
-                            fn1 = ((FieldMapping)att).FieldName.ToLower();
-                            if (dic.ContainsKey(fn1)) field = dic[fn1];
-                        }
-                    }
-                    if (string.IsNullOrEmpty(field)) return;
-                    vObj = dr[field];
-                    if (DBNull.Value == vObj) return;
-                    if (null == vObj) return;
-
-                    if (!isArr)
-                    {
-                        vObj = ConvertTo(vObj, tp);
-                    }
-
-                    try
-                    {
-                        pi.SetValue(ele, vObj);
-                    }
-                    catch (Exception)
-                    {
-                        try
-                        {
-                            ele.SetPropertyValue(pi.Name, vObj);
-                        }
-                        catch (Exception)
-                        {
-
-                            //throw;
-                        }
-                        //throw;
-                    }
-                });
-                list.Add(ele);
-            }
-            return list;
-        }
-
-        public static List<T> DataTableToList<T>(this DataTable dataTable)
-        {
-            Type type = typeof(T);
-            List<T> datas = new List<T>();
-            List<object> list = dataTable.DataTableToList(type);
-            foreach (var item in list)
-            {
-                datas.Add((T)item);
-            }
-            return datas;
         }
 
         public static bool SetPropertyValue(this object entity, string propertyName, object propertyValue)

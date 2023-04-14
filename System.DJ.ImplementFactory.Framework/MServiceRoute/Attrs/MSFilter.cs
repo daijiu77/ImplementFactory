@@ -23,8 +23,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             //
         }
 
-        private static object _SetToken = new object();
-
         /// <summary>
         /// Set up token filtering (ignore IP registration)
         /// </summary>
@@ -33,7 +31,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="token">The value of the token is set in the background for gateway filtering</param>
         public static void SetToken(HttpContextBase context, string tokenKeyName, string token)
         {
-            lock (_SetToken)
+            lock (mSFilter)
             {
                 MSFilter.tokenKeyName = tokenKeyName;
                 string ip = mSFilter.GetIP(context);
@@ -43,7 +41,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         private string GetIP_Token(string token)
         {
-            lock (_SetToken)
+            lock (mSFilter)
             {
                 string ip = "";
                 if (tokenKV.ContainsKey(token))
