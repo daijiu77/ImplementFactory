@@ -38,17 +38,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             string start = "";
             string end = "";
             string key = "";
+            string fKey = "";
             foreach (var item in dicPara)
             {
-                if (-1 != item.Key.IndexOf("start"))
+                fKey = item.Key.ToLower();
+                if (-1 != fKey.IndexOf("start"))
                 {
                     if (null != item.Value) start = item.Value.ToString();
                 }
-                else if (-1 != item.Key.IndexOf("end"))
+                else if (-1 != fKey.IndexOf("end"))
                 {
                     if (null != item.Value) end = item.Value.ToString();
                 }
-                else if (-1 != item.Key.IndexOf("key"))
+                else if (-1 != fKey.IndexOf("key"))
                 {
                     if (null != item.Value) key = item.Value.ToString();
                 }

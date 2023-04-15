@@ -22,7 +22,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 if (item.Key.ToLower().Equals(contractKey))
                 {
-                    key = item.Value.ToString();
+                    if (null != item.Value) key = item.Value.ToString();
                     break;
                 }
             }
@@ -35,7 +35,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (0 == dic.Count)
             {
-                dic = GetKVListFromForm(context.HttpContext, list, false);                
+                dic = GetKVListFromForm(context.HttpContext, list, false);
             }
 
             if (0 == dic.Count)
@@ -47,11 +47,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 foreach (var item in dic)
                 {
-                    key = item.Value.ToString();
+                    if (null != item.Value) key = item.Value.ToString();
                     break;
                 }
             }
-            if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '"+ MSServiceImpl.contractKey + "' is not empty.");
+            if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MSServiceImpl.contractKey + "' is not empty.");
             string ip = GetIP(context.HttpContext);
             bool mbool = _mSService.SaveIPAddr(ip, key);
             if (mbool) _kvDic[ip] = ip;
