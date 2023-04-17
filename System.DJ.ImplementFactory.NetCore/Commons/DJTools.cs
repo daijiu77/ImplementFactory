@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
+using static System.DJ.ImplementFactory.Commons.Attrs.Condition;
 
 namespace System.DJ.ImplementFactory.Commons
 {
@@ -1222,6 +1222,35 @@ namespace System.DJ.ImplementFactory.Commons
             return pi;
         }
 
+        public static bool SetMethodValue(this object entity, string propertyName, object propertyValue, object convertValue)
+        {
+            string methodName = "Set" + propertyName.Substring(0, 1).ToUpper() + propertyName.Substring(1);
+            MethodInfo mi = entity.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
+            if (null == mi) return false;
+            try
+            {
+                mi.Invoke(entity, new object[] { propertyValue });
+                return true;
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
+            try
+            {
+                mi.Invoke(entity, new object[] { convertValue });
+                return true;
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+            return false;
+        }
+
         public static bool SetPropertyValue(this object entity, string propertyName, object propertyValue)
         {
             initPropertyDic(entity);
@@ -1290,22 +1319,9 @@ namespace System.DJ.ImplementFactory.Commons
             }
             catch (Exception ex)
             {
-                string methodName = "Set" + propertyName.Substring(0, 1).ToUpper() + propertyName.Substring(1);
-                MethodInfo mi = entity.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
-                if (null == mi) throw ex;
-                try
-                {
-                    mi.Invoke(entity, new object[] { propertyValue });
-                    return true;
-                }
-                catch (Exception)
-                {
-
-                    //throw;
-                }
+                return entity.SetMethodValue(propertyName, propertyValue, v);                
                 //throw;
             }
-            return false;
         }
 
         public static bool InitDirectory(this string path, bool isDirectory)
