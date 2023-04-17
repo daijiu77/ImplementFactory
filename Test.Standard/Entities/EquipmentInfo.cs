@@ -1,5 +1,5 @@
 ﻿using System;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs;
 
 namespace Test.Standard.Entities
 {

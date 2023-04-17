@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.NetCore.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Drawing.Printing;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -17,7 +13,7 @@ namespace System.DJ.ImplementFactory.Commons
     public class MultiTablesExec : IMultiTablesExec, IDisposable
     {
         /// <summary>
-        /// key: tableName_lower, value: List<string>
+        /// key: tableName_lower, value: List[string]
         /// </summary>
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
         private static Dictionary<string, string> _tableDic = new Dictionary<string, string>();

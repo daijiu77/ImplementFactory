@@ -429,16 +429,8 @@ namespace System.DJ.ImplementFactory.Commons
                     propertyInfo.SetValue(tObj, vObj);
                 }
                 catch (Exception)
-                {
-                    try
-                    {
-                        tObj.SetPropertyValue(propertyInfo.Name, fv);
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
+                {                    
+                    tObj.SetMethodValue(fn, fv, vObj);
                     //throw;
                 }
                 return true;

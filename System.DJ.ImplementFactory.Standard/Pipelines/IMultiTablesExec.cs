@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.Pipelines;
-using System.Text;
 
-namespace System.DJ.ImplementFactory.NetCore.Pipelines
+namespace System.DJ.ImplementFactory.Pipelines
 {
     public interface IMultiTablesExec: ISingleInstance
     {

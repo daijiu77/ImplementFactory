@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Reflection;
 using Test.Standard.DataInterface;
 using Test.Standard.Entities;
-using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
+using static System.DJ.ImplementFactory.Commons.Attrs.Condition;
 
 namespace Test.Standard
 {

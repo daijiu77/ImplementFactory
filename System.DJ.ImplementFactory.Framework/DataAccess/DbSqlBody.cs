@@ -216,7 +216,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return fv;
         }
 
-        private string GetConditionUnit(ConditionItem[] conditions)
+        private string GetConditionUnit(ConditionItem[] conditions, Dictionary<string, object> fieldDic)
         {
             string cdt = "";
             string cnts = "";
@@ -233,7 +233,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     if (0 < item.conditionItems.Length)
                     {
-                        s = GetConditionUnit(item.conditionItems);
+                        s = GetConditionUnit(item.conditionItems, fieldDic);
                         s = rg.Match(s).Groups["wherePart"].Value;
                         s = "(" + s + ")";
                         cdt += cnts + s;
@@ -253,12 +253,61 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     fv = GetValueByType(item);
                     cdt += cnts + sqlAnalysis.GetConditionOfBaseValue(item.FieldName, item.Relation, fv);
+                    if (null != fieldDic)
+                    {
+                        if (fieldDic.ContainsKey(item.FieldName))
+                        {
+                            fieldDic.Add(item.FieldName, fv);
+                        }
+                    }
                 }
             }
             return cdt;
         }
 
-        private string GetFromPart(ref string wherePart)
+        private string GetWhereByProperty(DbSqlBody body, Dictionary<string, object> fieldDic)
+        {
+            string sw = "";
+            if (null == body) return sw;
+            if (null == body.fromUnits) return sw;
+            if (0 == body.fromUnits.Count) return sw;
+            string s = "";
+            string alias = "";
+            string fn = "";
+            const string startStr = "1=1";
+            bool isSqlBody = false;
+            foreach (SqlFromUnit item in body.fromUnits)
+            {
+                if (null == item.dataModel) continue;
+                isSqlBody = null != (item.dataModel as DbSqlBody);
+                s = "";
+                if (isSqlBody)
+                {
+                    s = GetWhereByProperty((DbSqlBody)item.dataModel, fieldDic);
+                }
+                else
+                {
+                    alias = item.alias;
+                    if (null == alias) alias = "";
+                    if (!string.IsNullOrEmpty(alias)) alias += ".";
+                    s = item.dataModel.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+                    {
+                        fn = alias + propertyInfoExt.Name;
+                        if (fieldDic.ContainsKey(fn) || fieldDic.ContainsKey(propertyInfoExt.Name)) return false;
+                        return true;
+                    });
+                    if (0 == s.IndexOf(startStr))
+                    {
+                        s = s.Substring(3);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(s)) sw += s;
+            }
+            return sw;
+        }
+
+        private string GetFromPart(ref string wherePart, Dictionary<string, object> fieldDic)
         {
             string fromPart = "";
             string s = "";
@@ -285,7 +334,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (!string.IsNullOrEmpty(item.alias)) s += " " + item.alias;
                     if (null != item.conditions)
                     {
-                        wherePart += GetConditionUnit(item.conditions);
+                        wherePart += GetConditionUnit(item.conditions, fieldDic);
                     }
                 }
                 else
@@ -312,7 +361,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         ConditionBody = "";
                         if (null != item.conditions)
                         {
-                            s1 = GetConditionUnit(item.conditions);
+                            s1 = GetConditionUnit(item.conditions, fieldDic);
                             if (rg.IsMatch(s1))
                             {
                                 ConditionBody = rg.Match(s1).Groups["ConditionBody"].Value;
@@ -334,7 +383,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     else if (null != item.conditions)
                     {
-                        wherePart += GetConditionUnit(item.conditions);
+                        wherePart += GetConditionUnit(item.conditions, fieldDic);
                     }
 
                     if (!mbool)
@@ -348,9 +397,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             return fromPart;
         }
 
-        private string GetWherePart(string wherePart)
+        private string GetWherePart(string wherePart, Dictionary<string, object> fieldDic)
         {
-            wherePart += GetConditionUnit(conditionItems.ToArray());
+            wherePart += GetConditionUnit(conditionItems.ToArray(), fieldDic);
 
             if (!string.IsNullOrEmpty(wherePart))
             {
@@ -385,7 +434,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             return orderbyPart;
         }
 
-        private void GetPropertyOfModel(AbsDataModel dataModel, string wherePart, Action<AbsDataModel, string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
+        private void GetPropertyOfModel(AbsDataModel dataModel,
+            string wherePart,
+            Action<AbsDataModel, string, string> fromUnitAction,
+            Action<string, object, Constraint, PropertyInfo> propertyAction,
+            Action propEndAction)
         {
             Attribute att = null;
             string tbName = "";
@@ -584,7 +637,10 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// <param name="fromUnitAction">tableName, where</param>
         /// <param name="propertyAction">fieldName, fieldValue</param>
         /// <param name="propEndAction">属性结束</param>
-        private void CreateDataOpt(Action<AbsDataModel, string, string> fromUnitAction, Action<string, object, Constraint, PropertyInfo> propertyAction, Action propEndAction)
+        private void CreateDataOpt(Dictionary<string, object> fieldDic,
+            Action<AbsDataModel, string, string> fromUnitAction,
+            Action<string, object, Constraint, PropertyInfo> propertyAction,
+            Action propEndAction)
         {
             string wherePart = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
@@ -595,7 +651,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 wherePart = "";
                 if (null != item.conditions)
                 {
-                    wherePart = GetConditionUnit(item.conditions);
+                    wherePart = GetConditionUnit(item.conditions, fieldDic);
                     if (rg.IsMatch(wherePart))
                     {
                         wherePart = rg.Match(wherePart).Groups["ConditionBody"].Value;
@@ -654,7 +710,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dic.Add(_fn.ToLower(), para);
             };
 
-            CreateDataOpt((dataModel, tb, whereStr) =>
+            Dictionary<string, object> fieldDic = null;
+            CreateDataOpt(fieldDic, (dataModel, tb, whereStr) =>
             {
                 dataItem = new SqlDataItem()
                 {
@@ -682,7 +739,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (!string.IsNullOrEmpty(sets))
                 {
                     sets = sets.Substring(2);
-                    where = GetWherePart(where);
+                    where = GetWherePart(where, fieldDic);
                     sql += sets;
                     if (!string.IsNullOrEmpty(where)) sql += " where " + where;
                     dataItem.sql = sql;
@@ -725,7 +782,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dic.Add(_fn.ToLower(), para);
             };
 
-            CreateDataOpt((dataModel, tb, whereStr) =>
+            Dictionary<string, object> fieldDic = null;
+            CreateDataOpt(fieldDic, (dataModel, tb, whereStr) =>
             {
                 dataItem = new SqlDataItem()
                 {
@@ -782,10 +840,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlDataItem> list = new List<SqlDataItem>();
             string sql = "";
             string whereStr = "";
-            CreateDataOpt((dataModel, tb, where) =>
+            Dictionary<string, object> fieldDic = null;
+            CreateDataOpt(fieldDic, (dataModel, tb, where) =>
             {
                 sql = "delete from " + sqlAnalysis.GetTableName(tb);
-                whereStr = GetWherePart(where);
+                whereStr = GetWherePart(where, fieldDic);
                 if (!string.IsNullOrEmpty(whereStr)) sql += " where " + whereStr;
                 list.Add(new SqlDataItem()
                 {
@@ -800,9 +859,10 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string wherePart = "";
 
+            Dictionary<string, object> fieldDic = new Dictionary<string, object>();
             string selectPart = GetSelectPart();
-            string fromPart = GetFromPart(ref wherePart);
-            wherePart = GetWherePart(wherePart);
+            string fromPart = GetFromPart(ref wherePart, fieldDic);
+            wherePart = GetWherePart(wherePart, fieldDic);
             string groupPart = GetGroupPart();
 
             string sql = sqlAnalysis.GetCount(fromPart, wherePart, groupPart);
@@ -815,10 +875,11 @@ namespace System.DJ.ImplementFactory.DataAccess
         private string GetTop(int start, int top)
         {
             string wherePart = "";
+            Dictionary<string, object> fieldDic = new Dictionary<string, object>();
 
             string selectPart = GetSelectPart();
-            string fromPart = GetFromPart(ref wherePart);
-            wherePart = GetWherePart(wherePart);
+            string fromPart = GetFromPart(ref wherePart, fieldDic);
+            wherePart = GetWherePart(wherePart, fieldDic);
             string groupPart = GetGroupPart();
             string orderbyPart = GetOrderbyPart();
 
@@ -834,15 +895,17 @@ namespace System.DJ.ImplementFactory.DataAccess
         protected string GetSql()
         {
             string wherePart = "";
-
+            Dictionary<string, object> fieldDic = new Dictionary<string, object>();
             string selectPart = GetSelectPart();
-            string fromPart = GetFromPart(ref wherePart);
-            wherePart = GetWherePart(wherePart);
+            string fromPart = GetFromPart(ref wherePart, fieldDic);
+            wherePart = GetWherePart(wherePart, fieldDic);
             string groupPart = GetGroupPart();
             string orderbyPart = GetOrderbyPart();
 
             orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
             groupPart = sqlAnalysis.GetGroupBy(groupPart);
+
+            wherePart += GetWhereByProperty(this, fieldDic);
 
             wherePart = wherePart.Trim();
             groupPart = groupPart.Trim();

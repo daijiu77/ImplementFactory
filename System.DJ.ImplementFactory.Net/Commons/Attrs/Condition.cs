@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
+namespace System.DJ.ImplementFactory.Commons.Attrs
 {
     /// <summary>
     /// where 条件解析属性,默认情况下采用对象属性做为字段名,采用等号(=)做为比较符,采用and做为逻辑连接符

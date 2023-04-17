@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
@@ -8,14 +7,8 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
-using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
-using System.DJ.ImplementFactory.Pipelines;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,7 +17,6 @@ using System.Threading.Tasks;
 using Test.Framework.DataInterface;
 using Test.Framework.Entities;
 using Test.Framework.MSVisitor;
-using static System.DJ.ImplementFactory.NetCore.Commons.Attrs.Condition;
 
 namespace Test.Framework
 {
