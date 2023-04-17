@@ -1,6 +1,6 @@
 ﻿using System;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 
 namespace Test.NetCore.Entities
 {
@@ -9,7 +9,6 @@ namespace Test.NetCore.Entities
     {
         [IgnoreField(IgnoreField.IgnoreType.Insert|IgnoreField.IgnoreType.Update)]
         public Guid id { get; set; }
-
         public int height { get; set; }
         public int width { get; set; }
         public string equipmentName { get; set; }

@@ -1,4 +1,4 @@
-﻿namespace System.DJ.ImplementFactory.NetCore.Commons.Attrs
+﻿namespace System.DJ.ImplementFactory.Commons.Attrs
 {
     /// <summary>
     /// Identifies data model properties that do not participate in the specified data operations

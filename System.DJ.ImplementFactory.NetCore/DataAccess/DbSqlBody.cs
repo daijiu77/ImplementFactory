@@ -6,7 +6,6 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.NetCore.Commons.Attrs;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
