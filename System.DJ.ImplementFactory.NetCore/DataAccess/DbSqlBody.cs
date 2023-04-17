@@ -290,7 +290,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     alias = item.alias;
                     if (null == alias) alias = "";
                     if (!string.IsNullOrEmpty(alias)) alias += ".";
-                    s = item.dataModel.GetWhere(startStr, (propertyInfoExt, condition) =>
+                    s = item.dataModel.GetWhere(startStr, true, (propertyInfoExt, condition) =>
                     {
                         fn = alias + propertyInfoExt.Name;
                         if (fieldDic.ContainsKey(fn) || fieldDic.ContainsKey(propertyInfoExt.Name)) return false;
