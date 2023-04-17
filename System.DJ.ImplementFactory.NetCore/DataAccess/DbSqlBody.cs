@@ -293,7 +293,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     s = item.dataModel.GetWhere(startStr, (propertyInfoExt, condition) =>
                     {
                         fn = alias + propertyInfoExt.Name;
-                        if (fieldDic.ContainsKey(fn)) return false;
+                        if (fieldDic.ContainsKey(fn) || fieldDic.ContainsKey(propertyInfoExt.Name)) return false;
                         return true;
                     });
                     if (0 == s.IndexOf(startStr))
@@ -637,9 +637,9 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// <param name="fromUnitAction">tableName, where</param>
         /// <param name="propertyAction">fieldName, fieldValue</param>
         /// <param name="propEndAction">属性结束</param>
-        private void CreateDataOpt(Dictionary<string, object> fieldDic, 
-            Action<AbsDataModel, string, string> fromUnitAction, 
-            Action<string, object, Constraint, PropertyInfo> propertyAction, 
+        private void CreateDataOpt(Dictionary<string, object> fieldDic,
+            Action<AbsDataModel, string, string> fromUnitAction,
+            Action<string, object, Constraint, PropertyInfo> propertyAction,
             Action propEndAction)
         {
             string wherePart = "";
