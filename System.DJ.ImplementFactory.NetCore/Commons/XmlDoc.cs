@@ -89,7 +89,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (!File.Exists(xmlPath)) return null;
             doc = new XmlDocument();
-            doc.LoadXml(xmlPath);
+            doc.Load(xmlPath);
             XmlNode node = null;
             if (2 == doc.ChildNodes.Count)
             {
