@@ -391,6 +391,14 @@ namespace System.DJ.ImplementFactory.Commons
             return vObj;
         }
 
+        public static int Count(this IEnumerable srcList)
+        {
+            int count = 0;
+            if (null == srcList) return count;
+            foreach (var src in srcList) count++;
+            return count;
+        }
+
         public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
         {
             T tObj = default(T);
@@ -413,6 +421,7 @@ namespace System.DJ.ImplementFactory.Commons
             });
 
             PropertyInfo propertyInfo = null;
+            Type piType = null;
             object vObj = null;
             srcObj.ForeachProperty((pi, pt, fn, fv) =>
             {
@@ -424,18 +433,75 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
                 }
 
+                if (null != vObj)
+                {
+                    piType = propertyInfo.PropertyType;
+                    if (typeof(IList).IsAssignableFrom(pt) && typeof(IList).IsAssignableFrom(piType))
+                    {
+                        try
+                        {
+                            Type srcParaType = pt.GetGenericArguments()[0];
+                            Type tegartParaType = propertyInfo.PropertyType.GetGenericArguments()[0];
+                            IEnumerable list = (IEnumerable)vObj;
+                            MethodInfo mi = typeof(ExtMethod).GetMethod("ToListData", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new Type[] { tegartParaType, srcParaType });
+                            if (null != mi)
+                            {
+                                vObj = mi.Invoke(null, new object[] { list });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            //throw;
+                        }
+
+                    }
+                    else if (pt.IsClass
+                        && (false == pt.IsBaseType())
+                        && (false == pt.IsAbstract)
+                        && (false == pt.IsInterface)
+                        && piType.IsClass
+                        && (false == piType.IsBaseType())
+                        && (false == piType.IsAbstract)
+                        && (false == piType.IsInterface))
+                    {
+                        try
+                        {
+                            MethodInfo mi = typeof(ExtMethod).GetMethod("ToObjectData", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new Type[] { piType });
+                            if (null != mi)
+                            {
+                                vObj = mi.Invoke(null, new object[] { vObj });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                            //throw;
+                        }
+                    }
+                }
+
                 try
                 {
                     propertyInfo.SetValue(tObj, vObj);
                 }
                 catch (Exception)
-                {                    
+                {
                     tObj.SetMethodValue(fn, fv, vObj);
                     //throw;
                 }
                 return true;
             });
             return tObj;
+        }
+
+        private static T ToObjectData<T>(object srcM)
+        {
+            return srcM.ToObjectFrom<T>();
+        }
+
+        private static List<T> ToListData<T, TT>(IEnumerable srcList)
+        {
+            return (List<T>)srcList.ToListFrom<T, TT>();
         }
 
         public static T ToObjectFrom<T>(this object srcObj)
@@ -455,11 +521,12 @@ namespace System.DJ.ImplementFactory.Commons
             return Task.FromResult(t);
         }
 
-        public static IList<T> ToListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<Type, string, object, object> func)
         {
+            if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
             IList<T> list = new List<T>();
             if (null == srcList) return list;
-            if (0 == srcList.Count) return list;            
+            if (0 == srcList.Count()) return list;
             T t = default(T);
             foreach (TT item in srcList)
             {
@@ -469,7 +536,7 @@ namespace System.DJ.ImplementFactory.Commons
             return list;
         }
 
-        public static IList<T> ToListFrom<T, TT>(this IList<TT> srcList)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList)
         {
             return srcList.ToListFrom<T, TT>(null);
         }

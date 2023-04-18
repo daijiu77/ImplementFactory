@@ -18,7 +18,7 @@ namespace System.DJ.ImplementFactory.Commons
             object v = null;
             bool mbool = false;
             Attribute att = null;
-            foreach (var item in piArr)
+            foreach (PropertyInfo item in piArr)
             {
                 att = item.GetCustomAttribute(typeof(IgnoreForeachProp));
                 if (null != att) continue;
