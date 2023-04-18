@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Copy des="Pealse select a item:">
 	<item des="Copy to framework from dotNetCore, pealse input F key." val="F">toFramework.xml</item>
+	<item des="Copy to dot net core from framework, pealse input C key." val="C">toDotNetCore.xml</item>
 </Copy>

@@ -13,6 +13,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private const string SvrIPAddressFile = "SvrIPAddr.xml";
         private readonly Regex rgIP = new Regex(@"^[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.([1-9]{1,3})$", RegexOptions.IgnoreCase);
         private string filePath = "";
+        private const string rootNode = "IPAddresses";
         public const string startName = "StartTime";
         public const string endName = "EndTime";
         public const string contractKey = "ContractKey";
@@ -71,32 +72,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string ip = IPAddress.Trim();
             if (!rgIP.IsMatch(ip)) return mbool;
 
-            XmlDocument doc = new XmlDocument();
-            if (File.Exists(filePath)) doc.Load(filePath);
-
-            XmlNode ipNodes = null;
+            XmlDoc doc = new XmlDoc();
+            doc.Load(filePath);
+                        
+            XmlNode ipNodes = doc.RootNode(rootNode, null);
             XmlElement ele = null;
-            if (2 > doc.ChildNodes.Count)
-            {
-                XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
-                doc.AppendChild(dec);
-
-                ipNodes = doc.CreateElement("IPAddresses");
-
-                XmlAttribute attr = doc.CreateAttribute(startName);
-                attr.Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                ipNodes.Attributes.Append(attr);
-
-                attr = doc.CreateAttribute(endName);
-                attr.Value = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd HH:mm:ss");
-                ipNodes.Attributes.Append(attr);
-
-                doc.AppendChild(ipNodes);
-            }
-            else
-            {
-                ipNodes = doc.ChildNodes[1];
-            }
 
             XmlAttribute att = ipNodes.Attributes[startName];
             if (null == att) return mbool;//throw new Exception("The XmlAttribute(" + startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
@@ -144,23 +124,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public virtual bool SetEnabledTime(DateTime startTime, DateTime endTime, string contractKey)
         {
             bool mbool = false;
-            XmlDocument doc = new XmlDocument();
-            if (File.Exists(filePath)) doc.Load(filePath);
+            XmlDoc doc = new XmlDoc();
+            doc.Load(filePath);
 
-            XmlNode ipNodes = null;
-            if (2 > doc.ChildNodes.Count)
-            {
-                XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
-                doc.AppendChild(dec);
-
-                ipNodes = doc.CreateElement("IPAddresses");
-                doc.AppendChild(ipNodes);
-            }
-            else
-            {
-                ipNodes = doc.ChildNodes[1];
-            }
-
+            XmlNode ipNodes = doc.RootNode(rootNode);            
             string startNameL = startName.ToLower();
             string endNameL = endName.ToLower();
             string contractKeyL = MSServiceImpl.contractKey.ToLower();

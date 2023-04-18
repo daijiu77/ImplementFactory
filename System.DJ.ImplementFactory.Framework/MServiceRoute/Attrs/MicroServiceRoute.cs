@@ -52,15 +52,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (0 < dic.Count) return;
 
+            const string MicroServiceRoutes = "MicroServiceRoutes";
             string fPath = Path.Combine(DJTools.RootPath, configFile);
             if (!File.Exists(fPath))
             {
-                XmlDocument doc = new XmlDocument();
-                XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
-                doc.AppendChild(dec);
-
-                XmlElement XMLroot = doc.CreateElement("MicroServiceRoutes");
-                doc.AppendChild(XMLroot);
+                XmlDoc doc = new XmlDoc();
+                XmlElement XMLroot = doc.RootNode(MicroServiceRoutes);
 
                 XmlElement route = doc.CreateElement("Route");
                 RouteAttr route_attr = new RouteAttr()
@@ -92,14 +89,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (File.Exists(fPath))
             {
-                XmlDocument document = new XmlDocument();
+                XmlDoc document = new XmlDoc();
                 document.Load(fPath);
-
-                if (2 > document.ChildNodes.Count) return;
+                XmlNode node = document.RootNode(MicroServiceRoutes);
+                if (null == node) return;
 
                 string attrName1 = "";
                 RouteAttr routeAttr1 = null;
-                XmlNode node = document.ChildNodes[1];
                 foreach (XmlNode routeItem in node.ChildNodes)
                 {
                     routeAttr1 = new RouteAttr();

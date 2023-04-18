@@ -399,6 +399,13 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
+        /// <summary>
+        /// 'Reflection calling' is prohibited for deletion
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <returns></returns>
         public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
         {
             T tObj = default(T);
@@ -494,33 +501,75 @@ namespace System.DJ.ImplementFactory.Commons
             return tObj;
         }
 
+        #region 'Reflection calling' is prohibited for deletion
+        /// <summary>
+        /// 'Reflection calling' is prohibited for deletion
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcM">Data source entity</param>
+        /// <returns></returns>
         private static T ToObjectData<T>(object srcM)
         {
             return srcM.ToObjectFrom<T>();
         }
 
+        /// <summary>
+        /// 'Reflection calling' is prohibited for deletion
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <returns></returns>
         private static List<T> ToListData<T, TT>(IEnumerable srcList)
         {
             return (List<T>)srcList.ToListFrom<T, TT>();
         }
+        #endregion
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <returns>Returns an assigned data entity</returns>
         public static T ToObjectFrom<T>(this object srcObj)
         {
             return srcObj.ToObjectFrom<T>(null);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
         public static Task<T> ToTaskObjectFrom<T>(this object srcObj)
         {
             T t = srcObj.ToObjectFrom<T>(null);
             return Task.FromResult(t);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
         public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
         {
             T t = srcObj.ToObjectFrom<T>(func);
             return Task.FromResult(t);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
         public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<Type, string, object, object> func)
         {
             if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
@@ -536,29 +585,66 @@ namespace System.DJ.ImplementFactory.Commons
             return list;
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
         public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList)
         {
             return srcList.ToListFrom<T, TT>(null);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <returns>Returns an assigned IList element collection object of type task</returns>
         public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(func);
             return Task.FromResult(list);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <returns>Returns an assigned List element collection object of type task</returns>
         public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
         {
             List<T> list = (List<T>)srcList.ToListFrom<T, TT>(func);
             return Task.FromResult(list);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <returns>Returns an assigned IList element collection object of type task</returns>
         public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(null);
             return Task.FromResult(list);
         }
 
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <returns>Returns an assigned List element collection object of type task</returns>
         public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList)
         {
             List<T> list = (List<T>)srcList.ToListFrom<T, TT>(null);
