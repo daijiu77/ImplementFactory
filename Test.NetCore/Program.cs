@@ -90,6 +90,7 @@ namespace Test.NetCore
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
+            testObj.test_ToObjectFrom();
             //testObj.test_user();
             string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
@@ -446,6 +447,42 @@ namespace Test.NetCore
                 {
                     name = "SZ"
                 });
+            }
+
+            public void test_ToObjectFrom()
+            {
+                Plan plan = new Plan()
+                {
+                    PName = "abc",
+                    plan = new Plan() { PName = "abc-123" },
+                    plans = new List<Plan>()
+                {
+                    new Plan()
+                    {
+                        PName="abc-321",
+                        plan=new Plan(){PName="abc-321-01"}
+                    },
+                    new Plan()
+                    {
+                        PName="abc-567",
+                        plan=new Plan(){PName="abc-567-01"}
+                    }
+                }
+                };
+
+                PlanCopy plan1 = plan.ToObjectFrom<PlanCopy>();
+                string pName = plan1.PName;
+            }
+
+            public class PlanCopy
+            {
+                public string PName { get; set; }
+                public string Detail { get; set; }
+                public DateTime StartDate { get; set; }
+                public DateTime EndDate { get; set; }
+
+                public PlanCopy plan { get; set; }
+                public List<PlanCopy> plans { get; set; }
             }
         }
 

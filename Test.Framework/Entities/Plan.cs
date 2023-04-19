@@ -12,5 +12,7 @@ namespace Test.Framework.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        public Plan plan { get; set; }
+        public List<Plan> plans { get; set; }
     }
 }

@@ -445,22 +445,9 @@ namespace System.DJ.ImplementFactory.Commons
                     piType = propertyInfo.PropertyType;
                     if (typeof(IList).IsAssignableFrom(pt) && typeof(IList).IsAssignableFrom(piType))
                     {
-                        try
-                        {
-                            Type srcParaType = pt.GetGenericArguments()[0];
-                            Type tegartParaType = propertyInfo.PropertyType.GetGenericArguments()[0];
-                            IEnumerable list = (IEnumerable)vObj;
-                            MethodInfo mi = typeof(ExtMethod).GetMethod("ToListData", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new Type[] { tegartParaType, srcParaType });
-                            if (null != mi)
-                            {
-                                vObj = mi.Invoke(null, new object[] { list });
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            //throw;
-                        }
-
+                        Type srcParaType = pt.GetGenericArguments()[0];
+                        Type tegartParaType = propertyInfo.PropertyType.GetGenericArguments()[0];
+                        vObj = ExecuteStaticMethod("ToListData", new Type[] { tegartParaType, srcParaType }, new object[] { vObj });
                     }
                     else if (pt.IsClass
                         && (false == pt.IsBaseType())
@@ -470,20 +457,8 @@ namespace System.DJ.ImplementFactory.Commons
                         && (false == piType.IsBaseType())
                         && (false == piType.IsAbstract)
                         && (false == piType.IsInterface))
-                    {
-                        try
-                        {
-                            MethodInfo mi = typeof(ExtMethod).GetMethod("ToObjectData", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new Type[] { piType });
-                            if (null != mi)
-                            {
-                                vObj = mi.Invoke(null, new object[] { vObj });
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-
-                            //throw;
-                        }
+                    {                        
+                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType }, new object[] { vObj });
                     }
                 }
 
@@ -499,6 +474,35 @@ namespace System.DJ.ImplementFactory.Commons
                 return true;
             });
             return tObj;
+        }
+
+        /// <summary>
+        /// Reflection calls and executes generic methods
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="genericTypes">An array of generic types for the method</param>
+        /// <param name="methodParameters">An array of parameters for the method</param>
+        /// <returns>Returns the result of the method execution</returns>
+        private static object ExecuteStaticMethod(string methodName, Type[] genericTypes, object[] methodParameters)
+        {
+            object vObj = null;
+            MethodInfo mi = typeof(ExtMethod).GetMethod(methodName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic);
+            if (null == mi) return vObj;
+            mi = mi.MakeGenericMethod(genericTypes);
+            if (null == mi) return vObj;
+            if (null != mi)
+            {
+                try
+                {
+                    vObj = mi.Invoke(null, methodParameters);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+            return vObj;
         }
 
         #region 'Reflection calling' is prohibited for deletion
