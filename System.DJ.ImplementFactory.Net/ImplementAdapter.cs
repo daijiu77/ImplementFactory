@@ -1493,13 +1493,12 @@ namespace System.DJ.ImplementFactory
             EList<CKeyValue> list = new EList<CKeyValue>();
 
             string f = Path.Combine(rootPath, configFile_Xml);
-            XmlDocument doc = new XmlDocument();
-            doc.Load(f);
+            XmlDoc doc = new XmlDoc();
+            XmlNode node = doc.Load(f);
 
-            if (1 >= doc.ChildNodes.Count) return list;
+            if (null == node) return list;
 
             LogsRange logsRange1 = new LogsRange();
-            XmlNode node = doc.ChildNodes[1];
             string nodeName = "";
             object entity = null;
 
@@ -1742,7 +1741,7 @@ namespace System.DJ.ImplementFactory
             return dic;
         }
 
-        private static void createChildrenNode(object _obj, XmlDocument doc, XmlElement parentNode)
+        private static void createChildrenNode(object _obj, XmlDoc doc, XmlElement parentNode)
         {
             Dictionary<string, FieldInfo> dic = getPrivateDic(_obj);
             XmlElement child = null;
@@ -1784,13 +1783,9 @@ namespace System.DJ.ImplementFactory
         private static void createXmlConfig()
         {
             string des = "description";
-            XmlDocument doc = new XmlDocument();
-            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
-            doc.AppendChild(dec);
-
-            XmlElement XMLroot = doc.CreateElement("configurations");
-            doc.AppendChild(XMLroot);
-
+            XmlDoc doc = new XmlDoc();
+            XmlElement XMLroot = doc.RootNode("configurations");
+            
             XmlElement ele = doc.CreateElement("database");
             DbInfo dbInfo = new DbInfo();
             createChildrenNode(dbInfo, doc, ele);

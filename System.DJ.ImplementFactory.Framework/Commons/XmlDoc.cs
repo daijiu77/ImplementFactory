@@ -85,15 +85,20 @@ namespace System.DJ.ImplementFactory.Commons
             return RootNode(nodeName, null);
         }
 
-        public XmlNode Load(string xmlPath)
+        /// <summary>
+        /// Loads a valid XML file and returns the root node if it exists
+        /// </summary>
+        /// <param name="xmlPath">The physical path to the XML file</param>
+        /// <returns>Return the root node if it exist</returns>
+        public XmlElement Load(string xmlPath)
         {
             if (!File.Exists(xmlPath)) return null;
             doc = new XmlDocument();
             doc.Load(xmlPath);
-            XmlNode node = null;
+            XmlElement node = null;
             if (2 == doc.ChildNodes.Count)
             {
-                node = doc.ChildNodes[1];
+                node = (XmlElement)doc.ChildNodes[1];
             }
             return node;
         }

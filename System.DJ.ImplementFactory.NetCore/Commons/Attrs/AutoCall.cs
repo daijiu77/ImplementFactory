@@ -324,11 +324,10 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
         void LoadErrorLevelByXml(string f)
         {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(f);
+            XmlDoc doc = new XmlDoc();
+            XmlNode node = doc.Load(f);
 
-            if (1 >= doc.ChildNodes.Count) return;
-            XmlNode node = doc.ChildNodes[1];
+            if (null == node) return;
             string nodeName = "";
 
             LogsRange logsRange1 = new LogsRange();

@@ -51,10 +51,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             List<string> ipAddrs = new List<string>();
             if (!File.Exists(filePath)) return ipAddrs;
-            XmlDocument doc = new XmlDocument();
-            doc.Load(filePath);
-            if (2 > doc.ChildNodes.Count) return ipAddrs;
-            XmlNode node = doc.ChildNodes[1];
+            XmlDoc doc = new XmlDoc();
+            XmlNode node = doc.Load(filePath);
+            if (null == node) return ipAddrs;
             string ip = "";
             foreach (XmlNode item in node.ChildNodes)
             {
