@@ -129,6 +129,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\TableInfoDetail.cs" />
+    <Compile Include="Entities\TableFieldInfo.cs" />
+    <Compile Include="Entities\TableDetail.cs" />
     <Compile Include="Commons\XmlDoc.cs" />
     <Compile Include="MServiceRoute\Attrs\RequestMapping.cs" />
     <Compile Include="DCache\Attrs\DataCache.cs" />

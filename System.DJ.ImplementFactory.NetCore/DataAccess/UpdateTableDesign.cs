@@ -5,6 +5,7 @@ using System.Data;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text;
@@ -14,6 +15,7 @@ namespace System.DJ.ImplementFactory.DataAccess
     public class UpdateTableDesign
     {
         private List<Type> absDataModels = new List<Type>();
+        private static TableInfoDetail tableFieldInfos = new TableInfoDetail();
 
         private IDbTableScheme dbTableScheme;
         private AutoCall autoCall = new AutoCall();
@@ -98,6 +100,11 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        public UpdateTableDesign AddTable<T>() where T : AbsDataModel
+        {
+            return AddTable(typeof(T));
+        }
+
         public void TableScheme()
         {
             Dictionary<string, string> tableDic = MultiTablesExec.Tables;
@@ -153,6 +160,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (null == fm.FieldType) fm.FieldType = type1;
                     if (0 == fm.Length) fm.Length = length;
                     fieldMappings.Add(fm);
+                    tableFieldInfos.Add(tbName, fm.FieldName, null, 0);
                 });
                 if (0 == fieldMappings.Count) continue;
                 MultiTablesExec.SetTable(tbName);
@@ -160,6 +168,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dbHelper.update(autoCall, sql, null, false, null, ref err);
             }
             ImplementAdapter.Destroy(dbHelper);
+        }
+
+        public static TableInfoDetail GetTableInfoDetail()
+        {
+            return tableFieldInfos;
         }
 
         private void AddField(string tableName, Type type)
@@ -177,6 +190,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 fn1 = item.ToLower();
                 if (fieldDic.ContainsKey(fn1)) continue;
+                tableFieldInfos.Add(tableName, item, null, 0);
                 fieldDic.Add(fn1, item);
             }
 
@@ -202,5 +216,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             });
             ImplementAdapter.Destroy(dbHelper);
         }
+
+        
     }
 }

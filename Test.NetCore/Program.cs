@@ -7,6 +7,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -92,9 +93,19 @@ namespace Test.NetCore
             TestObj testObj = new TestObj();
             testObj.test_ToObjectFrom();
             //testObj.test_user();
-            string un = testObj.VisitService();
+            //string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
+
+            TableInfoDetail details = UpdateTableDesign.GetTableInfoDetail();
+            foreach (TableDetail item in details)
+            {
+                Trace.WriteLine(item.Name);
+                item.Foreach((fieldName, fieldType, length) =>
+                {
+                    Trace.WriteLine("\t" + fieldName);
+                });
+            }
 
             SetWindowPositionCenter();
 
