@@ -28,12 +28,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string registerAddr = "";
                 Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Regex rg1 = new Regex(@"^((http)|(https))\:\/\/", RegexOptions.IgnoreCase);
-                MicroServiceRoute.ForEach(routeAttr =>
+                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, MethodTypes RegisterActionType)
                 {
-                    s = routeAttr.Uri.Trim();
+                    s = Uri.Trim();
                     if (string.IsNullOrEmpty(s)) return;
 
-                    registerAddr = routeAttr.RegisterAddr.Trim();
+                    registerAddr = RegisterAddr.Trim();
                     if (string.IsNullOrEmpty(registerAddr)) return;
                     if (registerAddr.Substring(0, 1).Equals("/"))
                     {
@@ -51,7 +51,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         uris = new string[] { s };
                     }
 
-                    methodTypes = routeAttr.RegisterActionType;
+                    methodTypes = RegisterActionType;
                     foreach (string item in uris)
                     {
                         url = item.Trim();
@@ -65,6 +65,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) => { });
                     }
                 });
+                
             });
         }
     }
