@@ -17,76 +17,90 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         private bool _IsGenericMethod = false;
         private bool _isAsyncReturn = false;
         private bool _isTaskReturn = false;
+        private bool isJudgeExc = false;
         private string _name = "";
-        private List<Attribute> _attributes = new List<Attribute>();
-        private List<ParameterInfo> _parameterInfos = new List<ParameterInfo>();
-        private List<CustomAttributeData> _CustomAttributeDatas = new List<CustomAttributeData>();
-        private List<Type> _GenericArguments = new List<Type>();
+        private ParameterInfo[] _parameterInfos = null;
+        private List<CustomAttributeData> _CustomAttributeDatas = null;
+        private Type[] _GenericArguments = null;
 
-        public EMethodInfo(MethodInfo mi)
+        public EMethodInfo(MethodInfo interfaceMethod)
         {
-            _mi = mi;
+            _mi = interfaceMethod;
+            _name = interfaceMethod.Name;
+            _declaringType = interfaceMethod.DeclaringType;
+            _returnType = interfaceMethod.ReturnType;
+            _IsGenericMethod = interfaceMethod.IsGenericMethod;
+            _parameterInfos = interfaceMethod.GetParameters();
+            _GenericArguments = interfaceMethod.GetGenericArguments();
         }
 
         public override Type DeclaringType => _declaringType;
 
         public override string Name => _name;
 
-        public override Type ReturnType => _returnType;
+        public override Type ReturnType
+        {
+            get
+            {
+                JudgeTaskMethod(_mi, ref _isAsyncReturn, ref _isTaskReturn, ref _returnType);
+                return _returnType;
+            }
+        }
 
         public override bool IsGenericMethod => _IsGenericMethod;
 
-        public override IEnumerable<CustomAttributeData> CustomAttributes => _CustomAttributeDatas;
+        public override IEnumerable<CustomAttributeData> CustomAttributes
+        {
+            get
+            {
+                if (null == _CustomAttributeDatas)
+                {
+                    _CustomAttributeDatas = new List<CustomAttributeData>();
+                    var attrDatas = _mi.CustomAttributes;
+                    if (null != attrDatas)
+                    {
+                        foreach (var attrData in attrDatas)
+                        {
+                            _CustomAttributeDatas.Add(attrData);
+                        }
+                    }
 
-        public bool IsAsyncReturn { get { return _isAsyncReturn; } }
+                    MethodInfo implMethod = GetImplementMethodBy(_mi, _implementType);
+                    if (null != implMethod)
+                    {
+                        attrDatas = implMethod.CustomAttributes;
+                        if (null != attrDatas)
+                        {
+                            foreach (var attrData in attrDatas)
+                            {
+                                _CustomAttributeDatas.Add(attrData);
+                            }
+                        }
+                    }
+                }
+                return _CustomAttributeDatas;
+            }
+        }
 
-        public bool IsTaskReturn { get { return _isTaskReturn; } }
+        public bool IsAsyncReturn
+        {
+            get
+            {
+                JudgeTaskMethod(_mi, ref _isAsyncReturn, ref _isTaskReturn, ref _returnType);
+                return _isAsyncReturn;
+            }
+        }
+
+        public bool IsTaskReturn
+        {
+            get
+            {
+                JudgeTaskMethod(_mi, ref _isAsyncReturn, ref _isTaskReturn, ref _returnType);
+                return _isTaskReturn;
+            }
+        }
 
         public Type ImplementType { get { return _implementType; } }
-
-        public EMethodInfo SetCustomAttributeDatas(IEnumerable<CustomAttributeData> customAttributeDatas)
-        {
-            if (null == customAttributeDatas) return this;
-            foreach (CustomAttributeData customData in customAttributeDatas)
-            {
-                _CustomAttributeDatas.Add(customData);
-            }
-
-            if (null != _returnType)
-            {
-                Type rtnType = null;
-                JudgeTaskMethod(this, ref _isAsyncReturn, ref _isTaskReturn, ref rtnType);
-                _returnType = rtnType;
-            }
-            return this;
-        }
-
-        public EMethodInfo SetIsGenericMethod(bool isGenericMethod)
-        {
-            _IsGenericMethod = isGenericMethod;
-            return this;
-        }
-
-        public EMethodInfo SetReturnType(Type returnType)
-        {
-            _returnType = returnType;
-            Type rtnType = null;
-            JudgeTaskMethod(this, ref _isAsyncReturn, ref _isTaskReturn, ref rtnType);
-            _returnType = rtnType;
-            return this;
-        }
-
-        public EMethodInfo SetDeclaringType(Type declaringType)
-        {
-            _declaringType = declaringType;
-            return this;
-        }
-
-        public EMethodInfo SetName(string name)
-        {
-            _name = name;
-            return this;
-        }
 
         public EMethodInfo SetImplementType(Type implType)
         {
@@ -96,61 +110,112 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public override Type[] GetGenericArguments()
         {
-            return _GenericArguments.ToArray();
-        }
-
-        public EMethodInfo SetGenericArguments(Type[] genericArguments)
-        {
-            if (null == genericArguments) return this;
-            foreach (var item in genericArguments)
-            {
-                _GenericArguments.Add(item);
-            }
-            return this;
+            return _GenericArguments;
         }
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return _attributes.ToArray();
-            //throw new NotImplementedException();
+            return WholeAttributes(null, inherit);
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            List<object> attributeList = new List<object>();
-            foreach (var item in _attributes)
-            {
-                if (attributeType.IsAssignableFrom(item.GetType()) || attributeType == item.GetType())
-                {
-                    attributeList.Add(item);
-                }
-            }
-            return attributeList.ToArray();
+            return WholeAttributes(attributeType, inherit);
         }
 
-        public EMethodInfo SetCustomAttributes(object[] attributes)
+        public object[] WholeAttributes(Type attributeType, bool inherit)
         {
-            if (null == attributes) return this;
-            foreach (var item in attributes)
+            object[] attributes = _mi.GetCustomAttributes(attributeType, inherit);
+            MethodInfo implMethod = GetImplementMethodBy(_mi, _implementType);
+            if (null != implMethod)
             {
-                this._attributes.Add((Attribute)item);
+                Dictionary<string, object> attrsDic = new Dictionary<string, object>();
+                string key = "";
+                if (null != attributes)
+                {
+                    foreach (var attr in attributes)
+                    {
+                        key = attr.GetType().FullName;
+                        if (attrsDic.ContainsKey(key)) attrsDic.Remove(key);
+                        attrsDic.Add(key, attr);
+                    }
+                }
+
+                object[] attrs = implMethod.GetCustomAttributes(attributeType, inherit);
+                if (null != attrs)
+                {
+                    foreach (var attr in attrs)
+                    {
+                        key = attr.GetType().FullName;
+                        if (attrsDic.ContainsKey(key)) attrsDic.Remove(key);
+                        attrsDic.Add(key, attr);
+                    }
+                }
+
+                if (0 < attrsDic.Count)
+                {
+                    attributes = new object[attrsDic.Count];
+                    int n = 0;
+                    foreach (var attr in attrsDic)
+                    {
+                        attributes[n] = attr.Value;
+                        n++;
+                    }
+                }
             }
-            return this;
+            return attributes;
         }
 
         public override ParameterInfo[] GetParameters()
         {
-            return _parameterInfos.ToArray();
+            return _parameterInfos;
         }
 
-        public EMethodInfo SetParameters(ParameterInfo[] parameters)
+        public List<CustomAttributeData> CustomAttributeDatas { get; private set; }
+
+        private MethodInfo GetImplementMethodBy(MethodInfo interfaceMethod, Type implementClass)
         {
-            if (null == parameters) return this;
-            foreach (var item in parameters)
+            MethodInfo implMethod = null;
+            if ((null == interfaceMethod) || (null == implementClass)) return implMethod;
+            ParameterInfo[] paras = interfaceMethod.GetParameters();
+            int paraSize = paras.Length;
+
+            string methodName = interfaceMethod.Name;
+            string methodName1 = interfaceMethod.DeclaringType.FullName + "." + methodName;
+            bool mbool = false;
+            int n = 0;
+            string mName = "";
+            ParameterInfo[] paras1 = null;
+            MethodInfo[] implMs = implementClass.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (MethodInfo impl in implMs)
             {
-                _parameterInfos.Add(item);
+                mbool = false;
+                mName = impl.Name;
+                if (mName.Equals(methodName) || mName.Equals(methodName1))
+                {
+                    paras1 = impl.GetParameters();
+                    if (paras1.Length == paraSize)
+                    {
+                        mbool = true;
+                        n = 0;
+                        foreach (ParameterInfo item in paras1)
+                        {
+                            if (item.ParameterType != paras[n].ParameterType)
+                            {
+                                mbool = false;
+                                break;
+                            }
+                            n++;
+                        }
+                    }
+                }
+                if (mbool)
+                {
+                    implMethod = impl;
+                    break;
+                }
             }
-            return this;
+            return implMethod;
         }
 
         /// <summary>
@@ -162,6 +227,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <param name="return_type">方法返回值类型</param>
         private void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
         {
+            if (isTaskReturn) return;
+            isJudgeExc = true;
             isAsyncReturn = false;
             isTaskReturn = false;
             return_type = typeof(void);
@@ -176,78 +243,36 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 attrs = mi.CustomAttributes;
             }
 
-            if (null != _implementType)
+            MethodInfo implM = GetImplementMethodBy(_mi, _implementType);
+            if (null != implM)
             {
-                ParameterInfo[] paras = _mi.GetParameters();
-                int paraSize = paras.Length;
-
-                string methodName = _mi.Name;
-                string methodName1 = _mi.DeclaringType.FullName + "." + methodName;
-                bool mbool = false;
-                int n = 0;
-                string mName = "";
-                ParameterInfo[] paras1 = null;
-                MethodInfo implM = null;
-                MethodInfo[] implMs = _implementType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance);
-                foreach (MethodInfo impl in implMs)
+                var attrs1 = implM.CustomAttributes;
+                if (null == attrs)
                 {
-                    mbool = false;
-                    mName = impl.Name;
-                    if (mName.Equals(methodName) || mName.Equals(methodName1))
-                    {
-                        paras1 = impl.GetParameters();
-                        if (paras1.Length == paraSize)
-                        {
-                            mbool = true;
-                            n = 0;
-                            foreach (ParameterInfo item in paras1)
-                            {
-                                if (item.ParameterType != paras[n].ParameterType)
-                                {
-                                    mbool = false;
-                                    break;
-                                }
-                                n++;
-                            }
-                        }
-                    }
-                    if (mbool)
-                    {
-                        implM = impl;
-                        break;
-                    }
+                    attrs = attrs1;
                 }
-
-                if (null != implM)
+                else
                 {
-                    var attrs1 = implM.CustomAttributes;
-                    if (null == attrs)
+                    string attType = "";
+                    Dictionary<string, CustomAttributeData> attrDic = new Dictionary<string, CustomAttributeData>();
+                    List<CustomAttributeData> list = new List<CustomAttributeData>();
+                    foreach (CustomAttributeData item in attrs)
                     {
-                        attrs = attrs1;
+                        attType = item.AttributeType.Name;
+                        if (attrDic.ContainsKey(attType)) continue;
+                        attrDic[attType] = item;
+                        list.Add(item);
                     }
-                    else
+
+                    foreach (CustomAttributeData item in attrs1)
                     {
-                        string attType = "";
-                        Dictionary<string, CustomAttributeData> attrDic = new Dictionary<string, CustomAttributeData>();
-                        List<CustomAttributeData> list = new List<CustomAttributeData>();
-                        foreach (CustomAttributeData item in attrs)
-                        {
-                            attType = item.AttributeType.Name;
-                            if (attrDic.ContainsKey(attType)) continue;
-                            attrDic[attType] = item;
-                            list.Add(item);
-                        }
-
-                        foreach (CustomAttributeData item in attrs1)
-                        {
-                            attType = item.AttributeType.Name;
-                            if (attrDic.ContainsKey(attType)) continue;
-                            attrDic[attType] = item;
-                            list.Add(item);
-                        }
-
-                        attrs = list;
+                        attType = item.AttributeType.Name;
+                        if (attrDic.ContainsKey(attType)) continue;
+                        attrDic[attType] = item;
+                        list.Add(item);
                     }
+
+                    attrs = list;
                 }
             }
 

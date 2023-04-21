@@ -957,15 +957,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     msInterval = 0;
 
                     eMethod = new EMethodInfo(miItem)
-                    .SetImplementType(implementType)
-                    .SetCustomAttributes(miItem.GetCustomAttributes(true))
-                    .SetCustomAttributeDatas(miItem.CustomAttributes)
-                    .SetReturnType(miItem.ReturnType)
-                    .SetName(miItem.Name)
-                    .SetDeclaringType(miItem.DeclaringType)
-                    .SetParameters(miItem.GetParameters())
-                    .SetIsGenericMethod(miItem.IsGenericMethod)
-                    .SetGenericArguments(miItem.GetGenericArguments());
+                    .SetImplementType(implementType);
 
                     autoCall = getAutoCall(eMethod, ref isDataOpt, ref absData, ref methodAttr, ref isAsync, ref msInterval, ref EnabledBuffer);
                     if (false == _isDataOpt) _isDataOpt = isDataOpt;
