@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
+using System.Threading.Tasks;
 using Test.NetCore.DataInterface;
+using Test.NetCore.InterfaceTest;
 
 namespace Test.NetCore
 {
@@ -49,10 +51,15 @@ namespace Test.NetCore
             }
             return c;
         }
-                
+
         int ICalculate.Sum(int a, int b)
         {
             return a + b;
+        }
+
+        async Task<int> ICalculate.TaskSum(int a, int b)
+        {
+            return await Task.FromResult((a + b));
         }
     }
 }

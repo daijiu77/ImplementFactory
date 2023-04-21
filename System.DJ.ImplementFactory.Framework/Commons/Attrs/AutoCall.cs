@@ -462,7 +462,16 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 return code;
             }
             string resultVarName = string.IsNullOrEmpty(mc.ResultVariantName) ? "" : (mc.ResultVariantName + " = ");
-            method.append(ref code, LeftSpaceLevel.one, "{0}{1}.{2}{3}({4});", resultVarName, mc.InstanceVariantName, mc.InterfaceMethodName, mc.GenericityParas, mc.MethodParas);
+            EMethodInfo em = (EMethodInfo)method.methodInfo;
+            if(em.IsTaskReturn && (false == string.IsNullOrEmpty(resultVarName)))
+            {
+                method.append(ref code, LeftSpaceLevel.one, "{0}{1}.{2}{3}({4}).Result;", resultVarName, mc.InstanceVariantName, mc.InterfaceMethodName, mc.GenericityParas, mc.MethodParas);
+            }
+            else
+            {
+                method.append(ref code, LeftSpaceLevel.one, "{0}{1}.{2}{3}({4});", resultVarName, mc.InstanceVariantName, mc.InterfaceMethodName, mc.GenericityParas, mc.MethodParas);
+            }
+            
             return code;
         }
 

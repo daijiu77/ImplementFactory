@@ -835,7 +835,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadOpt.task.Wait();
                 if (0 < queryDatas.Rows.Count)
                 {
-                    startQuantity += (pgSize - queryDatas.Rows.Count);
+                    startQuantity = (dataPage.StartQuantity + queryDatas.Rows.Count);
                     pageSize = (pgSize - queryDatas.Rows.Count);
                 }
 

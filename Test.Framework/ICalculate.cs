@@ -1,7 +1,8 @@
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DCache.Attrs;
+using System.Threading.Tasks;
 
-namespace Test.Framework
+namespace Test.Framework.InterfaceTest
 {
     public delegate void getData(object data);
     public interface ICalculate
@@ -12,6 +13,9 @@ namespace Test.Framework
 
         [DataCache]
         int Sum(int a, int b);
+
+        [DataCache]
+        Task<int> TaskSum(int a, int b);
 
         /// <summary>
         /// ����������Ϊ AutoCall�����Ҹò���ֵΪ null ʱ������Զ�ע�� AutoCall ʵ������

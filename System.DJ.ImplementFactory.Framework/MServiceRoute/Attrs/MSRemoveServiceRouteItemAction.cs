@@ -8,19 +8,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// <summary>
     /// To remove the service route entry, specify that the method parameter needs to contain: ServiceRouteName(RouteName)
     /// </summary>
-    public class RemoveServiceRouteItemAction : AbsActionFilterAttribute
+    public class MSRemoveServiceRouteItemAction : AbsActionFilterAttribute
     {
         private string ServiceRouteName = "RouteName";
         /// <summary>
         /// To remove the service route entry, specify that the method parameter needs to contain: ServiceRouteName(RouteName)
         /// </summary>
-        public RemoveServiceRouteItemAction() { }
+        public MSRemoveServiceRouteItemAction() { }
 
         /// <summary>
         /// To remove the service route entry
         /// </summary>
         /// <param name="ServiceRouteName">The parameter name of the ServiceRouteName mapping</param>
-        public RemoveServiceRouteItemAction(string ServiceRouteName)
+        public MSRemoveServiceRouteItemAction(string ServiceRouteName)
         {
             this.ServiceRouteName = ServiceRouteName;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
+using Test.NetCore.InterfaceTest;
 
 namespace Test.NetCore
 {

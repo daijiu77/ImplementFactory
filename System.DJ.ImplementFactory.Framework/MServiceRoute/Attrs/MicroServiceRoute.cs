@@ -3,6 +3,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -171,10 +172,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 string key = ServiceRouteName.Trim().ToLower();
                 XmlElement routeNode = null;
                 eleDic.TryGetValue(key, out routeNode);
+                RouteAttr routeAttr = null;
                 if (null == routeNode)
                 {
                     routeNode = document.CreateElement(routeItem);
                     rootElement.AppendChild(routeNode);
+                    eleDic.Add(key, routeNode);
+
+                    routeAttr = new RouteAttr();
+                    routeAttrDic.Add(key, routeAttr);
+                }
+                else
+                {
+                    routeAttr = routeAttrDic[key];
                 }
 
                 Dictionary<string, XmlAttribute> dic = new Dictionary<string, XmlAttribute>();
@@ -183,13 +193,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     dic[item.Name.ToLower()] = item;
                 }
 
-                RouteAttr routeAttr = new RouteAttr()
-                {
-                    Name = ServiceRouteName.Trim(),
-                    Uri = Uri.Trim(),
-                    RegisterAddr = RegisterAddr.Trim(),
-                    RegisterActionType = RegisterActionType
-                };
+                routeAttr.Name = ServiceRouteName.Trim();
+                routeAttr.Uri = Uri.Trim();
+                routeAttr.RegisterAddr = RegisterAddr.Trim();
+                routeAttr.RegisterActionType = RegisterActionType;
 
                 XmlAttribute attr = null;
                 routeAttr.ForeachProperty((pi, pt, fn, fv) =>

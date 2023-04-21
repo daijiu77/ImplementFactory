@@ -8,7 +8,7 @@ using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.Commons
 {
-    class DbAdapter: IDisposable
+    class DbAdapter : IDisposable
     {
         private DbConnection conn = null;
         private static DbAdapter dbAdapter = null;
@@ -104,18 +104,22 @@ namespace System.DJ.ImplementFactory.Commons
             dbConnectionState.DbConnection_Disposed(conn, e);
         }
 
-        private void printSql(AutoCall autoCall, string sql)
+        private static object _DbAdapter = new object();
+        public static void printSql(AutoCall autoCall, string sql)
         {
-            if (IsPrintSQLToTrace)
+            lock (_DbAdapter)
             {
-                Trace.WriteLine(sql);
-                Trace.WriteLine("++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++");
-            }
+                if (IsPrintSQLToTrace)
+                {
+                    Trace.WriteLine(sql);
+                    Trace.WriteLine("++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++");
+                }
 
-            if (IsPrintSqlToLog)
-            {
-                autoCall.e(sql, ErrorLevels.debug);
-            }
+                if (IsPrintSqlToLog)
+                {
+                    autoCall.e(sql, ErrorLevels.debug);
+                }
+            }            
         }
 
         public IDbConnectionState dbConnectionState { get; set; }

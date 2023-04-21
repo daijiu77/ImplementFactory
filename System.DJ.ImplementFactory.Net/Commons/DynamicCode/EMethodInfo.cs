@@ -10,8 +10,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 {
     internal class EMethodInfo : MethodInfo
     {
+        private MethodInfo _mi = null;
         private Type _declaringType = null;
         private Type _returnType = null;
+        private Type _implementType = null;
         private bool _IsGenericMethod = false;
         private bool _isAsyncReturn = false;
         private bool _isTaskReturn = false;
@@ -20,6 +22,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         private List<ParameterInfo> _parameterInfos = new List<ParameterInfo>();
         private List<CustomAttributeData> _CustomAttributeDatas = new List<CustomAttributeData>();
         private List<Type> _GenericArguments = new List<Type>();
+
+        public EMethodInfo(MethodInfo mi)
+        {
+            _mi = mi;
+        }
 
         public override Type DeclaringType => _declaringType;
 
@@ -34,6 +41,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         public bool IsAsyncReturn { get { return _isAsyncReturn; } }
 
         public bool IsTaskReturn { get { return _isTaskReturn; } }
+
+        public Type ImplementType { get { return _implementType; } }
 
         public EMethodInfo SetCustomAttributeDatas(IEnumerable<CustomAttributeData> customAttributeDatas)
         {
@@ -76,6 +85,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         public EMethodInfo SetName(string name)
         {
             _name = name;
+            return this;
+        }
+
+        public EMethodInfo SetImplementType(Type implType)
+        {
+            _implementType = implType;
             return this;
         }
 
@@ -150,14 +165,94 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             isAsyncReturn = false;
             isTaskReturn = false;
             return_type = typeof(void);
+            /**
+                * 判断方法是否是 async Task 方法:
+                * public async Task UpdateInfo(Guid Id, CustomerInfo) { }
+                * **/
+            #region 判断方法是否是 async Task 方法
+            IEnumerable<CustomAttributeData> attrs = null;
             if (0 < mi.CustomAttributes.Count())
             {
-                /**
-                 * 判断方法是否是 async Task 方法:
-                 * public async Task UpdateInfo(Guid Id, CustomerInfo) { }
-                 * **/
-                #region 判断方法是否是 async Task 方法
-                IEnumerable<CustomAttributeData> attrs = mi.CustomAttributes;
+                attrs = mi.CustomAttributes;
+            }
+
+            if (null != _implementType)
+            {
+                ParameterInfo[] paras = _mi.GetParameters();
+                int paraSize = paras.Length;
+
+                string methodName = _mi.Name;
+                string methodName1 = _mi.DeclaringType.FullName + "." + methodName;
+                bool mbool = false;
+                int n = 0;
+                string mName = "";
+                ParameterInfo[] paras1 = null;
+                MethodInfo implM = null;
+                MethodInfo[] implMs = _implementType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (MethodInfo impl in implMs)
+                {
+                    mbool = false;
+                    mName = impl.Name;
+                    if (mName.Equals(methodName) || mName.Equals(methodName1))
+                    {
+                        paras1 = impl.GetParameters();
+                        if (paras1.Length == paraSize)
+                        {
+                            mbool = true;
+                            n = 0;
+                            foreach (ParameterInfo item in paras1)
+                            {
+                                if (item.ParameterType != paras[n].ParameterType)
+                                {
+                                    mbool = false;
+                                    break;
+                                }
+                                n++;
+                            }
+                        }
+                    }
+                    if (mbool)
+                    {
+                        implM = impl;
+                        break;
+                    }
+                }
+
+                if (null != implM)
+                {
+                    var attrs1 = implM.CustomAttributes;
+                    if (null == attrs)
+                    {
+                        attrs = attrs1;
+                    }
+                    else
+                    {
+                        string attType = "";
+                        Dictionary<string, CustomAttributeData> attrDic = new Dictionary<string, CustomAttributeData>();
+                        List<CustomAttributeData> list = new List<CustomAttributeData>();
+                        foreach (CustomAttributeData item in attrs)
+                        {
+                            attType = item.AttributeType.Name;
+                            if (attrDic.ContainsKey(attType)) continue;
+                            attrDic[attType] = item;
+                            list.Add(item);
+                        }
+
+                        foreach (CustomAttributeData item in attrs1)
+                        {
+                            attType = item.AttributeType.Name;
+                            if (attrDic.ContainsKey(attType)) continue;
+                            attrDic[attType] = item;
+                            list.Add(item);
+                        }
+
+                        attrs = list;
+                    }
+                }
+            }
+
+            if (null != attrs)
+            {
                 Type attrType = null;
                 List<Type> listTypes = new List<Type>();
                 listTypes.Add(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
@@ -174,8 +269,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     isAsyncReturn = true;
                     isTaskReturn = true;
                 }
-                #endregion
             }
+            #endregion
 
             Type rtnType = mi.ReturnType;
             if (false == isTaskReturn) isTaskReturn = -1 != rtnType.Name.ToLower().IndexOf("task");

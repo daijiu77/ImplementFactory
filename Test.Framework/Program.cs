@@ -10,6 +10,7 @@ using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Test.Framework.DataInterface;
 using Test.Framework.Entities;
+using Test.Framework.InterfaceTest;
 using Test.Framework.MSVisitor;
 
 namespace Test.Framework
@@ -85,14 +87,16 @@ namespace Test.Framework
 
         static void Main(string[] args)
         {
+            Test1 test1 = new Test1();
+            test1.Test();
             MService.Start();
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
-            testObj.test_ToObjectFrom();
-            //testObj.test_user();
+            //testObj.test_ToObjectFrom();
+            testObj.test_user();
             //string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
@@ -271,6 +275,21 @@ namespace Test.Framework
             int len = data.Length;
         }
 
+        class Test1: ImplementAdapter
+        {
+            [MyAutoCall]
+            private ICalculate calculate;
+            public Test1()
+            {
+                //
+            }
+
+            public void Test()
+            {
+                int a = 0;
+            }
+        }
+
         class TestObj : ImplementAdapter
         {
             [MyAutoCall]
@@ -410,7 +429,8 @@ namespace Test.Framework
 
             private async Task<int> task3()
             {
-                return await Task.Run(() => { return 2; });
+                //return await Task.Run(() => { return 2; });
+                return await Task.FromResult(0);
             }
 
             private Task<int> task4()

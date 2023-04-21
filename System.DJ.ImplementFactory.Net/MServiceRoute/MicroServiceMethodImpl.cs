@@ -82,7 +82,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 requestMapping = null;
                 attr = miItem.GetCustomAttribute(typeof(RequestMapping));
 
-                eMethod = new EMethodInfo()
+                eMethod = new EMethodInfo(miItem)
                     .SetCustomAttributes(miItem.GetCustomAttributes(true))
                     .SetCustomAttributeDatas(miItem.CustomAttributes)
                     .SetReturnType(miItem.ReturnType)

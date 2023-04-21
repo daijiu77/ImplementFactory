@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
@@ -48,7 +49,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (typeof(System.Collections.ICollection).IsAssignableFrom(type))
             {
                 Type tp = null;
-                if(typeof(byte[]) == type)
+                if (typeof(byte[]) == type)
                 {
                     tp = type;
                     type1 = type;
@@ -123,6 +124,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (var item in absDataModels)
             {
                 tbName = item.Name;
+                DbAdapter.printSql(autoCall, "Table name: <" + tbName + ">");
                 atts = item.GetCustomAttributes();
                 if (null != atts)
                 {
@@ -162,6 +164,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     fieldMappings.Add(fm);
                     tableFieldInfos.Add(tbName, fm.FieldName, null, 0);
                 });
+                DbAdapter.printSql(autoCall, "Table name: <" + tbName + ">, fields mapping count: " + fieldMappings.Count);
                 if (0 == fieldMappings.Count) continue;
                 MultiTablesExec.SetTable(tbName);
                 sql = dbTableScheme.GetTableScheme(tbName, fieldMappings);
@@ -217,6 +220,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             ImplementAdapter.Destroy(dbHelper);
         }
 
-        
+
     }
 }

@@ -129,8 +129,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MServiceRoute\Attrs\RemoveServiceRouteItemAction.cs" />
-    <Compile Include="MServiceRoute\Attrs\AddServiceRouteItemAction.cs" />
     <Compile Include="DataAccess\TableInfoDetail.cs" />
     <Compile Include="Entities\TableFieldInfo.cs" />
     <Compile Include="Entities\TableDetail.cs" />
