@@ -17,7 +17,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         private bool _IsGenericMethod = false;
         private bool _isAsyncReturn = false;
         private bool _isTaskReturn = false;
-        private bool isJudgeExc = false;
+        private bool _isJudgeExc = false;
         private string _name = "";
         private ParameterInfo[] _parameterInfos = null;
         private List<CustomAttributeData> _CustomAttributeDatas = null;
@@ -25,6 +25,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public EMethodInfo(MethodInfo interfaceMethod)
         {
+            _isJudgeExc = false;
             _mi = interfaceMethod;
             _name = interfaceMethod.Name;
             _declaringType = interfaceMethod.DeclaringType;
@@ -227,8 +228,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         /// <param name="return_type">方法返回值类型</param>
         private void JudgeTaskMethod(MethodInfo mi, ref bool isAsyncReturn, ref bool isTaskReturn, ref Type return_type)
         {
-            if (isTaskReturn) return;
-            isJudgeExc = true;
+            if (_isJudgeExc) return;
+            _isJudgeExc = true;
             isAsyncReturn = false;
             isTaskReturn = false;
             return_type = typeof(void);
