@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Test.NetCoreApi
 {
@@ -13,6 +10,7 @@ namespace Test.NetCoreApi
     {
         public static void Main(string[] args)
         {
+            ServiceExtensions.SetAssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
             CreateHostBuilder(args).Build().Run();
         }
 

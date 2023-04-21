@@ -55,7 +55,7 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute</source>
 		<target rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute</target>
-		<exclude>MSFilter.cs,AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSConfiguratorAction.cs,AddServiceRouteItemAction.cs,RemoveServiceRouteItemAction.cs</exclude>
+		<exclude>MSFilter.cs,AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSConfiguratorAction.cs,MSAddServiceRouteItemAction.cs,MSRemoveServiceRouteItemAction.cs</exclude>
 	</copy>
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
@@ -132,7 +132,7 @@
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
-		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\RemoveServiceRouteItemAction.cs</source>
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSRemoveServiceRouteItemAction.cs</source>
 		<target rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs</target>
 		<exclude></exclude>
 		<replaces>
@@ -151,7 +151,7 @@
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
-		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\AddServiceRouteItemAction.cs</source>
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSAddServiceRouteItemAction.cs</source>
 		<target rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs</target>
 		<exclude></exclude>
 		<replaces>
@@ -426,6 +426,6 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\MServiceRoute</target>
-		<exclude>MSFilter.cs,AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSConfiguratorAction.cs,MSUnlimited.cs,AddServiceRouteItemAction.cs,RemoveServiceRouteItemAction.cs</exclude>
+		<exclude>MSFilter.cs,AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSConfiguratorAction.cs,MSUnlimited.cs,MSAddServiceRouteItemAction.cs,MSRemoveServiceRouteItemAction.cs</exclude>
 	</copy>
 </files>

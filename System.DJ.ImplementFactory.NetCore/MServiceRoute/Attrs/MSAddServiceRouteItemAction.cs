@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Text;
 using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
@@ -10,7 +8,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// <summary>
     /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
     /// </summary>
-    public class AddServiceRouteItemAction : AbsActionFilterAttribute
+    public class MSAddServiceRouteItemAction : AbsActionFilterAttribute
     {
         private string routeName = "routeName";
         private string uri = "uri";
@@ -19,7 +17,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>
-        public AddServiceRouteItemAction() { }
+        public MSAddServiceRouteItemAction() { }
 
         /// <summary>
         /// To add a service route entry
@@ -28,7 +26,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="Uri">The parameter name of the Uri mapping</param>
         /// <param name="RegisterAddr">The parameter name of the RegisterAddr mapping</param>
         /// <param name="RegisterActionType">The parameter name of the RegisterActionType mapping</param>
-        public AddServiceRouteItemAction(string ServiceRouteName, string Uri, string RegisterAddr, string RegisterActionType)
+        public MSAddServiceRouteItemAction(string ServiceRouteName, string Uri, string RegisterAddr, string RegisterActionType)
         {
             this.routeName = ServiceRouteName;
             this.uri = Uri;

@@ -773,7 +773,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             const string taskRunEndTag = "[_Task.Run-End_]";
             const string References = "[_References_]";
 
-            bool isNotInheritInterface = false, _isDataOpt = false;
+            bool isNotInheritInterface = false;
+            bool _isDataOpt = false;
+            bool isDataOpt = false;
+
             List<Type> typeList = new List<Type>();
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
@@ -930,7 +933,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                     EnabledBuffer = false;
                     isDynamicEntity = false;
-                    bool isDataOpt = false;
+                    isDataOpt = false;
                     isAsync = false;
                     methodAttr = "";
                     msInterval = 0;
@@ -1126,11 +1129,18 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "}");
                                     mInfo.append(ref code, LeftSpaceLevel.four + 2, "dataCacheVal = rtnList;");
                                 }
-
+                                
                                 mInfo.append(ref code, LeftSpaceLevel.four + 1, "{0}(({1})dataCacheVal);", actionParaName, action_type);
                                 if (eMethod.ReturnType != typeof(void))
                                 {
-                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", action_type);
+                                    if(isDataOpt || (false == eMethod.IsTaskReturn))
+                                    {
+                                        mInfo.append(ref code, LeftSpaceLevel.four + 1, "return ({0})dataCacheVal;", action_type);
+                                    }
+                                    else if(eMethod.IsTaskReturn)
+                                    {
+                                        mInfo.append(ref code, LeftSpaceLevel.four + 1, "return Task.FromResult(({0})dataCacheVal);", action_type);
+                                    }
                                 }
                                 else
                                 {

@@ -21,7 +21,7 @@ namespace Test.NetCoreApi.Controllers
             return new { success = true, message = "", data = data };
         }
 
-        [Route("GetCount")]
+        [HttpPost, Route("GetCount")]
         public int Count()
         {
             return 3;
@@ -54,30 +54,6 @@ namespace Test.NetCoreApi.Controllers
             string Password = jt["Password"].ToString();
             string AuthCode = jt["AuthCode"].ToString();
             return DJTools.ExtFormat("[{0}] 登录成功！", UserName);
-        }
-
-        /// <summary>
-        /// 对服务设置注册的有效时间和约束key
-        /// </summary>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="contractKey"></param>
-        /// <returns></returns>
-        [HttpPost, MSConfiguratorAction, Route("SetMSConfig")]
-        public object SetMSConfig(DateTime startTime, DateTime endTime, string contractKey)
-        {
-            return new { startTime = startTime, endTime = endTime, contractKey = contractKey };
-        }
-
-        /// <summary>
-        /// 向服务注册访问端 ip 地址
-        /// </summary>
-        /// <param name="contractKey"></param>
-        /// <returns></returns>
-        [HttpPost, MSClientRegisterAction, Route("RegisterIP")]
-        public object RegisterIP(string contractKey)
-        {
-            return new { contractKey = contractKey };
         }
 
         private static object _getCode = new object();
