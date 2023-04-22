@@ -174,10 +174,16 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public List<CustomAttributeData> CustomAttributeDatas { get; private set; }
 
-        private MethodInfo GetImplementMethodBy(MethodInfo interfaceMethod, Type implementClass)
+        public MethodInfo GetImplementMethodBy(MethodInfo interfaceMethod, Type implementClass)
         {
             MethodInfo implMethod = null;
             if ((null == interfaceMethod) || (null == implementClass)) return implMethod;
+            Type interfaceClassType = interfaceMethod.DeclaringType;
+            if (!interfaceClassType.IsAssignableFrom(implementClass))
+            {
+                string err = "Type: <{0}> is not an implementation class for interface type: <{1}>".ExtFormat(implementClass.FullName, interfaceClassType.FullName);
+                throw new Exception(err);
+            }
             ParameterInfo[] paras = interfaceMethod.GetParameters();
             int paraSize = paras.Length;
 
