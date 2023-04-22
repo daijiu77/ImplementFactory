@@ -103,6 +103,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public Type ImplementType { get { return _implementType; } }
 
+        /// <summary>
+        /// Sets the type of the implementation class for the interface class
+        /// </summary>
+        /// <param name="implType">The interface implements the type of the class</param>
+        /// <returns></returns>
         public EMethodInfo SetImplementType(Type implType)
         {
             _implementType = implType;
@@ -124,6 +129,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return WholeAttributes(attributeType, inherit);
         }
 
+        /// <summary>
+        /// Gets the [all or specified] custom properties that act on the method (including the interface method and the implementation class method corresponding to the interface method)
+        /// </summary>
+        /// <param name="attributeType">Specifies the custom property type</param>
+        /// <param name="inherit">Whether to look for subclasses that contain custom properties</param>
+        /// <returns>Returns a collection of custom properties</returns>
         public object[] WholeAttributes(Type attributeType, bool inherit)
         {
             object[] attributes = _mi.GetCustomAttributes(attributeType, inherit);
@@ -174,6 +185,13 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public List<CustomAttributeData> CustomAttributeDatas { get; private set; }
 
+        /// <summary>
+        /// Obtain the corresponding method from the interface implementation class based on the method of the interface class
+        /// </summary>
+        /// <param name="interfaceMethod">The methods of the interface</param>
+        /// <param name="implementClass">The interface implements the class type</param>
+        /// <returns>Returns a method in the implementation class that corresponds to the specified interface method</returns>
+        /// <exception cref="Exception">Throws an exception where the implementation class type of the transferred is not the interface implementation class to which the interface method belongs</exception>
         public MethodInfo GetImplementMethodBy(MethodInfo interfaceMethod, Type implementClass)
         {
             MethodInfo implMethod = null;
