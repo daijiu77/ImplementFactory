@@ -236,8 +236,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         {
             if (null == orderByPart) orderByPart = "";
             orderByPart = orderByPart.Trim();
-            if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
+            //if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
 
+            if(!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
             if (null == wherePart) wherePart = "";
             if (null == groupPart) groupPart = "";
             wherePart = GetWhere(wherePart);

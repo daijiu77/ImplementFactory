@@ -590,7 +590,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 rgs.Add(rg1);
                 rg2 = new Regex(@"\slimit\s+[\@\?\:]?" + start_quantity + @"\s*\,\s*[\@\?\:]?" + page_size, RegexOptions.IgnoreCase);
             }
-            else
+            else if ((false == string.IsNullOrEmpty(dataPage.PageSizeSignOfSql))
+                && (false == string.IsNullOrEmpty(dataPage.StartQuantitySignOfSql)))
             {
                 page_size = dataPage.PageSizeSignOfSql.Trim();
                 start_quantity = dataPage.StartQuantitySignOfSql.Trim();
@@ -633,7 +634,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 s = rg.Replace(s, " 1=1");
             }
-            s = rg2.Replace(s, "");
+            if (null != rg2) s = rg2.Replace(s, "");
 
             rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
             if (rg1.IsMatch(s))
@@ -746,7 +747,8 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                         if (pn.Equals(start_quantity)) item.Value = _start;
                     }
                 }
-                else
+                else if ((false == string.IsNullOrEmpty(dataPage.PageSizeSignOfSql))
+                    && (false == string.IsNullOrEmpty(dataPage.StartQuantitySignOfSql)))
                 {
                     page_size = dataPage.PageSizeSignOfSql.Trim();
                     start_quantity = dataPage.StartQuantitySignOfSql.Trim();

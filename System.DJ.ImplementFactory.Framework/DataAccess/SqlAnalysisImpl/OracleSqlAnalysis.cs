@@ -236,8 +236,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         {
             if (null == orderByPart) orderByPart = "";
             orderByPart = orderByPart.Trim();
-            if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
+            //if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
 
+            if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
             if (null == wherePart) wherePart = "";
             if (null == groupPart) groupPart = "";
             wherePart = GetWhere(wherePart);
@@ -246,7 +247,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
             Random rnd = new Random();
             string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
-            string sql = "select {0} from (select {0} from {2}{3}{4}) {5} where {5}.ROWNUM>{6} and {5}.ROWNUM<={7}";
+            string sql = "select {0} from (select {0} from {2}{3}{4}{1}) {5} where {5}.ROWNUM>{6} and {5}.ROWNUM<={7}";
             ISqlAnalysis sqlAnalysis = this;
             sqlAnalysis.PageSizeSignOfSql = "{0}.ROWNUM<=".ExtFormat(tb);
             sqlAnalysis.StartQuantitySignOfSql = "{0}.ROWNUM>".ExtFormat(tb);
