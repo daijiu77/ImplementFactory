@@ -1,11 +1,18 @@
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DCache.Attrs;
 using System.Threading.Tasks;
+using Test.NetCore.Entities;
 
 namespace Test.NetCore.InterfaceTest
 {
     public delegate void getData(object data);
-    public interface ICalculate
+
+    public interface IBaseTest<T>
+    {
+        T getDataObj();
+    }
+
+    public interface ICalculate: IBaseTest<Plan>
     {
         event getData GetData;
 

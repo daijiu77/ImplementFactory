@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
 using System.Threading.Tasks;
 using Test.Framework.DataInterface;
+using Test.Framework.Entities;
 using Test.Framework.InterfaceTest;
 
 namespace Test.Framework
@@ -60,6 +61,14 @@ namespace Test.Framework
         async Task<int> ICalculate.TaskSum(int a, int b)
         {
             return await Task.FromResult((a + b));
+        }
+
+        Plan IBaseTest<Plan>.getDataObj()
+        {
+            return new Plan()
+            {
+                PName = "abc"
+            };
         }
     }
 }

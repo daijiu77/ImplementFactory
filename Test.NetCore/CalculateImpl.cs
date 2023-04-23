@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Text;
 using System.Threading.Tasks;
 using Test.NetCore.DataInterface;
+using Test.NetCore.Entities;
 using Test.NetCore.InterfaceTest;
 
 namespace Test.NetCore
@@ -60,6 +61,14 @@ namespace Test.NetCore
         async Task<int> ICalculate.TaskSum(int a, int b)
         {
             return await Task.FromResult((a + b));
+        }
+
+        Plan IBaseTest<Plan>.getDataObj()
+        {
+            return new Plan()
+            {
+                PName = "abc"
+            };
         }
     }
 }
