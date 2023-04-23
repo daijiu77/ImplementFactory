@@ -22,16 +22,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// To add a service route entry
         /// </summary>
-        /// <param name="ServiceRouteName">The parameter name of the ServiceRouteName mapping</param>
-        /// <param name="Uri">The parameter name of the Uri mapping</param>
-        /// <param name="RegisterAddr">The parameter name of the RegisterAddr mapping</param>
-        /// <param name="RegisterActionType">The parameter name of the RegisterActionType mapping</param>
-        public MSAddServiceRouteItemAction(string ServiceRouteName, string Uri, string RegisterAddr, string RegisterActionType)
+        /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
+        /// <param name="uriMapping">The parameter name of the Uri mapping</param>
+        /// <param name="registerAddrMapping">The parameter name of the RegisterAddr mapping</param>
+        /// <param name="registerActionTypeMapping">The parameter name of the RegisterActionType(Get|Post) mapping</param>
+        public MSAddServiceRouteItemAction(string serviceRouteNameMapping, string uriMapping, string registerAddrMapping, string registerActionTypeMapping)
         {
-            this.routeName = ServiceRouteName;
-            this.uri = Uri;
-            this.addr = RegisterAddr;
-            this.actionType = RegisterActionType;
+            this.routeName = serviceRouteNameMapping;
+            this.uri = uriMapping;
+            this.addr = registerAddrMapping;
+            this.actionType = registerActionTypeMapping;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)

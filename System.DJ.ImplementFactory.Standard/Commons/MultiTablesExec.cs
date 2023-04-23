@@ -1039,10 +1039,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                             {
                                 queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
                             }
-                            if (0 < RecordQuantity)
-                            {
-                                queryDatas.Columns.Add(RecordQuantityFN, typeof(int));
-                            }
+                            queryDatas.Columns.Add(RecordQuantityFN, typeof(int));
                         }
                         DataRow dr = queryDatas.NewRow();
                         foreach (DataColumn dc in dt.Columns)
@@ -1050,11 +1047,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                             dr[dc.ColumnName] = item[dc.ColumnName];
                         }
 
-                        if (0 < RecordQuantity)
-                        {
-                            //if (0 == queryDatas.Rows.Count) 
-                            dr[RecordQuantityFN] = RecordQuantity;
-                        }
+                        dr[RecordQuantityFN] = RecordQuantity;
                         queryDatas.Rows.Add(dr);
                     }
                 }

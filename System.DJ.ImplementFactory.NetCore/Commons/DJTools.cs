@@ -982,6 +982,7 @@ namespace System.DJ.ImplementFactory.Commons
                 else if (type.IsArray)
                 {
                     tn = isFullName ? type.FullName : type.Name;
+                    tn = tn.Replace("[]", "");
                 }
                 else if (typeof(IList) == type.GetInterface("IList"))
                 {
@@ -1034,13 +1035,18 @@ namespace System.DJ.ImplementFactory.Commons
                     s = isFullName ? type.FullName : type.Name;
                     if (type.IsByRef)
                     {
-                        rg = new Regex(".+[^a-z0-9]$", RegexOptions.IgnoreCase);
-                        if (rg.IsMatch(s))
+                        Regex rg1 = new Regex(".+[^a-z0-9]$", RegexOptions.IgnoreCase);
+                        if (rg1.IsMatch(s))
                         {
                             s = s.Substring(0, s.Length - 1);
                         }
                     }
                 }
+            }
+
+            if (rg.IsMatch(s))
+            {
+                s = rg.Match(s).Groups["TypeName"].Value;
             }
             return s;
         }

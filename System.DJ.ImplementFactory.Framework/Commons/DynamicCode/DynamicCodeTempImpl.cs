@@ -767,7 +767,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 implNamespace = implementType.Namespace;
                 implName = DJTools.GetClassName(implementType);
-                implName1 = implementType.Name.Replace("`1", "");
+                implName1 = implementType.TypeToString(false);
             }
             else
             {
@@ -1534,7 +1534,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     impl_name = "null";
                     if (false == impl_name1.Equals("null"))
                     {
-                        impl_name = interfaceType.Name.Replace("`1", "") + "_01";
+                        impl_name = interfaceType.TypeToString(false) + "_01";
                         if(string.IsNullOrEmpty(privateVarNameCode))
                         {
                             mInfo.append(ref privateVarNameCode, LeftSpaceLevel.one, "private {0} {1} = null;", interfaceName, impl_name);

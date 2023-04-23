@@ -10,17 +10,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// </summary>
     public class MSConfiguratorAction : AbsActionFilterAttribute
     {
+        private string _startTime = "start";
+        private string _endTime = "end";
+        private string _contractKey = "key";
+
         /// <summary>
         /// A method for setting the registration permission of client 'IP', which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
         /// </summary>
         public MSConfiguratorAction() { }
+
+        public MSConfiguratorAction(string startTimeMapping, string endTimeMapping, string contractKeyMapping)
+        {
+            _startTime = startTimeMapping;
+            _endTime = endTimeMapping;
+            _contractKey = contractKeyMapping;
+        }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
 
             IDictionary<string, object> dicPara = context.ActionParameters;
-            List<string> list = new List<string>() { "start", "end", "key" };
+            List<string> list = new List<string>() { _startTime, _endTime, _contractKey };
             if (0 == dicPara.Count)
             {
                 dicPara = GetKVListFromBody(context.HttpContext, list, true);

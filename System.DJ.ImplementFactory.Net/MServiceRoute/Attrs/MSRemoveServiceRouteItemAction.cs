@@ -19,10 +19,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// To remove the service route entry
         /// </summary>
-        /// <param name="ServiceRouteName">The parameter name of the ServiceRouteName mapping</param>
-        public MSRemoveServiceRouteItemAction(string ServiceRouteName)
+        /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
+        public MSRemoveServiceRouteItemAction(string serviceRouteNameMapping)
         {
-            this.ServiceRouteName = ServiceRouteName;
+            this.ServiceRouteName = serviceRouteNameMapping;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)

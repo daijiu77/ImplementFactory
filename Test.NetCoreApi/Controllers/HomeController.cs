@@ -40,7 +40,7 @@ namespace Test.NetCoreApi.Controllers
         /// <param name="addr"></param>
         /// <param name="actionType"></param>
         /// <returns></returns>
-        [MSAddServiceRouteItemAction(ServiceRouteName:"routeName", Uri: "url", RegisterAddr: "addr", RegisterActionType: "actionType")]
+        [MSAddServiceRouteItemAction(serviceRouteNameMapping:"routeName", uriMapping: "url", registerAddrMapping: "addr", registerActionTypeMapping: "actionType")]
         [HttpGet, Route("SetMSRouteItem")]
         public object SetMSRouteItem(string routeName, string url, string addr, int actionType)
         {
@@ -52,7 +52,7 @@ namespace Test.NetCoreApi.Controllers
         /// </summary>
         /// <param name="routeName"></param>
         /// <returns></returns>
-        [MSRemoveServiceRouteItemAction(ServiceRouteName: "routeName")]
+        [MSRemoveServiceRouteItemAction(serviceRouteNameMapping: "routeName")]
         [HttpGet, Route("DelMSRouteItem")]
         public object DelMSRouteItem(string routeName)
         {
