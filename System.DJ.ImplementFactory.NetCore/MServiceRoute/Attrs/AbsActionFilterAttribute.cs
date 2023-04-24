@@ -345,7 +345,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             foreach (string ip in ips)
             {
                 txt = "{0}: {1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
-                File.AppendText(txt);
+                File.AppendAllText(fPath, txt);
             }
         }
     }
