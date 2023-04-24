@@ -4,8 +4,8 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public abstract class AbsSqlAnalysis
     {
-        protected Regex specialRg= new Regex(@"(^[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^[\-\+][0-9]$)|(^[\-\+][1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]*[0-9]$)|(^[1-9][0-9]+\.[0-9]*[0-9]$)|(^[\-\+][0-9]\.[0-9]*[0-9]$)|(^[\-\+][1-9][0-9]+\.[0-9]*[0-9]$)|(^true$)|(^false$)|(^null$)", RegexOptions.IgnoreCase);
-        
+        protected Regex specialRg = new Regex(@"(^[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^[\-\+][0-9]$)|(^[\-\+][1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]*[0-9]$)|(^[1-9][0-9]+\.[0-9]*[0-9]$)|(^[\-\+][0-9]\.[0-9]*[0-9]$)|(^[\-\+][1-9][0-9]+\.[0-9]*[0-9]$)|(^true$)|(^false$)|(^null$)", RegexOptions.IgnoreCase);
+
         protected bool IsAliasField(string chars, ref string alias, ref string field)
         {
             bool mbool = false;
@@ -46,5 +46,40 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             }
             return dbn;
         }
+
+        protected string GetWhere(string wherePart, bool IgnoreWhereChar)
+        {
+            wherePart = wherePart.Trim();
+            if (string.IsNullOrEmpty(wherePart)) return wherePart;
+
+            Regex rg = new Regex(@"^where\s+(?<ConditionStr>.+)", RegexOptions.IgnoreCase);
+            if (IgnoreWhereChar)
+            {
+                if (rg.IsMatch(wherePart))
+                {
+                    wherePart = rg.Match(wherePart).Groups["ConditionStr"].Value;
+                }
+            }
+            else
+            {
+                if (!rg.IsMatch(wherePart))
+                {
+                    Regex rg1 = new Regex(@"^((and)|(or))\s+(?<where_str>.+)");
+                    if (rg1.IsMatch(wherePart))
+                    {
+                        wherePart = rg1.Match(wherePart).Groups["where_str"].Value;
+                    }
+                    wherePart = "where " + wherePart;
+                }
+            }
+            wherePart = " " + wherePart;
+            return wherePart;
+        }
+
+        protected string GetWhere(string wherePart)
+        {
+            return GetWhere(wherePart, false);
+        }
+
     }
 }

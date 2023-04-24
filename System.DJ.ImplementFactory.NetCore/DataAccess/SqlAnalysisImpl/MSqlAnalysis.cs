@@ -201,36 +201,6 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             //throw new NotImplementedException();
         }
 
-        private string GetWhere(string wherePart, bool IgnoreWhereChar)
-        {
-            wherePart = wherePart.Trim();
-            if (!string.IsNullOrEmpty(wherePart))
-            {
-                Regex rg = new Regex(@"^where\s+(?<ConditionStr>.+)", RegexOptions.IgnoreCase);
-                if (!IgnoreWhereChar)
-                {
-                    if (!rg.IsMatch(wherePart))
-                    {
-                        wherePart = "where " + wherePart;
-                    }
-                }
-                else
-                {
-                    if (rg.IsMatch(wherePart))
-                    {
-                        wherePart = rg.Match(wherePart).Groups["ConditionStr"].Value;
-                    }
-                }
-                wherePart = " " + wherePart;
-            }
-            return wherePart;
-        }
-
-        private string GetWhere(string wherePart)
-        {
-            return GetWhere(wherePart, false);
-        }
-
         string ISqlAnalysis.GetPageChange(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber)
         {
             if (null == orderByPart) orderByPart = "";
