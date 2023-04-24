@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -96,6 +97,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     string token = kvDic[tokenKeyName.ToLower()].ToString();
                     string ip1 = GetIP_Token(token);
                     string ip2 = GetIP(context.HttpContext);
+                    string msg = "Original ip: {0}, Current ip: {1}, Token: {2}".ExtFormat(ip1, ip2, token);
+                    PrintIpToLogs(msg);
                     mbool = ip2.Equals(ip1);
                 }
             }
@@ -103,7 +106,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (!mbool)
             {
                 string ip = GetIP(context.HttpContext);
-                if (!_kvDic.ContainsKey(ip))
+                PrintIpToLogs(ip);
+                if (!_ipDic.ContainsKey(ip))
                 {
                     throw new Exception("Illegal access");
                 }

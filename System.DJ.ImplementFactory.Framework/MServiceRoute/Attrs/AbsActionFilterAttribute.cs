@@ -7,12 +7,15 @@ using System.Web;
 using System.Web.Mvc;
 using System.Collections.Specialized;
 using System.DJ.ImplementFactory.Commons;
+using System.Threading.Tasks;
+using System.DJ.ImplementFactory.Commons.Attrs;
+using System.Threading;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     public abstract class AbsActionFilterAttribute : ActionFilterAttribute
     {
-        protected static Dictionary<string, string> _kvDic = new Dictionary<string, string>();
+        protected static Dictionary<string, string> _ipDic = new Dictionary<string, string>();
 
         protected static IMSService _mSService = null;
 
@@ -23,7 +26,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null == ips) return;
             foreach (var item in ips)
             {
-                _kvDic[item] = item;
+                _ipDic[item] = item;
             }
         }
 
@@ -150,7 +153,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null == keys) keys = new List<string>();
             try
             {
-                NameValueCollection heads = context.Request.Headers;                
+                NameValueCollection heads = context.Request.Headers;
                 string kn = "", kv = "";
                 bool mbool = false;
                 foreach (var item in heads.AllKeys)
@@ -278,5 +281,79 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (ip.Equals("::1")) ip = dIP;
             return ip;
         }
+
+        private static object _PrintIpToLogsLock = new object();
+        private static Task ipLogTask = null;
+        private static List<string> ipPools1 = new List<string>();
+        private static List<string> ipPools2 = new List<string>();
+        private static int collection_index = 0;
+        protected void PrintIpToLogs(string ip)
+        {
+            lock (_PrintIpToLogsLock)
+            {
+                if (!ImplementAdapter.dbInfo1.PrintFilterIPToLogs) return;
+                SetIpToList(ip);
+
+                if (null != ipLogTask) return;
+                ipLogTask = Task.Run(() =>
+                {
+                    List<string> ips = null;
+                    while (true)
+                    {
+                        ips = SetIpToList(null);
+                        SaveIpToLogs(ips);
+                        Thread.Sleep(1000);
+                    }
+                });
+            }
+        }
+
+        private List<string> SetIpToList(string ip)
+        {
+            lock (_PrintIpToLogsLock)
+            {
+                if (!string.IsNullOrEmpty(ip))
+                {
+                    if (0 == collection_index)
+                    {
+                        ipPools1.Add(ip);
+                    }
+                    else
+                    {
+                        ipPools2.Add(ip);
+                    }
+                    return null;
+                }
+
+                if (0 == collection_index)
+                {
+                    collection_index = 1;
+                    return ipPools1;
+                }
+                else
+                {
+                    collection_index = 0;
+                    return ipPools2;
+                }
+            }
+        }
+
+        private void SaveIpToLogs(List<string> ips)
+        {
+            if (0 == ips.Count) return;
+            DateTime dt = DateTime.Now;
+            string fPath = Path.Combine(DJTools.RootPath, AutoCall.LogsDir);
+            DJTools.InitDirectory(fPath, true);
+            string fName = "IP-List-" + dt.ToString("yyyyMMddHH") + ".txt";
+            fPath = Path.Combine(fPath, fName);
+
+            string txt = "";
+            foreach (string ip in ips)
+            {
+                txt = "{0}: {1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
+                File.AppendText(txt);
+            }
+        }
+
     }
 }

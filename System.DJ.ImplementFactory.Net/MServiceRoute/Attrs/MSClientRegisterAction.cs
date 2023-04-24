@@ -63,7 +63,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MSServiceImpl.contractKey + "' is not empty.");
             string ip = GetIP(context.HttpContext);
             bool mbool = _mSService.SaveIPAddr(ip, key);
-            if (mbool) _kvDic[ip] = ip;
+            if (mbool) _ipDic[ip] = ip;
             base.OnActionExecuting(context);
         }
     }

@@ -26,7 +26,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
     public class AutoCall : Attribute
     {
         DynamicCodeAutoCall dynamicCodeAutoCall = new DynamicCodeAutoCall();
-
+        public const string LogsDir = "Logs";
         public enum IgnoreLU { none = 0, is_true, is_false }
 
         public static List<Assembly> AssemblyCollection { get; set; }
@@ -171,7 +171,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
 
                 //异常处理
                 string rootPath = null == RootPath ? "" : RootPath;
-                string dir = Path.Combine(rootPath, "Logs");
+                string dir = Path.Combine(rootPath, LogsDir);
                 if (!Directory.Exists(dir))
                 {
                     try
