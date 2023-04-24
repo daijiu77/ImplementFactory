@@ -40,6 +40,17 @@ namespace System.DJ.ImplementFactory.Commons
             MultiTablesExec.dbHelper = dbHelper;
         }
 
+        public string GetCurrentDbName()
+        {
+            string dbName = "";
+            string conn = ImplementAdapter.DbHelper.connectString;
+            if (string.IsNullOrEmpty(conn)) return dbName;
+            Regex rg = new Regex(@"(database\s*\=\s*(?<DbName>[a-z0-9_\-]+))|(Initial\s+Catalog\s*\=\s*(?<DbName>[a-z0-9_\-]+))", RegexOptions.IgnoreCase);
+            if(!rg.IsMatch(conn)) return dbName;
+            dbName = rg.Match(conn).Groups["DbName"].Value;
+            return dbName;
+        }
+
         public MultiTablesExec(DbInfo dbInfo, IDbHelper dbHelper)
         {
             if (0 < tbDic.Count) return;
@@ -49,6 +60,7 @@ namespace System.DJ.ImplementFactory.Commons
 
             string rule = getRule(dbInfo);
             string sql = "";
+            string dbName = GetCurrentDbName();
             if (dbInfo.DatabaseType.Equals("sqlserver"))
             {
                 //select TABLE_NAME from {0}.dbo.sysobjects where type='U'
@@ -57,7 +69,15 @@ namespace System.DJ.ImplementFactory.Commons
             else if (dbInfo.DatabaseType.Equals("mysql"))
             {
                 //select TABLE_NAME from information_schema.tables where table_schema='{0}';
-                sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)<>'information_schema' and LOWER(TABLE_SCHEMA)<>'mysql' and LOWER(ENGINE)='innodb';";
+                if (string.IsNullOrEmpty(dbName))
+                {
+                    sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)<>'information_schema' and LOWER(TABLE_SCHEMA)<>'mysql' and LOWER(ENGINE)='innodb';";
+                }
+                else
+                {
+                    sql = "select TABLE_NAME from information_schema.tables where LOWER(TABLE_SCHEMA)='{0}' and LOWER(TABLE_SCHEMA)<>'mysql' and LOWER(ENGINE)='innodb';";
+                    sql = sql.ExtFormat(dbName.ToLower());
+                }
             }
             else if (dbInfo.DatabaseType.Equals("oracle"))
             {

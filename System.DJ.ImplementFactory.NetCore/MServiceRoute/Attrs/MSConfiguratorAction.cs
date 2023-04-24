@@ -19,6 +19,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// </summary>
         public MSConfiguratorAction() { }
 
+        /// <summary>
+        /// A method for setting the registration permission of client 'IP'
+        /// </summary>
+        /// <param name="startTimeMapping">The parameter name of the StartTime mapping</param>
+        /// <param name="endTimeMapping">The parameter name of the EndTime mapping</param>
+        /// <param name="contractKeyMapping">The parameter name of the ContractKey mapping</param>
         public MSConfiguratorAction(string startTimeMapping, string endTimeMapping, string contractKeyMapping)
         {
             _startTime = startTimeMapping;

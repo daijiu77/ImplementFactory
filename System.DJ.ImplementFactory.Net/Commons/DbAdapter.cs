@@ -117,6 +117,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                 if (IsPrintSqlToLog)
                 {
+                    if (null == autoCall) autoCall = new AutoCall();
                     autoCall.e(sql, ErrorLevels.debug);
                 }
             }            

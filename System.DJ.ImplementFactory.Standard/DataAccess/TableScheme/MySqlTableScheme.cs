@@ -133,7 +133,7 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
             IDbHelper dbHelper = ImplementAdapter.DbHelper;
             string err = "";
-            DataTable dt = dbHelper.query(null, sql, false, null, ref err);
+            DataTable dt = dbHelper.query(autoCall, sql, false, null, ref err);
             List<string> list = new List<string>();
             if (null == dt) return list;
             if (0 == dt.Rows.Count) return list;
