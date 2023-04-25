@@ -11,7 +11,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     {
         private Dictionary<string, string> ipDic = new Dictionary<string, string>();
         private const string SvrIPAddressFile = "SvrIPAddr.xml";
-        private readonly Regex rgIP = new Regex(@"^[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.([1-9]{1,3})$", RegexOptions.IgnoreCase);
+        private readonly Regex rgIP = new Regex(@"^[1-9][0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.([1-9][0-9]{0,2})$", RegexOptions.IgnoreCase);
         private string filePath = "";
         private const string rootNode = "IPAddresses";
         public const string startName = "StartTime";

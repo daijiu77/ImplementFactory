@@ -1044,6 +1044,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
+            rg = new Regex(@"^(?<TypeName>[a-z0-9_\.]+)[^a-z0-9_\.](.{1,3})$", RegexOptions.IgnoreCase);
             if (rg.IsMatch(s))
             {
                 s = rg.Match(s).Groups["TypeName"].Value;

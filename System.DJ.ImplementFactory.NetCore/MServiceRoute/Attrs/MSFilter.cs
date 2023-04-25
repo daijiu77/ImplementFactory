@@ -106,7 +106,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (!mbool)
             {
                 string ip = GetIP(context.HttpContext);
-                PrintIpToLogs(ip);
+                PrintIpToLogs("IP: " + ip);
                 if (!_ipDic.ContainsKey(ip))
                 {
                     throw new Exception("Illegal access");

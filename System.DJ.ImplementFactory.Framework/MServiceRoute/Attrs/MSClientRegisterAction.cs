@@ -1,5 +1,6 @@
 using System.Web.Mvc;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -26,7 +27,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             IDictionary<string, object> dic = context.ActionParameters;
-            string key = "";            
+            string key = "";
             foreach (var item in dic)
             {
                 if (item.Key.ToLower().Equals(_contractKey))
@@ -60,9 +61,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     break;
                 }
             }
+            
             if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MSServiceImpl.contractKey + "' is not empty.");
             string ip = GetIP(context.HttpContext);
             bool mbool = _mSService.SaveIPAddr(ip, key);
+            string msg = "{0} enroll {1}.".ExtFormat(ip, (mbool ? "successfully" : "failly"));
+            PrintIpToLogs(msg);
             if (mbool) _ipDic[ip] = ip;
             base.OnActionExecuting(context);
         }

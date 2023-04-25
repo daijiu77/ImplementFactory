@@ -291,7 +291,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             lock (_PrintIpToLogsLock)
             {
-                if (!ImplementAdapter.dbInfo1.PrintFilterIPToLogs) return;
+                if (!ImplementAdapter.dbInfo1.IsPrintFilterIPToLogs) return;
                 SetIpToList(ip);
 
                 if (null != ipLogTask) return;
@@ -350,7 +350,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             string txt = "";
             foreach (string ip in ips)
             {
-                txt = "{0}: {1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
+                txt = "{0}\t{1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
                 File.AppendAllText(fPath, txt);
             }
         }

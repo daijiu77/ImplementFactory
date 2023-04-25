@@ -109,7 +109,7 @@
         private string _PersistenceCylceSync_Second = "缓存持久化周期同步间隔，默认10秒";
         public int PersistenceCylceSync_Second { get; set; } = 10;
 
-        private string _PrintFilterIPToLogs = "把网关拦截的 IP 输出到 Logs 文件夹";
-        public bool PrintFilterIPToLogs { get; set; }
+        private string _IsPrintFilterIPToLogs = "把网关拦截的 IP 输出到 Logs 文件夹";
+        public bool IsPrintFilterIPToLogs { get; set; }
     }
 }
