@@ -242,17 +242,20 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 if (null != (item.FieldValue as ICollection))
                 {
-                    cdt += cnts + sqlAnalysis.GetConditionOfCollection(item.FieldName, item.Relation, (ICollection)item.FieldValue);
+                    s = sqlAnalysis.GetConditionOfCollection(item.FieldName, item.Relation, (ICollection)item.FieldValue);
+                    if (!string.IsNullOrEmpty(s)) cdt += cnts + s;
                 }
                 else if (null != (item.FieldValue as DbSqlBody))
                 {
                     sql = ((DbSqlBody)item.FieldValue).GetSql();
-                    cdt += cnts + sqlAnalysis.GetConditionOfDbSqlBody(item.FieldName, item.Relation, sql);
+                    s = sqlAnalysis.GetConditionOfDbSqlBody(item.FieldName, item.Relation, sql);
+                    if (!string.IsNullOrEmpty(s)) cdt += cnts + s;
                 }
                 else
                 {
                     fv = GetValueByType(item);
-                    cdt += cnts + sqlAnalysis.GetConditionOfBaseValue(item.FieldName, item.Relation, fv);
+                    s = sqlAnalysis.GetConditionOfBaseValue(item.FieldName, item.Relation, fv);
+                    if (!string.IsNullOrEmpty(s)) cdt += cnts + s;
                     if (null != fieldDic)
                     {
                         if (fieldDic.ContainsKey(item.FieldName))
@@ -275,7 +278,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string alias = "";
             string fn = "";
             object dataMode = null;
-            const string startStr = "1=1";
+            const string startStr = "";
             bool isSqlBody = false;
             foreach (SqlFromUnit item in body.fromUnits)
             {
@@ -284,7 +287,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     isSqlBody = null != (item.dataModel as DbSqlBody);
                 }
-                
+
                 s = "";
                 if (isSqlBody)
                 {
@@ -317,7 +320,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     });
                     if (0 == s.IndexOf(startStr))
                     {
-                        s = s.Substring(3);
+                        s = s.Substring(startStr.Length);
                     }
                 }
 

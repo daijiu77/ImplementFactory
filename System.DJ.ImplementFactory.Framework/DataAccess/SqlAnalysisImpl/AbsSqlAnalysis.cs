@@ -64,15 +64,19 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             {
                 if (!rg.IsMatch(wherePart))
                 {
+                    int n = 0;
+                    const int maxNum = 100;
                     Regex rg1 = new Regex(@"^((and)|(or))\s+(?<where_str>.+)");
-                    if (rg1.IsMatch(wherePart))
+                    while (rg1.IsMatch(wherePart) && (n < maxNum))
                     {
-                        wherePart = rg1.Match(wherePart).Groups["where_str"].Value;
+                        wherePart = rg1.Match(wherePart).Groups["where_str"].Value.Trim();
+                        if (string.IsNullOrEmpty(wherePart)) break;
+                        n++;
                     }
-                    wherePart = "where " + wherePart;
+                    if (!string.IsNullOrEmpty(wherePart)) wherePart = "where " + wherePart;
                 }
             }
-            wherePart = " " + wherePart;
+            if (!string.IsNullOrEmpty(wherePart)) wherePart = " " + wherePart;
             return wherePart;
         }
 
