@@ -1336,10 +1336,12 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (string.IsNullOrEmpty(path)) return false;
             bool isSuccess = true;
-            path = path.Replace("/", "\\");
-            if (-1 == path.IndexOf("\\")) return isSuccess;
+            
+            Regex rg = new Regex(@"[\\\/]",RegexOptions.IgnoreCase);
+            if (!rg.IsMatch(path)) return isSuccess;
+            char c = rg.Match(path).Groups[0].Value.ToCharArray()[0];
 
-            string[] arr = path.Split('\\');
+            string[] arr = path.Split(c);
             int len = arr.Length;
             string f = arr[0];
             for (int i = 1; i < len; i++)
@@ -1352,7 +1354,7 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                 }
 
-                f += "\\" + arr[i];
+                f += c.ToString() + arr[i];
                 if (!Directory.Exists(f))
                 {
                     try
