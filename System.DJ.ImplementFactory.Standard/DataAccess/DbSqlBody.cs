@@ -274,12 +274,17 @@ namespace System.DJ.ImplementFactory.DataAccess
             string s = "";
             string alias = "";
             string fn = "";
+            object dataMode = null;
             const string startStr = "1=1";
             bool isSqlBody = false;
             foreach (SqlFromUnit item in body.fromUnits)
             {
-                if (null == item.dataModel) continue;
-                isSqlBody = null != (item.dataModel as DbSqlBody);
+                isSqlBody = false;
+                if (null != item.dataModel)
+                {
+                    isSqlBody = null != (item.dataModel as DbSqlBody);
+                }
+                
                 s = "";
                 if (isSqlBody)
                 {
@@ -290,7 +295,21 @@ namespace System.DJ.ImplementFactory.DataAccess
                     alias = item.alias;
                     if (null == alias) alias = "";
                     if (!string.IsNullOrEmpty(alias)) alias += ".";
-                    s = item.dataModel.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+                    dataMode = null;
+                    if (null != item.dataModel) dataMode = item.dataModel;
+                    if (null == dataMode)
+                    {
+                        try
+                        {
+                            dataMode = Activator.CreateInstance(item.modelType);
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                            //throw;
+                        }
+                    }
+                    s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
                     {
                         fn = alias + propertyInfoExt.Name;
                         if (fieldDic.ContainsKey(fn) || fieldDic.ContainsKey(propertyInfoExt.Name)) return false;
