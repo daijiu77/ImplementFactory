@@ -77,6 +77,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 if (-1 != sign.ToLower().IndexOf("like"))
                 {
                     s = fieldValueOfBaseValue.ToString();
+                    if (0 == s.Trim().Length) return wherePart;
                     if (2 < s.Length)
                     {
                         if ((s.Substring(0, 1).Equals("'") && s.Substring(s.Length - 1).Equals("'"))
@@ -91,6 +92,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 else if (-1 != sign.ToLower().IndexOf("in"))
                 {
                     s = fieldValueOfBaseValue.ToString();
+                    if (0 == s.Trim().Length) return wherePart;
                     if (2 <= s.Length)
                     {
                         if (s.Substring(0, 1).Equals("(") && s.Substring(s.Length - 1).Equals(")"))

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
+using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
@@ -234,6 +235,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (0 < item.conditionItems.Length)
                     {
                         s = GetConditionUnit(item.conditionItems, fieldDic);
+                        s = s.Trim();
+                        if (string.IsNullOrEmpty(s)) continue;
                         s = rg.Match(s).Groups["wherePart"].Value;
                         s = "(" + s + ")";
                         cdt += cnts + s;
