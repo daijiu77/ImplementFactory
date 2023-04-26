@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Pipelines\IMSFilterMessage.cs" />
     <Compile Include="DataAccess\TableInfoDetail.cs" />
     <Compile Include="Entities\TableFieldInfo.cs" />
     <Compile Include="Entities\TableDetail.cs" />

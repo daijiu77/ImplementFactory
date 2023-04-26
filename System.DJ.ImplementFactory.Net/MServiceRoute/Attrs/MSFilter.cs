@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -14,14 +17,91 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     {
         private static string tokenKeyName = "token";
 
-        private static Dictionary<string, string> tokenKV = new Dictionary<string, string>();
+        private static Dictionary<string, TokenObj> tokenKV = new Dictionary<string, TokenObj>();
         private static MSFilter mSFilter = new MSFilter();
+
+        static MSFilter()
+        {
+            Task.Run(() =>
+            {
+                const int sleepNum = 5000;
+                while (true)
+                {
+                    ConfirmTokenEnabled();
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
         /// <summary>
         /// The service gateway filter requires the use of the 'MSClientRegisterAction' attribute to specify the interface method used to accept client registration
         /// </summary>
         public MSFilter()
         {
             //
+        }
+
+        private static void ConfirmTokenEnabled()
+        {
+            lock (mSFilter)
+            {
+                DateTime dt = DateTime.Now;
+                List<TokenObj> tokens = new List<TokenObj>();
+                foreach (var item in tokenKV)
+                {
+                    if (item.Value.endTime <= dt)
+                    {
+                        tokens.Add(item.Value);
+                    }
+                }
+
+                foreach (var item in tokens)
+                {
+                    if (null != ImplementAdapter.mSFilterMessage)
+                    {
+                        try
+                        {
+                            ImplementAdapter.mSFilterMessage.KillToken(item.token, item.ip);
+                        }
+                        catch (Exception)
+                        {
+                            //throw;
+                        }
+                    }
+                    tokenKV.Remove(item.token);
+                }
+                tokens.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Set up token filtering (ignore IP registration)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="tokenKeyName">Set the keyName of the key-value pair Token in the parameters of the front-end HTTP request</param>
+        /// <param name="token">The value of the token is set in the background for gateway filtering</param>
+        /// <param name="liveCycle_Second">Set the lifetime of the token in seconds, and the default value is 3600 seconds, that is: 1 hour</param>
+        public static void SetToken(HttpContext context, string tokenKeyName, string token, int liveCycle_Second)
+        {
+            lock (mSFilter)
+            {
+                MSFilter.tokenKeyName = tokenKeyName;
+                string ip = mSFilter.GetIP(context);
+                tokenKV[token] = new TokenObj(liveCycle_Second)
+                {
+                    token = token,
+                    ip = ip,
+                    startTime = DateTime.Now,
+                };
+                if (null != ImplementAdapter.mSFilterMessage)
+                {
+                    try
+                    {
+                        ImplementAdapter.mSFilterMessage.EnabledToken(token, ip);
+                    }
+                    catch { }
+                }
+            }
         }
 
         /// <summary>
@@ -36,7 +116,32 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 MSFilter.tokenKeyName = tokenKeyName;
                 string ip = mSFilter.GetIP(context);
-                tokenKV[token] = ip;
+                tokenKV[token] = new TokenObj()
+                {
+                    token = token,
+                    ip = ip,
+                    startTime = DateTime.Now,
+                };
+                try
+                {
+                    ImplementAdapter.mSFilterMessage.EnabledToken(token, ip);
+                }
+                catch { }
+            }
+        }
+
+        public static void RemoveToken(string token)
+        {
+            lock (mSFilter)
+            {
+                if (!tokenKV.ContainsKey(token)) return;
+                TokenObj token1 = tokenKV[token];
+                try
+                {
+                    ImplementAdapter.mSFilterMessage.KillToken(token, token1.ip);
+                }
+                catch { }
+                tokenKV.Remove(token);
             }
         }
 
@@ -47,7 +152,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 string ip = "";
                 if (tokenKV.ContainsKey(token))
                 {
-                    ip = tokenKV[token];
+                    TokenObj token1 = tokenKV[token];
+                    token1.startTime = DateTime.Now;
+                    ip = token1.ip;
                 }
                 return ip;
             }
@@ -114,6 +221,33 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
 
             base.OnActionExecuting(context);
+        }
+
+        class TokenObj
+        {
+            public TokenObj(int liveCycle_Second)
+            {
+                if (0 < liveCycle_Second) this.liveCycle_Second = liveCycle_Second;
+            }
+
+            public TokenObj() { }
+
+            public string token { get; set; }
+            public string ip { get; set; }
+
+            private DateTime _startTime = DateTime.Now;
+            public DateTime startTime
+            {
+                get { return _startTime; }
+                set
+                {
+                    _startTime = value;
+                    endTime = _startTime.AddSeconds(liveCycle_Second);
+                }
+            }
+
+            public DateTime endTime { get; private set; }
+            public int liveCycle_Second { get; private set; } = 3600;
         }
     }
 }

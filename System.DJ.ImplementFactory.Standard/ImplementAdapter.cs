@@ -197,6 +197,8 @@ namespace System.DJ.ImplementFactory
             dbHelper1.dbConnectionState = dbConnectionState;
 
             microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
+
+            mSFilterMessage = loadInterfaceInstance<IMSFilterMessage>("", null, ref asse3);
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
@@ -443,6 +445,7 @@ namespace System.DJ.ImplementFactory
             }
         }
 
+        public static IMSFilterMessage mSFilterMessage { get; set; }
         public static IDataServerProvider dataServerProvider { get; set; }
 
         public static IInstanceCodeCompiler codeCompiler { get; set; }
