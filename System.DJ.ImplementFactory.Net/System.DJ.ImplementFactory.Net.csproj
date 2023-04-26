@@ -11,7 +11,7 @@ The ImplementFactory component automatically scans interface type members, autom
 for example: https://github.com/daijiu77/ImplementFactory-simple-example.git</Description>
     <PackageReleaseNotes>The ImplementFactory component is suitable for .Net &gt;= 6.0 environment.</PackageReleaseNotes>
     <PackageId>ImplementFactory.Net</PackageId>
-    <Version>1.0.0.39</Version>
+    <Version>1.0.0.40</Version>
     <Authors>DJ</Authors>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>

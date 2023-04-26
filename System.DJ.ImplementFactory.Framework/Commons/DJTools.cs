@@ -451,11 +451,11 @@ namespace System.DJ.ImplementFactory.Commons
             string ganaricName = "IEnumerable";
             if (type == typeof(Guid))
             {
-                s = Guid.Empty.ToString();
+                s = "System.Guid.Empty";
             }
             else if (type == typeof(DateTime))
             {
-                s = DateTime.MinValue.ToString("yyyy/MM/dd hh:mm:ss");
+                s = "System.DateTime.MinValue";
             }
             else if (type == typeof(bool))
             {
