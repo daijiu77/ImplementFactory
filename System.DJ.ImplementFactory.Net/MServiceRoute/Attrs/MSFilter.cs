@@ -61,7 +61,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         try
                         {
-                            ImplementAdapter.mSFilterMessage.KillToken(item.token, item.ip);
+                            ImplementAdapter.mSFilterMessage.TokenKilled(item.token, item.ip);
                         }
                         catch (Exception)
                         {
@@ -95,11 +95,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 };
                 if (null != ImplementAdapter.mSFilterMessage)
                 {
-                    try
+                    Task.Run(() =>
                     {
-                        ImplementAdapter.mSFilterMessage.EnabledToken(token, ip);
-                    }
-                    catch { }
+                        try
+                        {
+                            ImplementAdapter.mSFilterMessage.TokenUsed(token, ip);
+                        }
+                        catch { }
+                    });                    
                 }
             }
         }
@@ -114,19 +117,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             lock (mSFilter)
             {
-                MSFilter.tokenKeyName = tokenKeyName;
-                string ip = mSFilter.GetIP(context);
-                tokenKV[token] = new TokenObj()
-                {
-                    token = token,
-                    ip = ip,
-                    startTime = DateTime.Now,
-                };
-                try
-                {
-                    ImplementAdapter.mSFilterMessage.EnabledToken(token, ip);
-                }
-                catch { }
+                SetToken(context, tokenKeyName, token, 0);
             }
         }
 
@@ -136,12 +127,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 if (!tokenKV.ContainsKey(token)) return;
                 TokenObj token1 = tokenKV[token];
-                try
-                {
-                    ImplementAdapter.mSFilterMessage.KillToken(token, token1.ip);
-                }
-                catch { }
+                string ip = token1.ip;                
                 tokenKV.Remove(token);
+                if(null!= ImplementAdapter.mSFilterMessage)
+                {
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            ImplementAdapter.mSFilterMessage.TokenKilled(token, ip);
+                        }
+                        catch { }
+                    });
+                }                
             }
         }
 
