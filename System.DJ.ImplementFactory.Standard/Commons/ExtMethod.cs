@@ -400,13 +400,14 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         /// <summary>
-        /// 'Reflection calling' is prohibited for deletion
+        /// Object property-relationship mapping assignments
         /// </summary>
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
-        /// <param name="func">When false is returned, no value is assigned to the property</param>
-        /// <returns></returns>
-        public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<Type, string, object, object> funcVal)
         {
             T tObj = default(T);
             if (srcObj.GetType().IsBaseType()) return tObj;
@@ -429,15 +430,22 @@ namespace System.DJ.ImplementFactory.Commons
 
             PropertyInfo propertyInfo = null;
             Type piType = null;
+            Type srcType = srcObj.GetType();
+            object fv = null;
             object vObj = null;
-            srcObj.ForeachProperty((pi, pt, fn, fv) =>
+            srcType.ForeachProperty((pi, pt, fn) =>
             {
                 propertyInfo = piDic[fn.ToLower()];
                 if (null == propertyInfo) return true;
-                vObj = fv;
-                if (null != func)
+                if (null != funcAssign)
                 {
-                    vObj = func(propertyInfo.PropertyType, propertyInfo.Name, fv);
+                    if (!funcAssign(pi, fn)) return true;
+                }
+                fv = pi.GetValue(srcObj, null);
+                vObj = fv;
+                if (null != funcVal)
+                {
+                    vObj = funcVal(propertyInfo.PropertyType, propertyInfo.Name, fv);
                 }
 
                 if (null != vObj)
@@ -457,7 +465,7 @@ namespace System.DJ.ImplementFactory.Commons
                         && (false == piType.IsBaseType())
                         && (false == piType.IsAbstract)
                         && (false == piType.IsInterface))
-                    {                        
+                    {
                         vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType }, new object[] { vObj });
                     }
                 }
@@ -538,7 +546,31 @@ namespace System.DJ.ImplementFactory.Commons
         /// <returns>Returns an assigned data entity</returns>
         public static T ToObjectFrom<T>(this object srcObj)
         {
-            return srcObj.ToObjectFrom<T>(null);
+            return srcObj.ToObjectFrom<T>(null, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            return srcObj.ToObjectFrom<T>(funcAssign, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T>(this object srcObj, Func<Type, string, object, object> funcVal)
+        {
+            return srcObj.ToObjectFrom<T>(null, funcVal);
         }
 
         /// <summary>
@@ -549,7 +581,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <returns>Returns an assigned data entity of type task.</returns>
         public static Task<T> ToTaskObjectFrom<T>(this object srcObj)
         {
-            T t = srcObj.ToObjectFrom<T>(null);
+            T t = srcObj.ToObjectFrom<T>(null, null);
             return Task.FromResult(t);
         }
 
@@ -558,11 +590,24 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
-        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<Type, string, object, object> func)
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<Type, string, object, object> funcVal)
         {
-            T t = srcObj.ToObjectFrom<T>(func);
+            T t = srcObj.ToObjectFrom<T>(null, funcVal);
+            return Task.FromResult(t);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            T t = srcObj.ToObjectFrom<T>(funcAssign, null);
             return Task.FromResult(t);
         }
 
@@ -572,9 +617,10 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
-        /// <param name="func">When false is returned, no value is assigned to the property</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<Type, string, object, object> func)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<Type, string, object, object> funcVal)
         {
             if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
             IList<T> list = new List<T>();
@@ -583,7 +629,7 @@ namespace System.DJ.ImplementFactory.Commons
             T t = default(T);
             foreach (TT item in srcList)
             {
-                t = item.ToObjectFrom<T>(func);
+                t = item.ToObjectFrom<T>(funcAssign, funcVal);
                 list.Add(t);
             }
             return list;
@@ -595,10 +641,11 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<Type, string, object, object> funcVal)
         {
-            return srcList.ToListFrom<T, TT>(null);
+            return srcList.ToListFrom<T, TT>(null, funcVal);
         }
 
         /// <summary>
@@ -607,11 +654,36 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
-        /// <param name="func">When false is returned, no value is assigned to the property</param>
-        /// <returns>Returns an assigned IList element collection object of type task</returns>
-        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign)
         {
-            IList<T> list = srcList.ToListFrom<T, TT>(func);
+            return srcList.ToListFrom<T, TT>(funcAssign, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList)
+        {
+            return srcList.ToListFrom<T, TT>(null, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned IList element collection object of type task</returns>
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> funcVal)
+        {
+            IList<T> list = srcList.ToListFrom<T, TT>(null, funcVal);
             return Task.FromResult(list);
         }
 
@@ -621,11 +693,39 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
-        /// <param name="func">When false is returned, no value is assigned to the property</param>
-        /// <returns>Returns an assigned List element collection object of type task</returns>
-        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> func)
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns an assigned IList element collection object of type task</returns>
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<PropertyInfo, string, bool> funcAssign)
         {
-            List<T> list = (List<T>)srcList.ToListFrom<T, TT>(func);
+            IList<T> list = srcList.ToListFrom<T, TT>(funcAssign, null);
+            return Task.FromResult(list);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned List element collection object of type task</returns>
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<Type, string, object, object> funcVal)
+        {
+            List<T> list = (List<T>)srcList.ToListFrom<T, TT>(null, funcVal);
+            return Task.FromResult(list);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns an assigned List element collection object of type task</returns>
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            List<T> list = (List<T>)srcList.ToListFrom<T, TT>(funcAssign, null);
             return Task.FromResult(list);
         }
 
