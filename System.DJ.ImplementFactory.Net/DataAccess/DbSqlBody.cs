@@ -451,11 +451,14 @@ namespace System.DJ.ImplementFactory.DataAccess
         private string GetOrderbyPart()
         {
             string orderbyPart = "";
+            string OrderBy_Item = "";
             foreach (var item in orderbyItems)
             {
-                orderbyPart += ", " + sqlAnalysis.GetOrderByItem(item.FieldName, item.Rule);
+                OrderBy_Item = sqlAnalysis.GetOrderByItem(item.FieldName, item.Rule);
+                if (null != OrderBy_Item) OrderBy_Item = OrderBy_Item.Trim();
+                if (!string.IsNullOrEmpty(OrderBy_Item)) orderbyPart += ", " + OrderBy_Item;
             }
-            if (!string.IsNullOrEmpty(orderbyPart)) orderbyPart = orderbyPart.Substring(1);
+            if (!string.IsNullOrEmpty(orderbyPart)) orderbyPart = orderbyPart.Substring(1).Trim();
             return orderbyPart;
         }
 
@@ -953,7 +956,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             else
             {
-                if (!string.IsNullOrEmpty(wherePart)) wherePart = " where " + wherePart;
+                if (!string.IsNullOrEmpty(wherePart))
+                {
+                    if (0 != wherePart.ToLower().IndexOf("where "))
+                    {
+                        wherePart = " where " + wherePart;
+                    }
+                }
+                if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
+                if (!string.IsNullOrEmpty(orderbyPart)) orderbyPart = " " + orderbyPart;
                 sql = "select {0} from {1}{2}{3}{4}";
                 sql = string.Format(sql, selectPart, fromPart, wherePart, groupPart, orderbyPart);
             }

@@ -183,7 +183,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.GetOrderBy(string orderByItems)
         {
             if (string.IsNullOrEmpty(orderByItems)) return "";
-            string orderbyPart = "order by " + orderByItems;
+            string orderbyPart = "order by " + orderByItems.Trim();
             return orderbyPart;
             //throw new NotImplementedException();
         }
