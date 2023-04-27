@@ -121,6 +121,44 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
+        /// <summary>
+        /// Set up token filtering (ignore IP registration)
+        /// </summary>
+        /// <param name="clientIP">Client ip address</param>
+        /// <param name="tokenKeyName">Set the keyName of the key-value pair Token in the parameters of the front-end HTTP request</param>
+        /// <param name="token">The value of the token is set in the background for gateway filtering</param>
+        /// <param name="liveCycle_Second">Set the lifetime of the token in seconds, and the default value is 3600 seconds, that is: 1 hour</param>
+        public static void SetToken(string clientIP, string tokenKeyName, string token, int liveCycle_Second)
+        {
+            lock(mSFilter)
+            {
+                TokenObj tokenObj = null;
+                tokenKV.TryGetValue(token, out tokenObj);
+                if (null == tokenObj)
+                {
+                    tokenObj = new TokenObj(liveCycle_Second)
+                    {
+                        token = token,
+                        ip = clientIP,
+                        startTime = DateTime.Now,
+                    };
+                    tokenKV.Add(token, tokenObj);
+                }
+
+                if (null != ImplementAdapter.mSFilterMessage)
+                {                    
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            ImplementAdapter.mSFilterMessage.TokenUsed(token, clientIP);
+                        }
+                        catch { }
+                    });
+                }
+            }
+        }
+
         public static void RemoveToken(string token)
         {
             lock (mSFilter)

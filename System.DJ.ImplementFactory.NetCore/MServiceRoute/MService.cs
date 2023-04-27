@@ -6,6 +6,7 @@ using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
@@ -21,6 +22,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 IHttpHelper httpHelper = new HttpHelper();
                 MethodTypes methodTypes = MethodTypes.Get;
+                List<string> errUrls = new List<string>();
                 string[] uris = null;
                 char c = ' ';
                 string s = "", s1 = "";
@@ -62,10 +64,41 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             url = url.Substring(0, url.Length - 1);
                         }
                         url += "/" + registerAddr;
-                        httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) => { });
+                        httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) =>
+                        {
+                            if (!string.IsNullOrEmpty(msg)) errUrls.Add(url + "\t" + ((int)methodTypes).ToString());
+                        });
                     }
                 });
-                
+
+                int n = 0;
+                int num = 0;
+                int size = errUrls.Count;
+                const int sleepNum = 1000 * 3;
+                string[] arr = null;
+                while (n < size)
+                {
+                    url = errUrls[n];
+                    arr = url.Split('\t');
+                    url = arr[0];
+                    num = 0;
+                    int.TryParse(arr[1], out num);
+                    methodTypes = (MethodTypes)num;
+                    httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) =>
+                    {
+                        if (string.IsNullOrEmpty(msg))
+                        {
+                            errUrls.RemoveAt(n);
+                            n = 0;
+                            size = errUrls.Count;
+                        }
+                        else
+                        {
+                            n++;
+                        }
+                    });
+                    Thread.Sleep(sleepNum);
+                }
             });
         }
     }
