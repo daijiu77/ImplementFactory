@@ -10,373 +10,139 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {
     public class MSqlAnalysis : AbsSqlAnalysis, ISqlAnalysis
     {
+        public MSqlAnalysis()
+        {
+            dataType = db_dialect.sqlserver;
+            leftTag = '[';
+            rightTag = ']';
+        }
+
         string ISqlAnalysis.PageSizeSignOfSql { get; set; }
         string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
 
-        private string GetRuleSign(ConditionRelation relation)
-        {
-            string sign = "";
-            switch (relation)
-            {
-                case ConditionRelation.Equals:
-                    sign = "= {0}";
-                    break;
-                case ConditionRelation.NoEquals:
-                    sign = "<> {0}";
-                    break;
-                case ConditionRelation.Greader:
-                    sign = "> {0}";
-                    break;
-                case ConditionRelation.GreaderOrEquals:
-                    sign = ">= {0}";
-                    break;
-                case ConditionRelation.Less:
-                    sign = "< {0}";
-                    break;
-                case ConditionRelation.LessOrEquals:
-                    sign = "<= {0}";
-                    break;
-                case ConditionRelation.Contain:
-                    sign = "like '%{0}%'";
-                    break;
-                case ConditionRelation.LeftContain:
-                    sign = "like '%{0}'";
-                    break;
-                case ConditionRelation.RightContain:
-                    sign = "like '{0}%'";
-                    break;
-                case ConditionRelation.In:
-                    sign = "in {0}";
-                    break;
-            }
-            return sign;
-        }
-
-        private bool IsChar(object fv)
-        {
-            bool mbool = false;
-            if ((typeof(string) == fv.GetType())
-            || (typeof(Guid) == fv.GetType()) || (typeof(Guid?) == fv.GetType())
-            || (typeof(DateTime) == fv.GetType()) || (typeof(DateTime?) == fv.GetType()))
-            {
-                mbool = true;
-            }
-            return mbool;
-        }
-
         string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
-            string wherePart = "";
-            if (null == fieldValueOfBaseValue) return wherePart;
-
-            string s = "";
-            string sign = GetRuleSign(relation);
-            if (IsChar(fieldValueOfBaseValue))
-            {
-                if (-1 != sign.ToLower().IndexOf("like"))
-                {
-                    s = fieldValueOfBaseValue.ToString();
-                    if (0 == s.Trim().Length) return wherePart;
-                    if (2 < s.Length)
-                    {
-                        if ((s.Substring(0, 1).Equals("'") && s.Substring(s.Length - 1).Equals("'"))
-                            || (s.Substring(0, 1).Equals("\"") && s.Substring(s.Length - 1).Equals("\"")))
-                        {
-                            s = s.Substring(1);
-                            s = s.Substring(0, s.Length - 1);
-                        }
-                    }
-                    sign = string.Format(sign, s);
-                }
-                else if (-1 != sign.ToLower().IndexOf("in"))
-                {
-                    s = fieldValueOfBaseValue.ToString();
-                    if (0 == s.Trim().Length) return wherePart;
-                    if (2 <= s.Length)
-                    {
-                        if (s.Substring(0, 1).Equals("(") && s.Substring(s.Length - 1).Equals(")"))
-                        {
-                            s = s.Substring(1);
-                            s = s.Substring(0, s.Length - 1);
-                        }
-                        fieldValueOfBaseValue = s;
-                    }
-
-                    sign = string.Format(sign, "(" + fieldValueOfBaseValue.ToString() + ")");
-                }
-                else
-                {
-                    s = fieldValueOfBaseValue.ToString();
-                    string alias = "";
-                    string field = "";
-                    bool mbool = IsAliasField(s, ref alias, ref field);
-                    if (mbool)
-                    {
-                        s = ((ISqlAnalysis)this).GetFieldName(alias, field);
-                    }
-                    else if (!specialRg.IsMatch(s))
-                    {
-                        if (false == s.Substring(0, 1).Equals("'") && false == s.Substring(s.Length - 1).Equals("'")
-                            && false == s.Substring(0, 1).Equals("\"") && false == s.Substring(s.Length - 1).Equals("\""))
-                        {
-                            s = "'" + s + "'";
-                        }
-                    }
-                    sign = string.Format(sign, s);
-                }
-            }
-            else
-            {
-                sign = string.Format(sign, fieldValueOfBaseValue.ToString());
-            }
-
-            if (string.IsNullOrEmpty(wherePart)) wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " " + sign;
-            return wherePart;
-            //throw new NotImplementedException();
+            return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue);
         }
 
         string ISqlAnalysis.GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection)
         {
-            string wherePart = "";
-            if (null == fieldValueOfCollection) return wherePart;
-            bool? isChar = null;
-            string s = "";
-            foreach (var item in fieldValueOfCollection)
-            {
-                if (null == item) continue;
-                if (null == isChar) isChar = IsChar(item);
-                if ((bool)isChar)
-                {
-                    s += ", '" + item.ToString() + "'";
-                }
-                else
-                {
-                    s += ", " + item.ToString();
-                }
-            }
-            if (!string.IsNullOrEmpty(s)) s = s.Substring(2);
-            wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " in (" + s + ")";
-            return wherePart;
+            return GetConditionOfCollection(fieldName, relation, fieldValueOfCollection);
         }
 
         string ISqlAnalysis.GetConditionOfDbSqlBody(string fieldName, ConditionRelation relation, string fieldValueOfSql)
         {
-            string wherePart = "";
-            if (null == fieldValueOfSql) return wherePart;
-            string sign = GetRuleSign(relation);
-            string sql = "(" + fieldValueOfSql + ")";
-            sign = string.Format(sign, sql);
-            if (string.IsNullOrEmpty(wherePart)) wherePart = ((ISqlAnalysis)this).GetFieldName(fieldName) + " " + sign;
-            return wherePart;
-            //throw new NotImplementedException();
+            return GetConditionOfDbSqlBody(fieldName, relation, fieldValueOfSql);
         }
 
         string ISqlAnalysis.GetGroupBy(string groupByFields)
         {
-            if (string.IsNullOrEmpty(groupByFields)) return "";
-            string groupPart = "Group by " + groupByFields.Trim();
-            return groupPart;
-            //throw new NotImplementedException();
+            return GetGroupBy(groupByFields);
         }
 
         string ISqlAnalysis.GetOrderBy(string orderByItems)
         {
-            if (string.IsNullOrEmpty(orderByItems)) return "";
-            string orderbyPart = "order by " + orderByItems.Trim();
-            return orderbyPart;
-            //throw new NotImplementedException();
+            return GetOrderBy(orderByItems);
         }
 
         string ISqlAnalysis.GetOrderByItem(string fieldName, OrderByRule orderByRule)
         {
-            if (string.IsNullOrEmpty(fieldName)) return "";
-            string orderbyPart = ((ISqlAnalysis)this).GetFieldName(fieldName);
-            if (OrderByRule.Asc == orderByRule)
-            {
-                orderbyPart += " asc".ToUpper();
-            }
-            else
-            {
-                orderbyPart += " desc".ToUpper();
-            }
-            return orderbyPart;
-            //throw new NotImplementedException();
+            return GetOrderByItem(fieldName, orderByRule);
         }
 
-        string ISqlAnalysis.GetPageChange(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber)
+        string ISqlAnalysis.GetPageChange(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int pageSize1, int pageNumber1)
         {
-            if (null == orderByPart) orderByPart = "";
-            orderByPart = orderByPart.Trim();
-            if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
-
-            if (null == wherePart) wherePart = "";
-            if (null == groupPart) groupPart = "";
-            wherePart = GetWhere(wherePart);
-
-            groupPart = groupPart.Trim();
-            if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
-            Random rnd = new Random();
-            string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
-            string sql = "select {0} from (select ROW_NUMBER() OVER({1}) rowNumber,{0} from {2}{3}{4}) {5} where {5}.rowNumber>{6} and {5}.rowNumber<={7}";
-            ISqlAnalysis sqlAnalysis = this;
-            sqlAnalysis.PageSizeSignOfSql = "{0}.rowNumber<=".ExtFormat(tb);
-            sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNumber>".ExtFormat(tb);
-            sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
-            return sql;
-            //throw new NotImplementedException();
+            return GetPageChange(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, pageSize1, pageNumber1,
+                delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber)
+                {
+                    if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
+                    Random rnd = new Random();
+                    string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
+                    string sql = "select {0} from (select ROW_NUMBER() OVER({1}) rowNumber,{0} from {2}{3}{4}) {5} where {5}.rowNumber>{6} and {5}.rowNumber<={7}";
+                    ISqlAnalysis sqlAnalysis = this;
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.rowNumber<=".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNumber>".ExtFormat(tb);
+                    sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
+                    return sql;
+                });
         }
 
-        string ISqlAnalysis.GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
+        string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int top1)
         {
-            if (null == wherePart) wherePart = "";
-            if (null == groupPart) groupPart = "";
-            if (null == orderByPart) orderByPart = "";
+            return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, top1,
+                delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
+                {
+                    string sql = "select * from (select row_number() over({5}) rowNum, {1} from {2}{3}{4}) tb where tb.rowNum<={0} and tb.rowNum>0";
+                    if (!string.IsNullOrEmpty(orderByPart))
+                    {
+                        sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
+                        ISqlAnalysis sqlAnalysis = this;
+                        sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<=";
+                        sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>";
+                    }
+                    else
+                    {
+                        sql = "select top {0} {1} from {2}{3}{4}{5}";
+                        sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart);
+                    }
 
-            wherePart = GetWhere(wherePart);
-
-            groupPart = groupPart.Trim();
-            if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
-
-            orderByPart = orderByPart.Trim();
-            if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
-            //string sql = "select top {0} {1} from {2}{3}{4}{5}";
-            string sql = "select * from (select row_number() over({5}) rowNum, {1} from {2}{3}{4}) tb where tb.rowNum<={0} and tb.rowNum>0";
-            sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
-            ISqlAnalysis sqlAnalysis = this;
-            sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<=";
-            sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>";
-            return sql;
-            //throw new NotImplementedException();
+                    return sql;
+                });
         }
 
-        string ISqlAnalysis.GetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
+        string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int startNumber1, int length1)
         {
-            if (null == wherePart) wherePart = "";
-            if (null == groupPart) groupPart = "";
-            if (null == orderByPart) orderByPart = "";
-
-            wherePart = GetWhere(wherePart);
-
-            groupPart = groupPart.Trim();
-            if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
-
-            orderByPart = orderByPart.Trim();
-            if (!string.IsNullOrEmpty(orderByPart)) orderByPart = " " + orderByPart;
-            int end = startNumber + length;
-            string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
-            sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
-            ISqlAnalysis sqlAnalysis = this;
-            sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<";
-            sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>=";
-            return sql;
-            //throw new NotImplementedException();
+            return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, startNumber1, length1,
+                delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
+                {
+                    int end = startNumber + length;
+                    string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
+                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
+                    ISqlAnalysis sqlAnalysis = this;
+                    sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<";
+                    sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>=";
+                    return sql;
+                });       
         }
 
         string ISqlAnalysis.GetCount(string fromPart, string wherePart, string groupPart)
         {
-            if (null == wherePart) wherePart = "";
-            if (null == groupPart) groupPart = "";
-            wherePart = GetWhere(wherePart);
-
-            groupPart = groupPart.Trim();
-            if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
-            string sql = "select count(1) countNum from {0}{1}{2}";
-            sql = sql.ExtFormat(fromPart, wherePart, groupPart);
-            return sql;
-            //throw new NotImplementedException();
-        }
-
-        private string GetJoin(string flag, string tableName, string alias, string wherePart)
-        {
-            string sql = flag + " " + ((ISqlAnalysis)this).GetTableName(tableName);
-            sql = ((ISqlAnalysis)this).GetTableAilas(sql, alias);
-            if (!string.IsNullOrEmpty(wherePart))
-            {
-                wherePart = GetWhere(wherePart, true);
-                sql += " on " + wherePart.TrimStart();
-            }
-            return sql;
+            return GetCount(fromPart, wherePart, groupPart);
         }
 
         string ISqlAnalysis.GetLeftJoin(string tableName, string alias, string wherePart)
         {
             return GetJoin("Left join", tableName, alias, wherePart);
-            //throw new NotImplementedException();
         }
 
         string ISqlAnalysis.GetRightJoin(string tableName, string alias, string wherePart)
         {
             return GetJoin("Right join", tableName, alias, wherePart);
-            //throw new NotImplementedException();
         }
 
         string ISqlAnalysis.GetInnerJoin(string tableName, string alias, string wherePart)
         {
             return GetJoin("Inner join", tableName, alias, wherePart);
-            //throw new NotImplementedException();
         }
 
         string ISqlAnalysis.GetTableAilas(string tableName, string alias)
         {
-            string sql = ((ISqlAnalysis)this).GetTableName(tableName);
-            string s = null == alias ? "" : alias;
-            s = s.Trim();
-            if (!string.IsNullOrEmpty(s)) sql += " " + s;
-            return sql;
+            return GetTableAilas(tableName, alias);
         }
 
         string ISqlAnalysis.GetFieldAlias(string fieldName, string alias)
         {
-            string sql = ((ISqlAnalysis)this).GetFieldName(fieldName);
-            string s = null == alias ? "" : alias;
-            s = s.Trim();
-            if (!string.IsNullOrEmpty(s)) sql += " " + s;
-            return sql;
+            return GetFieldAlias(fieldName, alias);
         }
 
         string ISqlAnalysis.GetTableName(string tableName)
         {
-            ISqlAnalysis sqlAnalysis = this;
-            if ("[" == tableName.Substring(0, 1) && "]" == tableName.Substring(tableName.Length - 1))
-            {
-                string s = tableName.Substring(1);
-                s = s.Substring(0, s.Length - 1);
-                tableName = sqlAnalysis.GetLegalName(s);
-                tableName = "[" + tableName + "]";
-                return tableName;
-            }
-            tableName = sqlAnalysis.GetLegalName(tableName);
-            return "[" + tableName + "]";
+            return GetTableName(tableName);
         }
 
         string ISqlAnalysis.GetFieldName(string alias, string fieldName)
         {
-            ISqlAnalysis sqlAnalysis = this;
-            if (!string.IsNullOrEmpty(alias))
-            {
-                fieldName = sqlAnalysis.GetLegalName(fieldName);
-                return alias + "." + StandardFieldName(fieldName);
-            }
-            else
-            {
-                string field = "";
-                bool mbool = IsAliasField(fieldName, ref alias, ref field);
-                if (mbool)
-                {
-                    field = sqlAnalysis.GetLegalName(field);
-                    return alias + "." + StandardFieldName(field);
-                }
-                else if ("[" == fieldName.Substring(0, 1) && "]" == fieldName.Substring(fieldName.Length - 1))
-                {
-                    string s = fieldName.Substring(1);
-                    s = s.Substring(0, s.Length - 1);
-                    fieldName = sqlAnalysis.GetLegalName(s);
-                    fieldName = StandardFieldName(fieldName);
-                    return fieldName;
-                }
-            }
-            fieldName = sqlAnalysis.GetLegalName(fieldName);
-            return StandardFieldName(fieldName);
+            return GetFieldName(alias, fieldName);
         }
 
         string ISqlAnalysis.GetFieldName(string fieldName)
@@ -425,13 +191,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         }
 
         string ISqlAnalysis.GetLegalName(string name)
-        {            
+        {
             return LegalName(name);
         }
 
-        private string StandardFieldName(string fieldName)
-        {
-            return "[" + fieldName + "]";
-        }
     }
 }

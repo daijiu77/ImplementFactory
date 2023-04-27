@@ -275,7 +275,7 @@ namespace Test.Framework
             int len = data.Length;
         }
 
-        class Test1: ImplementAdapter
+        class Test1 : ImplementAdapter
         {
             [MyAutoCall]
             private ICalculate calculate;
@@ -464,16 +464,24 @@ namespace Test.Framework
                 uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
                 uiList = userInfo3.query<UserInfo>("abc", 1, 5, 1).Result;
 
-                UserInfo userInfo = new UserInfo()
+                char[] arr = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+                int size = arr.Length - 1;
+                Random rnd = new Random();
+                UserInfo userInfo = null;
+                for (int i = 0; i < 5; i++)
                 {
-                    id = Guid.NewGuid(),
-                    name = "LS-abc-123",
-                    age = 13,
-                    address = "Szsf",
-                    userType = UserType.TOP,
-                    cdatetime = DateTime.Now
-                };
-                userInfo3.insert(userInfo);
+                    userInfo = new UserInfo()
+                    {
+                        id = Guid.NewGuid(),
+                        name = "LS-abc-" + arr[rnd.Next(0, size)],
+                        age = 13,
+                        address = "Szsf_" + arr[rnd.Next(0, size)],
+                        userType = UserType.TOP,
+                        cdatetime = DateTime.Now
+                    };
+                    userInfo3.insert(userInfo);
+                }
+
                 List<UserInfo> userInfos = userInfo3.query(new UserInfo()
                 {
                     name = "SZ"

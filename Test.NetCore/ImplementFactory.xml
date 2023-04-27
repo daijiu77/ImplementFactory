@@ -13,7 +13,7 @@
     <IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">true</IsPrintSQLToTrace>
     <IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
     <splitTable>
-      <Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_{8}#_#{2}</Rule>
+      <Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#{6}</Rule>
       <RecordQuantity description="单表最大记录数量">10000000</RecordQuantity>
       <Enabled description="分表存储，分表查询">true</Enabled>
       <MaxWaitIntervalOfS description="最大等待间隔_秒">0</MaxWaitIntervalOfS>
