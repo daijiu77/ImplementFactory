@@ -47,7 +47,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return dbn;
         }
 
-        protected string GetWhere(string wherePart, bool IgnoreWhereChar)
+        public string GetWhere(string wherePart, bool IgnoreWhereChar)
         {
             wherePart = wherePart.Trim();
             if (string.IsNullOrEmpty(wherePart)) return wherePart;
@@ -80,7 +80,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return wherePart;
         }
 
-        protected string GetWhere(string wherePart)
+        public string GetWhere(string wherePart)
         {
             return GetWhere(wherePart, false);
         }

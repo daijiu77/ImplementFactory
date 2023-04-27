@@ -6,6 +6,7 @@ using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
+using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.Entities;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -956,7 +957,12 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             else
             {
-                if (!string.IsNullOrEmpty(wherePart))
+                if (null != (sqlAnalysis as AbsSqlAnalysis))
+                {
+                    AbsSqlAnalysis absAnalysis = (AbsSqlAnalysis)sqlAnalysis;
+                    wherePart = absAnalysis.GetWhere(wherePart);
+                }
+                else if (!string.IsNullOrEmpty(wherePart))
                 {
                     if (0 != wherePart.ToLower().IndexOf("where "))
                     {
