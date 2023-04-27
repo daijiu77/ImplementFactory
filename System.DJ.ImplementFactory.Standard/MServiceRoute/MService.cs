@@ -97,6 +97,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             n++;
                         }
                     });
+
+                    if ((n >= size) && (0 < size))
+                    {
+                        n = 0;
+                    }
                     Thread.Sleep(sleepNum);
                 }
             });

@@ -1,4 +1,5 @@
-﻿using System.DJ.ImplementFactory.Commons;
+﻿using System.Collections;
+using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
@@ -174,7 +175,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
                     else if (null != eMethod.ReturnType.GetInterface("System.Collections.IEnumerable"))
                     {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", returnType);
+                        string dtType = returnType;
+                        if (typeof(IList).IsAssignableFrom(eMethod.ReturnType))
+                        {
+                            Type tp = eMethod.ReturnType.GetGenericArguments()[0];
+                            dtType = tp.TypeToString(true);
+                        }
+                        else if (eMethod.ReturnType.IsArray)
+                        {
+                            dtType = eMethod.ReturnType.TypeToString(true);
+                        }
+                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", dtType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})list;", returnType);
                     }
                     else if ((typeof(void) != eMethod.ReturnType)
