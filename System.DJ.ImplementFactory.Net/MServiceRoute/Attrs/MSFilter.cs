@@ -95,14 +95,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 };
                 if (null != ImplementAdapter.mSFilterMessage)
                 {
-                    Task.Run(() =>
+                    try
                     {
-                        try
-                        {
-                            ImplementAdapter.mSFilterMessage.TokenUsed(token, ip);
-                        }
-                        catch { }
-                    });                    
+                        ImplementAdapter.mSFilterMessage.TokenUsed(token, ip);
+                    }
+                    catch { }
                 }
             }
         }
@@ -146,15 +143,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 }
 
                 if (null != ImplementAdapter.mSFilterMessage)
-                {                    
-                    Task.Run(() =>
+                {
+                    try
                     {
-                        try
-                        {
-                            ImplementAdapter.mSFilterMessage.TokenUsed(token, clientIP);
-                        }
-                        catch { }
-                    });
+                        ImplementAdapter.mSFilterMessage.TokenUsed(token, clientIP);
+                    }
+                    catch { }
                 }
             }
         }
@@ -169,14 +163,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 tokenKV.Remove(token);
                 if(null!= ImplementAdapter.mSFilterMessage)
                 {
-                    Task.Run(() =>
+                    try
                     {
-                        try
-                        {
-                            ImplementAdapter.mSFilterMessage.TokenKilled(token, ip);
-                        }
-                        catch { }
-                    });
+                        ImplementAdapter.mSFilterMessage.TokenKilled(token, ip);
+                    }
+                    catch { }
                 }                
             }
         }

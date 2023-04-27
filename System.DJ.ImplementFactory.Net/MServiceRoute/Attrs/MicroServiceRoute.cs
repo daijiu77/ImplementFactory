@@ -106,7 +106,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 RouteAttr routeAttr1 = null;
                 foreach (XmlNode routeItem in rootElement.ChildNodes)
                 {
-                    routeAttr1 = new RouteAttr();
+                    if (null == routeItem) continue;
+                    if (null == routeItem.Attributes) continue;
+                    if (0 == routeItem.Attributes.Count) continue;
+                    routeAttr1 = new RouteAttr();                    
                     foreach (XmlAttribute item in routeItem.Attributes)
                     {
                         routeAttr1.SetPropertyValue(item.Name, item.Value);
