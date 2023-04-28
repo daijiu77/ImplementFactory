@@ -93,24 +93,30 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlElement ele = null;
 
             XmlAttribute att = ipNodes.Attributes[startName];
-            if (null == att) return mbool;//throw new Exception("The XmlAttribute(" + startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            if (null == att) throw new Exception("The XmlAttribute(" + startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            //if (null == att) return mbool;
 
             DateTime startTime = DateTime.Now;
             DateTime.TryParse(att.Value.Trim(), out startTime);
 
             att = ipNodes.Attributes[endName];
-            if (null == att) return mbool;//throw new Exception("The XmlAttribute(" + endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            if (null == att) throw new Exception("The XmlAttribute(" + endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            //if (null == att) return mbool;
 
             DateTime endTime = DateTime.Now;
             DateTime.TryParse(att.Value.Trim(), out endTime);
 
             DateTime dt = DateTime.Now;
-            if (dt < startTime || dt > endTime) return mbool;//throw new Exception("Invalid validity period start or end time.");
+            if (dt < startTime || dt > endTime) throw new Exception("Invalid validity period start or end time.");
+            //if (dt < startTime || dt > endTime) return mbool;
 
             att = ipNodes.Attributes[MSServiceImpl.contractKey];
-            if (null == att) return mbool;//throw new Exception("The XmlAttribute(" + MSServiceImpl.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            if (null == att) throw new Exception("The XmlAttribute(" + MSServiceImpl.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            //if (null == att) return mbool;
+
             string key = att.Value.Trim();
-            if (!key.Equals(contractKey)) return mbool;//throw new Exception("Invalid contract string.");
+            if (!key.Equals(contractKey)) throw new Exception("Invalid contract string.");
+            if (!key.Equals(contractKey)) return mbool;
 
             if (0 == ipDic.Count)
             {

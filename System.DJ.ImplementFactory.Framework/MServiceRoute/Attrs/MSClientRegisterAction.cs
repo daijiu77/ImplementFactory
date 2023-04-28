@@ -1,6 +1,7 @@
 using System.Web.Mvc;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.Linq;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -26,48 +27,39 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            IDictionary<string, object> dic = context.ActionParameters;
+            IDictionary<string, object> dic = new Dictionary<string, object>();
             string key = "";
-            foreach (var item in dic)
-            {
-                if (item.Key.ToLower().Equals(_contractKey))
-                {
-                    if (null != item.Value) key = item.Value.ToString();
-                    break;
-                }
-            }
-
             List<string> list = new List<string>() { _contractKey };
-            if (0 == dic.Count)
-            {
-                dic = GetKVListFromBody(context.HttpContext, list, false);
-            }
-
-            if (0 == dic.Count)
-            {
-                dic = GetKVListFromForm(context.HttpContext, list, false);
-            }
-
-            if (0 == dic.Count)
+            if (0 == dic.Count || string.IsNullOrEmpty(key))
             {
                 dic = GetKVListFromHeader(context.HttpContext, list, false);
+                key = GetVal(dic);
             }
 
-            if (string.IsNullOrEmpty(key))
+            if (0 == dic.Count || string.IsNullOrEmpty(key))
             {
-                foreach (var item in dic)
-                {
-                    if (null != item.Value) key = item.Value.ToString();
-                    break;
-                }
+                dic = GetKVListFromQuery(context.HttpContext, list, false);
+                key = GetVal(dic);
             }
-            
+
+            if (0 == dic.Count || string.IsNullOrEmpty(key))
+            {
+                dic = GetKVListFromBody(context.HttpContext, list, false);
+                key = GetVal(dic);
+            }
+
+            if (0 == dic.Count || string.IsNullOrEmpty(key))
+            {
+                dic = GetKVListFromForm(context.HttpContext, list, false);
+                key = GetVal(dic);
+            }
+
             if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MSServiceImpl.contractKey + "' is not empty.");
             string ip = GetIP(context.HttpContext);
             bool mbool = _mSService.SaveIPAddr(ip, key);
             string msg = "{0} enroll {1}.".ExtFormat(ip, (mbool ? "successfully" : "failly"));
             PrintIpToLogs(msg);
-            if (mbool) _ipDic[ip] = ip;
+            if (mbool) SetIpToDic(ip);
             base.OnActionExecuting(context);
         }
     }

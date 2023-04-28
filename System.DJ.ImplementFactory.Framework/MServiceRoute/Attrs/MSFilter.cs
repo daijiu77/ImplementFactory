@@ -3,6 +3,7 @@ using System.Web.Mvc;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -286,7 +287,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     throw new Exception(err);
                 }
 
-                string contractVal1 = hdDic[MSServiceImpl.contractKey.ToLower()].ToString();
+                string[] keys = hdDic.Keys.ToArray();
+                string contractVal1 = hdDic[keys[0]].ToString();
                 string contractVal2 = MSServiceImpl.GetContractValue();
                 if (!contractVal1.Equals(contractVal2))
                 {
@@ -294,7 +296,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 }
                 string ip = GetIP(context.HttpContext);
                 PrintIpToLogs("IP: " + ip);
-                if (!_ipDic.ContainsKey(ip))
+                if (!IsExistIP(ip))
                 {
                     throw new Exception(err);
                 }

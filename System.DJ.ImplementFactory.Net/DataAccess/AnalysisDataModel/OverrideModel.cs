@@ -3,6 +3,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Reflection;
 
@@ -300,7 +301,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 DJTools.append(ref code, level, "{");
                 level++;
                 string dmType = dataModelType.TypeToString(true);
-                DJTools.append(ref code, level, "public class {0} : {1}", newClassName, dmType);
+                DJTools.append(ref code, level, "public class {0} : {1}, {2}", newClassName, dmType, typeof(IEntityCopy).TypeToString(true));
                 DJTools.append(ref code, level, "{");
                 DJTools.append(ref code, level + 1, "public Type {0} { get { return typeof({1}); } }", CopyParentModel, dmType);
                 DJTools.append(ref code, level + 1, "public int {0} { get; set; }", MultiTablesExec.RecordQuantityFN);

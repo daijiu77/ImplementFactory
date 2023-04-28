@@ -276,6 +276,34 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             return ip;
         }
 
+        protected string GetVal(IDictionary<string, object> dic)
+        {
+            string val = "";
+            if (null == dic) return val;
+            if (0 == dic.Count) return val;
+            string[] keys = dic.Keys.ToArray();
+            if (null != dic[keys[0]]) val = dic[keys[0]].ToString();
+            return val;
+        }
+
+        private static object _AbsActionFilterAttributeLock = new object();
+        protected static void SetIpToDic(string ip)
+        {
+            lock (_AbsActionFilterAttributeLock)
+            {
+                if (_ipDic.ContainsKey(ip)) return;
+                _ipDic.Add(ip, ip);
+            }
+        }
+
+        protected static bool IsExistIP(string ip)
+        {
+            lock( _AbsActionFilterAttributeLock)
+            {
+                return _ipDic.ContainsKey(ip);
+            }
+        }
+
         private static object _PrintIpToLogsLock = new object();
         private static Task ipLogTask = null;
         private static List<string> ipPools1 = new List<string>();
@@ -340,7 +368,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             DJTools.InitDirectory(fPath, true);
             string fName = "IP-List-" + dt.ToString("yyyyMMddHH") + ".txt";
             fPath = Path.Combine(fPath, fName);
-            
+
             string txt = "";
             foreach (string ip in ips)
             {

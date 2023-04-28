@@ -33,6 +33,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 foreach (Type tp in types)
                 {
                     if (tp.IsAbstract || tp.IsInterface || tp.IsEnum) continue;
+                    if (typeof(IEntityCopy).IsAssignableFrom(tp)) continue;
                     if (typeof(ImplementAdapter).IsAssignableFrom(tp)) continue;
                     if (!typeof(AbsDataModel).IsAssignableFrom(tp)) continue;
                     if (absDataModels.Contains(tp)) continue;

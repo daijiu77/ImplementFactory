@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -77,12 +78,15 @@ namespace System.DJ.ImplementFactory.Commons
                     resultData = rsa.Result;
                 }
                 else
-                {
-                    object ex = httpResponseMessage.Content.ReadAsStringAsync().Exception;
-                    if (null != ex)
+                {                    
+                    try
                     {
-                        err = ex.ToString();
-                        //throw new Exception(err);
+                        httpResponseMessage.EnsureSuccessStatusCode();
+                    }
+                    catch (Exception ex)
+                    {
+                        err = ex.Message;
+                        //throw;
                     }
                 }
             }
