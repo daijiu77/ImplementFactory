@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Org.BouncyCastle.Bcpg.Sig;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
@@ -13,6 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private const string SvrIPAddressFile = "SvrIPAddr.xml";
         private readonly Regex rgIP = new Regex(@"^[1-9][0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.([1-9][0-9]{0,2})$", RegexOptions.IgnoreCase);
         private string filePath = "";
+        private static string contractValue = "";
         private const string rootNode = "IPAddresses";
         public const string startName = "StartTime";
         public const string endName = "EndTime";
@@ -47,6 +49,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
+        public static string GetContractValue()
+        {
+            if (!string.IsNullOrEmpty(contractValue)) return contractValue;
+            string filePath1 = Path.Combine(DJTools.RootPath, SvrIPAddressFile);
+            XmlDoc doc = new XmlDoc();
+            XmlNode ipNodes = doc.Load(filePath1);
+            if (null == ipNodes) return contractValue;
+            XmlAttribute att = ipNodes.Attributes[MSServiceImpl.contractKey];
+            if (null == att) return contractValue;
+            contractValue = att.Value.Trim();
+            return contractValue;
+        }
+
         public virtual List<string> GetIPAddresses()
         {
             List<string> ipAddrs = new List<string>();
@@ -73,7 +88,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             XmlDoc doc = new XmlDoc();
             doc.Load(filePath);
-                        
+
             XmlNode ipNodes = doc.RootNode(rootNode, null);
             XmlElement ele = null;
 
@@ -126,7 +141,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlDoc doc = new XmlDoc();
             doc.Load(filePath);
 
-            XmlNode ipNodes = doc.RootNode(rootNode);            
+            XmlNode ipNodes = doc.RootNode(rootNode);
             string startNameL = startName.ToLower();
             string endNameL = endName.ToLower();
             string contractKeyL = MSServiceImpl.contractKey.ToLower();

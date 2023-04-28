@@ -87,17 +87,17 @@ namespace Test.Framework
 
         static void Main(string[] args)
         {
-            Test1 test1 = new Test1();
-            test1.Test();
-            MService.Start();
+            //Test1 test1 = new Test1();
+            //test1.Test();
+            //MService.Start();
             int n1 = 1 % 3; //n1=1
             int n2 = 2 % 3; //n2=2
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            testObj.test_user();
-            //string un = testObj.VisitService();
+            //testObj.test_user();
+            string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 
@@ -105,9 +105,11 @@ namespace Test.Framework
             foreach (TableDetail item in details)
             {
                 Trace.WriteLine(item.Name);
+                Console.WriteLine(item.Name);
                 item.Foreach((fieldName, fieldType, length) =>
                 {
                     Trace.WriteLine("\t" + fieldName);
+                    Console.WriteLine("\t" + fieldName);
                 });
             }
 
@@ -409,8 +411,13 @@ namespace Test.Framework
             public string VisitService()
             {
                 string un = userInfo2.UserName("LiShi").Result;
+                Console.WriteLine("MicroService Visitor: " + un);
+
                 un = userInfo2.UserName("LiShi-123").Result;
+                Console.WriteLine("MicroService Visitor: " + un);
+
                 un = userInfo2.UserName("LiShi-321").Result;
+                Console.WriteLine("MicroService Visitor: " + un);
                 return un;
             }
 

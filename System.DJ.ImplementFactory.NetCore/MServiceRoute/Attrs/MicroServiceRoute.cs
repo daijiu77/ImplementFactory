@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
-    public delegate void MSRouteAttribute(string MSRouteName, string Uri, string RegisterAddr, MethodTypes RegisterActionType);
+    public delegate void MSRouteAttribute(string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType);
     /// <summary>
     /// Service interface local mapping interface class identifier
     /// </summary>
@@ -74,8 +74,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     Name = "ServiceRoute1",
                     Uri = "http://127.0.0.1:8080,http://127.0.0.1:8081",
-                    RegisterAddr = "/Home/RegisterIP?ContractKey=abc123",
-                    RegisterActionType = MethodTypes.Post
+                    RegisterAddr = "/Home/RegisterIP",
+                    RegisterActionType = MethodTypes.Post,
+                    ContractKey = "abc"
                 };
                 route_attr.ForeachProperty((pi, pt, fn, fv) =>
                 {
@@ -109,7 +110,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     if (null == routeItem) continue;
                     if (null == routeItem.Attributes) continue;
                     if (0 == routeItem.Attributes.Count) continue;
-                    routeAttr1 = new RouteAttr();                    
+                    routeAttr1 = new RouteAttr();
                     foreach (XmlAttribute item in routeItem.Attributes)
                     {
                         routeAttr1.SetPropertyValue(item.Name, item.Value);
@@ -161,12 +162,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 foreach (var item in routeAttrDic)
                 {
                     routeAttr = item.Value;
-                    routeAttribute(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.RegisterActionType);
+                    routeAttribute(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
                 }
             }
         }
 
-        public static void Add(string ServiceRouteName, string Uri, string RegisterAddr, MethodTypes RegisterActionType)
+        public static void Add(string ServiceRouteName, string Uri, string RegisterAddr, string ContractValue, MethodTypes RegisterActionType)
         {
             lock (MSObject)
             {
@@ -200,6 +201,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 routeAttr.Uri = Uri.Trim();
                 routeAttr.RegisterAddr = RegisterAddr.Trim();
                 routeAttr.RegisterActionType = RegisterActionType;
+                routeAttr.ContractKey = ContractValue;
 
                 XmlAttribute attr = null;
                 routeAttr.ForeachProperty((pi, pt, fn, fv) =>
@@ -235,11 +237,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
+        public static RouteAttr GetRouteAttributeByName(string name)
+        {            
+            lock (MSObject)
+            {
+                RouteAttr routeAttr = null;
+                routeAttrDic.TryGetValue(name, out routeAttr);
+                return routeAttr;
+            }
+        }
+
         public class RouteAttr
         {
             public string Name { get; set; }
             public string Uri { get; set; }
             public string RegisterAddr { get; set; }
+
+            public string ContractKey { get; set; }
 
             private MethodTypes _method = MethodTypes.Get;
             public MethodTypes RegisterActionType

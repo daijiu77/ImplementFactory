@@ -8,7 +8,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MSDataVisitor : ImplementAdapter
     {
-        [AutoCall]
         private IHttpHelper httpHelper;
 
         [AutoCall]
@@ -17,6 +16,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private static Dictionary<string, int> map = new Dictionary<string, int>();
 
         private static object _thObj = new object();
+
+        public MSDataVisitor()
+        {
+            httpHelper = new HttpHelper();
+        }
+
         private static int GetIndex(string key, int baseNum)
         {
             lock (_thObj)
@@ -83,7 +88,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return s;
         }
 
-        public string GetResult(string routeName, string uri, string controller, string action, MethodTypes methodTypes, object data)
+        public string GetResult(string routeName, string uri, string controller, string action, string contractKey, MethodTypes methodTypes, object data)
         {
             string result = null;
             if (null == httpHelper) return result;
@@ -137,6 +142,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 headers = mSAllot.HttpHeaders(routeName, controller, action1);
             }
+            if (null == headers) headers = new Dictionary<string, string>();
+            headers[MSServiceImpl.contractKey] = contractKey;
             httpHelper.SendData(addr, headers, data, true, methodTypes, (resultData, err) =>
             {
                 if (string.IsNullOrEmpty(err) && null != resultData) result = resultData.ToString();

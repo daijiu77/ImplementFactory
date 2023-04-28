@@ -14,6 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string uri = "uri";
         private string addr = "addr";
         private string actionType = "actionType";
+        private string contractKeyName = "contractKey";
         /// <summary>
         /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>
@@ -25,12 +26,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
         /// <param name="uriMapping">The parameter name of the Uri mapping</param>
         /// <param name="registerAddrMapping">The parameter name of the RegisterAddr mapping</param>
+        /// <param name="contractKeyMapping">The parameter name of the contractKey mapping</param>
         /// <param name="registerActionTypeMapping">The parameter name of the RegisterActionType(Get|Post) mapping</param>
-        public MSAddServiceRouteItemAction(string serviceRouteNameMapping, string uriMapping, string registerAddrMapping, string registerActionTypeMapping)
+        public MSAddServiceRouteItemAction(string serviceRouteNameMapping, string uriMapping, string registerAddrMapping, string contractKeyMapping, string registerActionTypeMapping)
         {
             this.routeName = serviceRouteNameMapping;
             this.uri = uriMapping;
             this.addr = registerAddrMapping;
+            this.contractKeyName = contractKeyMapping;
             this.actionType = registerActionTypeMapping;
         }
 
@@ -41,6 +44,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                routeName,
                uri,
                addr,
+               contractKeyName,
                actionType
             };
             int size = list.Count;
@@ -88,6 +92,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     }
                     else if (-1 != item.Key.ToLower().IndexOf(list[3]))
                     {
+                        if (null != item.Value) routeAttr.ContractKey = item.Value.ToString();
+                    }
+                    else if (-1 != item.Key.ToLower().IndexOf(list[4]))
+                    {
                         if (null != item.Value)
                         {
                             int num = 0;
@@ -100,9 +108,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     }
                 }
 
-                if ((false == string.IsNullOrEmpty(routeAttr.Name)) && false == string.IsNullOrEmpty(routeAttr.Uri))
+                if ((false == string.IsNullOrEmpty(routeAttr.Name))
+                    && (false == string.IsNullOrEmpty(routeAttr.Uri))
+                    && (false == string.IsNullOrEmpty(routeAttr.ContractKey)))
                 {
-                    MicroServiceRoute.Add(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.RegisterActionType);
+                    MicroServiceRoute.Add(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
                 }
             }
 

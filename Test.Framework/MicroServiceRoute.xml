@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <MicroServiceRoute>
-  <Route name="route1" uri="http://localhost:81/api/" RegisterAddr="/UserInfo/RegisterIP?ContractKey=abc123456" RegisterActionType="post" />
+  <Route Name="route1" Uri="http://localhost:81/api/" RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc" />
 </MicroServiceRoute>

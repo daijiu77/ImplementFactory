@@ -38,11 +38,12 @@ namespace Test.NetCoreApi.Controllers
         /// <param name="routeName"></param>
         /// <param name="url"></param>
         /// <param name="addr"></param>
+        /// <param name="key"></param>
         /// <param name="actionType"></param>
         /// <returns></returns>
-        [MSAddServiceRouteItemAction(serviceRouteNameMapping:"routeName", uriMapping: "url", registerAddrMapping: "addr", registerActionTypeMapping: "actionType")]
+        [MSAddServiceRouteItemAction(serviceRouteNameMapping:"routeName", uriMapping: "url", registerAddrMapping: "addr", contractKeyMapping: "key", registerActionTypeMapping: "actionType")]
         [HttpGet, Route("SetMSRouteItem")]
-        public object SetMSRouteItem(string routeName, string url, string addr, int actionType)
+        public object SetMSRouteItem(string routeName, string url, string addr, string key, int actionType)
         {
             return new { routeName = routeName, url = url, addr = addr, actionType = actionType };
         }

@@ -87,20 +87,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 MSFilter.tokenKeyName = tokenKeyName;
                 string ip = mSFilter.GetIP(context);
-                tokenKV[token] = new TokenObj(liveCycle_Second)
-                {
-                    token = token,
-                    ip = ip,
-                    startTime = DateTime.Now,
-                };
-                if (null != ImplementAdapter.mSFilterMessage)
-                {
-                    try
-                    {
-                        ImplementAdapter.mSFilterMessage.TokenUsed(token, ip);
-                    }
-                    catch { }
-                }
+                SetToken(ip, tokenKeyName, token, liveCycle_Second);
             }
         }
 
@@ -127,18 +114,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="liveCycle_Second">Set the lifetime of the token in seconds, and the default value is 3600 seconds, that is: 1 hour</param>
         public static void SetToken(string clientIP, string tokenKeyName, string token, int liveCycle_Second)
         {
-            lock(mSFilter)
+            lock (mSFilter)
             {
                 TokenObj tokenObj = null;
                 tokenKV.TryGetValue(token, out tokenObj);
                 if (null == tokenObj)
                 {
-                    tokenObj = new TokenObj(liveCycle_Second)
-                    {
-                        token = token,
-                        ip = clientIP,
-                        startTime = DateTime.Now,
-                    };
+                    tokenObj = new TokenObj(liveCycle_Second);
+                    tokenObj.SetToken(token)
+                        .SetIp(clientIP)
+                        .SetStartTime(DateTime.Now);
                     tokenKV.Add(token, tokenObj);
                 }
 
@@ -153,22 +138,36 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
+        public static bool IsEnabled(string clientIP, string token)
+        {
+            lock (mSFilter)
+            {
+                bool mbool = false;
+                if (tokenKV.ContainsKey(token))
+                {
+                    TokenObj tokenObj = tokenKV[token];
+                    mbool = tokenObj.ip.Equals(clientIP);
+                }
+                return mbool;
+            }
+        }
+
         public static void RemoveToken(string token)
         {
             lock (mSFilter)
             {
                 if (!tokenKV.ContainsKey(token)) return;
                 TokenObj token1 = tokenKV[token];
-                string ip = token1.ip;                
+                string ip = token1.ip;
                 tokenKV.Remove(token);
-                if(null!= ImplementAdapter.mSFilterMessage)
+                if (null != ImplementAdapter.mSFilterMessage)
                 {
                     try
                     {
                         ImplementAdapter.mSFilterMessage.TokenKilled(token, ip);
                     }
                     catch { }
-                }                
+                }
             }
         }
 
@@ -180,7 +179,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (tokenKV.ContainsKey(token))
                 {
                     TokenObj token1 = tokenKV[token];
-                    token1.startTime = DateTime.Now;
+                    token1.SetStartTime(DateTime.Now);
                     ip = token1.ip;
                 }
                 return ip;
@@ -229,21 +228,54 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (0 < kvDic.Count)
                 {
                     string token = kvDic[tokenKeyName.ToLower()].ToString();
-                    string ip1 = GetIP_Token(token);
-                    string ip2 = GetIP(context.HttpContext);
-                    string msg = "Original ip: {0}, Current ip: {1}, Token: {2}".ExtFormat(ip1, ip2, token);
-                    PrintIpToLogs(msg);
-                    mbool = ip2.Equals(ip1);
+                    
+                    string ip1 = GetIP(context.HttpContext);
+                    string ip2 = "";
+                    if (null != ImplementAdapter.mSFilterMessage)
+                    {
+                        ip2 = ip1;
+                        try
+                        {
+                            mbool = ImplementAdapter.mSFilterMessage.TokenValidating(token, ip1);
+                        }
+                        catch (Exception)
+                        {
+                            mbool = false;
+                            //throw;
+                        }
+                    }
+                                        
+                    if (!mbool)
+                    {
+                        ip2 = GetIP_Token(token);
+                        mbool = ip2.Equals(ip1);
+                    }
+                    string msg = "Original ip: {0}, Current ip: {1}, Token: {2}".ExtFormat(ip2, ip1, token);
+                    PrintIpToLogs(msg);                    
                 }
             }
 
             if (!mbool)
             {
+                string err = "Illegal access";
+                List<string> heads = new List<string>() { MSServiceImpl.contractKey };
+                Dictionary<string, object> hdDic = GetKVListFromHeader(context.HttpContext, heads, false);
+                if (0 == hdDic.Count)
+                {
+                    throw new Exception(err);
+                }
+
+                string contractVal1 = hdDic[MSServiceImpl.contractKey.ToLower()].ToString();
+                string contractVal2 = MSServiceImpl.GetContractValue();
+                if (!contractVal1.Equals(contractVal2))
+                {
+                    throw new Exception(err);
+                }
                 string ip = GetIP(context.HttpContext);
                 PrintIpToLogs("IP: " + ip);
                 if (!_ipDic.ContainsKey(ip))
                 {
-                    throw new Exception("Illegal access");
+                    throw new Exception(err);
                 }
             }
 
@@ -259,22 +291,36 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             public TokenObj() { }
 
-            public string token { get; set; }
-            public string ip { get; set; }
+            public string token { get; private set; }
+            public string ip { get; private set; }
 
             private DateTime _startTime = DateTime.Now;
             public DateTime startTime
             {
                 get { return _startTime; }
-                set
-                {
-                    _startTime = value;
-                    endTime = _startTime.AddSeconds(liveCycle_Second);
-                }
             }
 
             public DateTime endTime { get; private set; }
             public int liveCycle_Second { get; private set; } = 3600;
+
+            public TokenObj SetToken(string token)
+            {
+                this.token = token;
+                return this;
+            }
+
+            public TokenObj SetIp(string ip)
+            {
+                this.ip = ip;
+                return this;
+            }
+
+            public TokenObj SetStartTime(DateTime startTime)
+            {
+                this._startTime = startTime;
+                endTime = _startTime.AddSeconds(liveCycle_Second);
+                return this;
+            }
         }
     }
 }

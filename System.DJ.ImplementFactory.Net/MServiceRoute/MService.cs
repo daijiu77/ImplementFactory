@@ -30,7 +30,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string registerAddr = "";
                 Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Regex rg1 = new Regex(@"^((http)|(https))\:\/\/", RegexOptions.IgnoreCase);
-                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, MethodTypes RegisterActionType)
+                Dictionary<string, string> heads = new Dictionary<string, string>();
+                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType)
                 {
                     s = Uri.Trim();
                     if (string.IsNullOrEmpty(s)) return;
@@ -53,6 +54,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         uris = new string[] { s };
                     }
 
+                    heads.Clear();
+                    heads[MSServiceImpl.contractKey] = contractValue;
                     methodTypes = RegisterActionType;
                     foreach (string item in uris)
                     {
@@ -64,9 +67,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             url = url.Substring(0, url.Length - 1);
                         }
                         url += "/" + registerAddr;
-                        httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) =>
+                        httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                         {
-                            if (!string.IsNullOrEmpty(msg)) errUrls.Add(url + "\t" + ((int)methodTypes).ToString());
+                            if (!string.IsNullOrEmpty(msg)) errUrls.Add(url + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue);
                         });
                     }
                 });
@@ -83,8 +86,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     url = arr[0];
                     num = 0;
                     int.TryParse(arr[1], out num);
+                    heads.Clear();
+                    heads[MSServiceImpl.contractKey] = arr[2];
                     methodTypes = (MethodTypes)num;
-                    httpHelper.SendData(url, null, null, true, methodTypes, (result, msg) =>
+                    httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                     {
                         if (string.IsNullOrEmpty(msg))
                         {

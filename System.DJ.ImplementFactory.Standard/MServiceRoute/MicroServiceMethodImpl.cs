@@ -8,6 +8,7 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
@@ -18,6 +19,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string usingList = "";
             string methodList = "";
             string methodCode = "";
+            string contractKey = "";
             string sign = ", ";
             string paraList = "";
             string data = "";
@@ -80,6 +82,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 data = "";
                 err = "";
                 actionName = "";
+                contractKey = "";
                 requestMapping = null;
                 attr = miItem.GetCustomAttribute(typeof(RequestMapping));
 
@@ -136,7 +139,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 s = "";
                 mInfo.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
 
-                if (typeof(void) != eMethod.ReturnType)
+                RouteAttr routeAttr = MicroServiceRoute.GetRouteAttributeByName(microServiceRoute.RouteName);
+                if (null != routeAttr) contractKey = routeAttr.ContractKey;
+                if ((typeof(void) != eMethod.ReturnType) && (false == string.IsNullOrEmpty(contractKey)))
                 {
                     if (string.IsNullOrEmpty(actionName)) { actionName = miItem.Name; }
                     mInfo.append(ref s, LeftSpaceLevel.four, "MethodTypes methodTypes = MethodTypes.Post;");
@@ -147,9 +152,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             mInfo.append(ref s, LeftSpaceLevel.four, "methodTypes = MethodTypes.Get;");
                         }
                     }
+                    
                     mInfo.append(ref s, LeftSpaceLevel.four, "MSDataVisitor dataVisitor = new MSDataVisitor();");
-                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", \"{1}\", \"{2}\", \"{3}\", methodTypes, {4});",
-                        microServiceRoute.RouteName, microServiceRoute.Uri, controllerName, actionName, data);
+                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", methodTypes, {5});",
+                        microServiceRoute.RouteName, microServiceRoute.Uri, controllerName, actionName, contractKey, data);
                     mInfo.append(ref s, LeftSpaceLevel.four, "");
                     mInfo.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
                     mInfo.append(ref s, LeftSpaceLevel.one, "");
