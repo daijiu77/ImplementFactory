@@ -20,15 +20,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         protected static IMSService _mSService = null;
 
+        private static object _AbsActionFilterAttributeLock = new object();
+
         public static void SetMSServiceInstance(IMSService mSService)
         {
-            _mSService = mSService;
-            List<string> ips = _mSService.IPAddrSources();
-            if (null == ips) return;
-            foreach (var item in ips)
+            lock (_AbsActionFilterAttributeLock)
             {
-                _ipDic[item] = item;
-            }
+                _mSService = mSService;
+                List<string> ips = _mSService.IPAddrSources();
+                if (null == ips) return;
+                foreach (var item in ips)
+                {
+                    _ipDic[item] = item;
+                }
+            }            
         }
 
         protected Dictionary<string, object> GetKVListFromBody(HttpContext context, List<string> keys, bool contain)
@@ -285,8 +290,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null != dic[keys[0]]) val = dic[keys[0]].ToString();
             return val;
         }
-
-        private static object _AbsActionFilterAttributeLock = new object();
+                
         protected static void SetIpToDic(string ip)
         {
             lock (_AbsActionFilterAttributeLock)
