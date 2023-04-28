@@ -268,6 +268,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 Dictionary<string, object> hdDic = GetKVListFromHeader(context.HttpContext, heads, false);
                 if (0 == hdDic.Count)
                 {
+                    hdDic = GetKVListFromQuery(context.HttpContext, heads, false);
+                }
+
+                if (0 == hdDic.Count)
+                {
+                    hdDic = GetKVListFromBody(context.HttpContext, heads, false);
+                }
+
+                if (0 == hdDic.Count)
+                {
+                    hdDic = GetKVListFromForm(context.HttpContext, heads, false);
+                }
+
+                if (0 == hdDic.Count)
+                {
                     throw new Exception(err);
                 }
 
