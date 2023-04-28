@@ -403,6 +403,6 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\MServiceRoute</target>
-		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSConfiguratorAction.cs,MSUnlimited.cs,MSRemoveServiceRouteItemAction.cs,MSAddServiceRouteItemAction.cs</exclude>
+		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSConfiguratorAction.cs,MSUnlimited.cs,MSRemoveServiceRouteItemAction.cs,MSAddServiceRouteItemAction.cs,AbsMSFilterMessage.cs</exclude>
 	</copy>
 </files>

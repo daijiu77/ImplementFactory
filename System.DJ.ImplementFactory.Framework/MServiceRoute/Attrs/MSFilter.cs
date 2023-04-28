@@ -138,7 +138,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        public static bool IsEnabled(string clientIP, string token)
+        /// <summary>
+        /// Determine the validity of the client token
+        /// </summary>
+        /// <param name="token">A valid token of client</param>
+        /// <param name="clientIP">Client ip address</param>
+        /// <returns></returns>
+        public static bool IsEnabledToken(string token, string clientIP)
         {
             lock (mSFilter)
             {
