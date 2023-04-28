@@ -255,7 +255,6 @@ namespace System.DJ.ImplementFactory
             string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
             string[] files = Directory.GetFiles(binPath, "*.dll");
             string file = "";
-            string interfaceName = typeof(T).FullName;
             if (!string.IsNullOrEmpty(likeName))
             {
                 Regex rg = new Regex(@".*" + likeName + @".*\.dll$", RegexOptions.IgnoreCase);
@@ -270,13 +269,14 @@ namespace System.DJ.ImplementFactory
             }
 
             bool isExist = false;
+            Type tType = typeof(T);
             Action<Type[]> action = types1 =>
             {
                 foreach (var type in types1)
                 {
                     if (type.IsAbstract) continue;
                     if (type.IsInterface) continue;
-                    if (null == type.GetInterface(interfaceName)) continue;
+                    if(!tType.IsAssignableFrom(type)) continue;
                     if (null != excludeTypes)
                     {
                         isExist = false;
