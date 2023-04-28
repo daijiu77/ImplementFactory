@@ -174,14 +174,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
                     else if (DJTools.IsBaseType(eMethod.ReturnType))
                     {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "if(typeof(string) == typeof({0})) return responseResult;", returnType);
+                        mInfo.append(ref s, LeftSpaceLevel.four, "if(typeof(string) == typeof({0})) return ({0})DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "if(string.IsNullOrEmpty(responseResult)) return default({0});", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "Object _vObj = DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})_vObj;", returnType);
                     }
                     else if (null != eMethod.ReturnType.GetInterface("System.Collections.IEnumerable"))
                     {
-                        string dtType = returnType;
+                        string dtType = returnType;                        
                         if (typeof(IList).IsAssignableFrom(eMethod.ReturnType))
                         {
                             Type tp = eMethod.ReturnType.GetGenericArguments()[0];
