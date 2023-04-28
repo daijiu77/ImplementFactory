@@ -238,11 +238,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         }
 
         public static RouteAttr GetRouteAttributeByName(string name)
-        {            
+        {
             lock (MSObject)
             {
                 RouteAttr routeAttr = null;
-                routeAttrDic.TryGetValue(name, out routeAttr);
+                if (null == name) return routeAttr;
+                name = name.Trim();
+                if (string.IsNullOrEmpty(name)) return routeAttr;
+                routeAttrDic.TryGetValue(name.ToLower(), out routeAttr);
                 return routeAttr;
             }
         }
