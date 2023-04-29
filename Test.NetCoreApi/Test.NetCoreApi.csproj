@@ -14,5 +14,11 @@
     <ProjectReference Include="..\System.DJ.ImplementFactory.NetCore\System.DJ.ImplementFactory.NetCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="MicroServiceRoute.xml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 
 </Project>

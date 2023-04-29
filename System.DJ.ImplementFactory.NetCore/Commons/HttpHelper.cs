@@ -28,10 +28,14 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     dts = (byte[])data;
                 }
+                else
+                {
+                    dts = Encoding.UTF8.GetBytes(data.ToString());
+                }
             }
             else
             {
-                dts = Encoding.Default.GetBytes("{\"content\": null}");
+                dts = Encoding.UTF8.GetBytes("{\"content\": null}");
             }
             HttpContent httpContent = new ByteArrayContent(dts);
             httpContent.Headers.ContentType = new MediaTypeHeaderValue(mvType);
@@ -78,7 +82,7 @@ namespace System.DJ.ImplementFactory.Commons
                     resultData = rsa.Result;
                 }
                 else
-                {                    
+                {
                     try
                     {
                         httpResponseMessage.EnsureSuccessStatusCode();

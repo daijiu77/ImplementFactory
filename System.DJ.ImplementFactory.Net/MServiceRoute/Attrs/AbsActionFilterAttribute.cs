@@ -15,20 +15,25 @@ using System.Threading.Tasks;
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     public abstract class AbsActionFilterAttribute : ActionFilterAttribute
-    {
+    {        
         protected static Dictionary<string, string> _ipDic = new Dictionary<string, string>();
 
         protected static IMSService _mSService = null;
 
+        private static object _AbsActionFilterAttributeLock = new object();
+
         public static void SetMSServiceInstance(IMSService mSService)
         {
-            _mSService = mSService;
-            List<string> ips = _mSService.IPAddrSources();
-            if (null == ips) return;
-            foreach (var item in ips)
+            lock (_AbsActionFilterAttributeLock)
             {
-                _ipDic[item] = item;
-            }
+                _mSService = mSService;
+                List<string> ips = _mSService.IPAddrSources();
+                if (null == ips) return;
+                foreach (var item in ips)
+                {
+                    _ipDic[item] = item;
+                }
+            }            
         }
 
         protected Dictionary<string, object> GetKVListFromBody(HttpContext context, List<string> keys, bool contain)
@@ -285,8 +290,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null != dic[keys[0]]) val = dic[keys[0]].ToString();
             return val;
         }
-
-        private static object _AbsActionFilterAttributeLock = new object();
+                
         protected static void SetIpToDic(string ip)
         {
             lock (_AbsActionFilterAttributeLock)
@@ -309,7 +313,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static List<string> ipPools1 = new List<string>();
         private static List<string> ipPools2 = new List<string>();
         private static int collection_index = 0;
-        protected void PrintIpToLogs(string ip)
+        protected static void PrintIpToLogs(string ip)
         {
             lock (_PrintIpToLogsLock)
             {
@@ -330,7 +334,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private List<string> SetIpToList(string ip)
+        private static List<string> SetIpToList(string ip)
         {
             lock (_PrintIpToLogsLock)
             {
@@ -360,22 +364,25 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private void SaveIpToLogs(List<string> ips)
+        private static void SaveIpToLogs(List<string> ips)
         {
-            if (0 == ips.Count) return;
-            DateTime dt = DateTime.Now;
-            string fPath = Path.Combine(DJTools.RootPath, AutoCall.LogsDir);
-            DJTools.InitDirectory(fPath, true);
-            string fName = "IP-List-" + dt.ToString("yyyyMMddHH") + ".txt";
-            fPath = Path.Combine(fPath, fName);
-
-            string txt = "";
-            foreach (string ip in ips)
+            lock (_PrintIpToLogsLock)
             {
-                txt = "{0}\t{1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
-                File.AppendAllText(fPath, txt);
-            }
-            ips.Clear();
+                if (0 == ips.Count) return;
+                DateTime dt = DateTime.Now;
+                string fPath = Path.Combine(DJTools.RootPath, AutoCall.LogsDir);
+                DJTools.InitDirectory(fPath, true);
+                string fName = "IP-List-" + dt.ToString("yyyyMMddHH") + ".txt";
+                fPath = Path.Combine(fPath, fName);
+
+                string txt = "";
+                foreach (string ip in ips)
+                {
+                    txt = "{0}\t{1}\r\n".ExtFormat(dt.ToString("yyyy-MM-dd HH:mm:ss"), ip);
+                    File.AppendAllText(fPath, txt);
+                }
+                ips.Clear();
+            }            
         }
     }
 }

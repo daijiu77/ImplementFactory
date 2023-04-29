@@ -14,7 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string uri = "uri";
         private string addr = "addr";
         private string actionType = "actionType";
-        private string contractKeyName = "contractKey";
+        private string contractKeyName = MSServiceImpl.contractKey;
         /// <summary>
         /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>

@@ -69,6 +69,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             //throw;
                         }
                     }
+                    PrintIpToLogs("The ip: {0} and the token: {1} has been removed when it was time out.".ExtFormat(item.ip, item.token));
                     tokenKV.Remove(item.token);
                 }
                 tokens.Clear();
@@ -150,11 +151,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             lock (mSFilter)
             {
                 bool mbool = false;
-                if (tokenKV.ContainsKey(token))
+                GetIP_Token(token, tokenObj =>
                 {
-                    TokenObj tokenObj = tokenKV[token];
-                    mbool = tokenObj.ip.Equals(clientIP);
-                }
+                    if (null != tokenObj)
+                    {
+                        mbool = clientIP.Equals(tokenObj.ip);
+                        if (mbool) tokenObj.SetStartTime(DateTime.Now);
+                    }
+                });
                 return mbool;
             }
         }
@@ -178,18 +182,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private string GetIP_Token(string token)
+        private static string GetIP_Token(string token, Action<TokenObj> action)
         {
             lock (mSFilter)
             {
                 string ip = "";
+                TokenObj token1 = null;
                 if (tokenKV.ContainsKey(token))
                 {
-                    TokenObj token1 = tokenKV[token];
-                    token1.SetStartTime(DateTime.Now);
+                    token1 = tokenKV[token];
+                    if (null == action) token1.SetStartTime(DateTime.Now);
                     ip = token1.ip;
                 }
+                if (null != action) action(token1);
                 return ip;
+            }
+        }
+
+        private static string GetIP_Token(string token)
+        {
+            lock (mSFilter)
+            {
+                return GetIP_Token(token, null);
             }
         }
 
@@ -235,7 +249,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (0 < kvDic.Count)
                 {
                     string token = kvDic[tokenKeyName.ToLower()].ToString();
-                    
+
                     string ip1 = GetIP(context.HttpContext);
                     string ip2 = "";
                     if (null != ImplementAdapter.mSFilterMessage)
@@ -251,14 +265,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             //throw;
                         }
                     }
-                                        
+
                     if (!mbool)
                     {
                         ip2 = GetIP_Token(token);
                         mbool = ip2.Equals(ip1);
                     }
                     string msg = "Original ip: {0}, Current ip: {1}, Token: {2}".ExtFormat(ip2, ip1, token);
-                    PrintIpToLogs(msg);                    
+                    PrintIpToLogs(msg);
                 }
             }
 

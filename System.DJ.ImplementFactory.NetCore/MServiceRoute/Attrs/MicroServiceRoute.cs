@@ -5,6 +5,7 @@ using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
+using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -14,27 +15,27 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// </summary>
     public class MicroServiceRoute : Attribute
     {
-        private string _routeName = "";
-        private string _controllerName = "";
-        private string _uri = "";
-        private static string configPath = "";
+        private string route_name = "";
+        private string controller_name = "";
+        private string uri_str = "";        
 
-        private const string routeItem = "Route";
-        private const string configFile = "MicroServiceRoute.xml";
-        private const string MicroServiceRoutes = "MicroServiceRoutes";
-        private const string ServiceManagerAddrName = "ServiceManagerAddr";
+        private const string _routeItem = "Route";
+        private const string _configFile = "MicroServiceRoute.xml";
+        private const string _microServiceRoutes = "MicroServiceRoutes";
 
-        private static object MSObject = new object();
-        private static XmlDoc document = new XmlDoc();
-        private static XmlElement rootElement = null;
-        private static Dictionary<string, RouteAttr> routeAttrDic = new Dictionary<string, RouteAttr>();
-        private static Dictionary<string, XmlElement> eleDic = new Dictionary<string, XmlElement>();
+        private static string s_config_path = "";
+        private static object s_MSObject = new object();
+        private static XmlDoc s_document = new XmlDoc();
+        private static XmlElement s_rootElement = null;
+        private static Dictionary<string, RouteAttr> s_routeAttrDic = new Dictionary<string, RouteAttr>();
+        private static Dictionary<string, XmlElement> s_eleDic = new Dictionary<string, XmlElement>();
 
-        public static ServiceManager serviceManager = null;
+        public static ServiceManager s_serviceManager = null;
+        public static string s_ServiceName = "";
 
         static MicroServiceRoute()
         {
-            configPath = Path.Combine(DJTools.RootPath, configFile);
+            s_config_path = Path.Combine(DJTools.RootPath, _configFile);
             msr(null, null, null);
         }
 
@@ -61,33 +62,47 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             if (null != microServiceRoute)
             {
-                microServiceRoute._routeName = RouteName;
-                microServiceRoute._controllerName = ControllerName;
+                microServiceRoute.route_name = RouteName;
+                microServiceRoute.controller_name = ControllerName;
             }
 
-            if (0 < routeAttrDic.Count) return;
+            if (0 < s_routeAttrDic.Count) return;
 
-            string fPath = configPath;
+            const string _ServiceManager = "ServiceManager";
+            const string _Routes = "Routes";
+            const string _ServiceName = "ServiceName";
+
+            string fPath = s_config_path;
             if (!File.Exists(fPath))
             {
                 XmlDoc doc = new XmlDoc();
-                XmlElement XMLroot = doc.RootNode(MicroServiceRoutes);
+                XmlElement XMLroot = doc.RootNode(_microServiceRoutes);
                 ServiceManager serviceMng = new ServiceManager()
                 {
-                    ServiceManagerAddr = "/Home/ReceiveManage",
-                    ServiceName = "MemberService",
+                    Name = _ServiceManager,
                     Uri = "http://127.0.0.1:5000/api",
+                    ServiceManagerAddr = "/Home/ReceiveManage",
+                    ServiceManagerActionType = MethodTypes.Post,
                     RegisterAddr = "/Home/RegisterIP",
                     RegisterActionType = MethodTypes.Post,
                     ContractKey = "abc2233"
                 };
+                XMLroot.SetAttribute(_ServiceName, "MemberService");
+
+                XmlElement serviceManagerNodes = doc.CreateElement(_ServiceManager);
+                XMLroot.AppendChild(serviceManagerNodes);
+
+                XmlElement smItem = null;
                 serviceMng.ForeachProperty((pi, pt, fn, fv) =>
                 {
-                    if (fn.ToLower().Equals("name")) return;
-                    if (typeof(MethodTypes) == pt) return;
-                    XMLroot.SetAttribute(fn, fv.ToString());
+                    if (null == fv) return;
+                    smItem = doc.CreateElement(fn);
+                    smItem.InnerText = fv.ToString();
+                    serviceManagerNodes.AppendChild(smItem);
                 });
-                XMLroot.SetAttribute("ServiceManagerActionType", "post");
+
+                XmlElement routeNodes = doc.CreateElement(_Routes);
+                XMLroot.AppendChild(routeNodes);
 
                 XmlElement route = doc.CreateElement("Route");
                 RouteAttr route_attr = new RouteAttr()
@@ -105,7 +120,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 });
                 route.SetAttribute("RegisterActionType", "post");
 
-                XMLroot.AppendChild(route);
+                routeNodes.AppendChild(route);
 
                 try
                 {
@@ -120,79 +135,96 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (File.Exists(fPath))
             {
-                rootElement = document.Load(fPath);
-                if (null == rootElement) return;
+                s_rootElement = s_document.Load(fPath);
+                if (null == s_rootElement) return;
 
-                serviceManager = new ServiceManager();
-                foreach (XmlAttribute attr in rootElement.Attributes)
-                {
-                    serviceManager.SetPropertyValue(attr.Name, attr.Value);
-                }
+                XmlAttribute atr = s_rootElement.Attributes[_ServiceName];
+                if (null != atr) s_ServiceName = atr.Value.Trim();
 
-                if ((false == string.IsNullOrEmpty(serviceManager.Uri)))
-                {
-                    routeAttrDic.Add(ServiceManagerAddrName, serviceManager);
-                    eleDic.Add(ServiceManagerAddrName, rootElement);
-                }
-
-                string attrName1 = "";
+                s_serviceManager = new ServiceManager();
+                string nodeName = "";
+                string routeName1 = "";
+                string serviceManagerLower = _ServiceManager.ToLower();
+                string routesLower = _Routes.ToLower();
                 RouteAttr routeAttr1 = null;
-                foreach (XmlNode routeItem in rootElement.ChildNodes)
+                foreach (XmlNode node in s_rootElement.ChildNodes)
                 {
-                    if (null == routeItem) continue;
-                    if (null == routeItem.Attributes) continue;
-                    if (0 == routeItem.Attributes.Count) continue;
-                    routeAttr1 = new RouteAttr();
-                    foreach (XmlAttribute item in routeItem.Attributes)
+                    nodeName = node.Name.ToLower();
+                    if (nodeName.Equals(serviceManagerLower))
                     {
-                        routeAttr1.SetPropertyValue(item.Name, item.Value);
+                        foreach (XmlNode item in node.ChildNodes)
+                        {
+                            s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
+                        }
                     }
-
-                    if (false == string.IsNullOrEmpty(routeAttr1.Name)
-                        && false == string.IsNullOrEmpty(routeAttr1.Uri))
+                    else if (nodeName.Equals(routesLower))
                     {
-                        attrName1 = routeAttr1.Name.ToLower();
-                        if (routeAttrDic.ContainsKey(attrName1)) continue;
-                        routeAttrDic.Add(attrName1, routeAttr1);
-                        eleDic.Add(attrName1, (XmlElement)routeItem);
+                        foreach (XmlNode _routeItem in node.ChildNodes)
+                        {
+                            if (null == _routeItem) continue;
+                            if (null == _routeItem.Attributes) continue;
+                            if (0 == _routeItem.Attributes.Count) continue;
+                            routeAttr1 = new RouteAttr();
+                            foreach (XmlAttribute item in _routeItem.Attributes)
+                            {
+                                routeAttr1.SetPropertyValue(item.Name, item.Value);
+                            }
+
+                            if (false == string.IsNullOrEmpty(routeAttr1.Name)
+                                && false == string.IsNullOrEmpty(routeAttr1.Uri))
+                            {
+                                routeName1 = routeAttr1.Name.ToLower();
+                                if (s_routeAttrDic.ContainsKey(routeName1)) continue;
+                                s_routeAttrDic.Add(routeName1, routeAttr1);
+                                s_eleDic.Add(routeName1, (XmlElement)_routeItem);
+                            }
+                        }
                     }
                 }
+
+                if ((false == string.IsNullOrEmpty(s_serviceManager.Uri)))
+                {
+                    routeName1 = s_serviceManager.Name.ToLower();
+                    s_routeAttrDic.Add(routeName1, s_serviceManager);
+                    s_eleDic.Add(routeName1, s_rootElement);
+                }
+
             }
 
             if (null == microServiceRoute) return;
             if (string.IsNullOrEmpty(RouteName)) return;
             RouteAttr routeAttr = null;
-            routeAttrDic.TryGetValue(microServiceRoute._routeName.ToLower(), out routeAttr);
+            s_routeAttrDic.TryGetValue(microServiceRoute.route_name.ToLower(), out routeAttr);
             if (null == routeAttr) return;
-            microServiceRoute._uri = routeAttr.Uri;
+            microServiceRoute.uri_str = routeAttr.Uri;
         }
 
-        public string RouteName { get { return _routeName; } }
+        public string RouteName { get { return route_name; } }
 
-        public string ControllerName { get { return _controllerName; } }
+        public string ControllerName { get { return controller_name; } }
 
         public string Uri
         {
             get
             {
-                lock (MSObject)
+                lock (s_MSObject)
                 {
-                    _uri = string.Empty;
-                    if (string.IsNullOrEmpty(_routeName)) _routeName = "";
+                    uri_str = string.Empty;
+                    if (string.IsNullOrEmpty(route_name)) route_name = "";
                     RouteAttr routeAttr = null;
-                    routeAttrDic.TryGetValue(_routeName.ToLower(), out routeAttr);
-                    if (null != routeAttr) _uri = routeAttr.Uri;
-                    return _uri;
+                    s_routeAttrDic.TryGetValue(route_name.ToLower(), out routeAttr);
+                    if (null != routeAttr) uri_str = routeAttr.Uri;
+                    return uri_str;
                 }
             }
         }
 
         public static void Foreach(MSRouteAttribute routeAttribute)
         {
-            lock (MSObject)
+            lock (s_MSObject)
             {
                 RouteAttr routeAttr = null;
-                foreach (var item in routeAttrDic)
+                foreach (var item in s_routeAttrDic)
                 {
                     routeAttr = item.Value;
                     routeAttribute(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
@@ -202,26 +234,26 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         public static void Add(string ServiceRouteName, string Uri, string RegisterAddr, string ContractValue, MethodTypes RegisterActionType)
         {
-            lock (MSObject)
+            lock (s_MSObject)
             {
                 if (string.IsNullOrEmpty(ServiceRouteName) || string.IsNullOrEmpty(Uri)) return;
-                if (null == rootElement) return;
+                if (null == s_rootElement) return;
                 string key = ServiceRouteName.Trim().ToLower();
                 XmlElement routeNode = null;
-                eleDic.TryGetValue(key, out routeNode);
+                s_eleDic.TryGetValue(key, out routeNode);
                 RouteAttr routeAttr = null;
                 if (null == routeNode)
                 {
-                    routeNode = document.CreateElement(routeItem);
-                    rootElement.AppendChild(routeNode);
-                    eleDic.Add(key, routeNode);
+                    routeNode = s_document.CreateElement(_routeItem);
+                    s_rootElement.AppendChild(routeNode);
+                    s_eleDic.Add(key, routeNode);
 
                     routeAttr = new RouteAttr();
-                    routeAttrDic.Add(key, routeAttr);
+                    s_routeAttrDic.Add(key, routeAttr);
                 }
                 else
                 {
-                    routeAttr = routeAttrDic[key];
+                    routeAttr = s_routeAttrDic[key];
                 }
 
                 Dictionary<string, XmlAttribute> dic = new Dictionary<string, XmlAttribute>();
@@ -244,41 +276,41 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     dic.TryGetValue(key, out attr);
                     if (null == attr)
                     {
-                        attr = document.CreateAttribute(fn);
+                        attr = s_document.CreateAttribute(fn);
                         routeNode.Attributes.Append(attr);
                     }
                     if (null == fv) fv = "";
                     attr.Value = fv.ToString();
                 });
 
-                document.Save(configPath);
+                s_document.Save(s_config_path);
             }
         }
 
         public static void Remove(string ServiceRouteName)
         {
-            lock (MSObject)
+            lock (s_MSObject)
             {
                 if (string.IsNullOrEmpty(ServiceRouteName)) return;
                 string key = ServiceRouteName.Trim().ToLower();
-                if (!routeAttrDic.ContainsKey(key)) return;
-                XmlElement ele = eleDic[key];
-                rootElement.RemoveChild(ele);
-                routeAttrDic.Remove(key);
-                eleDic.Remove(key);
-                document.Save(configPath);
+                if (!s_routeAttrDic.ContainsKey(key)) return;
+                XmlElement ele = s_eleDic[key];
+                s_rootElement.RemoveChild(ele);
+                s_routeAttrDic.Remove(key);
+                s_eleDic.Remove(key);
+                s_document.Save(s_config_path);
             }
         }
 
         public static RouteAttr GetRouteAttributeByName(string name)
         {
-            lock (MSObject)
+            lock (s_MSObject)
             {
                 RouteAttr routeAttr = null;
                 if (null == name) return routeAttr;
                 name = name.Trim();
                 if (string.IsNullOrEmpty(name)) return routeAttr;
-                routeAttrDic.TryGetValue(name.ToLower(), out routeAttr);
+                s_routeAttrDic.TryGetValue(name.ToLower(), out routeAttr);
                 return routeAttr;
             }
         }
@@ -301,7 +333,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         public class ServiceManager : RouteAttr
         {
-            public string ServiceName { get; set; }
             public string ServiceManagerAddr { get; set; }
             private MethodTypes _method1 = MethodTypes.Get;
             public MethodTypes ServiceManagerActionType

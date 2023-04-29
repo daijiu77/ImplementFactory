@@ -316,7 +316,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static List<string> ipPools1 = new List<string>();
         private static List<string> ipPools2 = new List<string>();
         private static int collection_index = 0;
-        protected void PrintIpToLogs(string ip)
+        protected static void PrintIpToLogs(string ip)
         {
             lock (_PrintIpToLogsLock)
             {
@@ -337,7 +337,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private List<string> SetIpToList(string ip)
+        private static List<string> SetIpToList(string ip)
         {
             lock (_PrintIpToLogsLock)
             {
@@ -367,7 +367,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private void SaveIpToLogs(List<string> ips)
+        private static void SaveIpToLogs(List<string> ips)
         {
             if (0 == ips.Count) return;
             DateTime dt = DateTime.Now;

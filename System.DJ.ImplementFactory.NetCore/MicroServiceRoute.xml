@@ -1,5 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<MicroServiceRoute ServiceName="MemberService" Uri="http://127.0.0.1/api" ServiceManagerAddr="/Home/ReceiveManage" ServiceManagerActionType="post"
-                   RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc2233">
-	<Route Name="route1" Uri="http://127.0.0.1:80/api" RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc123" />
-</MicroServiceRoute>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MicroServiceRoutes ServiceName="MemberService">
+  <ServiceManager>
+    <ServiceManagerAddr>/Home/ReceiveManage</ServiceManagerAddr>
+    <ServiceManagerActionType>Post</ServiceManagerActionType>
+    <Name>ServiceManager</Name>
+    <Uri>http://127.0.0.1:5000/api</Uri>
+    <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+    <ContractKey>abc2233</ContractKey>
+    <RegisterActionType>Post</RegisterActionType>
+  </ServiceManager>
+  <Routes>
+    <Route Name="ServiceRoute1" Uri="http://127.0.0.1:8080,http://127.0.0.1:8081" RegisterAddr="/Home/RegisterIP" ContractKey="abc" RegisterActionType="post" />
+  </Routes>
+</MicroServiceRoutes>
