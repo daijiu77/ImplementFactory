@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Google.Protobuf.WellKnownTypes;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
@@ -21,12 +22,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private const string routeItem = "Route";
         private const string configFile = "MicroServiceRoute.xml";
         private const string MicroServiceRoutes = "MicroServiceRoutes";
+        private const string ServiceManagerAddrName = "ServiceManagerAddr";
 
         private static object MSObject = new object();
         private static XmlDoc document = new XmlDoc();
         private static XmlElement rootElement = null;
         private static Dictionary<string, RouteAttr> routeAttrDic = new Dictionary<string, RouteAttr>();
         private static Dictionary<string, XmlElement> eleDic = new Dictionary<string, XmlElement>();
+
+        public static ServiceManager serviceManager = null;
 
         static MicroServiceRoute()
         {
@@ -68,6 +72,22 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 XmlDoc doc = new XmlDoc();
                 XmlElement XMLroot = doc.RootNode(MicroServiceRoutes);
+                ServiceManager serviceMng = new ServiceManager()
+                {
+                    ServiceManagerAddr = "/Home/ReceiveManage",
+                    ServiceName = "MemberService",
+                    Uri = "http://127.0.0.1:5000/api",
+                    RegisterAddr = "/Home/RegisterIP",
+                    RegisterActionType = MethodTypes.Post,
+                    ContractKey = "abc2233"
+                };
+                serviceMng.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (fn.ToLower().Equals("name")) return;
+                    if (typeof(MethodTypes) == pt) return;
+                    XMLroot.SetAttribute(fn, fv.ToString());
+                });
+                XMLroot.SetAttribute("ServiceManagerActionType", "post");
 
                 XmlElement route = doc.CreateElement("Route");
                 RouteAttr route_attr = new RouteAttr()
@@ -103,6 +123,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 rootElement = document.Load(fPath);
                 if (null == rootElement) return;
 
+                serviceManager = new ServiceManager();
+                foreach (XmlAttribute attr in rootElement.Attributes)
+                {
+                    serviceManager.SetPropertyValue(attr.Name, attr.Value);
+                }
+
+                if ((false == string.IsNullOrEmpty(serviceManager.Uri)))
+                {
+                    routeAttrDic.Add(ServiceManagerAddrName, serviceManager);
+                    eleDic.Add(ServiceManagerAddrName, rootElement);
+                }
+
                 string attrName1 = "";
                 RouteAttr routeAttr1 = null;
                 foreach (XmlNode routeItem in rootElement.ChildNodes)
@@ -116,7 +148,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         routeAttr1.SetPropertyValue(item.Name, item.Value);
                     }
 
-                    if (false == string.IsNullOrEmpty(routeAttr1.Name) && false == string.IsNullOrEmpty(routeAttr1.Uri))
+                    if (false == string.IsNullOrEmpty(routeAttr1.Name)
+                        && false == string.IsNullOrEmpty(routeAttr1.Uri))
                     {
                         attrName1 = routeAttr1.Name.ToLower();
                         if (routeAttrDic.ContainsKey(attrName1)) continue;
@@ -263,6 +296,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 get { return _method; }
                 set { _method = value; }
+            }
+        }
+
+        public class ServiceManager : RouteAttr
+        {
+            public string ServiceName { get; set; }
+            public string ServiceManagerAddr { get; set; }
+            private MethodTypes _method1 = MethodTypes.Get;
+            public MethodTypes ServiceManagerActionType
+            {
+                get { return _method1; }
+                set { _method1 = value; }
             }
         }
     }

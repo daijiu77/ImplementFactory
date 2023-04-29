@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -110,6 +111,212 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     Thread.Sleep(sleepNum);
                 }
             });
+
+            Task.Run(() =>
+            {
+                if (null == MicroServiceRoute.serviceManager) return;
+                if (string.IsNullOrEmpty(MicroServiceRoute.serviceManager.Uri)
+                    || string.IsNullOrEmpty(MicroServiceRoute.serviceManager.ServiceManagerAddr)
+                    || string.IsNullOrEmpty(MicroServiceRoute.serviceManager.ContractKey)) return;
+
+                Regex rg = new Regex(@"(?<controllerName>[a-z0-9_]+)controller$", RegexOptions.IgnoreCase);
+                Regex rg1 = new Regex(@"(\[controller\])|(\{controller\})", RegexOptions.IgnoreCase);
+                string controllerName = "";
+                string actionName = "";
+
+                Type[] attrTypes = new Type[]
+                {
+                    typeof(MSAddServiceRouteItemAction),
+                    typeof(MSClientRegisterAction),
+                    typeof(MSConfiguratorAction),
+                    typeof(MSRemoveServiceRouteItemAction)
+                };
+                PipleList pipleList = new PipleList();
+                string fn1 = "";
+                string fv1 = "";
+                string binPath = DJTools.RootPath;
+                binPath = DJTools.isWeb ? (binPath + "\\bin") : binPath;
+                List<Assembly> assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/TempImpl/bin/" });
+                foreach (Assembly assembly in assemblies)
+                {
+                    Type[] types = assembly.GetTypes();
+                    foreach (Type type in types)
+                    {
+                        if (string.IsNullOrEmpty(type.Name)) continue;
+                        if (!rg.IsMatch(type.Name)) continue;
+                        fv1 = "";
+                        controllerName = rg.Match(type.Name).Groups["controllerName"].Value;
+                        IEnumerable<Attribute> atrs = type.GetCustomAttributes();
+                        foreach (Attribute atr in atrs)
+                        {
+                            fn1 = atr.GetType().Name.ToLower();
+                            if (fn1.Equals("route") || fn1.Equals("routeattribute"))
+                            {
+                                fv1 = atr.GetPropertyValue<string>("Template");
+                                if (!string.IsNullOrEmpty(fv1))
+                                {
+                                    fv1 = rg1.Replace(fv1, controllerName);
+                                    controllerName = fv1;
+                                }
+                                break;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(fv1)) controllerName = "";
+
+                        MethodInfo[] mis = type.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+                        foreach (MethodInfo mi in mis)
+                        {
+                            Attribute atr = null;
+                            foreach (Type t in attrTypes)
+                            {
+                                atr = mi.GetCustomAttribute(t, true);
+                                if (null != atr) break;
+                            }
+
+                            PipleInfo info = null;
+                            if (null != atr)
+                            {
+                                string typeName = atr.GetType().Name;
+                                typeName = typeName.Substring(2);
+                                info = new PipleInfo();
+                                bool mbool = pipleList.SetPropertyValue(typeName, info);
+                                if (!mbool) info = null;
+                            }
+
+                            if (null != info)
+                            {
+                                actionName = mi.Name;
+                                string methodType = "get";
+                                atrs = mi.GetCustomAttributes();
+                                foreach (Attribute item in atrs)
+                                {
+                                    fn1 = item.GetType().Name.ToLower();
+                                    if (fn1.Equals("route") || fn1.Equals("routeattribute"))
+                                    {
+                                        fv1 = item.GetPropertyValue<string>("Template");
+                                        if (!string.IsNullOrEmpty(fv1)) actionName = fv1;
+                                    }
+                                    else if (fn1.Equals("httppost") || fn1.Equals("httppostattribute"))
+                                    {
+                                        methodType = "post";
+                                    }
+                                }
+                                info.MethodType = methodType;
+
+                                string s = "";
+                                if (!string.IsNullOrEmpty(controllerName))
+                                {
+                                    s = controllerName.Substring(controllerName.Length - 1);
+                                    if (s.Equals("/") || s.Equals("\\"))
+                                    {
+                                        controllerName = controllerName.Substring(0, controllerName.Length - 1);
+                                    }
+                                    controllerName += "/";
+                                }
+
+                                s = actionName.Substring(0, 1);
+                                if (s.Equals("/") || s.Equals("\\"))
+                                {
+                                    actionName = actionName.Substring(1);
+                                }
+                                info.Uri = controllerName + actionName;
+
+                                ParameterInfo[] paras = mi.GetParameters();
+                                foreach (ParameterInfo param in paras)
+                                {
+                                    info.Parameters.Add(param.Name, param.ParameterType);
+                                }
+                            }
+                            Thread.Sleep(100);
+                        }
+                        Thread.Sleep(100);
+                    }
+                }
+
+                string jsonData = "";
+                string paraStr = "";
+                PipleInfo pipleInfo = null;
+                pipleList.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (null == fv) return;
+                    pipleInfo = (PipleInfo)fv;
+                    paraStr = "";
+                    foreach (var param in pipleInfo.Parameters)
+                    {
+                        paraStr += ", {\"Name\": \"{0}\", \"Type\": \"{1}\"}".ExtFormat(param.Key, param.Value.TypeToString(true));
+                    }
+
+                    if (!string.IsNullOrEmpty(paraStr)) paraStr = paraStr.Substring(1);
+                    paraStr = paraStr.Trim();
+                    fv1 = "{\"Name\": \"{0}\", \"Uri\": \"{1}\", \"MethodType\": \"{2}\", \"Parameters\": \"[{3}]\"}";
+                    fv1 = fv1.ExtFormat(fn, pipleInfo.Uri, pipleInfo.MethodType, paraStr);
+                    jsonData += ", " + fv;
+                });
+
+                if (!string.IsNullOrEmpty(jsonData)) jsonData = jsonData.Substring(1);
+                jsonData = jsonData.Trim();
+                jsonData = "{\"ServiceName\": \"{0}\", \"Data\": \"[{1}]\", \"CrateTime\": \"{2}\"}".ExtFormat(MicroServiceRoute.serviceManager.ServiceName, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                string svrUrl = MicroServiceRoute.serviceManager.Uri;
+                string s1 = svrUrl.Substring(svrUrl.Length - 1);
+                if (s1.Equals("\\") || s1.Equals("/"))
+                {
+                    svrUrl = svrUrl.Substring(0, svrUrl.Length - 1);
+                }
+
+                string ServiceManagerAddr = MicroServiceRoute.serviceManager.ServiceManagerAddr;
+                s1 = ServiceManagerAddr.Substring(0, 1);
+                if (s1.Equals("\\") || s1.Equals("/"))
+                {
+                    ServiceManagerAddr = ServiceManagerAddr.Substring(1);
+                }
+
+                svrUrl += "/" + ServiceManagerAddr;
+
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add(MSServiceImpl.contractKey, MicroServiceRoute.serviceManager.ContractKey);
+
+                IHttpHelper httpHelper = new HttpHelper();
+                MethodTypes methodTypes1 = MicroServiceRoute.serviceManager.ServiceManagerActionType;
+                bool success = false;
+                while (true)
+                {
+                    httpHelper.SendData(svrUrl, headers, jsonData, false, methodTypes1, (vObj, err) =>
+                    {
+                        success = string.IsNullOrEmpty(err);
+                    });
+                    if (success) break;
+                    Thread.Sleep(5000);
+                }
+            });
+        }
+
+        public class PipleList
+        {
+            /// <summary>
+            /// MSAddServiceRouteItemAction
+            /// </summary>
+            public PipleInfo AddServiceRouteItemAction { get; set; }
+            /// <summary>
+            /// MSClientRegisterAction
+            /// </summary>
+            public PipleInfo ClientRegisterAction { get; set; }
+            /// <summary>
+            /// MSConfiguratorAction
+            /// </summary>
+            public PipleInfo ConfiguratorAction { get; set; }
+            /// <summary>
+            /// MSRemoveServiceRouteItemAction
+            /// </summary>
+            public PipleInfo RemoveServiceRouteItemAction { get; set; }
+        }
+
+        public class PipleInfo
+        {
+            private Dictionary<string, Type> _parameters = new Dictionary<string, Type>();
+            public string Uri { get; set; }
+            public string MethodType { get; set; }
+            public Dictionary<string, Type> Parameters { get { return _parameters; } }
         }
     }
 }
