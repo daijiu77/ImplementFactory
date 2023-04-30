@@ -19,6 +19,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return TokenValidating(token, clientIP);
         }
 
+        void IMSFilterMessage.ClientIP(string ip)
+        {
+            ClientIP(ip);
+        }
+
         /// <summary>
         /// The interface method is triggered when the Token string in the MSFilter gateway reaches the end of life
         /// </summary>
@@ -40,5 +45,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// <param name="clientIP">Client IP address</param>
         /// <returns>A return value of true indicates that the token value is legal</returns>
         public virtual bool TokenValidating(string token, string clientIP) { return false; }
+
+        /// <summary>
+        /// Get client ip address
+        /// </summary>
+        /// <param name="ip">Client ip address</param>
+        public virtual void ClientIP(string ip) { }
     }
 }

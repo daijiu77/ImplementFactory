@@ -51,6 +51,8 @@ namespace System.DJ.ImplementFactory
         public static Task task1 = null;
         public static Type dataCache = null;
 
+        private const string _rootNodeName = "SystemBaseInfo";
+
         static ImplementAdapter()
         {
             int n = 5;
@@ -168,7 +170,7 @@ namespace System.DJ.ImplementFactory
             Assembly asse1 = null;
             dbHelper1 = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbAccessHelper) }, ref asse1);
             if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
-            
+
             IMSService mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
             if (null == mSService) mSService = new MSServiceImpl();
             AbsActionFilterAttribute.SetMSServiceInstance(mSService);
@@ -276,7 +278,7 @@ namespace System.DJ.ImplementFactory
                 {
                     if (type.IsAbstract) continue;
                     if (type.IsInterface) continue;
-                    if(!tType.IsAssignableFrom(type)) continue;
+                    if (!tType.IsAssignableFrom(type)) continue;
                     if (null != excludeTypes)
                     {
                         isExist = false;
@@ -1458,6 +1460,7 @@ namespace System.DJ.ImplementFactory
             PropertyInfo pi = null;
             foreach (XmlNode item in _node.ChildNodes)
             {
+                if (!item.HasChildNodes) continue;
                 node_name = item.Name.ToLower();
                 pi = _obj.GetPropertyInfo(node_name);
                 if (null != pi)
@@ -1509,11 +1512,13 @@ namespace System.DJ.ImplementFactory
             string SysConfig = "SysConfig".ToLower();
             string MatchRules = "MatchRules".ToLower();
             string Recomplie = "Recomplie".ToLower();
+            string sysBaseNode = _rootNodeName.ToLower();
 
             foreach (XmlNode item in node.ChildNodes)
             {
+                if (!item.HasChildNodes) continue;
                 nodeName = item.Name.ToLower();
-                if (nodeName.Equals("database"))
+                if (nodeName.Equals("database") || nodeName.Equals(sysBaseNode))
                 {
                     entity = ImplementAdapter.dbInfo;
                 }
@@ -1530,6 +1535,7 @@ namespace System.DJ.ImplementFactory
                 {
                     foreach (XmlNode item1 in item.ChildNodes)
                     {
+                        if (!item1.HasChildNodes) continue;
                         entity = new MatchRule();
                         setPropertyVal(item1, entity);
                         if (!string.IsNullOrEmpty(((MatchRule)entity).InterFaceName))
@@ -1788,8 +1794,8 @@ namespace System.DJ.ImplementFactory
             string des = "description";
             XmlDoc doc = new XmlDoc();
             XmlElement XMLroot = doc.RootNode("configurations");
-            
-            XmlElement ele = doc.CreateElement("database");
+
+            XmlElement ele = doc.CreateElement(_rootNodeName);
             DbInfo dbInfo = new DbInfo();
             createChildrenNode(dbInfo, doc, ele);
             XMLroot.AppendChild(ele);

@@ -27,5 +27,11 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <param name="clientIP">Client IP address</param>
         /// <returns>A return value of true indicates that the token value is legal</returns>
         bool TokenValidating(string token, string clientIP);
+
+        /// <summary>
+        /// Get client ip address
+        /// </summary>
+        /// <param name="ip">Client ip address</param>
+        void ClientIP(string ip);
     }
 }

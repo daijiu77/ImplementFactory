@@ -16,6 +16,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
+        private static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/.+");
         private const int maxNum = 100;
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
@@ -39,8 +40,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string url = "";
                 string registerAddr = "";
                 string printMsg = "The current service has been successfully registered to the address: {0}.";
-                Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
-                Regex rg1 = new Regex(@"^((http)|(https))\:\/\/", RegexOptions.IgnoreCase);
+                Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);                
                 Dictionary<string, string> heads = new Dictionary<string, string>();
                 MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType)
                 {
@@ -72,7 +72,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     {
                         url = item.Trim();
                         if (string.IsNullOrEmpty(url)) continue;
-                        if (!rg1.IsMatch(url)) continue;
+                        if (!httpRg.IsMatch(url)) continue;
                         if (url.Substring(url.Length - 1).Equals("/"))
                         {
                             url = url.Substring(0, url.Length - 1);
@@ -140,7 +140,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     || string.IsNullOrEmpty(s_serviceManager.ServiceManagerAddr)
                     || string.IsNullOrEmpty(s_serviceManager.ContractKey)) return;
 
-                Regex httpRg = new Regex(@"^((http\:\/\/)|(https\:\/\/)).+");
                 if (!httpRg.IsMatch(s_serviceManager.Uri)) return;
 
                 Regex rg = new Regex(@"(?<controllerName>[a-z0-9_]+)controller$", RegexOptions.IgnoreCase);
@@ -328,13 +327,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string printMsg = "It has been successfully sent data to the ServiceManage: {0}";
                 bool success = false;
                 int timeNum = 0;
-                const int sleepNum = 1000 * 5;
+                const int sleepNum = 1000 * 3;
                 while (timeNum < maxNum)
                 {
                     httpHelper.SendData(svrUrl, headers, jsonData, false, methodTypes1, (vObj, err) =>
                     {
                         success = string.IsNullOrEmpty(err);
-                        if(success)
+                        if (success)
                         {
                             AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(svrUrl));
                         }

@@ -209,6 +209,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
+            string clientIP = GetIP(context.HttpContext);
+            if (null != ImplementAdapter.mSFilterMessage)
+            {
+                try
+                {
+                    ImplementAdapter.mSFilterMessage.ClientIP(clientIP);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+
             bool mbool = false;
             Type type = context.Controller.GetType();
             Attribute attr = type.GetCustomAttribute(typeof(MSUnlimited), true);
@@ -308,9 +322,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     throw new Exception(err);
                 }
-                string ip = GetIP(context.HttpContext);
-                PrintIpToLogs("IP: " + ip);
-                if (!IsExistIP(ip))
+
+                PrintIpToLogs("IP: " + clientIP);
+                if (!IsExistIP(clientIP))
                 {
                     throw new Exception(err);
                 }

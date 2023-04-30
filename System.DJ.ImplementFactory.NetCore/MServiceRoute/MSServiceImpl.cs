@@ -72,6 +72,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string ip = "";
             foreach (XmlNode item in node.ChildNodes)
             {
+                if(!item.HasChildNodes) continue;
                 ip = item.InnerText.Trim();
                 if (!rgIP.IsMatch(ip)) continue;
                 ipAddrs.Add(ip);

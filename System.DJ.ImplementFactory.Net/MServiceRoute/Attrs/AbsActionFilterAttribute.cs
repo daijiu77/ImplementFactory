@@ -313,7 +313,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static List<string> ipPools1 = new List<string>();
         private static List<string> ipPools2 = new List<string>();
         private static int collection_index = 0;
-        protected static void PrintIpToLogs(string ip)
+        public static void PrintIpToLogs(string ip)
         {
             lock (_PrintIpToLogsLock)
             {

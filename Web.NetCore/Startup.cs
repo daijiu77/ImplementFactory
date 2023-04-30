@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory;
+using System.DJ.ImplementFactory.MServiceRoute;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +17,8 @@ namespace Web.NetCore
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            ImplementAdapter.Start();
+            MService.Start();
         }
 
         public IConfiguration Configuration { get; }

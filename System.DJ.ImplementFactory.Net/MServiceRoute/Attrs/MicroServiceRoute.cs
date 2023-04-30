@@ -149,11 +149,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 RouteAttr routeAttr1 = null;
                 foreach (XmlNode node in s_rootElement.ChildNodes)
                 {
+                    if(!node.HasChildNodes) continue;
                     nodeName = node.Name.ToLower();
                     if (nodeName.Equals(serviceManagerLower))
                     {
                         foreach (XmlNode item in node.ChildNodes)
                         {
+                            if(!item.HasChildNodes) continue;
                             s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
                         }
                     }
@@ -161,7 +163,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         foreach (XmlNode _routeItem in node.ChildNodes)
                         {
-                            if (null == _routeItem) continue;
+                            if (!_routeItem.HasChildNodes) continue;
                             if (null == _routeItem.Attributes) continue;
                             if (0 == _routeItem.Attributes.Count) continue;
                             routeAttr1 = new RouteAttr();
