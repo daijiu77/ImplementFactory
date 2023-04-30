@@ -40,7 +40,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string url = "";
                 string registerAddr = "";
                 string printMsg = "The current service has been successfully registered to the address: {0}.";
-                Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);                
+                Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Dictionary<string, string> heads = new Dictionary<string, string>();
                 MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType)
                 {
@@ -301,7 +301,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (string.IsNullOrEmpty(jsonData)) return;
                 jsonData = jsonData.Substring(1);
                 jsonData = jsonData.Trim();
-                jsonData = "{\"ServiceName\": \"{0}\", \"Data\": [{1}], \"CrateTime\": \"{2}\"}".ExtFormat(s_ServiceName, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                string svrContractKey = MSServiceImpl.GetContractValue();
+                jsonData = "{\"ServiceName\": \"{0}\", \"SvrContractKey\": \"{1}\", \"Data\": [{2}], \"CrateTime\": \"{3}\"}".ExtFormat(s_ServiceName, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 string svrUrl = s_serviceManager.Uri;
                 string s1 = svrUrl.Substring(svrUrl.Length - 1);

@@ -1,4 +1,5 @@
 ﻿using System.DJ.ImplementFactory.Pipelines;
+using System.Reflection;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
@@ -14,14 +15,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             TokenUsed(token, clientIP);
         }
 
-        bool IMSFilterMessage.TokenValidating(string token, string clientIP)
+        bool IMSFilterMessage.TokenValidating(string token, string clientIP, object controller, MethodInfo actionMethod)
         {
-            return TokenValidating(token, clientIP);
+            return TokenValidating(token, clientIP, controller, actionMethod);
         }
 
-        void IMSFilterMessage.ClientIP(string ip)
+        void IMSFilterMessage.ClientIP(string ip, object controller, MethodInfo actionMethod)
         {
-            ClientIP(ip);
+            ClientIP(ip, controller, actionMethod);
         }
 
         /// <summary>
@@ -43,13 +44,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// </summary>
         /// <param name="token">The token value passed in by the client</param>
         /// <param name="clientIP">Client IP address</param>
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
         /// <returns>A return value of true indicates that the token value is legal</returns>
-        public virtual bool TokenValidating(string token, string clientIP) { return false; }
+        public virtual bool TokenValidating(string token, string clientIP, object controller, MethodInfo actionMethod) { return false; }
 
         /// <summary>
         /// Get client ip address
         /// </summary>
         /// <param name="ip">Client ip address</param>
-        public virtual void ClientIP(string ip) { }
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
+        public virtual void ClientIP(string ip, object controller, MethodInfo actionMethod) { }
     }
 }

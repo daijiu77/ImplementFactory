@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace System.DJ.ImplementFactory.Pipelines
@@ -25,13 +26,17 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// </summary>
         /// <param name="token">The token value passed in by the client</param>
         /// <param name="clientIP">Client IP address</param>
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
         /// <returns>A return value of true indicates that the token value is legal</returns>
-        bool TokenValidating(string token, string clientIP);
+        bool TokenValidating(string token, string clientIP, object controller, MethodInfo actionMethod);
 
         /// <summary>
         /// Get client ip address
         /// </summary>
         /// <param name="ip">Client ip address</param>
-        void ClientIP(string ip);
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
+        void ClientIP(string ip, object controller, MethodInfo actionMethod);
     }
 }

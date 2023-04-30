@@ -3,12 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.MServiceRoute;
-using System.Linq;
-using System.Threading.Tasks;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 
 namespace Web.NetCore
 {
@@ -29,6 +26,7 @@ namespace Web.NetCore
             services.AddControllersWithViews();
             services.AddMvc(options =>
             {
+                options.Filters.Add<MSFilter>();
                 options.ModelBinderProviders.Insert(0, new ModelBinderProvider());
             });
         }

@@ -90,7 +90,7 @@
 		<replaces>
 			<item>
 				<source>using System.Web.Mvc;</source>
-				<target>using Microsoft.AspNetCore.Mvc.Filters;</target>
+				<target>using Microsoft.AspNetCore.Mvc.Filters; using Microsoft.AspNetCore.Mvc.Abstractions;</target>
 				<extendNames>cs</extendNames>
 			</item>
 			<item>
@@ -106,6 +106,11 @@
 			<item>
 				<source>context.ActionDescriptor.ActionName;</source>
 				<target>context.ActionDescriptor.DisplayName;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>actionObj.ActionName;</source>
+				<target>actionObj.DisplayName;</target>
 				<extendNames>cs</extendNames>
 			</item>
 		</replaces>

@@ -10,6 +10,7 @@ using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Linq;
 using System.Threading.Tasks;
 using Web.NetCore.Models;
+using Web.NetCore.Models.ServiceAPI;
 
 namespace Web.NetCore.Controllers
 {
@@ -59,6 +60,8 @@ namespace Web.NetCore.Controllers
         [HttpPost, Route("ReceiveManage")]
         public IActionResult ReceiveManage(object data)
         {
+            SvrAPISchema svrAPISchema = new SvrAPISchema();
+            svrAPISchema.Add(data);
             return new JsonResult(new { Message = "Successfully", data, CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") });
         }
     }

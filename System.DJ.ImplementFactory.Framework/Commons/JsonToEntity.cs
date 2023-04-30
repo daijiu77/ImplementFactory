@@ -142,7 +142,7 @@ namespace System.DJ.ImplementFactory.Commons
                         proName = item.Name.Substring(0, 1).ToLower() + item.Name.Substring(1);
                         JsonToClassDesign(item.Name, extendName, ele1);
                     }
-                    DJTools.append(ref txt, level, "public List<{0}> {1}s { get; set; }", eleType, item.Name);
+                    DJTools.append(ref txt, level, "public List<{0}> {1} { get; set; }", eleType, item.Name);
                 }
                 else if (JTokenType.Date == ele.Type || JTokenType.TimeSpan == ele.Type)
                 {
@@ -195,11 +195,11 @@ namespace System.DJ.ImplementFactory.Commons
                             SetObjVal(v1, item1);
                             ExtCollection.listAdd(list, v1);
                         }
-                        vObj.SetPropertyValue(item.Name + "s", list);
+                        vObj.SetPropertyValue(item.Name, list);
                     }
                     else
                     {
-                        pi = vObj.GetPropertyInfo(item.Name + "s");
+                        pi = vObj.GetPropertyInfo(item.Name);
                         if (null == pi) continue;
                         type = pi.PropertyType.GetGenericArguments()[0];
                         object list = ExtCollection.createListByType(type);
@@ -209,7 +209,7 @@ namespace System.DJ.ImplementFactory.Commons
                             if (null == v1) continue;
                             ExtCollection.listAdd(list, v1);
                         }
-                        vObj.SetPropertyValue(item.Name + "s", list);
+                        vObj.SetPropertyValue(item.Name, list);
                     }
                     continue;
                 }

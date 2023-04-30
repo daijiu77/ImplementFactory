@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ServiceApiCollection>
+  <ServiceApi ServiceName="MemberService" ContractKey="abc">
+    <Item Name="ConfiguratorAction">
+      <MethodType>post</MethodType>
+      <Uri>api/Home/UpdateMSRegisterEnabled</Uri>
+      <Parameters>
+        <Item Name="startTime" Type="System.DateTime" />
+        <Item Name="endTime" Type="System.DateTime" />
+        <Item Name="contractKey" Type="System.String" />
+      </Parameters>
+    </Item>
+  </ServiceApi>
+</ServiceApiCollection>

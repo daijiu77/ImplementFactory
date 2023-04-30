@@ -108,6 +108,11 @@
 				<extendNames>cs</extendNames>
 			</item>
 			<item>
+				<source>using Microsoft.AspNetCore.Mvc.Abstractions;</source>
+				<target></target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
 				<source>using Microsoft.AspNetCore.Http;</source>
 				<target>using System.Web;</target>
 				<extendNames>cs</extendNames>
@@ -120,6 +125,11 @@
 			<item>
 				<source>context.ActionDescriptor.DisplayName;</source>
 				<target>context.ActionDescriptor.ActionName;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>actionObj.DisplayName;</source>
+				<target>actionObj.ActionName;</target>
 				<extendNames>cs</extendNames>
 			</item>
 		</replaces>

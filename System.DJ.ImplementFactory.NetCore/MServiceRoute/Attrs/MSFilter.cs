@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -210,11 +211,42 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             string clientIP = GetIP(context.HttpContext);
+            object controller = context.Controller;
+            MethodInfo mi = null;
             if (null != ImplementAdapter.mSFilterMessage)
             {
+                Type controllerType = controller.GetType();
+
+                string actionName = "";
+                ActionDescriptor actionObj = context.ActionDescriptor;
+                PropertyInfo pi = actionObj.GetType().GetProperty("ActionName");
+                if (null != pi)
+                {
+                    object piVal = pi.GetValue(actionObj);
+                    if (null != piVal) actionName = piVal.ToString();
+                }
+
+                string actionName1 = "";
+                string s = actionObj.DisplayName;
+                Regex rgAN = new Regex(@"(?<ActionName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
+                if (rgAN.IsMatch(s))
+                {
+                    actionName1 = rgAN.Match(s).Groups["ActionName"].Value;
+                }
+
+                if (!string.IsNullOrEmpty(actionName1))
+                {
+                    mi = controllerType.GetMethod(actionName1);
+                }
+
+                if ((false == string.IsNullOrEmpty(actionName)) && (null == mi))
+                {
+                    mi = controllerType.GetMethod(actionName);
+                }
+
                 try
                 {
-                    ImplementAdapter.mSFilterMessage.ClientIP(clientIP);
+                    ImplementAdapter.mSFilterMessage.ClientIP(clientIP, controller, mi);
                 }
                 catch (Exception)
                 {
@@ -231,22 +263,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 base.OnActionExecuting(context);
                 return;
             }
-            string displayName = context.ActionDescriptor.DisplayName;
-            Regex rg = new Regex(@"controller\.(?<MethodName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
-            string MethodName = "";
-            if (rg.IsMatch(displayName))
-            {
-                MethodName = rg.Match(displayName).Groups["MethodName"].Value;
-            }
-            else
-            {
-                MethodName = displayName;
-            }
-            MethodInfo mi = type.GetMethod(MethodName);
+
             if (null != mi)
             {
-                Attribute atr1 = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
-                Attribute atr2 = mi.GetCustomAttribute(typeof(MSConfiguratorAction), true);
+                Attribute atr1 = null; // mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
+                Attribute atr2 = null; // mi.GetCustomAttribute(typeof(MSConfiguratorAction), true);
                 Attribute atr3 = mi.GetCustomAttribute(typeof(MSUnlimited), true);
                 if (null != atr1 || null != atr2 || null != atr3) mbool = true;
             }
@@ -271,7 +292,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         ip2 = ip1;
                         try
                         {
-                            mbool = ImplementAdapter.mSFilterMessage.TokenValidating(token, ip1);
+                            mbool = ImplementAdapter.mSFilterMessage.TokenValidating(token, ip1, controller, mi);
                         }
                         catch (Exception)
                         {
