@@ -5,6 +5,7 @@ using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
 using System.Reflection;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,6 +16,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
+        private const int maxNum = 100;
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
         /// </summary>
@@ -36,6 +38,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string s = "", s1 = "";
                 string url = "";
                 string registerAddr = "";
+                string printMsg = "The current service has been successfully registered to the address: {0}.";
                 Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Regex rg1 = new Regex(@"^((http)|(https))\:\/\/", RegexOptions.IgnoreCase);
                 Dictionary<string, string> heads = new Dictionary<string, string>();
@@ -77,7 +80,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         url += "/" + registerAddr;
                         httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                         {
-                            if (!string.IsNullOrEmpty(msg)) errUrls.Add(url + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue);
+                            if (string.IsNullOrEmpty(msg))
+                            {
+                                AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(url));
+                                return;
+                            }
+                            errUrls.Add(url + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue);
                         });
                     }
                 });
@@ -85,9 +93,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 int n = 0;
                 int num = 0;
                 int size = errUrls.Count;
+                int timeNum = 0;
                 const int sleepNum = 1000 * 3;
                 string[] arr = null;
-                while (n < size)
+                while ((n < size) && (timeNum < maxNum))
                 {
                     url = errUrls[n];
                     arr = url.Split('\t');
@@ -101,6 +110,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     {
                         if (string.IsNullOrEmpty(msg))
                         {
+                            AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(url));
                             errUrls.RemoveAt(n);
                             n = 0;
                             size = errUrls.Count;
@@ -115,6 +125,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     {
                         n = 0;
                     }
+                    timeNum++;
                     Thread.Sleep(sleepNum);
                 }
             });
@@ -207,7 +218,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             if (null != atr)
                             {
                                 string typeName = atr.GetType().Name.ToLower();
-                                if(piDic.ContainsKey(typeName))
+                                if (piDic.ContainsKey(typeName))
                                 {
                                     info = new PipleItem();
                                     piDic[typeName].SetValue(pipleList, info);
@@ -314,15 +325,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 IHttpHelper httpHelper = new HttpHelper();
                 MethodTypes methodTypes1 = s_serviceManager.ServiceManagerActionType;
+                string printMsg = "It has been successfully sent data to the ServiceManage: {0}";
                 bool success = false;
-                while (true)
+                int timeNum = 0;
+                const int sleepNum = 1000 * 5;
+                while (timeNum < maxNum)
                 {
                     httpHelper.SendData(svrUrl, headers, jsonData, false, methodTypes1, (vObj, err) =>
                     {
                         success = string.IsNullOrEmpty(err);
+                        if(success)
+                        {
+                            AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(svrUrl));
+                        }
                     });
                     if (success) break;
-                    Thread.Sleep(5000);
+                    timeNum++;
+                    Thread.Sleep(sleepNum);
                 }
             });
         }
