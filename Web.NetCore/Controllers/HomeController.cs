@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -58,7 +59,7 @@ namespace Web.NetCore.Controllers
         [HttpPost, Route("ReceiveManage")]
         public IActionResult ReceiveManage(object data)
         {
-            return new JsonResult(new { Message = "Successfully" });
+            return new JsonResult(new { Message = "Successfully", data, CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") });
         }
     }
 }

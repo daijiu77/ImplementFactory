@@ -27,6 +27,10 @@ namespace Web.NetCore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddMvc(options =>
+            {
+                options.ModelBinderProviders.Insert(0, new ModelBinderProvider());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
