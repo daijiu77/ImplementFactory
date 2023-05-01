@@ -8,7 +8,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     public class ServiceIPCollector
     {
         private CallMethodInfo[] _callMethodInfos = null;
-        private Dictionary<object, string> controllerDic = new Dictionary<object, string>();
+        private static Dictionary<object, string> controllerDic = new Dictionary<object, string>();
+        private static object _serviceIPCollectorLock = new object();
 
         public ServiceIPCollector()
         {
@@ -20,7 +21,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
 
         private void ReceiveIP(string ip, object controller, MethodInfo actionMethod, bool isFinished)
         {
-            lock (this)
+            lock (_serviceIPCollectorLock)
             {
                 if (null == _callMethodInfos) return;
                 if (0 == _callMethodInfos.Length) return;
@@ -55,14 +56,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             }
         }
 
+        /// <summary>
+        /// Set by the accessed IP address, the invoked controller, or you can set the called method name
+        /// </summary>
+        /// <param name="callMethodInfos">Sets the type of controller being called, or the name of the method being called</param>
         public void Monitor(params CallMethodInfo[] callMethodInfos)
         {
             _callMethodInfos = callMethodInfos;
         }
 
+        /// <summary>
+        /// Obtain the corresponding client IP address based on the called controller object
+        /// </summary>
+        /// <param name="controller">The controller object that is called</param>
+        /// <returns>Returns the client IP address</returns>
         public string GetIP(object controller)
         {
-            lock (this)
+            lock (_serviceIPCollectorLock)
             {
                 string ip = "";
                 controllerDic.TryGetValue(controller, out ip);
