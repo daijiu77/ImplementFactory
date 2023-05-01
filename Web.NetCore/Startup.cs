@@ -6,16 +6,24 @@ using Microsoft.Extensions.Hosting;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.MServiceRoute;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
+using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
+using Web.NetCore.Controllers;
 
 namespace Web.NetCore
 {
     public class Startup
     {
+        public static ServiceIPCollector serviceIPCollector = new ServiceIPCollector();
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             ImplementAdapter.Start();
             MService.Start();
+            serviceIPCollector.Monitor(new CallMethodInfo()
+            {
+                ControllerType = typeof(HomeController),
+                MethodName = "ReceiveManage"
+            });
         }
 
         public IConfiguration Configuration { get; }

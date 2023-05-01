@@ -31,7 +31,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static Dictionary<string, XmlElement> s_eleDic = new Dictionary<string, XmlElement>();
 
         public static ServiceManager s_serviceManager = null;
-        public static string s_ServiceName = "";
+        public static string s_ServiceName { get; private set; } = "";
+        public static string s_Port { get; private set; } = "";
 
         static MicroServiceRoute()
         {
@@ -71,6 +72,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             const string _ServiceManager = "ServiceManager";
             const string _Routes = "Routes";
             const string _ServiceName = "ServiceName";
+            const string _Port = "Port";
 
             string fPath = s_config_path;
             if (!File.Exists(fPath))
@@ -88,6 +90,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     ContractKey = "abc2233"
                 };
                 XMLroot.SetAttribute(_ServiceName, "MemberService");
+                XMLroot.SetAttribute(_Port, "5000");
 
                 XmlElement serviceManagerNodes = doc.CreateElement(_ServiceManager);
                 XMLroot.AppendChild(serviceManagerNodes);
@@ -140,6 +143,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                 XmlAttribute atr = s_rootElement.Attributes[_ServiceName];
                 if (null != atr) s_ServiceName = atr.Value.Trim();
+
+                atr = s_rootElement.Attributes[_Port];
+                if (null != atr) s_Port = atr.Value.Trim();
 
                 s_serviceManager = new ServiceManager();
                 string nodeName = "";

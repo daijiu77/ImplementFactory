@@ -90,7 +90,7 @@ namespace System.DJ.ImplementFactory
         public static void Start() { }
 
         private static bool _initialization = false;
-        public static void Init()
+        private static void Init()
         {
             if (_initialization) return;
             _initialization = true;

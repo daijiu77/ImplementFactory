@@ -20,7 +20,11 @@ namespace Web.NetCore
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    var configuration = new ConfigurationBuilder().SetBasePath(Environment.CurrentDirectory)
+                                          .AddJsonFile("hosting.json")
+                                          .Build();
+                    var url = configuration["server.urls"];
+                    webBuilder.UseUrls(new string[] { url }).UseStartup<Startup>();
                 });
     }
 }

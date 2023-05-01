@@ -16,7 +16,7 @@ namespace Test.NetCoreApi
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            ImplementAdapter.Init();
+            ImplementAdapter.Start();
             MService.Start();
         }
 

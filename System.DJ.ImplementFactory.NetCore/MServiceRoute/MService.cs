@@ -302,8 +302,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 jsonData = jsonData.Substring(1);
                 jsonData = jsonData.Trim();
 
+                string port = null == s_Port ? "" : s_Port;
                 string svrContractKey = MSServiceImpl.GetContractValue();
-                jsonData = "{\"ServiceName\": \"{0}\", \"SvrContractKey\": \"{1}\", \"Data\": [{2}], \"CrateTime\": \"{3}\"}".ExtFormat(s_ServiceName, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"SvrContractKey\": \"{2}\", \"Data\": [{3}], \"CrateTime\": \"{4}\"}"
+                    .ExtFormat(s_ServiceName, port, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 string svrUrl = s_serviceManager.Uri;
                 string s1 = svrUrl.Substring(svrUrl.Length - 1);

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +8,7 @@ using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,7 +17,7 @@ using System.Threading.Tasks;
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     public abstract class AbsActionFilterAttribute : ActionFilterAttribute
-    {        
+    {
         protected static Dictionary<string, string> _ipDic = new Dictionary<string, string>();
 
         protected static IMSService _mSService = null;
@@ -33,7 +35,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     _ipDic[item] = item;
                 }
-            }            
+            }
         }
 
         protected Dictionary<string, object> GetKVListFromBody(HttpContext context, List<string> keys, bool contain)
@@ -290,7 +292,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null != dic[keys[0]]) val = dic[keys[0]].ToString();
             return val;
         }
-                
+
         protected static void SetIpToDic(string ip)
         {
             lock (_AbsActionFilterAttributeLock)
@@ -302,10 +304,55 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         protected static bool IsExistIP(string ip)
         {
-            lock( _AbsActionFilterAttributeLock)
+            lock (_AbsActionFilterAttributeLock)
             {
                 return _ipDic.ContainsKey(ip);
             }
+        }
+
+        protected MethodInfo GetActionMethod(FilterContext context)
+        {
+            MethodInfo mi = null;
+            Type controllerType = null;
+            ActionDescriptor actionObj = null;
+            if (null != (context as ActionExecutedContext))
+            {
+                controllerType = ((ActionExecutedContext)context).Controller.GetType();
+                actionObj = ((ActionExecutedContext)context).ActionDescriptor;
+            }
+            else if (null != (context as ActionExecutingContext))
+            {
+                controllerType = ((ActionExecutingContext)context).Controller.GetType();
+                actionObj = ((ActionExecutingContext)context).ActionDescriptor;
+            }
+            if (null == controllerType) return mi;
+
+            string actionName = "";
+            PropertyInfo pi = actionObj.GetType().GetProperty("ActionName");
+            if (null != pi)
+            {
+                object piVal = pi.GetValue(actionObj);
+                if (null != piVal) actionName = piVal.ToString();
+            }
+
+            string actionName1 = "";
+            string s = actionObj.DisplayName;
+            Regex rgAN = new Regex(@"(?<ActionName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
+            if (rgAN.IsMatch(s))
+            {
+                actionName1 = rgAN.Match(s).Groups["ActionName"].Value;
+            }
+
+            if (!string.IsNullOrEmpty(actionName1))
+            {
+                mi = controllerType.GetMethod(actionName1);
+            }
+
+            if ((false == string.IsNullOrEmpty(actionName)) && (null == mi))
+            {
+                mi = controllerType.GetMethod(actionName);
+            }
+            return mi;
         }
 
         private static object _PrintIpToLogsLock = new object();
@@ -382,7 +429,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     File.AppendAllText(fPath, txt);
                 }
                 ips.Clear();
-            }            
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Web.NetCore.Models.ServiceAPI
+﻿namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
 {
     public class SvrUri
     {

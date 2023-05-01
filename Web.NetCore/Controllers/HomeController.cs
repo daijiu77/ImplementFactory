@@ -1,16 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
-using System.Linq;
-using System.Threading.Tasks;
+using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using Web.NetCore.Models;
-using Web.NetCore.Models.ServiceAPI;
 
 namespace Web.NetCore.Controllers
 {
@@ -60,8 +56,9 @@ namespace Web.NetCore.Controllers
         [HttpPost, Route("ReceiveManage")]
         public IActionResult ReceiveManage(object data)
         {
+            string ip = Startup.serviceIPCollector.GetIP(this);
             SvrAPISchema svrAPISchema = new SvrAPISchema();
-            svrAPISchema.Add(data);
+            svrAPISchema.Add(ip, data);
             return new JsonResult(new { Message = "Successfully", data, CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") });
         }
     }

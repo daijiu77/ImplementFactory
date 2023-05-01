@@ -38,5 +38,13 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <param name="controller">The controller class object being called</param>
         /// <param name="actionMethod">The method being called</param>
         void ClientIP(string ip, object controller, MethodInfo actionMethod);
+
+        /// <summary>
+        /// The called method has finished executing.
+        /// </summary>
+        /// <param name="ip">Client ip address</param>
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
+        void MethodExecuted(string ip, object controller, MethodInfo actionMethod);
     }
 }

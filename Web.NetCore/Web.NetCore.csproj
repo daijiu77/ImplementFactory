@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\ServiceAPI\**" />
+    <Content Remove="Models\ServiceAPI\**" />
+    <EmbeddedResource Remove="Models\ServiceAPI\**" />
+    <None Remove="Models\ServiceAPI\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\System.DJ.ImplementFactory.NetCore\System.DJ.ImplementFactory.NetCore.csproj" />
   </ItemGroup>
 

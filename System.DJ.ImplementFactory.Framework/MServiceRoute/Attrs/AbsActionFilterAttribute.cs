@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Threading;
 using System.Linq;
+using System.Reflection;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -309,6 +310,51 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 return _ipDic.ContainsKey(ip);
             }
+        }
+        
+        protected MethodInfo GetActionMethod(ControllerContext context)
+        {
+            MethodInfo mi = null;
+            Type controllerType = null;
+            ActionDescriptor actionObj = null;
+            if (null != (context as ActionExecutedContext))
+            {
+                controllerType = ((ActionExecutedContext)context).Controller.GetType();
+                actionObj = ((ActionExecutedContext)context).ActionDescriptor;
+            }
+            else if (null != (context as ActionExecutingContext))
+            {
+                controllerType = ((ActionExecutingContext)context).Controller.GetType();
+                actionObj = ((ActionExecutingContext)context).ActionDescriptor;
+            }
+            if (null == controllerType) return mi;
+
+            string actionName = "";            
+            PropertyInfo pi = actionObj.GetType().GetProperty("ActionName");
+            if (null != pi)
+            {
+                object piVal = pi.GetValue(actionObj);
+                if (null != piVal) actionName = piVal.ToString();
+            }
+
+            string actionName1 = "";
+            string s = actionObj.ActionName;
+            Regex rgAN = new Regex(@"(?<ActionName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
+            if (rgAN.IsMatch(s))
+            {
+                actionName1 = rgAN.Match(s).Groups["ActionName"].Value;
+            }
+
+            if (!string.IsNullOrEmpty(actionName1))
+            {
+                mi = controllerType.GetMethod(actionName1);
+            }
+
+            if ((false == string.IsNullOrEmpty(actionName)) && (null == mi))
+            {
+                mi = controllerType.GetMethod(actionName);
+            }
+            return mi;
         }
 
         private static object _PrintIpToLogsLock = new object();

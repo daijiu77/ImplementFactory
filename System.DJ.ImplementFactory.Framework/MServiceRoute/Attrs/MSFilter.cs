@@ -212,38 +212,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             string clientIP = GetIP(context.HttpContext);
             object controller = context.Controller;
-            MethodInfo mi = null;
+            MethodInfo mi = GetActionMethod(context);
             if (null != ImplementAdapter.mSFilterMessage)
-            {
-                Type controllerType = controller.GetType();
-
-                string actionName = "";
-                ActionDescriptor actionObj = context.ActionDescriptor;
-                PropertyInfo pi = actionObj.GetType().GetProperty("ActionName");
-                if (null != pi)
-                {
-                    object piVal = pi.GetValue(actionObj);
-                    if (null != piVal) actionName = piVal.ToString();
-                }
-
-                string actionName1 = "";
-                string s = actionObj.ActionName;
-                Regex rgAN = new Regex(@"(?<ActionName>[a-z0-9_]+)\s*\(", RegexOptions.IgnoreCase);
-                if (rgAN.IsMatch(s))
-                {
-                    actionName1 = rgAN.Match(s).Groups["ActionName"].Value;
-                }
-
-                if (!string.IsNullOrEmpty(actionName1))
-                {
-                    mi = controllerType.GetMethod(actionName1);
-                }
-
-                if ((false == string.IsNullOrEmpty(actionName)) && (null == mi))
-                {
-                    mi = controllerType.GetMethod(actionName);
-                }
-
+            {                
                 try
                 {
                     ImplementAdapter.mSFilterMessage.ClientIP(clientIP, controller, mi);
@@ -352,6 +323,26 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
 
             base.OnActionExecuting(context);
+        }
+
+        public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (null != ImplementAdapter.mSFilterMessage)
+            {
+                string clientIP = GetIP(context.HttpContext);
+                object controller = context.Controller;
+                MethodInfo mi = GetActionMethod(context);
+                try
+                {
+                    ImplementAdapter.mSFilterMessage.MethodExecuted(clientIP, controller, mi);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+            base.OnActionExecuted(context);
         }
 
         class TokenObj

@@ -426,11 +426,11 @@
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\DCache</target>
 		<exclude></exclude>
 	</copy>
-	<copy ext="cs,csproj,user">
+                <copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\MServiceRoute</target>
-		<exclude>MSFilter.cs,AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSConfiguratorAction.cs,MSUnlimited.cs,MSAddServiceRouteItemAction.cs,MSRemoveServiceRouteItemAction.cs,AbsMSFilterMessage.cs,MService.cs</exclude>
+		<exclude>AbsActionFilterAttribute.cs,MSClientRegisterAction.cs,MSFilter.cs,MSConfiguratorAction.cs,MSUnlimited.cs,MSRemoveServiceRouteItemAction.cs,MSAddServiceRouteItemAction.cs,AbsMSFilterMessage.cs,MService.cs,\ServiceManager\</exclude>
 	</copy>
 </files>

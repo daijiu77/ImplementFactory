@@ -3,8 +3,11 @@ using System.Reflection;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
+    public delegate void ReceiveIP(string ip, object controller, MethodInfo actionMethod, bool isFinished);
     public abstract class AbsMSFilterMessage : IMSFilterMessage
-    {        
+    {
+        private ReceiveIP _receiveIP = null;
+
         void IMSFilterMessage.TokenKilled(string token, string clientIP)
         {
             TokenKilled(token, clientIP);
@@ -22,7 +25,31 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         void IMSFilterMessage.ClientIP(string ip, object controller, MethodInfo actionMethod)
         {
+            if (null != _receiveIP)
+            {
+                lock (this)
+                {
+                    _receiveIP(ip, controller, actionMethod, false);
+                }
+            }
             ClientIP(ip, controller, actionMethod);
+        }
+
+        void IMSFilterMessage.MethodExecuted(string ip, object controller, MethodInfo actionMethod)
+        {
+            if (null != _receiveIP)
+            {
+                lock (this)
+                {
+                    _receiveIP(ip, controller, actionMethod, true);
+                }
+            }
+            MethodExecuted(ip, controller, actionMethod);
+        }
+
+        public void SetIPReceiver(ReceiveIP receiveIP)
+        {
+            _receiveIP = receiveIP;
         }
 
         /// <summary>
@@ -56,5 +83,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// <param name="controller">The controller class object being called</param>
         /// <param name="actionMethod">The method being called</param>
         public virtual void ClientIP(string ip, object controller, MethodInfo actionMethod) { }
+
+        /// <summary>
+        /// The called method has finished executing.
+        /// </summary>
+        /// <param name="ip">Client ip address</param>
+        /// <param name="controller">The controller class object being called</param>
+        /// <param name="actionMethod">The method being called</param>
+        public virtual void MethodExecuted(string ip, object controller, MethodInfo actionMethod) { }
     }
 }
