@@ -171,7 +171,7 @@ namespace System.DJ.ImplementFactory
             dbHelper1 = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbAccessHelper) }, ref asse1);
             if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
 
-            //IMSService mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
+            mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
             //if (null == mSService) mSService = new MSServiceImpl();
             //AbsActionFilterAttribute.SetMSServiceInstance(mSService);
 
@@ -447,6 +447,7 @@ namespace System.DJ.ImplementFactory
             }
         }
 
+        public static IMSService mSService { get; set; }
         public static IMSFilterMessage mSFilterMessage { get; set; }
         public static IDataServerProvider dataServerProvider { get; set; }
 

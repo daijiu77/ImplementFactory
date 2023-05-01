@@ -20,9 +20,38 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public const string endName = "EndTime";
         public const string contractKey = "ContractKey";
 
+        private event changeEnabled ChangeEnabled = null;
+        private event registerIP RegisterIP = null;
+
         public MSServiceImpl()
         {
             filePath = Path.Combine(DJTools.RootPath, SvrIPAddressFile);
+        }
+
+        event changeEnabled IMSService.ChangeEnabled
+        {
+            add
+            {
+                ChangeEnabled += value;
+            }
+
+            remove
+            {
+                ChangeEnabled -= value;
+            }
+        }
+
+        event registerIP IMSService.RegisterIP
+        {
+            add
+            {
+                RegisterIP += value;
+            }
+
+            remove
+            {
+                RegisterIP -= value;
+            }
         }
 
         List<string> IMSService.IPAddrSources()
@@ -72,7 +101,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string ip = "";
             foreach (XmlNode item in node.ChildNodes)
             {
-                if(!item.HasChildNodes) continue;
+                if (!item.HasChildNodes) continue;
                 ip = item.InnerText.Trim();
                 if (!rgIP.IsMatch(ip)) continue;
                 ipAddrs.Add(ip);
@@ -139,6 +168,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             doc.Save(filePath);
             mbool = true;
+
+            if (null != RegisterIP)
+            {
+                try
+                {
+                    RegisterIP(IPAddress);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
             return mbool;
         }
 
@@ -195,9 +237,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             dic[startNameL].Value = startTime.ToString("yyyy-MM-dd HH:mm:ss");
             dic[endNameL].Value = endTime.ToString("yyyy-MM-dd HH:mm:ss");
             dic[contractKeyL].Value = contractKey;
+            contractValue = contractKey;
 
             doc.Save(filePath);
             mbool = true;
+
+            if (null != ChangeEnabled)
+            {
+                try
+                {
+                    ChangeEnabled(startTime, endTime, contractKey);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+
             return mbool;
         }
     }

@@ -111,5 +111,8 @@
 
         private string _IsPrintFilterIPToLogs = "把网关拦截的 IP 输出到 Logs 文件夹";
         public bool IsPrintFilterIPToLogs { get; set; }
+
+        private string _TryTimeServiceRegister = "服务注册尝试次数，默认50次";
+        public int TryTimeServiceRegister { get; set; } = 50;
     }
 }

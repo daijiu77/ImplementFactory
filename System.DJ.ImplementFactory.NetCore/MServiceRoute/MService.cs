@@ -17,13 +17,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     public class MService
     {
         private static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/.+");
-        private const int maxNum = 100;
+        private const int maxNum = 50;
+        private const int sleepNum = 1000 * 3;
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
         /// </summary>
         public static void Start()
         {
             register();
+            serviceManage();
+            if (null != ImplementAdapter.mSService)
+            {
+                ImplementAdapter.mSService.ChangeEnabled += MSService_ChangeEnabled;
+            }
+        }
+
+        private static void MSService_ChangeEnabled(DateTime startTime, DateTime endTime, string contractKey)
+        {
             serviceManage();
         }
 
@@ -94,7 +104,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 int num = 0;
                 int size = errUrls.Count;
                 int timeNum = 0;
-                const int sleepNum = 1000 * 3;
                 string[] arr = null;
                 while ((n < size) && (timeNum < maxNum))
                 {
@@ -298,7 +307,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     jsonData += ", " + fv1;
                 });
 
-                if (string.IsNullOrEmpty(jsonData)) return;
+                if (string.IsNullOrEmpty(jsonData))
+                {
+                    return;
+                }
                 jsonData = jsonData.Substring(1);
                 jsonData = jsonData.Trim();
 
@@ -331,7 +343,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string printMsg = "It has been successfully sent data to the ServiceManage: {0}";
                 bool success = false;
                 int timeNum = 0;
-                const int sleepNum = 1000 * 3;
                 while (timeNum < maxNum)
                 {
                     httpHelper.SendData(svrUrl, headers, jsonData, false, methodTypes1, (vObj, err) =>
