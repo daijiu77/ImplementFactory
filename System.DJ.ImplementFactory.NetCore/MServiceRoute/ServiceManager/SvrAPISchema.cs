@@ -153,7 +153,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             }
         }
 
-        public void Add(string ip, object data)
+        /// <summary>
+        /// Save the configuration interface information data provided by the business function service
+        /// </summary>
+        /// <param name="ip">Client IP address</param>
+        /// <param name="data">Configuration interface information data provided by business function services</param>
+        public void Save(string ip, object data)
         {
             lock (_svrAPISchameLock)
             {
@@ -161,6 +166,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             }
         }
 
+        /// <summary>
+        /// Obtain the business function service configuration interface information data
+        /// </summary>
+        /// <param name="action">Obtain the business function service configuration interface information data</param>
         public void Foreach(Action<SvrAPI> action)
         {
             lock (_svrAPISchameLock)

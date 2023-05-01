@@ -58,7 +58,7 @@ namespace Web.NetCore.Controllers
         {
             string ip = Startup.serviceIPCollector.GetIP(this);
             SvrAPISchema svrAPISchema = new SvrAPISchema();
-            svrAPISchema.Add(ip, data);
+            svrAPISchema.Save(ip, data);
             return new JsonResult(new { Message = "Successfully", data, CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") });
         }
     }
