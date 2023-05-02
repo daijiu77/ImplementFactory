@@ -87,7 +87,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     MethodName = displayName;
                 }
                 MethodName = "(" + MethodName + ") ";
-                string err = "The method {0}parameter must contain and set a valid start time(startTime) and end time(endTime) and contract key({1}).".ExtFormat(MethodName, MSServiceImpl.contractKey);
+                string err = "The method {0}parameter must contain and set a valid start time(startTime) and end time(endTime) and contract key({1}).".ExtFormat(MethodName, MServiceConst.contractKey);
                 throw new Exception(err);
             }
 

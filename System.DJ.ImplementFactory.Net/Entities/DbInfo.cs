@@ -114,5 +114,8 @@
 
         private string _TryTimeServiceRegister = "服务注册尝试次数，默认50次";
         public int TryTimeServiceRegister { get; set; } = 50;
+
+        private string _HttpTimeout_Second = "Http请求等待时长, 默认30秒";
+        public int HttpTimeout_Second { get; set; } = 30;
     }
 }

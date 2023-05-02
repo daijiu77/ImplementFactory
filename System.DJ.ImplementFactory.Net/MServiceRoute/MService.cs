@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
 using System.Reflection;
-using System.Security.Policy;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,7 +85,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
 
                     heads.Clear();
-                    heads[MSServiceImpl.contractKey] = contractValue;
+                    heads[MServiceConst.contractKey] = contractValue;
                     methodTypes = RegisterActionType;
                     foreach (string item in uris)
                     {
@@ -146,7 +144,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     num = 0;
                     int.TryParse(arr[1], out num);
                     heads.Clear();
-                    heads[MSServiceImpl.contractKey] = arr[2];
+                    heads[MServiceConst.contractKey] = arr[2];
                     methodTypes = (MethodTypes)num;
                     httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                     {
@@ -194,6 +192,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     typeof(MSAddServiceRouteItemAction),
                     typeof(MSClientRegisterAction),
                     typeof(MSConfiguratorAction),
+                    typeof(MServiceManagerConfigAction),
+                    typeof(DbConfigAction),
                     typeof(MSRemoveServiceRouteItemAction)
                 };
 
@@ -349,8 +349,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 string port = null == s_Port ? "" : s_Port;
                 string svrContractKey = MSServiceImpl.GetContractValue();
-                jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"SvrContractKey\": \"{2}\", \"Data\": [{3}], \"CrateTime\": \"{4}\"}"
-                    .ExtFormat(s_ServiceName, port, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"{2}\": \"{3}\", \"Data\": [{4}], \"CrateTime\": \"{5}\"}"
+                    .ExtFormat(s_ServiceName, port, MServiceConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 string svrUrl = s_serviceManager.Uri;
                 string s1 = svrUrl.Substring(svrUrl.Length - 1);
@@ -369,7 +369,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 svrUrl += "/" + ServiceManagerAddr;
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add(MSServiceImpl.contractKey, s_serviceManager.ContractKey);
+                headers.Add(MServiceConst.contractKey, s_serviceManager.ContractKey);
 
                 IHttpHelper httpHelper = new HttpHelper();
                 MethodTypes methodTypes1 = s_serviceManager.ServiceManagerActionType;

@@ -12,15 +12,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     {
         private const string _svrApiFileName = "SvrApiList.xml";
         private const string _rootNodeName = "ServiceApiCollection";
-        private const string _serviceName = "ServiceName";
-        private const string _contractKey = "SvrContractKey";
+        private const string _serviceName = "ServiceName";        
         private const string _port = "Port";
         private const string _ip = "IP";
 
         /// <summary>
-        /// key: ServiceName, value: ServiceApiCollection
+        /// key: ServiceName_Lower, value: ServiceApiCollection
         /// </summary>
         private static Dictionary<string, SvrAPI> s_svrApiDic = new Dictionary<string, SvrAPI>();
+        private static List<string> s_ServiceNames = new List<string>();
         private static object _svrAPISchameLock = new object();
 
         private static string s_svrApiPath = "";
@@ -68,11 +68,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             if (null == attr) return;
             string serviceName = attr.Value.Trim();
 
-            string contractKeyName = _contractKey;
-            if (contractKeyName.Substring(0, 3).ToLower().Equals("svr"))
-            {
-                contractKeyName = contractKeyName.Substring(3);
-            }
+            string contractKeyName = MServiceConst.contractKey;
 
             string contractKey = "";
             attr = svrApiNode.Attributes[contractKeyName];
@@ -92,18 +88,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             SvrAPI svrAPI = null;
             SvrUri svrUri = null;
             string featureName = "";
-            string paraJsonData = "";
             string paraName = "";
             string paraType = "";
 
             svrAPI = new SvrAPI();
             s_svrApiDic[serviceName.ToLower()] = svrAPI;
+            s_ServiceNames.Add(serviceName);
 
             svrAPI.ServiceName = serviceName;
             svrAPI.ContractKey = contractKey;
             svrAPI.IP = ip;
             svrAPI.Port = port;
-
+            
             svrApiNode.ForeachChildNode(item =>
             {
                 attr = item.Attributes["Name"];
@@ -117,7 +113,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 {
                     if (itemChild.Name.ToLower().Equals("parameters"))
                     {
-                        paraJsonData = "";
                         itemChild.ForeachChildNode(paraItem =>
                         {
                             attr = paraItem.Attributes["Name"];
@@ -132,17 +127,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                             if (string.IsNullOrEmpty(paraType)) paraType = XmlDoc.GetChildTextByNodeName(paraItem, "type");
                             if (string.IsNullOrEmpty(paraType)) return true;
 
-                            paraJsonData += ", \"" + paraName + "\": " + GetJsonValueByType(paraType);
+                            svrUri.ParameterItems.Add(new ParameterItem()
+                            {
+                                ParameterName = paraName,
+                                ParameterType = paraType,
+                            });
                             return true;
                         });
-
-                        if (!string.IsNullOrEmpty(paraJsonData))
-                        {
-                            paraJsonData = paraJsonData.Substring(1);
-                            paraJsonData = paraJsonData.Trim();
-                            paraJsonData = "{" + paraJsonData + "}";
-                        }
-                        svrUri.JsonData = paraJsonData;
                     }
                     else
                     {
@@ -187,6 +178,33 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             }
         }
 
+        /// <summary>
+        /// Get current all names of service
+        /// </summary>
+        /// <returns>Return a array of names of service</returns>
+        public string[] GetServiceNames()
+        {
+            lock (_svrAPISchameLock)
+            {
+                return s_ServiceNames.ToArray();
+            }            
+        }
+
+        /// <summary>
+        /// Get the API for a service by service name
+        /// </summary>
+        /// <param name="serviceName">service name</param>
+        /// <returns>Return the API for a service</returns>
+        public SvrAPI GetServiceAPIByServiceName(string serviceName)
+        {
+            lock (_svrAPISchameLock)
+            {
+                SvrAPI svrAPI = null;
+                s_svrApiDic.TryGetValue(serviceName.ToLower(), out svrAPI);
+                return svrAPI;
+            }
+        }
+
         private void AddToFile(string ip, object data)
         {
             if (null == data) return;
@@ -209,7 +227,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             if (null == collection) return;
 
             string serviceName = data.GetPropertyValue<string>(_serviceName);
-            string svrContractKey = data.GetPropertyValue<string>(_contractKey);
+            string svrContractKey = data.GetPropertyValue<string>(MServiceConst.svrMngcontractKey);
             string port = data.GetPropertyValue<string>(_port);
             if (null == serviceName) return;
             if (null == svrContractKey) svrContractKey = "";
@@ -239,13 +257,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             {
                 rootNode.RemoveChild(svrNode);
                 s_svrApiDic.Remove(serviceNameLower);
+                s_ServiceNames.Remove(serviceName);
             }
 
-            string contractKeyName = _contractKey;
-            if (contractKeyName.Substring(0, 3).ToLower().Equals("svr"))
-            {
-                contractKeyName = contractKeyName.Substring(3);
-            }
+            string contractKeyName = MServiceConst.contractKey;
 
             svrNode = doc.CreateElement("ServiceApi");
             svrNode.SetAttribute(_serviceName, serviceName);

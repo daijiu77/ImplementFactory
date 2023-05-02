@@ -8,6 +8,7 @@ using System.DJ.ImplementFactory.MServiceRoute;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using Web.NetCore.Controllers;
+using Web.NetCore.Models;
 
 namespace Web.NetCore
 {
@@ -35,6 +36,7 @@ namespace Web.NetCore
             services.AddMvc(options =>
             {
                 options.Filters.Add<MSFilter>();
+                options.Filters.Add<UIResultModel>();
                 options.ModelBinderProviders.Insert(0, new ModelBinderProvider());
             });
         }

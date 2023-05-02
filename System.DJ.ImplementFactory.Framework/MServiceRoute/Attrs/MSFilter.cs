@@ -285,38 +285,39 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (!mbool)
             {
                 string err = "Illegal access";
-                List<string> heads = new List<string>() { MSServiceImpl.contractKey };
-                Dictionary<string, object> hdDic = GetKVListFromHeader(context.HttpContext, heads, false);
-                if (0 == hdDic.Count)
+                List<string> list = new List<string>() { MServiceConst.contractKey };
+                Dictionary<string, object> ckDic = GetKVListFromHeader(context.HttpContext, list, false);
+                if (0 == ckDic.Count)
                 {
-                    hdDic = GetKVListFromQuery(context.HttpContext, heads, false);
+                    ckDic = GetKVListFromQuery(context.HttpContext, list, false);
                 }
 
-                if (0 == hdDic.Count)
+                if (0 == ckDic.Count)
                 {
-                    hdDic = GetKVListFromBody(context.HttpContext, heads, false);
+                    ckDic = GetKVListFromBody(context.HttpContext, list, false);
                 }
 
-                if (0 == hdDic.Count)
+                if (0 == ckDic.Count)
                 {
-                    hdDic = GetKVListFromForm(context.HttpContext, heads, false);
+                    ckDic = GetKVListFromForm(context.HttpContext, list, false);
                 }
 
-                if (0 == hdDic.Count)
+                if (0 == ckDic.Count)
                 {
                     throw new Exception(err);
                 }
 
-                string[] keys = hdDic.Keys.ToArray();
-                string contractVal1 = hdDic[keys[0]].ToString();
+                string[] keys = ckDic.Keys.ToArray();
+                string contractVal1 = ckDic[keys[0]].ToString();
                 string contractVal2 = MSServiceImpl.GetContractValue();
                 if (!contractVal1.Equals(contractVal2))
                 {
                     throw new Exception(err);
                 }
-
+                                
                 PrintIpToLogs("IP: " + clientIP);
-                if (!IsExistIP(clientIP))
+                attr = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
+                if ((false == IsExistIP(clientIP)) && (null == attr))
                 {
                     throw new Exception(err);
                 }

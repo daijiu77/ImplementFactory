@@ -63,7 +63,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
 
                     heads.Clear();
-                    heads[MSServiceImpl.contractKey] = contractValue;
+                    heads[MServiceConst.contractKey] = contractValue;
                     methodTypes = RegisterActionType;
                     foreach (string item in uris)
                     {
@@ -95,7 +95,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     num = 0;
                     int.TryParse(arr[1], out num);
                     heads.Clear();
-                    heads[MSServiceImpl.contractKey] = arr[2];
+                    heads[MServiceConst.contractKey] = arr[2];
                     methodTypes = (MethodTypes)num;
                     httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                     {
@@ -289,7 +289,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 svrUrl += "/" + ServiceManagerAddr;
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add(MSServiceImpl.contractKey, s_serviceManager.ContractKey);
+                headers.Add(MServiceConst.contractKey, s_serviceManager.ContractKey);
 
                 IHttpHelper httpHelper = new HttpHelper();
                 MethodTypes methodTypes1 = s_serviceManager.ServiceManagerActionType;

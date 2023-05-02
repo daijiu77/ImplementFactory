@@ -15,6 +15,8 @@ namespace Web.NetCore.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
+        private SvrAPISchema svrAPISchema = new SvrAPISchema();
+
         [AutoCall]
         private Calculate calculate;
 
@@ -41,25 +43,42 @@ namespace Web.NetCore.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [HttpPost, MSClientRegisterAction, Route("RegisterIP")]
-        public IActionResult RegisterIP(string contractKey)
+        [HttpPost, UIData, MSClientRegisterAction, Route("RegisterIP")]
+        public object RegisterIP(string contractKey)
         {
-            return new JsonResult(new { contractKey });
+            return contractKey;
         }
 
-        [HttpPost, MSConfiguratorAction, Route("SetEnabledRegister")]
-        public IActionResult SetEnabledRegister(DateTime startTime, DateTime endTime, string contractKey)
+        [HttpPost, UIData, MSConfiguratorAction, Route("SetEnabledRegister")]
+        public object SetEnabledRegister(DateTime startTime, DateTime endTime, string contractKey)
         {
-            return new JsonResult(new { startTime, endTime, contractKey });
+            return new { startTime, endTime, contractKey };
         }
 
-        [HttpPost, Route("ReceiveManage")]
-        public IActionResult ReceiveManage(object data)
+        [HttpPost, UIData, Route("Test")]
+        public object Test()
         {
-            string ip = Startup.serviceIPCollector.GetIP(this);
-            SvrAPISchema svrAPISchema = new SvrAPISchema();
+            return new { Message = "Hello World!" };
+        }
+
+        [HttpPost, UIData, Route("ReceiveManage")]
+        public object ReceiveManage(object data)
+        {
+            string ip = Startup.serviceIPCollector.GetIP(this);            
             svrAPISchema.Save(ip, data);
-            return new JsonResult(new { Message = "Successfully", data, CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") });
+            return new { Message = "Successfully", CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") };
+        }
+
+        [HttpPost, UIData, Route("GetApiMethods")]
+        public object GetApiNames()
+        {
+            return svrAPISchema.GetServiceNames();
+        }
+
+        [HttpPost, UIData, Route("GetApiByServiceName")]
+        public object GetApiByServiceName(string serviceName)
+        {
+            return svrAPISchema.GetServiceAPIByServiceName(serviceName);
         }
     }
 }

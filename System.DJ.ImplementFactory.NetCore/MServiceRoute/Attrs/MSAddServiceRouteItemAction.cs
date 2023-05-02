@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
@@ -14,7 +15,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string uri = "uri";
         private string addr = "addr";
         private string actionType = "actionType";
-        private string contractKeyName = MSServiceImpl.contractKey;
+        private string contractKeyName = MServiceConst.contractKey;
         /// <summary>
         /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>

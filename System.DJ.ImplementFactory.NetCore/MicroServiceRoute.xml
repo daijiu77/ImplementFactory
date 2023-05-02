@@ -6,6 +6,7 @@
     <Name>ServiceManager</Name>
     <Uri>http://127.0.0.1:5000/api</Uri>
     <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+    <TestAddr>/Home/Test</TestAddr>
     <ContractKey>abc2233</ContractKey>
     <RegisterActionType>Post</RegisterActionType>
   </ServiceManager>

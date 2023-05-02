@@ -24,6 +24,7 @@
     <PersistenceCylceSync_Second description="缓存持久化周期同步间隔，默认10秒">10</PersistenceCylceSync_Second>
     <IsPrintFilterIPToLogs description="把网关拦截的 IP 输出到 Logs 文件夹">true</IsPrintFilterIPToLogs>
     <TryTimeServiceRegister description="服务注册尝试次数，默认50次">50</TryTimeServiceRegister>
+    <HttpTimeout_Second description="Http请求等待时长, 默认30秒">30</HttpTimeout_Second>
 	</database>
 	<LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">
 		<upperLimit description="可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit">severe</upperLimit>

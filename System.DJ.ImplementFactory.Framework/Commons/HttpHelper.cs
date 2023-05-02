@@ -43,7 +43,10 @@ namespace System.DJ.ImplementFactory.Commons
             string resultData = "";
             string err = "";
 
+            int timeout = ImplementAdapter.dbInfo1.HttpTimeout_Second;
+            if (0 >= timeout) timeout = 30;
             HttpClient httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(timeout);
             if (null != heads)
             {
                 foreach (KeyValuePair<string, string> item in heads)
@@ -66,6 +69,10 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 postasync.Wait();
                 httpResponseMessage = postasync.Result;
+            }
+            catch (TimeoutException ex)
+            {
+                err = "TimeoutException";
             }
             catch (Exception ex)
             {

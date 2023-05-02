@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Xml;
@@ -19,15 +20,26 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private const string _routeItem = "Route";
         private const string _configFile = "MicroServiceRoute.xml";
         private const string _microServiceRoutes = "MicroServiceRoutes";
+        private const string _ServiceManager = "ServiceManager";
+        private const string _Routes = "Routes";
+        private const string _ServiceName = "ServiceName";
+        private const string _Port = "Port";
 
         private static string s_config_path = "";
         private static object s_MSObject = new object();
         private static XmlDoc s_document = new XmlDoc();
         private static XmlElement s_rootElement = null;
+
+        /// <summary>
+        /// key: serviceName_lower, value: RouteAttr
+        /// </summary>
         private static Dictionary<string, RouteAttr> s_routeAttrDic = new Dictionary<string, RouteAttr>();
+        /// <summary>
+        /// key: serviceName_lower, value: node
+        /// </summary>
         private static Dictionary<string, XmlElement> s_eleDic = new Dictionary<string, XmlElement>();
 
-        public static ServiceManager s_serviceManager = null;
+        public static MServiceManager s_serviceManager = null;
         public static string s_ServiceName { get; private set; } = "";
         public static string s_Port { get; private set; } = "";
 
@@ -56,6 +68,30 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             msr(this, RouteName, null);
         }
 
+        private static void ResetServiceManager(XmlNode serviceManagerNode)
+        {
+            lock (s_MSObject)
+            {
+                if (null == s_serviceManager) s_serviceManager = new MServiceManager();
+                serviceManagerNode.ForeachChildNode(item =>
+                {
+                    s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
+                });
+
+                if ((false == string.IsNullOrEmpty(s_serviceManager.Uri))
+                    && (false == string.IsNullOrEmpty(s_serviceManager.Name))
+                    && (false == string.IsNullOrEmpty(s_serviceManager.RegisterAddr)))
+                {
+                    string routeName1 = s_serviceManager.Name.ToLower();
+                    s_routeAttrDic.Remove(routeName1);
+                    s_eleDic.Remove(routeName1);
+
+                    s_routeAttrDic.Add(routeName1, s_serviceManager);
+                    s_eleDic.Add(routeName1, (XmlElement)serviceManagerNode);
+                }
+            }
+        }
+
         private static void msr(MicroServiceRoute microServiceRoute, string RouteName, string ControllerName)
         {
             if (null != microServiceRoute)
@@ -66,17 +102,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             if (0 < s_routeAttrDic.Count) return;
 
-            const string _ServiceManager = "ServiceManager";
-            const string _Routes = "Routes";
-            const string _ServiceName = "ServiceName";
-            const string _Port = "Port";
-
             string fPath = s_config_path;
             if (!File.Exists(fPath))
             {
                 XmlDoc doc = new XmlDoc();
                 XmlElement XMLroot = doc.RootNode(_microServiceRoutes);
-                ServiceManager serviceMng = new ServiceManager()
+                MServiceManager serviceMng = new MServiceManager()
                 {
                     Name = _ServiceManager,
                     Uri = "http://127.0.0.1:5000/api",
@@ -151,7 +182,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null != atr) s_Port = atr.Value.Trim();
                 if (string.IsNullOrEmpty(s_Port)) s_Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
 
-                s_serviceManager = new ServiceManager();
                 string nodeName = "";
                 string routeName1 = "";
                 string txt = "";
@@ -163,10 +193,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     nodeName = node.Name.ToLower();
                     if (nodeName.Equals(serviceManagerLower))
                     {
-                        node.ForeachChildNode(item =>
-                        {
-                            s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
-                        });
+                        ResetServiceManager(node);
                     }
                     else if (nodeName.Equals(routesLower))
                     {
@@ -196,14 +223,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         });
                     }
                 });
-
-                if ((false == string.IsNullOrEmpty(s_serviceManager.Uri)))
-                {
-                    routeName1 = s_serviceManager.Name.ToLower();
-                    s_routeAttrDic.Add(routeName1, s_serviceManager);
-                    s_eleDic.Add(routeName1, s_rootElement);
-                }
-
             }
 
             if (null == microServiceRoute) return;
@@ -330,31 +349,59 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        public class RouteAttr
+        public static void SetServiceManager(MServiceManager manager)
         {
-            public string Name { get; set; }
-            public string Uri { get; set; }
-            public string RegisterAddr { get; set; }
-            public string TestAddr { get; set; }
-            public string ContractKey { get; set; }
-
-            private MethodTypes _method = MethodTypes.Get;
-            public MethodTypes RegisterActionType
+            lock (s_MSObject)
             {
-                get { return _method; }
-                set { _method = value; }
+                if (null == manager || null == s_rootElement) return;
+                if (string.IsNullOrEmpty(manager.Uri)
+                    || string.IsNullOrEmpty(manager.Name)
+                    || string.IsNullOrEmpty(manager.ServiceManagerAddr)) return;
+
+                string serviceNameLower = manager.Name.ToLower();
+                XmlElement svrMngNode = null;
+                s_eleDic.TryGetValue(serviceNameLower, out svrMngNode);
+
+                if (null == svrMngNode)
+                {
+                    svrMngNode =  XmlDoc.GetChildNodeByNodeName(s_rootElement, _ServiceManager) as XmlElement;
+                }
+
+                if (null == svrMngNode)
+                {
+                    svrMngNode = s_document.CreateElement(_ServiceManager);
+                    s_rootElement.AppendChild(svrMngNode);
+                }
+
+                string nodeNameLower = "";
+                Dictionary<string, XmlElement> dic = new Dictionary<string, XmlElement>();
+                svrMngNode.ForeachChildNode(item =>
+                {
+                    nodeNameLower = item.Name.ToLower();
+                    dic[nodeNameLower] = item;
+                });
+
+                XmlElement ele = null;
+                manager.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    nodeNameLower = fn.ToLower();
+                    if (null == fv) fv = "";
+                    if (dic.ContainsKey(nodeNameLower))
+                    {
+                        dic[nodeNameLower].InnerText = fv.ToString();
+                    }
+                    else
+                    {
+                        ele = s_document.CreateElement(fn);
+                        ele.InnerText = fv.ToString();
+                        svrMngNode.AppendChild(ele);
+                    }
+                });
+
+                s_document.Save(s_config_path);
+                ResetServiceManager(svrMngNode);
             }
         }
 
-        public class ServiceManager : RouteAttr
-        {
-            public string ServiceManagerAddr { get; set; }
-            private MethodTypes _method1 = MethodTypes.Get;
-            public MethodTypes ServiceManagerActionType
-            {
-                get { return _method1; }
-                set { _method1 = value; }
-            }
-        }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.Sig;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
@@ -16,10 +15,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private string filePath = "";
         private static string contractValue = "";
         private const string rootNode = "IPAddresses";
-        public const string startName = "StartTime";
-        public const string endName = "EndTime";
-        public const string contractKey = "ContractKey";
-
+        
         private event changeEnabled ChangeEnabled = null;
         private event registerIP RegisterIP = null;
 
@@ -96,7 +92,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlDoc doc = new XmlDoc();
             XmlNode ipNodes = doc.Load(filePath1);
             if (null == ipNodes) return contractValue;
-            XmlAttribute att = ipNodes.Attributes[MSServiceImpl.contractKey];
+            XmlAttribute att = ipNodes.Attributes[MServiceConst.contractKey];
             if (null == att) return contractValue;
             contractValue = att.Value.Trim();
             return contractValue;
@@ -133,15 +129,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlNode ipNodes = doc.RootNode(rootNode, null);
             XmlElement ele = null;
 
-            XmlAttribute att = ipNodes.Attributes[startName];
-            if (null == att) throw new Exception("The XmlAttribute(" + startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            XmlAttribute att = ipNodes.Attributes[MServiceConst.startName];
+            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             DateTime startTime = DateTime.Now;
             DateTime.TryParse(att.Value.Trim(), out startTime);
 
-            att = ipNodes.Attributes[endName];
-            if (null == att) throw new Exception("The XmlAttribute(" + endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            att = ipNodes.Attributes[MServiceConst.endName];
+            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             DateTime endTime = DateTime.Now;
@@ -151,8 +147,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             if (dt < startTime || dt > endTime) throw new Exception("Invalid validity period start or end time.");
             //if (dt < startTime || dt > endTime) return mbool;
 
-            att = ipNodes.Attributes[MSServiceImpl.contractKey];
-            if (null == att) throw new Exception("The XmlAttribute(" + MSServiceImpl.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            att = ipNodes.Attributes[MServiceConst.contractKey];
+            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             string key = att.Value.Trim();
@@ -203,9 +199,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             doc.Load(filePath);
 
             XmlNode ipNodes = doc.RootNode(rootNode);
-            string startNameL = startName.ToLower();
-            string endNameL = endName.ToLower();
-            string contractKeyL = MSServiceImpl.contractKey.ToLower();
+            string startNameL = MServiceConst.startName.ToLower();
+            string endNameL = MServiceConst.endName.ToLower();
+            string contractKeyL = MServiceConst.contractKey.ToLower();
             Dictionary<string, XmlAttribute> dic = new Dictionary<string, XmlAttribute>();
             XmlAttributeCollection atc = ipNodes.Attributes;
             foreach (XmlAttribute item in atc)
@@ -227,21 +223,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlAttribute attr = null;
             if (!dic.ContainsKey(startNameL))
             {
-                attr = doc.CreateAttribute(startName);
+                attr = doc.CreateAttribute(MServiceConst.startName);
                 ipNodes.Attributes.Append(attr);
                 dic[startNameL] = attr;
             }
 
             if (!dic.ContainsKey(endNameL))
             {
-                attr = doc.CreateAttribute(endName);
+                attr = doc.CreateAttribute(MServiceConst.endName);
                 ipNodes.Attributes.Append(attr);
                 dic[endNameL] = attr;
             }
 
             if (!dic.ContainsKey(contractKeyL))
             {
-                attr = doc.CreateAttribute(MSServiceImpl.contractKey);
+                attr = doc.CreateAttribute(MServiceConst.contractKey);
                 ipNodes.Attributes.Append(attr);
                 dic[contractKeyL] = attr;
             }

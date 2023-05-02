@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
@@ -13,25 +13,67 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         [AutoCall]
         private IMSAllot mSAllot;
 
+        /// <summary>
+        /// key: routeName-controller-action, value: index
+        /// </summary>
         private static Dictionary<string, int> map = new Dictionary<string, int>();
 
-        private static object _thObj = new object();
+        /// <summary>
+        /// key: routeName_lower, value: indexs
+        /// </summary>
+        private static Dictionary<string, List<int>> timeoutUrlDic = new Dictionary<string, List<int>>();
+
+        private static object _thObjLock = new object();
 
         public MSDataVisitor()
         {
             httpHelper = new HttpHelper();
         }
 
-        private static int GetIndex(string key, int baseNum)
+        private int GetIndex(string routeName, string key, int baseNum)
         {
-            lock (_thObj)
+            lock (_thObjLock)
             {
+                string rtName = routeName.ToLower();
                 int index = 0;
+            resetIndex:
+                index = 0;
                 map.TryGetValue(key, out index);
                 index++;
                 index = index % baseNum;
                 map[key] = index;
+                if (timeoutUrlDic.ContainsKey(rtName))
+                {
+                    List<int> ints = timeoutUrlDic[rtName];
+                    if (ints.Count >= baseNum)
+                    {
+                        index = -1;
+                    }
+                    else if (ints.Contains(index))
+                    {
+                        goto resetIndex;
+                    }
+                }
                 return index;
+            }
+        }
+
+        private bool SetTimeoutIndex(string routeName, int urlSize, int index)
+        {
+            lock (_thObjLock)
+            {
+                List<int> ints = null;
+                string routeNameLower = routeName.ToLower();
+                timeoutUrlDic.TryGetValue(routeNameLower, out ints);
+                if (null == ints)
+                {
+                    ints = new List<int>();
+                    timeoutUrlDic.Add(routeNameLower, ints);
+                }
+                ints.Add(index);
+
+                bool isTimeout = urlSize > ints.Count;
+                return isTimeout;
             }
         }
 
@@ -107,21 +149,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 arr = uri.Split(',');
             }
-            string key = routeName + "-" + controller + "-" + action;
-            int index = GetIndex(key, arr.Length);
-            string url = InitUri(arr[index]);
-            string addr = string.Format("{0}/{1}/{2}", url, controller, actionName);
 
             Dictionary<string, string> headers = null;
+            string paras = "";
             if (null != mSAllot)
             {
                 string action1 = actionName;
-                if (-1 != action1.IndexOf("/")) action1 = action1.Substring(0, action1.IndexOf("/"));
                 if (-1 != action1.IndexOf("?")) action1 = action1.Substring(0, action1.IndexOf("?"));
                 Dictionary<string, string> parameters = mSAllot.HttpParameters(routeName, controller, action1);
                 if (null != parameters)
                 {
-                    string paras = "";
                     foreach (var item in parameters)
                     {
                         paras += "&" + item.Key + "=" + item.Value;
@@ -130,25 +167,62 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     if (0 < paras.Length)
                     {
                         paras = paras.Substring(1);
-                        if (-1 != addr.IndexOf("?"))
+                        if (-1 != actionName.IndexOf("?"))
                         {
-                            addr += "&" + paras;
+                            paras = "&" + paras;
                         }
                         else
                         {
-                            addr += "?" + addr;
+                            paras = "?" + paras;
                         }
                     }
                 }
                 headers = mSAllot.HttpHeaders(routeName, controller, action1);
             }
+
             if (null == headers) headers = new Dictionary<string, string>();
-            headers[MSServiceImpl.contractKey] = contractKey;
-            httpHelper.SendData(addr, headers, data, true, methodTypes, (resultData, err) =>
+            headers[MServiceConst.contractKey] = contractKey;
+
+            string key = routeName + "-" + controller + "-" + action;
+            int index = 0;
+            string url = "";
+            string http1 = "";
+            string httpAddr = "";
+            bool isTimeout = false;
+            int urlSize = arr.Length;
+        timeout_restart:
+            isTimeout = false;
+            index = GetIndex(routeName, key, urlSize);
+            if (0 > index)
             {
-                if (string.IsNullOrEmpty(err) && null != resultData) result = resultData.ToString();
+                string errMsg = "The service is unavailable";
+                if (1 < arr.Length) errMsg = "The service cluster is not reachable";
+                if (null != mSAllot) mSAllot.HttpVisitingException(routeName, string.Join(";", arr), errMsg);
+                return result;
+            }
+            url = InitUri(arr[index]);
+            http1 = "{0}/{1}/{2}".ExtFormat(url, controller, actionName);
+            httpAddr = http1 + paras;
+            httpHelper.SendData(httpAddr, headers, data, true, methodTypes, (resultData, err) =>
+            {
+                if (string.IsNullOrEmpty(err))
+                {
+                    if (null == resultData) resultData = "";
+                    result = resultData.ToString();
+                }
+                else
+                {
+                    if (-1 != err.ToLower().IndexOf("timeout"))
+                    {
+                        isTimeout = SetTimeoutIndex(routeName, urlSize, index);
+                    }
+                    if (null != mSAllot) mSAllot.HttpVisitingException(routeName, httpAddr, err);
+                }
+
             });
+            if (isTimeout) goto timeout_restart;
             return result;
         }
+
     }
 }

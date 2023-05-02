@@ -129,6 +129,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Attrs\MServiceManagerConfigAction.cs" />
+    <Compile Include="Entities\RouteAttr.cs" />
+    <Compile Include="Entities\MServiceManager.cs" />
+    <Compile Include="MServiceRoute\ServiceManager\ParameterItem.cs" />
+    <Compile Include="MServiceRoute\MServiceConst.cs" />
+    <Compile Include="MServiceRoute\AbsMSAllot.cs" />
     <Compile Include="Commons\Attrs\DbConfigAction.cs" />
     <Compile Include="Commons\ForeachExtends.cs" />
     <Compile Include="MServiceRoute\ServiceManager\SvrUri.cs" />
