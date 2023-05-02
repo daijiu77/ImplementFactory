@@ -8,7 +8,12 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class XmlDoc
     {
-        XmlDocument doc = null;
+        private static object s_XmlDocLock = new object();
+        private static XmlNode s_parentNode = null;
+        private static Dictionary<string, XmlNode> s_eleDic = new Dictionary<string, XmlNode>();
+
+        private XmlDocument doc = null;
+
         public XmlDoc()
         {
             //
@@ -68,8 +73,8 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         attr = doc.CreateAttribute(item.Key.Trim());
                         node.Attributes.Append(attr);
-                    }                    
-                    attr.Value = item.Value;                    
+                    }
+                    attr.Value = item.Value;
                 }
             }
             return node;
@@ -116,6 +121,59 @@ namespace System.DJ.ImplementFactory.Commons
         public XmlAttribute CreateAttribute(string name)
         {
             return doc.CreateAttribute(name);
+        }
+
+        public static XmlNode GetNodeByNodeName(XmlNode parentNode, string nodeName, ref string text)
+        {
+            lock (s_XmlDocLock)
+            {
+                text = "";
+                XmlNode node = null;
+                if (!parentNode.HasChildNodes) return node;
+
+                string nodeNameLower = nodeName.ToLower();
+                if (parentNode.Equals(s_parentNode) && (0 < s_eleDic.Count))
+                {
+                    s_eleDic.TryGetValue(nodeNameLower, out node);
+                    if (null != node) text = node.InnerText.Trim();
+                    return node;
+                }
+
+                s_parentNode = parentNode;
+                s_eleDic.Clear();
+                string nnLower = "";
+                foreach (XmlNode item in parentNode.ChildNodes)
+                {
+                    if (!item.HasChildNodes) continue;
+                    nnLower = item.Name.ToLower();
+                    s_eleDic[nnLower] = item;
+                    if (nodeNameLower.Equals(nnLower))
+                    {
+                        node = item;
+                        text = item.InnerText.Trim();
+                    }
+                }
+                return node;
+            }
+        }
+
+        public static XmlNode GetNodeByNodeName(XmlNode parentNode, string nodeName)
+        {
+            lock (s_XmlDocLock)
+            {
+                string text = "";
+                return GetNodeByNodeName(parentNode, nodeName, ref text);
+            }
+        }
+
+        public static string GetChildTextByNodeName(XmlNode parentNode, string nodeName)
+        {
+            lock (s_XmlDocLock)
+            {
+                string text = "";
+                GetNodeByNodeName(parentNode, nodeName, ref text);
+                return text;
+            }
         }
 
         public void Save(string xmlPath)

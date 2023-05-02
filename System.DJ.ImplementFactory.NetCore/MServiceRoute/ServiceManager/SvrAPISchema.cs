@@ -77,14 +77,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             string contractKey = "";
             attr = svrApiNode.Attributes[contractKeyName];
             if (null != attr) contractKey = attr.Value.Trim();
+            if (string.IsNullOrEmpty(contractKey)) contractKey = XmlDoc.GetChildTextByNodeName(svrApiNode, contractKeyName);
 
             string ip = "";
             attr = svrApiNode.Attributes[_ip];
             if (null != attr) ip = attr.Value.Trim();
+            if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(svrApiNode, _ip);
 
             string port = "";
             attr = svrApiNode.Attributes[_port];
             if (null != attr) port = attr.Value.Trim();
+            if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(svrApiNode, _port);
 
             SvrAPI svrAPI = null;
             SvrUri svrUri = null;
@@ -107,6 +110,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 attr = item.Attributes["Name"];
                 if (null == attr) attr = item.Attributes["name"];
                 if (null != attr) featureName = attr.Value.Trim();
+                if (string.IsNullOrEmpty(featureName)) featureName = XmlDoc.GetChildTextByNodeName(item, "name");
                 svrUri = new SvrUri();
                 svrUri.Name = featureName;
                 foreach (XmlNode itemChild in item.ChildNodes)
@@ -117,16 +121,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                         paraJsonData = "";
                         foreach (XmlNode paraItem in itemChild.ChildNodes)
                         {
+                            if (!paraItem.HasChildNodes) continue;
                             attr = paraItem.Attributes["Name"];
                             if (null == attr) attr = paraItem.Attributes["name"];
-                            if (null == attr) continue;
-                            paraName = attr.Value.Trim();
+                            if (null != attr) paraName = attr.Value.Trim();
+                            if (string.IsNullOrEmpty(paraName)) paraName = XmlDoc.GetChildTextByNodeName(paraItem, "name");
                             if (string.IsNullOrEmpty(paraName)) continue;
 
                             attr = paraItem.Attributes["Type"];
                             if (null == attr) attr = paraItem.Attributes["type"];
-                            if (null == attr) continue;
-                            paraType = attr.Value.Trim();
+                            if (null != attr) paraType = attr.Value.Trim();
+                            if (string.IsNullOrEmpty(paraType)) paraType = XmlDoc.GetChildTextByNodeName(paraItem, "type");
                             if (string.IsNullOrEmpty(paraType)) continue;
 
                             paraJsonData += ", \"" + paraName + "\": " + GetJsonValueByType(paraType);
