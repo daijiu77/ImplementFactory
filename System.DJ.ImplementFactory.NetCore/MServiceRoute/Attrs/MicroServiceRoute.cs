@@ -83,6 +83,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     ServiceManagerAddr = "/Home/ReceiveManage",
                     ServiceManagerActionType = MethodTypes.Post,
                     RegisterAddr = "/Home/RegisterIP",
+                    TestAddr = "/Home/Test",
                     RegisterActionType = MethodTypes.Post,
                     ContractKey = "abc2233"
                 };
@@ -117,7 +118,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 route_attr.ForeachProperty((pi, pt, fn, fv) =>
                 {
                     if (typeof(MethodTypes) == pt) return;
-                    XmlElement ele= doc.CreateElement(fn);
+                    XmlElement ele = doc.CreateElement(fn);
                     if (null == fv) fv = "";
                     ele.InnerText = fv.ToString().Trim();
                     route.AppendChild(ele);
