@@ -23,9 +23,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private event changeEnabled ChangeEnabled = null;
         private event registerIP RegisterIP = null;
 
+        static MSServiceImpl()
+        {
+            MSServiceImpl mSServiceImpl = new MSServiceImpl();
+            if (!File.Exists(mSServiceImpl.filePath))
+            {
+                DateTime start = DateTime.Now;
+                DateTime end = DateTime.Now.AddHours(24);
+                mSServiceImpl.SetEnabledTime(start, end, Guid.NewGuid().ToString());
+            }
+        }
+
         public MSServiceImpl()
         {
-            filePath = Path.Combine(DJTools.RootPath, SvrIPAddressFile);
+            filePath = Path.Combine(DJTools.RootPath, SvrIPAddressFile);            
         }
 
         event changeEnabled IMSService.ChangeEnabled
