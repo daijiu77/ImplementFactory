@@ -717,7 +717,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             SqlDataItem dataItem = null;
             DbParameter para = null;
             FieldMapping fm = null;
-            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DbAdapter.dbDialect);
             Dictionary<string, DbParameter> dic = new Dictionary<string, DbParameter>();
             string sql = "";
             string sets = "";
@@ -785,7 +785,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             DbParameter para = null;
             FieldMapping fm = null;
             Dictionary<string, DbParameter> dic = new Dictionary<string, DbParameter>();
-            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DbAdapter.dbDialect);
             string tableName = null;
             string sql = "";
             string fields = "";

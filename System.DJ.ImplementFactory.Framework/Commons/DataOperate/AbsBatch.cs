@@ -134,7 +134,7 @@ namespace System.DJ.ImplementFactory.Commons.DataOperate
 
         public AbsBatch()
         {
-            dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+            dbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
 
             new Task(() =>
             {

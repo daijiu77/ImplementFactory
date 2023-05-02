@@ -20,7 +20,7 @@ namespace System.DJ.ImplementFactory.Commons
     /// </summary>
     public static class DJTools
     {
-        private static ForechExtends forechExtends = new ForechExtends();
+        private static ForeachExtends forechExtends = new ForeachExtends();
         private static Dictionary<string, Type> dynamicTypes = new Dictionary<string, Type>();
 
         private static object _dynamicTypesLock = new object();
@@ -911,7 +911,7 @@ namespace System.DJ.ImplementFactory.Commons
         public static string GetParaTagByDbDialect(db_dialect dialect)
         {
             string dbTag = "";
-            switch (DataAdapter.dbDialect)
+            switch (dialect)
             {
                 case db_dialect.sqlserver:
                     dbTag = "@";

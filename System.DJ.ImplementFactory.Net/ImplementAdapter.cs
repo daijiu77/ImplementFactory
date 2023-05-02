@@ -32,8 +32,11 @@ namespace System.DJ.ImplementFactory
     {
         object currentObj = null;
 
-        private static readonly string configFile = "ImplementFactory.config";
-        private static readonly string configFile_Xml = "ImplementFactory.xml";
+        private const string configFile = "ImplementFactory.config";
+        public const string configFile_Xml = "ImplementFactory.xml";
+        public const string _rootNodeName = "SystemBaseInfo";
+        public const string _rootNodeName1 = "database";
+
         private static readonly string svrFile = "svr_info.dt";
         private static string dbConnectionFreeStrategy = "";
         private static EList<CKeyValue> matchRules = null;
@@ -50,8 +53,6 @@ namespace System.DJ.ImplementFactory
         public static Task task = null;
         public static Task task1 = null;
         public static Type dataCache = null;
-
-        private const string _rootNodeName = "SystemBaseInfo";
 
         static ImplementAdapter()
         {
@@ -106,7 +107,7 @@ namespace System.DJ.ImplementFactory
             tempImpl.SetRootPath(rootPath);
             tempImpl.IsShowCodeOfDataResourceDLL = dbInfo.IsShowCode;
 
-            DataAdapter.SetConfig(dbInfo.ConnectionString, dbInfo.DatabaseType);
+            DbAdapter.SetConfig(dbInfo.DatabaseType);
 
             string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
             assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/TempImpl/bin/" });
@@ -176,11 +177,11 @@ namespace System.DJ.ImplementFactory
             AbsActionFilterAttribute.SetMSServiceInstance(mSService);
 
             string dsFlag = "ms";
-            if (db_dialect.mysql == DataAdapter.dbDialect)
+            if (db_dialect.mysql == DbAdapter.dbDialect)
             {
                 dsFlag = "mysql";
             }
-            else if (db_dialect.oracle == DataAdapter.dbDialect)
+            else if (db_dialect.oracle == DbAdapter.dbDialect)
             {
                 dsFlag = "oracle";
             }
@@ -1459,9 +1460,8 @@ namespace System.DJ.ImplementFactory
             string v = null;
             string Recomplie = "Recomplie".ToLower();
             PropertyInfo pi = null;
-            foreach (XmlNode item in _node.ChildNodes)
+            _node.ForeachChildNode(item =>
             {
-                if (!item.HasChildNodes) continue;
                 node_name = item.Name.ToLower();
                 pi = _obj.GetPropertyInfo(node_name);
                 if (null != pi)
@@ -1477,12 +1477,12 @@ namespace System.DJ.ImplementFactory
                             }
                             catch (Exception)
                             {
-                                continue;
+                                return true; ;
                                 //throw;
                             }
                         }
                         setPropertyVal(item, childObj);
-                        continue;
+                        return true;
                     }
                 }
                 v = item.InnerText.Trim();
@@ -1492,7 +1492,8 @@ namespace System.DJ.ImplementFactory
                 {
                     item.InnerText = "false";
                 }
-            }
+                return true;
+            });
         }
 
         private static EList<CKeyValue> MatchRulesOfXml()
@@ -1514,12 +1515,12 @@ namespace System.DJ.ImplementFactory
             string MatchRules = "MatchRules".ToLower();
             string Recomplie = "Recomplie".ToLower();
             string sysBaseNode = _rootNodeName.ToLower();
+            string sysBaseNode1= _rootNodeName1.ToLower();
 
-            foreach (XmlNode item in node.ChildNodes)
+            node.ForeachChildNode(item =>
             {
-                if (!item.HasChildNodes) continue;
                 nodeName = item.Name.ToLower();
-                if (nodeName.Equals("database") || nodeName.Equals(sysBaseNode))
+                if (nodeName.Equals(sysBaseNode1) || nodeName.Equals(sysBaseNode))
                 {
                     entity = ImplementAdapter.dbInfo;
                 }
@@ -1534,9 +1535,8 @@ namespace System.DJ.ImplementFactory
 
                 if (nodeName.Equals(MatchRules))
                 {
-                    foreach (XmlNode item1 in item.ChildNodes)
+                    item.ForeachChildNode(item1 =>
                     {
-                        if (!item1.HasChildNodes) continue;
                         entity = new MatchRule();
                         setPropertyVal(item1, entity);
                         if (!string.IsNullOrEmpty(((MatchRule)entity).InterFaceName))
@@ -1547,13 +1547,13 @@ namespace System.DJ.ImplementFactory
                                 Value = entity
                             });
                         }
-                    }
+                    });
                 }
                 else
                 {
                     setPropertyVal(item, entity);
                 }
-            }
+            });
 
             errorLevels1.Clear();
             ErrorLevels el1 = ErrorLevels.severe;

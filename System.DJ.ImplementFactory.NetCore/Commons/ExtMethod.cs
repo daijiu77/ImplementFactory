@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace System.DJ.ImplementFactory.Commons
 {
@@ -755,5 +756,47 @@ namespace System.DJ.ImplementFactory.Commons
             return Task.FromResult(list);
         }
 
+        public static void ForeachChildNode(this XmlElement parentNode, Func<XmlElement, bool> funcChildren)
+        {
+            if (null == parentNode) return;
+            if (!parentNode.HasChildNodes) return;
+            foreach (XmlNode item in parentNode.ChildNodes)
+            {
+                if (!item.HasChildNodes) continue;
+                if (!funcChildren((XmlElement)item)) break;
+            }
+        }
+
+        public static void ForeachChildNode(this XmlElement parentNode, Action<XmlElement> actionChildren)
+        {
+            if (null == parentNode) return;
+            if (!parentNode.HasChildNodes) return;
+            parentNode.ForeachChildNode(item =>
+            {
+                actionChildren(item);
+                return true;
+            });
+        }
+
+        public static void ForeachChildNode(this XmlNode parentNode, Func<XmlElement, bool> funcChildren)
+        {
+            if(null == parentNode) return;
+            if (null == (parentNode as XmlElement)) return;
+            ((XmlElement)parentNode).ForeachChildNode(item =>
+            {
+                return funcChildren(item);
+            });
+        }
+
+        public static void ForeachChildNode(this XmlNode parentNode, Action<XmlElement> actionChildren)
+        {
+            if (null == parentNode) return;
+            if (!parentNode.HasChildNodes) return;
+            parentNode.ForeachChildNode(item =>
+            {
+                actionChildren(item);
+                return true;
+            });
+        }
     }
 }

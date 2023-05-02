@@ -123,7 +123,7 @@ namespace System.DJ.ImplementFactory.Commons
             return doc.CreateAttribute(name);
         }
 
-        public static XmlNode GetNodeByNodeName(XmlNode parentNode, string nodeName, ref string text)
+        public static XmlNode GetChildNodeByNodeName(XmlNode parentNode, string nodeName, ref string text)
         {
             lock (s_XmlDocLock)
             {
@@ -142,27 +142,28 @@ namespace System.DJ.ImplementFactory.Commons
                 s_parentNode = parentNode;
                 s_eleDic.Clear();
                 string nnLower = "";
-                foreach (XmlNode item in parentNode.ChildNodes)
+                string txt = "";
+                parentNode.ForeachChildNode(item =>
                 {
-                    if (!item.HasChildNodes) continue;
                     nnLower = item.Name.ToLower();
                     s_eleDic[nnLower] = item;
                     if (nodeNameLower.Equals(nnLower))
                     {
                         node = item;
-                        text = item.InnerText.Trim();
+                        txt = item.InnerText.Trim();
                     }
-                }
+                });
+                text = txt;
                 return node;
             }
         }
 
-        public static XmlNode GetNodeByNodeName(XmlNode parentNode, string nodeName)
+        public static XmlNode GetChildNodeByNodeName(XmlNode parentNode, string nodeName)
         {
             lock (s_XmlDocLock)
             {
                 string text = "";
-                return GetNodeByNodeName(parentNode, nodeName, ref text);
+                return GetChildNodeByNodeName(parentNode, nodeName, ref text);
             }
         }
 
@@ -171,7 +172,7 @@ namespace System.DJ.ImplementFactory.Commons
             lock (s_XmlDocLock)
             {
                 string text = "";
-                GetNodeByNodeName(parentNode, nodeName, ref text);
+                GetChildNodeByNodeName(parentNode, nodeName, ref text);
                 return text;
             }
         }

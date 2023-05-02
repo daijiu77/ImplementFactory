@@ -135,7 +135,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             if (0 == primaryKeys.Count) return sql;
             sql = sql.Trim();
             if (";" == sql.Substring(sql.Length - 1)) sql = sql.Substring(0, sql.Length - 1);
-            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(Commons.DbAdapter.dbDialect);
             string s = "";
             string fn = "";
             ISqlAnalysis sqlAnalysis = this;

@@ -62,7 +62,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             {
                 string LeftSign = "";
                 string EndSign = "";
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string DbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
                 string _dbTag = "";
                 string FieldName = "";
                 string unit = "";
@@ -138,7 +138,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             if (rg.IsMatch(sql) && 0 < method.paraList.Count)
             {
-                string DbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string DbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
                 string autoCallName = method.AutoCallVarName;
 
                 EList<CKeyValue> sqlParaList1 = new EList<CKeyValue>();
@@ -344,7 +344,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
             if (null == para) return;
 
-            string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
             string insertFields = "";
             string insertParas = "";
             string updateSets = "";
@@ -606,7 +606,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
         public void GetSegmentFromSql(MethodInformation method, Type dataType, ref string insertFields, ref string insertParas, ref string updateSets, ref string procParas)
         {
-            string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
             string insertFields1 = "";
             string insertParas1 = "";
             string updateSets1 = "";
@@ -717,7 +717,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                 }
 
-                ForechExtends fe = new ForechExtends();
+                ForeachExtends fe = new ForeachExtends();
                 fe.ForeachProperty(t, (item, pt, fieldName) =>
                 {
                     fn_2 = FieldMapping.GetFieldMapping(item);
@@ -780,7 +780,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             method.append(ref code, leftSpaceLevel, "{");
             if (DataOptType.select == method.sqlExecType || (DataOptType.procedure == dataOptType && DJTools.IsBaseType(method.methodComponent.ResultType)))
             {
-                string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+                string dbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
                 method.append(ref code, leftSpaceLevel + 1, "{0} = {0}.Replace(\"{1}\", \"{2}\");", sqlVarName, procParaSign, dbTag);
                 method.append(ref code, leftSpaceLevel + 1, "{4}.query({0}, {1}, {2}, {3}, dataTable =>", autCall, sqlVarName, paraListVarName, enabledBuffer, dbHelperVarName);
                 method.append(ref code, leftSpaceLevel + 1, "{");

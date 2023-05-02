@@ -39,7 +39,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Regex rg1 = new Regex(@"^((http)|(https))\:\/\/", RegexOptions.IgnoreCase);
                 Dictionary<string, string> heads = new Dictionary<string, string>();
-                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType)
+                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string TestAddr, string contractValue, MethodTypes RegisterActionType)
                 {
                     s = Uri.Trim();
                     if (string.IsNullOrEmpty(s)) return;

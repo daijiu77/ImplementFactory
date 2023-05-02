@@ -289,7 +289,7 @@ namespace System.DJ.ImplementFactory.Commons
                         sVal = item.ToString();
                         if (item.compareSign.ToLower().Contains("like"))
                         {
-                            if (db_dialect.oracle == DataAdapter.dbDialect)
+                            if (db_dialect.oracle == DbAdapter.dbDialect)
                             {
                                 sWhere += "0<instr(" + item.fieldNameOfSourceTable + ",'" + sVal + "')";
                             }

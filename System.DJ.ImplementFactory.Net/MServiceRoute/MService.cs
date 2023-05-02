@@ -17,13 +17,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     public class MService
     {
         private static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/.+");
-        private const int maxNum = 50;
+        private static int maxNum = 50;
         private const int sleepNum = 1000 * 3;
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
         /// </summary>
         public static void Start()
         {
+            if (0 < ImplementAdapter.dbInfo1.TryTimeServiceRegister) maxNum = ImplementAdapter.dbInfo1.TryTimeServiceRegister;
             register();
             serviceManage();
             if (null != ImplementAdapter.mSService)
@@ -48,11 +49,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 char c = ' ';
                 string s = "", s1 = "";
                 string url = "";
+                string testUrl = "";
                 string registerAddr = "";
                 string printMsg = "The current service has been successfully registered to the address: {0}.";
                 Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
                 Dictionary<string, string> heads = new Dictionary<string, string>();
-                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType)
+                MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string TestAddr, string contractValue, MethodTypes RegisterActionType)
                 {
                     s = Uri.Trim();
                     if (string.IsNullOrEmpty(s)) return;
@@ -62,6 +64,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     if (registerAddr.Substring(0, 1).Equals("/"))
                     {
                         registerAddr = registerAddr.Substring(1);
+                    }
+
+                    if (null == TestAddr) TestAddr = "";
+                    if (!string.IsNullOrEmpty(TestAddr))
+                    {
+                        if (TestAddr.Substring(0, 1).Equals("/"))
+                        {
+                            TestAddr = TestAddr.Substring(1);
+                        }
                     }
 
                     if (rg.IsMatch(s))
@@ -87,7 +98,29 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         {
                             url = url.Substring(0, url.Length - 1);
                         }
-                        url += "/" + registerAddr;
+                        url += "/";
+
+                        if (!string.IsNullOrEmpty(TestAddr))
+                        {
+                            if (httpRg.IsMatch(TestAddr))
+                            {
+                                testUrl = TestAddr;
+                            }
+                            else
+                            {
+                                testUrl = url + TestAddr;
+                            }
+                            bool testSuccessfully = false;
+                            httpHelper.SendData(testUrl, heads, null, true, methodTypes, (result, msg) =>
+                            {
+                                if (string.IsNullOrEmpty(msg))
+                                {
+                                    testSuccessfully = true;
+                                }
+                            });
+                            if (testSuccessfully) continue;
+                        }
+                        url += registerAddr;
                         httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
                         {
                             if (string.IsNullOrEmpty(msg))

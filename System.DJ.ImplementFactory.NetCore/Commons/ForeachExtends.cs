@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {
-    public class ForechExtends
+    public class ForeachExtends
     {
         public void ForeachProperty(object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)
         {

@@ -37,7 +37,55 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Commons</target>
-		<exclude>ExtCollection.cs,DJTools.cs</exclude>
+		<exclude>ExtCollection.cs,DJTools.cs,DbConfigAction.cs,DbAdapter.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\DbAdapter.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>object dbType = null;</source>
+				<target>db_dialect dialect1 = db_dialect.none;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>Enum.TryParse(typeof(db_dialect), dialectName, true, out dbType);</source>
+				<target>Enum.TryParse(dialectName, true, out dialect1);</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>null != dbType</source>
+				<target>db_dialect.none != dialect1</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>dbDialect = (db_dialect)dbType;</source>
+				<target>dbDialect = dialect1;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\Attrs\DbConfigAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\Commons\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using Microsoft.AspNetCore.Mvc.Filters;</source>
+				<target>using System.Web.Mvc;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionArguments;</source>
+				<target>context.ActionParameters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
 	</copy>
                 <!--复制 Entities 目录下的所有文件到Framework项目-->
 	<copy ext="cs,csproj,user">
@@ -371,7 +419,7 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Commons</target>
-		<exclude>ExtCollection.cs</exclude>
+		<exclude>ExtCollection.cs,DbConfigAction.cs</exclude>
 	</copy>
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->

@@ -96,7 +96,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             }
             else if (null != para.ParaType.FullName)
             {
-                ForechExtends fe = new ForechExtends();
+                ForeachExtends fe = new ForeachExtends();
                 fe.ForeachProperty(para.ParaType, (pi, pt, fieldName) =>
                 {
                     if (!pi.Name.ToLower().Equals(fn)) return true;
@@ -415,7 +415,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                         continue;
                     }
 
-                    ForechExtends fe = new ForechExtends();
+                    ForeachExtends fe = new ForeachExtends();
                     para = paras[FieldName];
                     if (null != para)
                     {
@@ -680,7 +680,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             enabledBuffer = method.methodComponent.IsAsync ? "true" : enabledBuffer;
                         
             DynamicCodeChange dynamicCodeChange = new DynamicCodeChange();
-            string dbTag = DJTools.GetParaTagByDbDialect(DataAdapter.dbDialect);
+            string dbTag = DJTools.GetParaTagByDbDialect(DbAdapter.dbDialect);
 
             method.append(ref code, LeftSpaceLevel.one, "string err = \"\";");
             method.append(ref code, LeftSpaceLevel.one, "");

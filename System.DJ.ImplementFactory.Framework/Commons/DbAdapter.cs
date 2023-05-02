@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -8,10 +8,28 @@ using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.Commons
 {
+    public enum db_dialect
+    {
+        none,
+        sqlserver,
+        oracle,
+        mysql,
+        access,
+        sqlite,
+        odbc,
+        oledb,
+        firebird, //firebird
+        postgresql, //postgresql
+        db2, //db2
+        informix,
+        sqlserverce //sqlserverce
+    }
+
     class DbAdapter : IDisposable
     {
         private DbConnection conn = null;
         private static DbAdapter dbAdapter = null;
+        public static db_dialect dbDialect = db_dialect.sqlserverce;
 
         private DbAdapter() { }
 
@@ -22,6 +40,21 @@ namespace System.DJ.ImplementFactory.Commons
                 dbAdapter = new DbAdapter();
                 return dbAdapter;
             }
+        }
+
+        public static bool SetConfig(string dialectName)
+        {
+            bool mbool = false;
+            if (string.IsNullOrEmpty(dialectName)) return mbool;
+
+            db_dialect dialect1 = db_dialect.none;
+            Enum.TryParse(dialectName, true, out dialect1);
+            if (db_dialect.none != dialect1)
+            {
+                dbDialect = dialect1;
+                mbool = true;
+            }
+            return mbool;
         }
 
         public static bool IsPrintSQLToTrace { get; set; }
@@ -120,7 +153,7 @@ namespace System.DJ.ImplementFactory.Commons
                     if (null == autoCall) autoCall = new AutoCall();
                     autoCall.e(sql, ErrorLevels.debug);
                 }
-            }            
+            }
         }
 
         public IDbConnectionState dbConnectionState { get; set; }

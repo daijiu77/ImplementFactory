@@ -1,15 +1,12 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Xml;
-using System.Xml.Linq;
-using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
-    public delegate void MSRouteAttribute(string MSRouteName, string Uri, string RegisterAddr, string contractValue, MethodTypes RegisterActionType);
+    public delegate void MSRouteAttribute(string MSRouteName, string Uri, string RegisterAddr, string TestAddr, string contractValue, MethodTypes RegisterActionType);
     /// <summary>
     /// Service interface local mapping interface class identifier
     /// </summary>
@@ -17,7 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     {
         private string route_name = "";
         private string controller_name = "";
-        private string uri_str = "";        
+        private string uri_str = "";
 
         private const string _routeItem = "Route";
         private const string _configFile = "MicroServiceRoute.xml";
@@ -113,13 +110,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     Name = "ServiceRoute1",
                     Uri = "http://127.0.0.1:8080,http://127.0.0.1:8081",
                     RegisterAddr = "/Home/RegisterIP",
+                    TestAddr = "/Home/Test",
                     RegisterActionType = MethodTypes.Post,
                     ContractKey = "abc"
                 };
                 route_attr.ForeachProperty((pi, pt, fn, fv) =>
                 {
                     if (typeof(MethodTypes) == pt) return;
-                    route.SetAttribute(fn, fv.ToString());
+                    XmlElement ele= doc.CreateElement(fn);
+                    if (null == fv) fv = "";
+                    ele.InnerText = fv.ToString().Trim();
+                    route.AppendChild(ele);
                 });
                 route.SetAttribute("RegisterActionType", "post");
 
@@ -143,52 +144,57 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                 XmlAttribute atr = s_rootElement.Attributes[_ServiceName];
                 if (null != atr) s_ServiceName = atr.Value.Trim();
+                if (string.IsNullOrEmpty(s_ServiceName)) s_ServiceName = XmlDoc.GetChildTextByNodeName(s_rootElement, _ServiceName);
 
                 atr = s_rootElement.Attributes[_Port];
                 if (null != atr) s_Port = atr.Value.Trim();
+                if (string.IsNullOrEmpty(s_Port)) s_Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
 
                 s_serviceManager = new ServiceManager();
                 string nodeName = "";
                 string routeName1 = "";
+                string txt = "";
                 string serviceManagerLower = _ServiceManager.ToLower();
                 string routesLower = _Routes.ToLower();
                 RouteAttr routeAttr1 = null;
-                foreach (XmlNode node in s_rootElement.ChildNodes)
+                s_rootElement.ForeachChildNode(node =>
                 {
-                    if(!node.HasChildNodes) continue;
                     nodeName = node.Name.ToLower();
                     if (nodeName.Equals(serviceManagerLower))
                     {
-                        foreach (XmlNode item in node.ChildNodes)
+                        node.ForeachChildNode(item =>
                         {
-                            if(!item.HasChildNodes) continue;
                             s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
-                        }
+                        });
                     }
                     else if (nodeName.Equals(routesLower))
                     {
-                        foreach (XmlNode _routeItem in node.ChildNodes)
+                        node.ForeachChildNode(_routeItem =>
                         {
-                            if (!_routeItem.HasChildNodes) continue;
-                            if (null == _routeItem.Attributes) continue;
-                            if (0 == _routeItem.Attributes.Count) continue;
                             routeAttr1 = new RouteAttr();
                             foreach (XmlAttribute item in _routeItem.Attributes)
                             {
                                 routeAttr1.SetPropertyValue(item.Name, item.Value);
                             }
 
+                            routeAttr1.GetType().ForeachProperty((pi, pt, fn) =>
+                            {
+                                txt = XmlDoc.GetChildTextByNodeName(_routeItem, fn);
+                                if (!string.IsNullOrEmpty(txt)) routeAttr1.SetPropertyValue(fn, txt);
+                            });
+
                             if (false == string.IsNullOrEmpty(routeAttr1.Name)
                                 && false == string.IsNullOrEmpty(routeAttr1.Uri))
                             {
                                 routeName1 = routeAttr1.Name.ToLower();
-                                if (s_routeAttrDic.ContainsKey(routeName1)) continue;
+                                if (s_routeAttrDic.ContainsKey(routeName1)) return true;
                                 s_routeAttrDic.Add(routeName1, routeAttr1);
                                 s_eleDic.Add(routeName1, (XmlElement)_routeItem);
                             }
-                        }
+                            return true;
+                        });
                     }
-                }
+                });
 
                 if ((false == string.IsNullOrEmpty(s_serviceManager.Uri)))
                 {
@@ -235,7 +241,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 foreach (var item in s_routeAttrDic)
                 {
                     routeAttr = item.Value;
-                    routeAttribute(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
+                    routeAttribute(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.TestAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
                 }
             }
         }
@@ -328,7 +334,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             public string Name { get; set; }
             public string Uri { get; set; }
             public string RegisterAddr { get; set; }
-
+            public string TestAddr { get; set; }
             public string ContractKey { get; set; }
 
             private MethodTypes _method = MethodTypes.Get;

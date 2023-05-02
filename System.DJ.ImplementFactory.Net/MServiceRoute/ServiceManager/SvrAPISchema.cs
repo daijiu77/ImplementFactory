@@ -77,14 +77,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             string contractKey = "";
             attr = svrApiNode.Attributes[contractKeyName];
             if (null != attr) contractKey = attr.Value.Trim();
+            if (string.IsNullOrEmpty(contractKey)) contractKey = XmlDoc.GetChildTextByNodeName(svrApiNode, contractKeyName);
 
             string ip = "";
             attr = svrApiNode.Attributes[_ip];
             if (null != attr) ip = attr.Value.Trim();
+            if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(svrApiNode, _ip);
 
             string port = "";
             attr = svrApiNode.Attributes[_port];
             if (null != attr) port = attr.Value.Trim();
+            if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(svrApiNode, _port);
 
             SvrAPI svrAPI = null;
             SvrUri svrUri = null;
@@ -101,36 +104,37 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             svrAPI.IP = ip;
             svrAPI.Port = port;
 
-            foreach (XmlNode item in svrApiNode.ChildNodes)
+            svrApiNode.ForeachChildNode(item =>
             {
-                if (!item.HasChildNodes) continue;
                 attr = item.Attributes["Name"];
                 if (null == attr) attr = item.Attributes["name"];
                 if (null != attr) featureName = attr.Value.Trim();
+                if (string.IsNullOrEmpty(featureName)) featureName = XmlDoc.GetChildTextByNodeName(item, "name");
+                if (string.IsNullOrEmpty(featureName)) return true;
                 svrUri = new SvrUri();
                 svrUri.Name = featureName;
-                foreach (XmlNode itemChild in item.ChildNodes)
+                item.ForeachChildNode(itemChild =>
                 {
-                    if (!itemChild.HasChildNodes) continue;
                     if (itemChild.Name.ToLower().Equals("parameters"))
                     {
                         paraJsonData = "";
-                        foreach (XmlNode paraItem in itemChild.ChildNodes)
+                        itemChild.ForeachChildNode(paraItem =>
                         {
                             attr = paraItem.Attributes["Name"];
                             if (null == attr) attr = paraItem.Attributes["name"];
-                            if (null == attr) continue;
-                            paraName = attr.Value.Trim();
-                            if (string.IsNullOrEmpty(paraName)) continue;
+                            if (null != attr) paraName = attr.Value.Trim();
+                            if (string.IsNullOrEmpty(paraName)) paraName = XmlDoc.GetChildTextByNodeName(paraItem, "name");
+                            if (string.IsNullOrEmpty(paraName)) return true;
 
                             attr = paraItem.Attributes["Type"];
                             if (null == attr) attr = paraItem.Attributes["type"];
-                            if (null == attr) continue;
-                            paraType = attr.Value.Trim();
-                            if (string.IsNullOrEmpty(paraType)) continue;
+                            if (null != attr) paraType = attr.Value.Trim();
+                            if (string.IsNullOrEmpty(paraType)) paraType = XmlDoc.GetChildTextByNodeName(paraItem, "type");
+                            if (string.IsNullOrEmpty(paraType)) return true;
 
                             paraJsonData += ", \"" + paraName + "\": " + GetJsonValueByType(paraType);
-                        }
+                            return true;
+                        });
 
                         if (!string.IsNullOrEmpty(paraJsonData))
                         {
@@ -144,13 +148,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                     {
                         svrUri.SetPropertyValue(itemChild.Name, itemChild.InnerText.Trim());
                     }
-                }
+                });
 
                 if ((false == string.IsNullOrEmpty(svrUri.Name)) && (false == string.IsNullOrEmpty(svrUri.Uri)))
                 {
                     svrAPI.SvrUris.Add(svrUri);
                 }
-            }
+                return true;
+            });
         }
 
         /// <summary>
@@ -218,17 +223,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             XmlElement svrNode = null;
             XmlAttribute attr = null;
             string serviceNameLower = serviceName.ToLower();
-            foreach (XmlNode node in rootNode.ChildNodes)
+            rootNode.ForeachChildNode(node =>
             {
-                if (!node.HasChildNodes) continue;
                 attr = node.Attributes[_serviceName];
-                if (null == attr) continue;
+                if (null == attr) return true;
                 if (serviceNameLower.Equals(attr.Value.Trim().ToLower()))
                 {
                     svrNode = (XmlElement)node;
-                    break;
+                    return false;
                 }
-            }
+                return true;
+            });
 
             if (null != svrNode)
             {
@@ -309,11 +314,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             XmlElement rootNode = doc.Load(s_svrApiPath);
             if (null == rootNode) return;
 
-            foreach (XmlNode svrApiNode in rootNode.ChildNodes)
+            rootNode.ForeachChildNode(svrApiNode =>
             {
                 SetSvrApiDic(svrApiNode);
-            }
-            //end
+            });
         }
     }
 }

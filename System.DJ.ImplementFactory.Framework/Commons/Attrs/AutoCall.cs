@@ -337,23 +337,24 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             {
                 string node_name = "";
                 string v = null;
-                foreach (XmlNode item in _node.ChildNodes)
+                _node.ForeachChildNode(item =>
                 {
                     node_name = item.Name.ToLower();
                     v = item.InnerText.Trim();
                     _obj.SetPropertyValue(node_name, v);
-                }
+                });
             };
 
-            foreach (XmlNode item in node.ChildNodes)
+            node.ForeachChildNode(item =>
             {
                 nodeName = item.Name.ToLower();
                 if (nodeName.Equals(LogsRange))
                 {
                     action(item, logsRange1);
-                    break;
+                    return false;
                 }
-            }
+                return true;
+            });
 
             errorLevels1 = null == errorLevels1 ? new List<ErrorLevels>() : errorLevels1;
 
@@ -1078,7 +1079,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             {
                 DataEntity<DataElement> dataElements = new DataEntity<DataElement>();
                 object _obj = null;
-                ForechExtends fe = new ForechExtends();
+                ForeachExtends fe = new ForeachExtends();
                 foreach (Para item in method.paraList)
                 {
                     if (DJTools.IsBaseType(item.ParaType)) continue;

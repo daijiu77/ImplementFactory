@@ -25,6 +25,75 @@
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons</source>
+		<target rootPath="">System.DJ.ImplementFactory.NetCore\Commons</target>
+		<exclude>ExtCollection.cs,DJTools.cs,DbConfigAction.cs,DbAdapter.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\DbAdapter.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>db_dialect dialect1 = db_dialect.none;</source>
+				<target>object dbType = null;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>Enum.TryParse(dialectName, true, out dialect1);</source>
+				<target>Enum.TryParse(typeof(db_dialect), dialectName, true, out dbType);</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>(db_dialect.none != dialect1)</source>
+				<target>(null != dbType)</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>dbDialect = dialect1;</source>
+				<target>dbDialect = (db_dialect)dbType;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\Attrs\DbConfigAction.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\Commons\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Web.Mvc;</source>
+				<target>using Microsoft.AspNetCore.Mvc.Filters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionParameters;</source>
+				<target>context.ActionArguments;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons\DJTools.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.NetCore\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>System.Web.HttpContext.Current</source>
+				<target>null</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs,csproj,user">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\Pipelines</source>
 		<target rootPath="">System.DJ.ImplementFactory.NetCore\Pipelines</target>
 		<exclude></exclude>
@@ -168,27 +237,6 @@
 			<item>
 				<source>context.ActionParameters;</source>
 				<target>context.ActionArguments;</target>
-				<extendNames>cs</extendNames>
-			</item>
-		</replaces>
-	</copy>
-	<copy ext="cs,csproj,user">
-		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
-		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
-		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons</source>
-		<target rootPath="">System.DJ.ImplementFactory.NetCore\Commons</target>
-		<exclude>ExtCollection.cs,DJTools.cs</exclude>
-	</copy>
-	<copy ext="cs">
-		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
-		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
-		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons\DJTools.cs</source>
-		<target rootPath="">System.DJ.ImplementFactory.NetCore\Commons</target>
-		<exclude></exclude>
-		<replaces>
-			<item>
-				<source>System.Web.HttpContext.Current</source>
-				<target>null</target>
 				<extendNames>cs</extendNames>
 			</item>
 		</replaces>
@@ -403,7 +451,7 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\Commons</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Commons</target>
-		<exclude>ExtCollection.cs</exclude>
+		<exclude>ExtCollection.cs,DbConfigAction.cs</exclude>
 	</copy>
 	<copy ext="cs,csproj,user">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->

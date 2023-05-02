@@ -1,11 +1,8 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
 using System.Xml;
-using System.Xml.Linq;
-using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
@@ -160,23 +157,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 string serviceManagerLower = _ServiceManager.ToLower();
                 string routesLower = _Routes.ToLower();
                 RouteAttr routeAttr1 = null;
-                foreach (XmlNode node in s_rootElement.ChildNodes)
+                s_rootElement.ForeachChildNode(node =>
                 {
-                    if (!node.HasChildNodes) continue;
                     nodeName = node.Name.ToLower();
                     if (nodeName.Equals(serviceManagerLower))
                     {
-                        foreach (XmlNode item in node.ChildNodes)
+                        node.ForeachChildNode(item =>
                         {
-                            if (!item.HasChildNodes) continue;
                             s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
-                        }
+                        });
                     }
                     else if (nodeName.Equals(routesLower))
                     {
-                        foreach (XmlNode _routeItem in node.ChildNodes)
+                        node.ForeachChildNode(_routeItem =>
                         {
-                            if (!_routeItem.HasChildNodes) continue;
                             routeAttr1 = new RouteAttr();
                             foreach (XmlAttribute item in _routeItem.Attributes)
                             {
@@ -193,13 +187,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                                 && false == string.IsNullOrEmpty(routeAttr1.Uri))
                             {
                                 routeName1 = routeAttr1.Name.ToLower();
-                                if (s_routeAttrDic.ContainsKey(routeName1)) continue;
+                                if (s_routeAttrDic.ContainsKey(routeName1)) return true;
                                 s_routeAttrDic.Add(routeName1, routeAttr1);
                                 s_eleDic.Add(routeName1, (XmlElement)_routeItem);
                             }
-                        }
+                            return true;
+                        });
                     }
-                }
+                });
 
                 if ((false == string.IsNullOrEmpty(s_serviceManager.Uri)))
                 {

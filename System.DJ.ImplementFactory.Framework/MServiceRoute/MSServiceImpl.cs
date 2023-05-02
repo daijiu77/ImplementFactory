@@ -99,13 +99,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlNode node = doc.Load(filePath);
             if (null == node) return ipAddrs;
             string ip = "";
-            foreach (XmlNode item in node.ChildNodes)
+            node.ForeachChildNode(item =>
             {
-                if (!item.HasChildNodes) continue;
                 ip = item.InnerText.Trim();
-                if (!rgIP.IsMatch(ip)) continue;
+                if (!rgIP.IsMatch(ip)) return true;
                 ipAddrs.Add(ip);
-            }
+                return true;
+            });
             return ipAddrs;
         }
 
@@ -151,12 +151,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             if (0 == ipDic.Count)
             {
                 string txt = "";
-                foreach (XmlNode item in ipNodes.ChildNodes)
+                ipNodes.ForeachChildNode(item =>
                 {
                     txt = item.InnerText.Trim();
-                    if (!rgIP.IsMatch(txt)) continue;
+                    if (!rgIP.IsMatch(txt)) return true;
                     ipDic[txt] = txt;
-                }
+                    return true;
+                });
             }
 
             if (ipDic.ContainsKey(IPAddress)) return mbool;
