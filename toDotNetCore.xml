@@ -129,6 +129,25 @@
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MicroServiceRoute.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using System.Web.Mvc;</source>
+				<target>using Microsoft.AspNetCore.Mvc.Filters;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>context.ActionParameters;</source>
+				<target>context.ActionArguments;</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.Framework\MServiceRoute\Attrs\MSApiReceiverAction.cs</source>
 		<target rootPath="">System.DJ.ImplementFactory.NetCore\MServiceRoute\Attrs</target>
 		<exclude></exclude>

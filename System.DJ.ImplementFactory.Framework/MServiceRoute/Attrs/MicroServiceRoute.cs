@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
@@ -266,7 +266,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        public static void Add(string ServiceRouteName, string Uri, string RegisterAddr, string ContractValue, MethodTypes RegisterActionType)
+        public static void Add(string ServiceRouteName, string Uri, string RegisterAddr, string TestAddr, string ContractValue, MethodTypes RegisterActionType)
         {
             lock (s_MSObject)
             {
@@ -300,6 +300,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 routeAttr.Uri = Uri.Trim();
                 routeAttr.RegisterAddr = RegisterAddr.Trim();
                 routeAttr.RegisterActionType = RegisterActionType;
+                routeAttr.TestAddr = TestAddr.Trim();
                 routeAttr.ContractKey = ContractValue;
 
                 XmlAttribute attr = null;

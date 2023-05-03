@@ -10,6 +10,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     public class MServiceManagerConfigAction : AbsActionFilterAttribute
     {
+        #region Variable names are prohibited from being changed
         private string NameMapping = "serviceManagerName";
         private string UriMapping = "httpUri";
         private string ServiceManagerAddrMapping = "serviceManagerAddr";
@@ -18,6 +19,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string RegisterAddrMapping = "registerAddr";
         private string RegisterActionTypeMapping = "registerActionType";
         private string ContractKeyMapping = MServiceConst.contractKey;
+        #endregion
 
         /// <summary>
         /// Identify the API method as receiving service manager related parameters and set them to a configuration file
@@ -33,10 +35,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="serviceNameMapping">The parameter name of the serviceName mapping</param>
         /// <param name="uriMapping">The parameter name of the http uri mapping</param>
         /// <param name="serviceManagerAddrMapping">The parameter name of the serviceManagerAddr mapping</param>
-        /// <param name="serviceManagerActionTypeMapping">The parameter name of the serviceManagerActionType mapping</param>
+        /// <param name="serviceManagerActionTypeMapping">The parameter name of the serviceManagerActionType(Get|Post) mapping</param>
         /// <param name="testAddrMapping">The parameter name of the testAddr mapping</param>
         /// <param name="registerAddrMapping">The parameter name of the registerAddr mapping</param>
-        /// <param name="registerActionTypeMapping">The parameter name of the registerActionType mapping</param>
+        /// <param name="registerActionTypeMapping">The parameter name of the registerActionType(Get|Post) mapping</param>
         /// <param name="contractKeyMapping">The parameter name of the contractKey mapping</param>
         public MServiceManagerConfigAction(string serviceNameMapping, string uriMapping, string serviceManagerAddrMapping, string serviceManagerActionTypeMapping, string testAddrMapping, string registerAddrMapping, string registerActionTypeMapping, string contractKeyMapping)
         {
@@ -50,39 +52,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             ContractKeyMapping = contractKeyMapping;
         }
 
-        /// <summary>
-        /// 遍历当前类后缀为 Mapping 的所有字段
-        /// </summary>
-        /// <param name="action">string: 原字段名称, string: 去除后缀 Mapping 的字段名, object: 字段值</param>
-        private void ForeachFields(Action<string, string, object> action)
-        {
-            Type meType = typeof(MServiceManagerConfigAction);
-            const string mapping = "mapping";
-            int len = mapping.Length;
-            string nameLower = "";
-            object vObj = null;
-            string fv = "";
-            string fn = "";
-            FieldInfo[] fieldInfos = this.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-            foreach (FieldInfo fieldInfo in fieldInfos)
-            {
-                if (fieldInfo.DeclaringType != meType) continue;
-                nameLower = fieldInfo.Name.ToLower();
-                if (len >= nameLower.Length) continue;
-                if (!nameLower.Substring(nameLower.Length - len).Equals(mapping)) continue;
-                vObj = fieldInfo.GetValue(this);
-                fv = "";
-                if (null != vObj) fv = vObj.ToString().Trim();
-                if (string.IsNullOrEmpty(fv)) continue;
-                fn = nameLower.Substring(0, nameLower.Length - len);
-                action(fieldInfo.Name, fn, fv);
-            }
-        }
-
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             List<string> list = new List<string>();
-            ForeachFields((OriginFieldName, field, fieldVal) =>
+            ForeachFields<MServiceManagerConfigAction>((OriginFieldName, field, fieldVal) =>
             {
                 list.Add(fieldVal.ToString().Trim());
             });
@@ -95,11 +68,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (0 < map.Count)
             {
                 object vObj = null;
-                string fv = "";
-                string fn = "";
                 string key = "";
                 MServiceManager manager = new MServiceManager();
-                ForeachFields((OriginFieldName, field, fieldVal) =>
+                ForeachFields<MServiceManagerConfigAction>((OriginFieldName, field, fieldVal) =>
                 {
                     key = fieldVal.ToString().ToLower();
                     vObj = "";

@@ -292,6 +292,46 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             return val;
         }
 
+        /// <summary>
+        /// 遍历当前类后缀为 Mapping 的所有字段
+        /// </summary>
+        /// <param name="action">string: 原字段名称, string: 去除后缀 Mapping 的字段名, object: 字段值</param>
+        protected void ForeachFields(Type type, Action<string, string, object> action)
+        {
+            Type meType = type;
+            const string mapping = "mapping";
+            int len = mapping.Length;
+            string nameLower = "";
+            object vObj = null;
+            string fv = "";
+            string fn = "";
+            FieldInfo[] fieldInfos = this.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+            foreach (FieldInfo fieldInfo in fieldInfos)
+            {
+                if (fieldInfo.DeclaringType != meType) continue;
+                nameLower = fieldInfo.Name.ToLower();
+                if (len >= nameLower.Length) continue;
+                if (!nameLower.Substring(nameLower.Length - len).Equals(mapping)) continue;
+                vObj = fieldInfo.GetValue(this);
+                fv = "";
+                if (null != vObj) fv = vObj.ToString().Trim();
+                if (string.IsNullOrEmpty(fv)) continue;
+                fn = nameLower.Substring(0, nameLower.Length - len);
+                action(fieldInfo.Name, fn, fv);
+            }
+        }
+
+        /// <summary>
+        /// 遍历当前类后缀为 Mapping 的所有字段
+        /// </summary>
+        /// <typeparam name="T">当前类</typeparam>
+        /// <param name="action">string: 原字段名称, string: 去除后缀 Mapping 的字段名, object: 字段值</param>
+        protected void ForeachFields<T>(Action<string, string, object> action)
+        {
+            Type type = typeof(T);
+            ForeachFields(type, action);
+        }
+
         protected static void SetIpToDic(string ip)
         {
             lock (_AbsActionFilterAttributeLock)

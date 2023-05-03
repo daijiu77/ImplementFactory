@@ -1,5 +1,6 @@
 using System.Web.Mvc;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
@@ -11,11 +12,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// </summary>
     public class MSAddServiceRouteItemAction : AbsActionFilterAttribute
     {
-        private string routeName = "routeName";
-        private string uri = "uri";
-        private string addr = "addr";
-        private string actionType = "actionType";
-        private string contractKeyName = MServiceConst.contractKey;
+        #region Variable names are prohibited from being changed
+        private string NameMapping = "Name";
+        private string UriMapping = "Uri";
+        private string TestAddrMapping = "testAddr";
+        private string RegisterAddrMapping = "registerAddr";
+        private string RegisterActionTypeMapping = "registerActionType";
+        private string ContractKeyMapping = MServiceConst.contractKey;
+        #endregion
         /// <summary>
         /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>
@@ -27,93 +31,58 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
         /// <param name="uriMapping">The parameter name of the Uri mapping</param>
         /// <param name="registerAddrMapping">The parameter name of the RegisterAddr mapping</param>
+        /// <param name="testAddrMapping">The parameter name of the testAddr mapping</param>
         /// <param name="contractKeyMapping">The parameter name of the contractKey mapping</param>
         /// <param name="registerActionTypeMapping">The parameter name of the RegisterActionType(Get|Post) mapping</param>
-        public MSAddServiceRouteItemAction(string serviceRouteNameMapping, string uriMapping, string registerAddrMapping, string contractKeyMapping, string registerActionTypeMapping)
+        public MSAddServiceRouteItemAction(string serviceRouteNameMapping, string uriMapping, string registerAddrMapping, string testAddrMapping, string contractKeyMapping, string registerActionTypeMapping)
         {
-            this.routeName = serviceRouteNameMapping;
-            this.uri = uriMapping;
-            this.addr = registerAddrMapping;
-            this.contractKeyName = contractKeyMapping;
-            this.actionType = registerActionTypeMapping;
+            this.NameMapping = serviceRouteNameMapping;
+            this.UriMapping = uriMapping;
+            this.RegisterAddrMapping = registerAddrMapping;
+            this.TestAddrMapping = testAddrMapping;
+            this.ContractKeyMapping = contractKeyMapping;
+            this.RegisterActionTypeMapping = registerActionTypeMapping;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            List<string> list = new List<string>()
+            List<string> list = new List<string>();
+            ForeachFields<MSAddServiceRouteItemAction>((OriginFieldName, field, fieldVal) =>
             {
-               routeName,
-               uri,
-               addr,
-               contractKeyName,
-               actionType
-            };
-            int size = list.Count;
-            for (int i = 0; i < size; i++)
-            {
-                list[i] = list[i].Trim();
-            }
-            Dictionary<string, object> dic = GetKVListFromQuery(context.HttpContext, list, true);
-            if (0 == dic.Count)
-            {
-                dic = GetKVListFromHeader(context.HttpContext, list, true);
-            }
+                list.Add(fieldVal.ToString().Trim());
+            });
 
-            if (0 == dic.Count)
-            {
-                dic = GetKVListFromBody(context.HttpContext, list, true);
-            }
+            Dictionary<string, object> map = GetKVListFromBody(context.HttpContext, list, false);
+            if (0 == map.Count) map = GetKVListFromForm(context.HttpContext, list, false);
+            if (0 == map.Count) map = GetKVListFromQuery(context.HttpContext, list, false);
+            if (0 == map.Count) map = GetKVListFromHeader(context.HttpContext, list, false);
 
-            if (0 == dic.Count)
+            if (0 < map.Count)
             {
-                dic = GetKVListFromForm(context.HttpContext, list, true);
-            }
-
-            if (0 < dic.Count)
-            {
-                size = list.Count;
-                for (int i = 0; i < size; i++)
-                {
-                    list[i] = list[i].ToLower();
-                }
+                object vObj = null;
+                string key = "";
                 RouteAttr routeAttr = new RouteAttr();
-                foreach (var item in dic)
+                ForeachFields<MSAddServiceRouteItemAction>((OriginFieldName, field, fieldVal) =>
                 {
-                    if (-1 != item.Key.ToLower().IndexOf(list[0]))
+                    key = fieldVal.ToString().ToLower();
+                    vObj = "";
+                    if (map.ContainsKey(key))
                     {
-                        if (null != item.Value) routeAttr.Name = item.Value.ToString();
+                        vObj = map[key];
                     }
-                    else if (-1 != item.Key.ToLower().IndexOf(list[1]))
-                    {
-                        if (null != item.Value) routeAttr.Uri = item.Value.ToString();
-                    }
-                    else if (-1 != item.Key.ToLower().IndexOf(list[2]))
-                    {
-                        if (null != item.Value) routeAttr.RegisterAddr = item.Value.ToString();
-                    }
-                    else if (-1 != item.Key.ToLower().IndexOf(list[3]))
-                    {
-                        if (null != item.Value) routeAttr.ContractKey = item.Value.ToString();
-                    }
-                    else if (-1 != item.Key.ToLower().IndexOf(list[4]))
-                    {
-                        if (null != item.Value)
-                        {
-                            int num = 0;
-                            string s = item.Value.ToString().Trim();
-                            int.TryParse(s, out num);
-                            MethodTypes methodTypes = (MethodTypes)num;
-                            if (0 > num || 1 < num) methodTypes = MethodTypes.Post;
-                            routeAttr.RegisterActionType = methodTypes;
-                        }
-                    }
-                }
+                    routeAttr.SetPropertyValue(field, vObj);
+                });
 
                 if ((false == string.IsNullOrEmpty(routeAttr.Name))
                     && (false == string.IsNullOrEmpty(routeAttr.Uri))
                     && (false == string.IsNullOrEmpty(routeAttr.ContractKey)))
                 {
-                    MicroServiceRoute.Add(routeAttr.Name, routeAttr.Uri, routeAttr.RegisterAddr, routeAttr.ContractKey, routeAttr.RegisterActionType);
+                    MicroServiceRoute.Add(routeAttr.Name,
+                        routeAttr.Uri,
+                        routeAttr.RegisterAddr,
+                        routeAttr.TestAddr,
+                        routeAttr.ContractKey,
+                        routeAttr.RegisterActionType);
                 }
             }
 
