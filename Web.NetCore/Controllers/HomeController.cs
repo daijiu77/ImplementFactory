@@ -61,11 +61,11 @@ namespace Web.NetCore.Controllers
             return new { Message = "Hello World!" };
         }
 
-        [HttpPost, UIData, Route("ReceiveManage")]
+        [HttpPost, UIData, MSApiReceiverAction, Route("ReceiveManage")]
         public object ReceiveManage(object data)
         {
-            string ip = Startup.serviceIPCollector.GetIP(this);            
-            svrAPISchema.Save(ip, data);
+            //string ip = Startup.serviceIPCollector.GetIP(this);            
+            //svrAPISchema.Save(ip, data);
             return new { Message = "Successfully", CreateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") };
         }
 
