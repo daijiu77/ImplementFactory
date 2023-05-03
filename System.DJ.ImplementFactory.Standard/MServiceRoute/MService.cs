@@ -15,6 +15,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
+        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/.+");
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
         /// </summary>

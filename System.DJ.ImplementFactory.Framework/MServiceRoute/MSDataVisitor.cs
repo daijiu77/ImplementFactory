@@ -158,7 +158,27 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             if (null == arr)
             {
-                arr = uri.Split(',');
+                Regex rg1 = new Regex(@"[\|\,\;\@\$\*\s]", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(uri))
+                {
+                    string sc = rg1.Match(uri).Groups[0].Value;
+                    char c = sc.ToCharArray()[0];
+                    string[] uriArr = uri.Split(c);
+                    string txt = "";
+                    List<string> list = new List<string>();
+                    foreach (var item in uriArr)
+                    {
+                        txt = item.Trim();
+                        if (string.IsNullOrEmpty(txt)) continue;
+                        if (!MService.httpRg.IsMatch(txt)) continue;
+                        list.Add(txt);
+                    }
+                    arr = list.ToArray();
+                }
+                else
+                {
+                    arr = new string[] { uri };
+                }
             }
 
             Dictionary<string, string> headers = null;
