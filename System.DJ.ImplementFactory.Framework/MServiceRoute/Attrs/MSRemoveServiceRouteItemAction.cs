@@ -6,18 +6,18 @@ using System.Text;
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     /// <summary>
-    /// To remove the service route entry, specify that the method parameter needs to contain: ServiceRouteName(RouteName)
+    /// Remove the children under the Routes node in the MicroServiceRoute.xml file based on the Route-Name value
     /// </summary>
     public class MSRemoveServiceRouteItemAction : AbsActionFilterAttribute
     {
         private string ServiceRouteName = "RouteName";
         /// <summary>
-        /// To remove the service route entry, specify that the method parameter needs to contain: ServiceRouteName(RouteName)
+        /// Remove the children under the Routes node in the MicroServiceRoute.xml file based on the Route-Name value
         /// </summary>
         public MSRemoveServiceRouteItemAction() { }
 
         /// <summary>
-        /// To remove the service route entry
+        /// Remove the children under the Routes node in the MicroServiceRoute.xml file based on the Route-Name value
         /// </summary>
         /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
         public MSRemoveServiceRouteItemAction(string serviceRouteNameMapping)

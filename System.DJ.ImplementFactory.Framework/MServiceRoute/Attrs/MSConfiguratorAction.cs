@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     /// <summary>
-    /// A method for setting the registration permission of client 'IP', which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
+    /// A method for setting the registration permission of client 'IP' in the SvrIPAddr.xml file, which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
     /// </summary>
     public class MSConfiguratorAction : AbsActionFilterAttribute
     {
@@ -15,12 +15,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string _contractKey = "key";
 
         /// <summary>
-        /// A method for setting the registration permission of client 'IP', which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
+        /// A method for setting the registration permission of client 'IP' in the SvrIPAddr.xml file, which must contain three parameters: 'startTime' and 'endTime' of date type, and 'contractKey' of string type
         /// </summary>
         public MSConfiguratorAction() { }
 
         /// <summary>
-        /// A method for setting the registration permission of client 'IP'
+        /// A method for setting the registration permission of client 'IP' in the SvrIPAddr.xml file
         /// </summary>
         /// <param name="startTimeMapping">The parameter name of the StartTime mapping</param>
         /// <param name="endTimeMapping">The parameter name of the EndTime mapping</param>

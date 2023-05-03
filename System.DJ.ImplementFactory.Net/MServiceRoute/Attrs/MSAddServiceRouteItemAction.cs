@@ -7,7 +7,7 @@ using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     /// <summary>
-    /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
+    /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
     /// </summary>
     public class MSAddServiceRouteItemAction : AbsActionFilterAttribute
     {
@@ -17,12 +17,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string actionType = "actionType";
         private string contractKeyName = MServiceConst.contractKey;
         /// <summary>
-        /// To add a service route entry, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
+        /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
         /// </summary>
         public MSAddServiceRouteItemAction() { }
 
         /// <summary>
-        /// To add a service route entry
+        /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node
         /// </summary>
         /// <param name="serviceRouteNameMapping">The parameter name of the ServiceRouteName mapping</param>
         /// <param name="uriMapping">The parameter name of the Uri mapping</param>

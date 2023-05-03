@@ -143,9 +143,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 string[] uri1 = mSAllot.UrlCollection(routeName);
                 if (null != uri1)
-                    if (0 < uri1.Length) arr = uri1;
+                {
+                    if (0 < uri1.Length)
+                    {
+                        int size = uri1.Length;
+                        arr = new string[size];
+                        for (int i = 0; i < size; i++)
+                        {
+                            arr[i] = uri1[i];
+                        }
+                    }
+                }
             }
-            else
+
+            if (null == arr)
             {
                 arr = uri.Split(',');
             }
