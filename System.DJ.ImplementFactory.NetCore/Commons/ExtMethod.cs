@@ -759,10 +759,10 @@ namespace System.DJ.ImplementFactory.Commons
         public static void ForeachChildNode(this XmlElement parentNode, Func<XmlElement, bool> funcChildren)
         {
             if (null == parentNode) return;
-            if (!parentNode.HasChildNodes) return;
+            if (XmlNodeType.Element != parentNode.NodeType) return;
             foreach (XmlNode item in parentNode.ChildNodes)
             {
-                if (!item.HasChildNodes) continue;
+                if (XmlNodeType.Element != item.NodeType) continue;
                 if (!funcChildren((XmlElement)item)) break;
             }
         }
@@ -780,7 +780,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static void ForeachChildNode(this XmlNode parentNode, Func<XmlElement, bool> funcChildren)
         {
-            if(null == parentNode) return;
+            if (null == parentNode) return;
             if (null == (parentNode as XmlElement)) return;
             ((XmlElement)parentNode).ForeachChildNode(item =>
             {
