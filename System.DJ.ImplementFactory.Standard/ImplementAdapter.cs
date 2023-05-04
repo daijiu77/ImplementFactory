@@ -1045,13 +1045,27 @@ namespace System.DJ.ImplementFactory
             return impl_type;
         }
 
+        /// <summary>
+        /// 是非法的实例类型
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        bool IsIllegalImplType(Type type)
+        {
+            bool mbool = false;
+            if (type.IsAbstract || type.IsInterface || type.IsEnum) mbool = true;
+            return mbool;
+        }
+
         Type GetImplTypeByTypes(Type[] types, Type interfaceType, AutoCall autoCall, Regex rg1, string implName, bool isIgnoreCase)
         {
             Type impl_type = null;
             Type type1 = null;
             foreach (Type t in types)
             {
-                if (false == t.IsImplementInterface(interfaceType)) continue;
+                //if (false == t.IsImplementInterface(interfaceType)) continue;
+                if (IsIllegalImplType(t)) continue;
+                if (false == interfaceType.IsAssignableFrom(t)) continue;
                 type1 = null;
                 try
                 {
@@ -1147,7 +1161,8 @@ namespace System.DJ.ImplementFactory
                 }
                 catch { }
                 if (null == type) return impl_type;
-                if (type.IsImplementInterface(interfaceType))
+                if (IsIllegalImplType(type)) return impl_type;
+                if (interfaceType.IsAssignableFrom(type)) //if (type.IsImplementInterface(interfaceType))
                 {
                     impl_type = type;
                 }
@@ -1190,7 +1205,9 @@ namespace System.DJ.ImplementFactory
                 if (null == impl1) continue;
 
                 type1 = impl1.newInstance.GetType();
-                if (false == type1.IsImplementInterface(interfaceType)) continue;
+                if (IsIllegalImplType(type1)) continue;
+                //if (false == type1.IsImplementInterface(interfaceType)) continue;
+                if (false == interfaceType.IsAssignableFrom(type1)) continue;
 
                 if (!MatchImpl(rg1, type1, fn1, isIgnoreCase)) continue;
 
@@ -1227,7 +1244,8 @@ namespace System.DJ.ImplementFactory
                 ts = ass.GetTypes();
                 foreach (Type t in ts)
                 {
-                    if (t.BaseType == classType)
+                    if (IsIllegalImplType(t)) continue;
+                    if (classType.IsAssignableFrom(t)) //if (t.BaseType == classType)
                     {
                         type = t;
                         break;
