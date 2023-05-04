@@ -982,7 +982,6 @@ namespace System.DJ.ImplementFactory.Commons
                 else if (type.IsArray)
                 {
                     tn = isFullName ? type.FullName : type.Name;
-                    tn = tn.Replace("[]", "");
                 }
                 else if (typeof(IList) == type.GetInterface("IList"))
                 {
@@ -1044,7 +1043,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
-            rg = new Regex(@"^(?<TypeName>[a-z0-9_\.]+)[^a-z0-9_\.](.)$", RegexOptions.IgnoreCase);
+            rg = new Regex(@"^(?<TypeName>[a-z0-9_\.]+)\`1$", RegexOptions.IgnoreCase);
             if (rg.IsMatch(s))
             {
                 s = rg.Match(s).Groups["TypeName"].Value;
