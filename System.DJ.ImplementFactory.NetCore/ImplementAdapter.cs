@@ -336,6 +336,114 @@ namespace System.DJ.ImplementFactory
             return (T)_obj;
         }
 
+        static T loadInterfaceInstance_new<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        {
+            asse = null;
+            object _obj = default(T);
+            string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
+            string[] files = Directory.GetFiles(binPath, "*.dll");
+            string file = "";
+            if (!string.IsNullOrEmpty(likeName))
+            {
+                Regex rg = new Regex(@".*" + likeName + @".*\.dll$", RegexOptions.IgnoreCase);
+                foreach (var item in files)
+                {
+                    if (rg.IsMatch(item))
+                    {
+                        file = item;
+                        break;
+                    }
+                }
+            }
+
+            Dictionary<Type, Type> excludeDic = new Dictionary<Type, Type>();
+            if (null != excludeTypes)
+            {
+                foreach (var item in excludeTypes)
+                {
+                    if (null == item) continue;
+                    excludeDic[item] = item;
+                }
+            }
+
+            Func<Type[], Type, Type> func = (types1, baseType) =>
+            {
+                Type resultType = baseType;
+                foreach (var type in types1)
+                {
+                    if (type.IsAbstract) continue;
+                    if (type.IsInterface) continue;
+                    if (!resultType.IsAssignableFrom(type)) continue;
+                    if (excludeDic.ContainsKey(type)) continue;
+                    
+                    resultType = type;
+                }
+                return resultType;
+            };
+
+            Type[] types = null;
+            Type srcType = typeof(T);
+            Type finallyType = srcType;
+            if (!string.IsNullOrEmpty(file))
+            {
+                try
+                {
+                    asse = Assembly.LoadFrom(file);
+                    types = asse.GetTypes();
+                    finallyType = func(types, finallyType);
+                }
+                catch { }
+
+                if (finallyType != srcType)
+                {
+                    try
+                    {
+                        _obj = Activator.CreateInstance(finallyType);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+            }
+
+            if (null == _obj)
+            {
+                finallyType = srcType;
+                foreach (Assembly asseItem in assemblies)
+                {
+                    try
+                    {
+                        types = asseItem.GetTypes();
+                        finallyType = func(types, finallyType);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+                
+                if (finallyType != srcType)
+                {
+                    try
+                    {
+                        _obj = Activator.CreateInstance(finallyType);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+            }
+
+            if (null == _obj) return default(T);
+
+            return (T)_obj;
+        }
+
         static void getTempBin()
         {
             if (0 < assembliesOfTemp.Count) return;
@@ -1533,7 +1641,7 @@ namespace System.DJ.ImplementFactory
             string MatchRules = "MatchRules".ToLower();
             string Recomplie = "Recomplie".ToLower();
             string sysBaseNode = _rootNodeName.ToLower();
-            string sysBaseNode1= _rootNodeName1.ToLower();
+            string sysBaseNode1 = _rootNodeName1.ToLower();
 
             node.ForeachChildNode(item =>
             {
