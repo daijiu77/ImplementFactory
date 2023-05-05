@@ -251,7 +251,7 @@ namespace System.DJ.ImplementFactory
             IsDbUsed = dbInfo.IsDbUsed;
         }
 
-        static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        static T loadInterfaceInstance_old<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
         {
             asse = null;
             object _obj = default(T);
@@ -329,6 +329,111 @@ namespace System.DJ.ImplementFactory
                     catch { }
                     if (null != _obj) break;
                 }
+            }
+
+            if (null == _obj) return default(T);
+
+            return (T)_obj;
+        }
+
+        static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        {
+            asse = null;
+            object _obj = default(T);
+            string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
+            string[] files = Directory.GetFiles(binPath, "*.dll");
+            string file = "";
+            if (!string.IsNullOrEmpty(likeName))
+            {
+                Regex rg = new Regex(@".*" + likeName + @".*\.dll$", RegexOptions.IgnoreCase);
+                foreach (var item in files)
+                {
+                    if (rg.IsMatch(item))
+                    {
+                        file = item;
+                        break;
+                    }
+                }
+            }
+
+            Dictionary<Type, Type> excludeDic = new Dictionary<Type, Type>();
+            if (null != excludeTypes)
+            {
+                foreach (var item in excludeTypes)
+                {
+                    if (null == item) continue;
+                    excludeDic[item] = item;
+                }
+            }
+
+            Func<Type[], Type, Type> func = (types1, baseType) =>
+            {
+                Type resultType = baseType;
+                foreach (var type in types1)
+                {
+                    if (type.IsAbstract) continue;
+                    if (type.IsInterface) continue;
+                    if (!resultType.IsAssignableFrom(type)) continue;
+                    if (excludeDic.ContainsKey(type)) continue;
+
+                    resultType = type;
+                }
+                return resultType;
+            };
+
+            Func<Type, Type, object> createObj = (_type1, _srcType1) =>
+            {
+                if (null == _type1 || null == _srcType1) return null;
+                object _vObj1 = null;
+                if (_type1 != _srcType1)
+                {
+                    try
+                    {
+                        _vObj1 = Activator.CreateInstance(_type1);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+                return _vObj1;
+            };
+
+            Type[] types = null;
+            Type srcType = typeof(T);
+            Type finallyType = srcType;
+            if (!string.IsNullOrEmpty(file))
+            {
+                try
+                {
+                    asse = Assembly.LoadFrom(file);
+                    types = asse.GetTypes();
+                    finallyType = func(types, finallyType);
+                }
+                catch { }
+
+                _obj = createObj(finallyType, srcType);                
+            }
+
+            if (null == _obj)
+            {
+                finallyType = srcType;
+                foreach (Assembly asseItem in assemblies)
+                {
+                    try
+                    {
+                        types = asseItem.GetTypes();
+                        finallyType = func(types, finallyType);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+
+                _obj = createObj(finallyType, srcType);
             }
 
             if (null == _obj) return default(T);
@@ -630,7 +735,7 @@ namespace System.DJ.ImplementFactory
                     {
                         try
                         {
-                            PropertyInfo pi = impl_type.GetProperty(TempImplCode.InterfaceInstanceType);
+                            PropertyInfo pi = impl_type.GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
                             if (null != pi)
                             {
                                 t1 = pi.PropertyType;
@@ -1063,13 +1168,12 @@ namespace System.DJ.ImplementFactory
             Type type1 = null;
             foreach (Type t in types)
             {
-                //if (false == t.IsImplementInterface(interfaceType)) continue;
                 if (IsIllegalImplType(t)) continue;
                 if (false == interfaceType.IsAssignableFrom(t)) continue;
                 type1 = null;
                 try
                 {
-                    PropertyInfo pi = t.GetProperty(TempImplCode.InterfaceInstanceType);
+                    PropertyInfo pi = t.GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
                     if (null != pi)
                     {
                         type1 = pi.PropertyType;
@@ -1089,7 +1193,6 @@ namespace System.DJ.ImplementFactory
                     if (!MatchImpl(rg1, t, implName, isIgnoreCase)) continue;
                 }
                 impl_type = t;
-
                 break;
             }
             return impl_type;
@@ -1533,7 +1636,7 @@ namespace System.DJ.ImplementFactory
             string MatchRules = "MatchRules".ToLower();
             string Recomplie = "Recomplie".ToLower();
             string sysBaseNode = _rootNodeName.ToLower();
-            string sysBaseNode1= _rootNodeName1.ToLower();
+            string sysBaseNode1 = _rootNodeName1.ToLower();
 
             node.ForeachChildNode(item =>
             {

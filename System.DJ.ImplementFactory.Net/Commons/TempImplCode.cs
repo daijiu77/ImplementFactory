@@ -118,8 +118,6 @@ namespace System.DJ.ImplementFactory.Commons
 
         public bool IsShowCodeOfAll { get; set; } = false;
 
-        public static string InterfaceInstanceType => DynamicCodeTempImpl.InterfaceInstanceType;
-
         void init(string rootPath)
         {
             instanceCount = 0;

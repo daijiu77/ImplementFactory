@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.IO;
@@ -1611,7 +1612,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             T v = default(T);
             if (newInstance.GetType().IsInterface) return v;
-            v = newInstance.GetPropertyValue<T>(TempImplCode.InterfaceInstanceType);
+            v = newInstance.GetPropertyValue<T>(DynamicCodeTempImpl.InterfaceInstanceType);
             return v;
         }
 

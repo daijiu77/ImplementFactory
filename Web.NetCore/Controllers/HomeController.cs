@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
+using System.Reflection;
 using Web.NetCore.Models;
 
 namespace Web.NetCore.Controllers
@@ -18,17 +20,21 @@ namespace Web.NetCore.Controllers
         private SvrAPISchema svrAPISchema = new SvrAPISchema();
 
         [AutoCall]
-        private Calculate calculate;
+        private ICalculate calculate;
 
         public HomeController(ILogger<HomeController> logger)
-        {
+        {            
             _logger = logger;
             ImplementAdapter.Register(this);
         }
 
+        [HttpGet, Route("Index")]
         public IActionResult Index()
         {
-            string s = calculate.GetStr();
+            calculate.append("abc");
+            calculate.append("def");
+            calculate.append("ghi");
+            string[] s = calculate.Lines();
             return View();
         }
 

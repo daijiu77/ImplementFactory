@@ -35,7 +35,7 @@ namespace Web.NetCore
             services.AddControllersWithViews();
             services.AddMvc(options =>
             {
-                options.Filters.Add<MSFilter>();
+                //options.Filters.Add<MSFilter>();
                 options.Filters.Add<UIResultModel>();
                 options.ModelBinderProviders.Insert(0, new ModelBinderProvider());
             });

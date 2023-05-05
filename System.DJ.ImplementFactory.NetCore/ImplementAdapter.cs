@@ -251,7 +251,7 @@ namespace System.DJ.ImplementFactory
             IsDbUsed = dbInfo.IsDbUsed;
         }
 
-        static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        static T loadInterfaceInstance_old<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
         {
             asse = null;
             object _obj = default(T);
@@ -336,7 +336,7 @@ namespace System.DJ.ImplementFactory
             return (T)_obj;
         }
 
-        static T loadInterfaceInstance_new<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
         {
             asse = null;
             object _obj = default(T);
@@ -375,10 +375,29 @@ namespace System.DJ.ImplementFactory
                     if (type.IsInterface) continue;
                     if (!resultType.IsAssignableFrom(type)) continue;
                     if (excludeDic.ContainsKey(type)) continue;
-                    
+
                     resultType = type;
                 }
                 return resultType;
+            };
+
+            Func<Type, Type, object> createObj = (_type1, _srcType1) =>
+            {
+                if (null == _type1 || null == _srcType1) return null;
+                object _vObj1 = null;
+                if (_type1 != _srcType1)
+                {
+                    try
+                    {
+                        _vObj1 = Activator.CreateInstance(_type1);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+                return _vObj1;
             };
 
             Type[] types = null;
@@ -394,18 +413,7 @@ namespace System.DJ.ImplementFactory
                 }
                 catch { }
 
-                if (finallyType != srcType)
-                {
-                    try
-                    {
-                        _obj = Activator.CreateInstance(finallyType);
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
-                }
+                _obj = createObj(finallyType, srcType);                
             }
 
             if (null == _obj)
@@ -424,19 +432,8 @@ namespace System.DJ.ImplementFactory
                         //throw;
                     }
                 }
-                
-                if (finallyType != srcType)
-                {
-                    try
-                    {
-                        _obj = Activator.CreateInstance(finallyType);
-                    }
-                    catch (Exception)
-                    {
 
-                        //throw;
-                    }
-                }
+                _obj = createObj(finallyType, srcType);
             }
 
             if (null == _obj) return default(T);
@@ -738,7 +735,7 @@ namespace System.DJ.ImplementFactory
                     {
                         try
                         {
-                            PropertyInfo pi = impl_type.GetProperty(TempImplCode.InterfaceInstanceType);
+                            PropertyInfo pi = impl_type.GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
                             if (null != pi)
                             {
                                 t1 = pi.PropertyType;
@@ -1171,13 +1168,12 @@ namespace System.DJ.ImplementFactory
             Type type1 = null;
             foreach (Type t in types)
             {
-                //if (false == t.IsImplementInterface(interfaceType)) continue;
                 if (IsIllegalImplType(t)) continue;
                 if (false == interfaceType.IsAssignableFrom(t)) continue;
                 type1 = null;
                 try
                 {
-                    PropertyInfo pi = t.GetProperty(TempImplCode.InterfaceInstanceType);
+                    PropertyInfo pi = t.GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
                     if (null != pi)
                     {
                         type1 = pi.PropertyType;
@@ -1197,7 +1193,6 @@ namespace System.DJ.ImplementFactory
                     if (!MatchImpl(rg1, t, implName, isIgnoreCase)) continue;
                 }
                 impl_type = t;
-
                 break;
             }
             return impl_type;
