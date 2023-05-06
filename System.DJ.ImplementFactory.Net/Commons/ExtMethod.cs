@@ -408,7 +408,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, Type, string, object, object> funcVal)
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
             T tObj = default(T);
             if (srcObj.GetType().IsBaseType()) return tObj;
@@ -446,7 +446,7 @@ namespace System.DJ.ImplementFactory.Commons
                 vObj = fv;
                 if (null != funcVal)
                 {
-                    vObj = funcVal(tObj, tgPropertyInfo.PropertyType, tgPropertyInfo.Name, fv);
+                    vObj = funcVal(tObj, srcObj, fn, fv);
                 }
 
                 if (null != vObj)
@@ -569,7 +569,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcObj">Data source entity</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, Func<T, Type, string, object, object> funcVal)
+        public static T ToObjectFrom<T>(this object srcObj, Func<T, object, string, object, object> funcVal)
         {
             return srcObj.ToObjectFrom<T>(null, funcVal);
         }
@@ -593,7 +593,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcObj">Data source entity</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<T, Type, string, object, object> funcVal)
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<T, object, string, object, object> funcVal)
         {
             T t = srcObj.ToObjectFrom<T>(null, funcVal);
             return Task.FromResult(t);
@@ -621,7 +621,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, Type, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
             if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
             IList<T> list = new List<T>();
@@ -644,7 +644,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<T, Type, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<T, object, string, object, object> funcVal)
         {
             return srcList.ToListFrom<T, TT>(null, funcVal);
         }
@@ -682,7 +682,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object of type task</returns>
-        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<T, Type, string, object, object> funcVal)
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<T, object, string, object, object> funcVal)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(null, funcVal);
             return Task.FromResult(list);
@@ -710,7 +710,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned List element collection object of type task</returns>
-        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<T, Type, string, object, object> funcVal)
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<T, object, string, object, object> funcVal)
         {
             List<T> list = (List<T>)srcList.ToListFrom<T, TT>(null, funcVal);
             return Task.FromResult(list);
