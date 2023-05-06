@@ -202,6 +202,9 @@ namespace System.DJ.ImplementFactory
             microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
 
             mSFilterMessage = loadInterfaceInstance<IMSFilterMessage>("", null, ref asse3);
+
+            serviceRegisterMessage = loadInterfaceInstance<ServiceRegisterMessage>("", null, ref asse3);
+            if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
@@ -560,6 +563,8 @@ namespace System.DJ.ImplementFactory
         public static IInstanceCodeCompiler codeCompiler { get; set; }
 
         public static IDbConnectionState dbConnectionState { get; set; }
+
+        public static ServiceRegisterMessage serviceRegisterMessage { get; set; }
 
         public static string ServerFile { get { return svrFile; } }
 

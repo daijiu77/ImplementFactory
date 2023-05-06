@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
@@ -74,6 +76,68 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 bool isTimeout = urlSize > ints.Count;
                 return isTimeout;
+            }
+        }
+
+        private static Type GetSrcType()
+        {
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = null;
+            MethodBase mb = null;
+            Type meType = typeof(MSDataVisitor);
+            Type pt = null;
+            Type srcType = null;
+            const int maxNum = 10;
+            int num = 0;
+            while (num <= maxNum)
+            {
+                stackFrame = trace.GetFrame(num);
+                if (null == stackFrame) break;
+                mb = stackFrame.GetMethod();
+                if (null == mb) break;
+                pt = mb.DeclaringType;
+                if (null == pt) break;
+                if (pt != meType)
+                {
+                    srcType = pt;
+                    break;
+                }
+                num++;
+            }
+
+            return srcType;
+        }
+
+        /// <summary>
+        /// It is illegal call.
+        /// </summary>
+        /// <returns></returns>
+        private static bool isIllegalCall()
+        {
+            Type srcType = GetSrcType();
+            if (null == srcType) return true;
+            if (srcType != typeof(ServiceRegisterMessage)) return true;
+            return false;
+        }
+
+        public static void RegisterSuccess(string routeName, string url, MethodTypes methodTypes, string contractValue)
+        {
+            lock (_thObjLock)
+            {
+                if (isIllegalCall()) return;
+                string routeNameLower = routeName.ToLower();
+                timeoutUrlDic.Remove(routeNameLower);
+            }
+        }
+
+        public static void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        {
+            lock (_thObjLock)
+            {
+                if (isIllegalCall()) return;
+                if (!string.IsNullOrEmpty(err)) return;
+                string routeNameLower = routeName.ToLower();
+                timeoutUrlDic.Remove(routeNameLower);
             }
         }
 

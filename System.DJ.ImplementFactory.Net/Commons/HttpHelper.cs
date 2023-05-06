@@ -102,6 +102,36 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
+            try
+            {
+                if (null != httpResponseMessage) httpResponseMessage.Dispose();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
+            try
+            {
+                if (null != httpClient) httpClient.Dispose();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
+            try
+            {
+                if (null != httpContent) httpContent.Dispose();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
             resultData = null == resultData ? "" : resultData;
             action(resultData, err);
         }

@@ -14,7 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
-        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/.+");
+        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/[^\/]+");
         private static int maxNum = 50;
         private static int maxNumber = 50;
         private const int sleepNum = 1000 * 3;
@@ -84,6 +84,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             char c = ' ';
             string s = "", s1 = "";
             string url = "";
+            string httpUrl = "";
             string testUrl = "";
             string registerAddr = "";
             string printMsg = "The current service has been successfully registered to the address: {0}.";
@@ -102,11 +103,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
 
                 if (null == TestAddr) TestAddr = "";
+                TestAddr = TestAddr.Trim();
                 if (!string.IsNullOrEmpty(TestAddr))
                 {
-                    if (TestAddr.Substring(0, 1).Equals("/"))
+                    TestAddr = httpRg.Replace(TestAddr, "");
+                    TestAddr = TestAddr.Trim();
+                    if (!string.IsNullOrEmpty(TestAddr))
                     {
-                        TestAddr = TestAddr.Substring(1);
+                        while (TestAddr.Substring(0, 1).Equals("/"))
+                        {
+                            TestAddr = TestAddr.Substring(1);
+                            if (string.IsNullOrEmpty(TestAddr)) break;
+                        }
                     }
                 }
 
@@ -137,14 +145,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                     if (!string.IsNullOrEmpty(TestAddr))
                     {
-                        if (httpRg.IsMatch(TestAddr))
-                        {
-                            testUrl = TestAddr;
-                        }
-                        else
-                        {
-                            testUrl = url + TestAddr;
-                        }
+                        testUrl = url + TestAddr;
                         bool testSuccessfully = false;
                         httpHelper.SendData(testUrl, heads, null, true, methodTypes, (result, msg) =>
                         {
@@ -152,18 +153,47 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             {
                                 testSuccessfully = true;
                             }
+                            if (null != ImplementAdapter.serviceRegisterMessage)
+                            {
+                                try
+                                {
+                                    ImplementAdapter.serviceRegisterMessage.Test(MSRouteName, testUrl, methodTypes, contractValue, msg);
+                                }
+                                catch { }
+                            }
+
                         });
                         if (testSuccessfully) continue;
                     }
-                    url += registerAddr;
-                    httpHelper.SendData(url, heads, null, true, methodTypes, (result, msg) =>
+
+                    httpUrl = url + registerAddr;
+                    httpHelper.SendData(httpUrl, heads, null, true, methodTypes, (result, msg) =>
                     {
                         if (string.IsNullOrEmpty(msg))
                         {
-                            AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(url));
+                            AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(httpUrl));
+                            if (null != ImplementAdapter.serviceRegisterMessage)
+                            {
+                                try
+                                {
+                                    ImplementAdapter.serviceRegisterMessage.RegisterSuccess(MSRouteName, httpUrl, methodTypes, contractValue);
+                                }
+                                catch { }
+                            }
                             return;
                         }
-                        errUrls.Add(url + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue);
+                        else
+                        {
+                            if (null != ImplementAdapter.serviceRegisterMessage)
+                            {
+                                try
+                                {
+                                    ImplementAdapter.serviceRegisterMessage.RegisterFail(MSRouteName, httpUrl, methodTypes, contractValue, msg);
+                                }
+                                catch { }
+                            }
+                        }
+                        errUrls.Add(httpUrl + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue + "\t" + MSRouteName);
                     });
                 }
             });
@@ -191,9 +221,25 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         errUrls.RemoveAt(n);
                         n = 0;
                         size = errUrls.Count;
+                        if (null != ImplementAdapter.serviceRegisterMessage)
+                        {
+                            try
+                            {
+                                ImplementAdapter.serviceRegisterMessage.RegisterSuccess(arr[3], url, methodTypes, arr[2]);
+                            }
+                            catch { }
+                        }
                     }
                     else
                     {
+                        if (null != ImplementAdapter.serviceRegisterMessage)
+                        {
+                            try
+                            {
+                                ImplementAdapter.serviceRegisterMessage.RegisterFail(arr[3], url, methodTypes, arr[2], msg);
+                            }
+                            catch { }
+                        }
                         n++;
                     }
                 });
