@@ -153,6 +153,20 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
+        private List<string> whereIgnoreConditions = new List<string>();
+        /// <summary>
+        /// Automatically generate a where condition (including properties with a Condition identifier) by setting the ignore property by this method
+        /// </summary>
+        /// <param name="fieldNames">Field names</param>
+        public void WhereIgnore(params string[] fieldNames)
+        {
+            if (null == fieldNames) return;
+            foreach (var item in fieldNames)
+            {
+                whereIgnoreConditions.Add(item);
+            }
+        }
+
         private string GetSelectPart()
         {
             string selectPart = "";
@@ -319,7 +333,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                     s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
                     {
                         fn = alias + propertyInfoExt.Name;
-                        if (fieldDic.ContainsKey(fn) || fieldDic.ContainsKey(propertyInfoExt.Name)) return false;
+                        if (fieldDic.ContainsKey(fn)
+                        || fieldDic.ContainsKey(propertyInfoExt.Name)
+                        || fieldDic.ContainsKey(fn.ToLower())
+                        || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
                         return true;
                     });
                     if (0 == s.IndexOf(startStr))
@@ -447,6 +464,18 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             if (!string.IsNullOrEmpty(groupPart)) groupPart = groupPart.Substring(1);
             return groupPart;
+        }
+
+        private void InitWhereIgnore(Dictionary<string, object> dic)
+        {
+            string key = "";
+            foreach (var item in whereIgnoreConditions)
+            {
+                if (string.IsNullOrEmpty(item)) continue;
+                key = item.Trim();
+                if (string.IsNullOrEmpty(item)) continue;
+                dic[key.ToLower()] = key;
+            }
         }
 
         private string GetOrderbyPart()
@@ -905,6 +934,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string wherePart = "";
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
+            InitWhereIgnore(fieldDic);
 
             string selectPart = GetSelectPart();
             string fromPart = GetFromPart(ref wherePart, fieldDic);
@@ -925,6 +955,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string wherePart = "";
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
+            InitWhereIgnore(fieldDic);
+
             string selectPart = GetSelectPart();
             string fromPart = GetFromPart(ref wherePart, fieldDic);
             wherePart = GetWherePart(wherePart, fieldDic);
