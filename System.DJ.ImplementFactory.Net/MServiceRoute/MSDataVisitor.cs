@@ -374,9 +374,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 get
                 {
-                    int count = ipDic.Count;
-                    if (count < indexDic.Count) count = indexDic.Count;
-                    return count;
+                    return ipDic.Count;
                 }
             }
 
@@ -385,7 +383,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 ipAddr = InitIPAddr(ipAddr);
                 if (!ipDic.ContainsKey(ipAddr)) return;
                 HttpItem item = ipDic[ipAddr];
-                if (-1 != item.index) indexDic.Remove(item.index);
+                if (-1 != item.index)
+                {
+                    indexDic.Remove(item.index);
+                    ints1.Remove(item.index);
+                }
                 ipDic.Remove(ipAddr);
             }
 
@@ -393,8 +395,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 if (!indexDic.ContainsKey(index)) return;
                 HttpItem item = indexDic[index];
-                if (!string.IsNullOrEmpty(item.IPAddr)) ipDic.Remove(item.IPAddr);
+                string ipAddr = InitIPAddr(item.IPAddr);
+                if (!string.IsNullOrEmpty(ipAddr))
+                {
+                    ipDic.Remove(ipAddr);
+                }
                 indexDic.Remove(index);
+                ints1.Remove(index);
             }
 
             public void Add(string ipAddr, int index)
@@ -404,16 +411,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 HttpItem item = null;
                 ipDic.TryGetValue(ipAddr1, out item);
+                if (null != item) return;
 
-                if (null == item)
+                item = new HttpItem()
                 {
-                    item = new HttpItem()
-                    {
-                        index = index,
-                        IPAddr = ipAddr
-                    };
-                }
-
+                    index = index,
+                    IPAddr = ipAddr
+                };
                 ipDic[ipAddr1] = item;
                 indexDic[index] = item;
                 ints1.Add(index);
