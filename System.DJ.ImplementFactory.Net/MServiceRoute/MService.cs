@@ -153,15 +153,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             {
                                 testSuccessfully = true;
                             }
-                            if (null != ImplementAdapter.serviceRegisterMessage)
-                            {
-                                try
-                                {
-                                    ImplementAdapter.serviceRegisterMessage.Test(MSRouteName, testUrl, methodTypes, contractValue, msg);
-                                }
-                                catch { }
-                            }
-
+                            Test(MSRouteName, testUrl, methodTypes, contractValue, msg); 
                         });
                         if (testSuccessfully) continue;
                     }
@@ -172,26 +164,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         if (string.IsNullOrEmpty(msg))
                         {
                             AbsActionFilterAttribute.PrintIpToLogs(printMsg.ExtFormat(httpUrl));
-                            if (null != ImplementAdapter.serviceRegisterMessage)
-                            {
-                                try
-                                {
-                                    ImplementAdapter.serviceRegisterMessage.RegisterSuccess(MSRouteName, httpUrl, methodTypes, contractValue);
-                                }
-                                catch { }
-                            }
+                            Success(MSRouteName, httpUrl, methodTypes, contractValue);                            
                             return;
                         }
                         else
                         {
-                            if (null != ImplementAdapter.serviceRegisterMessage)
-                            {
-                                try
-                                {
-                                    ImplementAdapter.serviceRegisterMessage.RegisterFail(MSRouteName, httpUrl, methodTypes, contractValue, msg);
-                                }
-                                catch { }
-                            }
+                            Fail(MSRouteName, httpUrl, methodTypes, contractValue, msg);                            
                         }
                         errUrls.Add(httpUrl + "\t" + ((int)methodTypes).ToString() + "\t" + contractValue + "\t" + MSRouteName);
                     });
@@ -221,25 +199,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         errUrls.RemoveAt(n);
                         n = 0;
                         size = errUrls.Count;
-                        if (null != ImplementAdapter.serviceRegisterMessage)
-                        {
-                            try
-                            {
-                                ImplementAdapter.serviceRegisterMessage.RegisterSuccess(arr[3], url, methodTypes, arr[2]);
-                            }
-                            catch { }
-                        }
+                        Success(arr[3], url, methodTypes, arr[2]);
+                        
                     }
                     else
                     {
-                        if (null != ImplementAdapter.serviceRegisterMessage)
-                        {
-                            try
-                            {
-                                ImplementAdapter.serviceRegisterMessage.RegisterFail(arr[3], url, methodTypes, arr[2], msg);
-                            }
-                            catch { }
-                        }
+                        Fail(arr[3], url, methodTypes, arr[2], msg);                        
                         n++;
                     }
                 });
@@ -250,6 +215,42 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 timeNum++;
                 Thread.Sleep(sleepNum);
+            }
+        }
+
+        private static void Success(string routeName, string url, MethodTypes methodTypes, string contractValue)
+        {
+            if (null != ImplementAdapter.serviceRegisterMessage)
+            {
+                try
+                {
+                    ImplementAdapter.serviceRegisterMessage.RegisterSuccess(routeName, url, methodTypes, contractValue);
+                }
+                catch { }
+            }
+        }
+
+        private static void Fail(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        {
+            if (null != ImplementAdapter.serviceRegisterMessage)
+            {
+                try
+                {
+                    ImplementAdapter.serviceRegisterMessage.RegisterFail(routeName, url, methodTypes, contractValue, err);
+                }
+                catch { }
+            }
+        }
+
+        private static void Test(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        {
+            if (null != ImplementAdapter.serviceRegisterMessage)
+            {
+                try
+                {
+                    ImplementAdapter.serviceRegisterMessage.TestVisit(routeName, url, methodTypes, contractValue, err);
+                }
+                catch { }
             }
         }
 

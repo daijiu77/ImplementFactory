@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
@@ -1336,8 +1337,8 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (string.IsNullOrEmpty(path)) return false;
             bool isSuccess = true;
-            
-            Regex rg = new Regex(@"[\\\/]",RegexOptions.IgnoreCase);
+
+            Regex rg = new Regex(@"[\\\/]", RegexOptions.IgnoreCase);
             if (!rg.IsMatch(path)) return isSuccess;
             char c = rg.Match(path).Groups[0].Value.ToCharArray()[0];
 
@@ -1666,6 +1667,52 @@ namespace System.DJ.ImplementFactory.Commons
             }
             foreach (T item in collection) count++;
             return count;
+        }
+
+        /// <summary>
+        /// 获取调用方法所属类的类型,但要排除指定的类型
+        /// </summary>
+        /// <param name="excludeType">排除指定的类型</param>
+        /// <returns></returns>
+        public static Type GetSrcType(Type excludeType)
+        {
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = null;
+            MethodBase mb = null;
+            Type meType = typeof(DJTools);
+            Type pt = null;
+            Type srcType = null;
+            Regex rg = new Regex(@"^\<\>.+", RegexOptions.IgnoreCase);
+            const int maxNum = 10;
+            int num = 0;
+            while (num <= maxNum)
+            {
+                stackFrame = trace.GetFrame(num);
+                if (null == stackFrame) break;
+                mb = stackFrame.GetMethod();
+                if (null == mb) break;
+                pt = mb.DeclaringType;
+                if (null == pt) break;
+                if ((pt != excludeType) && (pt != meType) && (false == rg.IsMatch(pt.Name)))
+                {
+                    srcType = pt;
+                    break;
+                }
+                num++;
+            }
+
+            return srcType;
+        }
+
+        /// <summary>
+        /// 获取调用方法所属类的类型,但要排除指定的类型
+        /// </summary>
+        /// <typeparam name="T">排除指定的类型</typeparam>
+        /// <returns></returns>
+        public static Type GetSrcType<T>()
+        {
+            Type excludeType = typeof(T);
+            return GetSrcType(excludeType);
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]

@@ -1,47 +1,21 @@
 ﻿using System.Diagnostics;
+using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class ServiceRegisterMessage
     {
-        private static Type GetSrcType()
-        {
-            StackTrace trace = new StackTrace();
-            StackFrame stackFrame = null;
-            MethodBase mb = null;
-            Type meType = typeof(ServiceRegisterMessage);
-            Type pt = null;
-            Type srcType = null;
-            const int maxNum = 10;
-            int num = 0;
-            while (num <= maxNum)
-            {
-                stackFrame = trace.GetFrame(num);
-                if (null == stackFrame) break;
-                mb = stackFrame.GetMethod();
-                if (null == mb) break;
-                pt = mb.DeclaringType;
-                if (null == pt) break;
-                if (pt != meType)
-                {
-                    srcType = pt;
-                    break;
-                }
-                num++;
-            }
-
-            return srcType;
-        }
-
         /// <summary>
         /// It is called illegal.
         /// </summary>
         /// <returns></returns>
         private static bool isIllegalCall()
-        {
-            Type srcType = GetSrcType();
+        {            
+            Type srcType = DJTools.GetSrcType<ServiceRegisterMessage>();
             if (null == srcType) return true;
             if (srcType != typeof(MService)) return true;
             return false;
