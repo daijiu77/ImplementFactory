@@ -120,12 +120,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
-        public static void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
+        public static void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err, bool success)
         {
             lock (_thObjLock)
             {
                 if (isIllegalCall()) return;
-                if (string.IsNullOrEmpty(err)) return;
+                if (!success) return;
                 RemoveTimeoutItem(routeName, url);
             }
         }
@@ -321,14 +321,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             private Dictionary<string, HttpItem> ipDic = new Dictionary<string, HttpItem>();
             private Dictionary<int, HttpItem> indexDic = new Dictionary<int, HttpItem>();
+            private List<int> ints1 = new List<int>();
 
-            private EnumerableItem enumerableItem = new EnumerableItem();
+            private EnumerableItem enumerableItem = null;
+
+            public HttpList()
+            {
+                enumerableItem = new EnumerableItem(this);
+            }
 
             public HttpItem this[string ipAddr]
             {
                 get
                 {
                     HttpItem item = null;
+                    ipAddr = InitIPAddr(ipAddr);
                     ipDic.TryGetValue(ipAddr, out item);
                     return item;
                 }
@@ -344,8 +351,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
             }
 
+            private string InitIPAddr(string ipAddr)
+            {
+                if (null == ipAddr) ipAddr = "";
+                ipAddr = ipAddr.Trim();
+                ipAddr = ipAddr.ToLower();
+                return ipAddr;
+            }
+
             public bool Contains(string ipAddr)
             {
+                ipAddr = InitIPAddr(ipAddr);
                 return ipDic.ContainsKey(ipAddr);
             }
 
@@ -366,6 +382,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             public void Remove(string ipAddr)
             {
+                ipAddr = InitIPAddr(ipAddr);
                 if (!ipDic.ContainsKey(ipAddr)) return;
                 HttpItem item = ipDic[ipAddr];
                 if (-1 != item.index) indexDic.Remove(item.index);
@@ -382,15 +399,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             public void Add(string ipAddr, int index)
             {
+                string ipAddr1 = InitIPAddr(ipAddr);
+                if (string.IsNullOrEmpty(ipAddr1) || (0 > index)) return;
+
                 HttpItem item = null;
-                if (!string.IsNullOrEmpty(ipAddr))
-                {
-                    ipDic.TryGetValue(ipAddr, out item);
-                }
-                else if (0 <= index)
-                {
-                    indexDic.TryGetValue(index, out item);
-                }
+                ipDic.TryGetValue(ipAddr1, out item);
 
                 if (null == item)
                 {
@@ -401,25 +414,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     };
                 }
 
-                if (!string.IsNullOrEmpty(ipAddr))
-                {
-                    ipDic[ipAddr] = item;
-                }
-
-                if (0 <= index)
-                {
-                    indexDic[index] = item;
-                }
-            }
-
-            public void Add(string ipAddr)
-            {
-                Add(ipAddr, -1);
-            }
-
-            public void Add(int index)
-            {
-                Add(null, index);
+                ipDic[ipAddr1] = item;
+                indexDic[index] = item;
+                ints1.Add(index);
             }
 
             IEnumerator<HttpItem> IEnumerable<HttpItem>.GetEnumerator()
@@ -434,23 +431,36 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             class EnumerableItem : IEnumerator<HttpItem>, IEnumerator
             {
-                HttpItem IEnumerator<HttpItem>.Current => throw new NotImplementedException();
+                private HttpList httpItems = null;
+                private HttpItem httpItem = null;
+                int numIndex = 0;
 
-                object IEnumerator.Current => throw new NotImplementedException();
+                public EnumerableItem(HttpList httpItems)
+                {
+                    this.httpItems = httpItems;
+                }
+
+                HttpItem IEnumerator<HttpItem>.Current => httpItem;
+
+                object IEnumerator.Current => httpItem;
 
                 void IDisposable.Dispose()
                 {
-                    throw new NotImplementedException();
+                    numIndex = 0;
                 }
 
                 bool IEnumerator.MoveNext()
                 {
-                    throw new NotImplementedException();
+                    if (numIndex >= httpItems.ints1.Count) return false;
+                    int index = httpItems.ints1[numIndex];
+                    httpItem = httpItems.indexDic[index];
+                    numIndex++;
+                    return true;
                 }
 
                 void IEnumerator.Reset()
                 {
-                    throw new NotImplementedException();
+                    numIndex = 0;
                 }
             }
         }

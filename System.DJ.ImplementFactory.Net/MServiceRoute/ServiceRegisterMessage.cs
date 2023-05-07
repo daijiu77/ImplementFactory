@@ -37,7 +37,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             if (isIllegalCall()) return;
-            MSDataVisitor.TestVisit(routeName, url, methodTypes, contractValue, message, err);
+            bool success = string.IsNullOrEmpty(err);
+            MSDataVisitor.TestVisit(routeName, url, methodTypes, contractValue, message, err, success);
             Test(routeName, url, methodTypes, contractValue, message, err);
         }
 
