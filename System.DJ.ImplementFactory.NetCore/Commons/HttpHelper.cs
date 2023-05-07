@@ -96,7 +96,7 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     catch (Exception ex)
                     {
-                        err = ex.Message;
+                        DJTools.append(ref err, ex.Message);
                         //throw;
                     }
                 }

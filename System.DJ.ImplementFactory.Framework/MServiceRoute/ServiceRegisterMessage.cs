@@ -14,44 +14,44 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// </summary>
         /// <returns></returns>
         private static bool isIllegalCall()
-        {            
+        {
             Type srcType = DJTools.GetSrcType<ServiceRegisterMessage>();
             if (null == srcType) return true;
             if (srcType != typeof(MService)) return true;
             return false;
         }
 
-        public void RegisterSuccess(string routeName, string url, MethodTypes methodTypes, string contractValue)
+        public void RegisterSuccess(string routeName, string url, MethodTypes methodTypes, string contractValue, string message)
         {
             if (isIllegalCall()) return;
-            MSDataVisitor.RegisterSuccess(routeName, url, methodTypes, contractValue);
-            Success(routeName, url, methodTypes, contractValue);
+            MSDataVisitor.RegisterSuccess(routeName, url, methodTypes, contractValue, message);
+            Success(routeName, url, methodTypes, contractValue, message);
         }
 
-        public void RegisterFail(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        public void RegisterFail(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             if (isIllegalCall()) return;
-            Fail(routeName, url, methodTypes, contractValue, err);
+            Fail(routeName, url, methodTypes, contractValue, message, err);
         }
 
-        public void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        public void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             if (isIllegalCall()) return;
-            MSDataVisitor.TestVisit(routeName, url, methodTypes, contractValue, err);
-            Test(routeName, url, methodTypes, contractValue, err);
+            MSDataVisitor.TestVisit(routeName, url, methodTypes, contractValue, message, err);
+            Test(routeName, url, methodTypes, contractValue, message, err);
         }
 
-        public virtual void Success(string routeName, string url, MethodTypes methodTypes, string contractValue)
+        public virtual void Success(string routeName, string url, MethodTypes methodTypes, string contractValue, string message)
         {
             //
         }
 
-        public virtual void Fail(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        public virtual void Fail(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             //
         }
 
-        public virtual void Test(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        public virtual void Test(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             //
         }

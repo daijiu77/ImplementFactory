@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
@@ -15,15 +16,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         [AutoCall]
         private IMSAllot mSAllot;
 
+        private const string IPAddr = "IPAddress";
+        private static Regex httpRg = new Regex(@"^((http)|(https)):\/\/(?<IPAddress>[^\/\?]+)", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// key: routeName-controller-action, value: index
         /// </summary>
         private static Dictionary<string, int> map = new Dictionary<string, int>();
 
         /// <summary>
-        /// key: routeName_lower, value: indexs
+        /// key: ip and port, value: indexs
         /// </summary>
-        private static Dictionary<string, List<int>> timeoutUrlDic = new Dictionary<string, List<int>>();
+        private static Dictionary<string, HttpList> timeoutUrlDic = new Dictionary<string, HttpList>();
 
         private static object _thObjLock = new object();
 
@@ -46,7 +50,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 map[key] = index;
                 if (timeoutUrlDic.ContainsKey(rtName))
                 {
-                    List<int> ints = timeoutUrlDic[rtName];
+                    HttpList ints = timeoutUrlDic[rtName];
                     if (ints.Count >= baseNum)
                     {
                         index = -1;
@@ -60,19 +64,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
-        private bool SetTimeoutIndex(string routeName, int urlSize, int index)
+        private bool SetTimeoutIndex(string routeName, string url, int urlSize, int index)
         {
             lock (_thObjLock)
             {
-                List<int> ints = null;
-                string routeNameLower = routeName.ToLower();
-                timeoutUrlDic.TryGetValue(routeNameLower, out ints);
+                string ipAddr = "";
+                if (httpRg.IsMatch(url))
+                {
+                    ipAddr = httpRg.Match(url).Groups[IPAddr].Value;
+                }
+                HttpList ints = null;
+                string rtName = routeName.ToLower();
+                timeoutUrlDic.TryGetValue(rtName, out ints);
                 if (null == ints)
                 {
-                    ints = new List<int>();
-                    timeoutUrlDic.Add(routeNameLower, ints);
+                    ints = new HttpList();
+                    timeoutUrlDic.Add(rtName, ints);
                 }
-                ints.Add(index);
+                ints.Add(ipAddr, index);
 
                 bool isTimeout = urlSize > ints.Count;
                 return isTimeout;
@@ -91,24 +100,33 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return false;
         }
 
-        public static void RegisterSuccess(string routeName, string url, MethodTypes methodTypes, string contractValue)
+        private static void RemoveTimeoutItem(string routeName, string url)
+        {
+            if (!httpRg.IsMatch(url)) return;
+            string rtName = routeName.ToLower();
+            HttpList httpItems = null;
+            timeoutUrlDic.TryGetValue(rtName, out httpItems);
+            if (null == httpItems) return;
+            string IPAddress = httpRg.Match(url).Groups[IPAddr].Value;
+            httpItems.Remove(IPAddress);
+        }
+
+        public static void RegisterSuccess(string routeName, string url, MethodTypes methodTypes, string contractValue, string message)
         {
             lock (_thObjLock)
             {
                 if (isIllegalCall()) return;
-                string routeNameLower = routeName.ToLower();
-                timeoutUrlDic.Remove(routeNameLower);
+                RemoveTimeoutItem(routeName, url);
             }
         }
 
-        public static void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string err)
+        public static void TestVisit(string routeName, string url, MethodTypes methodTypes, string contractValue, string message, string err)
         {
             lock (_thObjLock)
             {
                 if (isIllegalCall()) return;
-                if (!string.IsNullOrEmpty(err)) return;
-                string routeNameLower = routeName.ToLower();
-                timeoutUrlDic.Remove(routeNameLower);
+                if (string.IsNullOrEmpty(err)) return;
+                RemoveTimeoutItem(routeName, url);
             }
         }
 
@@ -256,6 +274,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string httpAddr = "";
             bool isTimeout = false;
             int urlSize = arr.Length;
+            Regex badRg = new Regex(@"bad\s+gateway", RegexOptions.IgnoreCase);
         timeout_restart:
             isTimeout = false;
             index = GetIndex(routeName, key, urlSize);
@@ -278,9 +297,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 else
                 {
-                    if (-1 != err.ToLower().IndexOf("timeout"))
+                    string errLower = err.ToLower();
+                    if ((-1 != errLower.IndexOf("timeout")) || badRg.IsMatch(errLower))
                     {
-                        isTimeout = SetTimeoutIndex(routeName, urlSize, index);
+                        isTimeout = SetTimeoutIndex(routeName, httpAddr, urlSize, index);
+
                     }
                     if (null != mSAllot) mSAllot.HttpVisitingException(routeName, httpAddr, err);
                 }
@@ -290,5 +311,148 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return result;
         }
 
+        class HttpItem
+        {
+            public int index { get; set; } = -1;
+            public string IPAddr { get; set; }
+        }
+
+        class HttpList : IEnumerable<HttpItem>
+        {
+            private Dictionary<string, HttpItem> ipDic = new Dictionary<string, HttpItem>();
+            private Dictionary<int, HttpItem> indexDic = new Dictionary<int, HttpItem>();
+
+            private EnumerableItem enumerableItem = new EnumerableItem();
+
+            public HttpItem this[string ipAddr]
+            {
+                get
+                {
+                    HttpItem item = null;
+                    ipDic.TryGetValue(ipAddr, out item);
+                    return item;
+                }
+            }
+
+            public HttpItem this[int index]
+            {
+                get
+                {
+                    HttpItem item = null;
+                    indexDic.TryGetValue(index, out item);
+                    return item;
+                }
+            }
+
+            public bool Contains(string ipAddr)
+            {
+                return ipDic.ContainsKey(ipAddr);
+            }
+
+            public bool Contains(int index)
+            {
+                return indexDic.ContainsKey(index);
+            }
+
+            public int Count
+            {
+                get
+                {
+                    int count = ipDic.Count;
+                    if (count < indexDic.Count) count = indexDic.Count;
+                    return count;
+                }
+            }
+
+            public void Remove(string ipAddr)
+            {
+                if (!ipDic.ContainsKey(ipAddr)) return;
+                HttpItem item = ipDic[ipAddr];
+                if (-1 != item.index) indexDic.Remove(item.index);
+                ipDic.Remove(ipAddr);
+            }
+
+            public void Remove(int index)
+            {
+                if (!indexDic.ContainsKey(index)) return;
+                HttpItem item = indexDic[index];
+                if (!string.IsNullOrEmpty(item.IPAddr)) ipDic.Remove(item.IPAddr);
+                indexDic.Remove(index);
+            }
+
+            public void Add(string ipAddr, int index)
+            {
+                HttpItem item = null;
+                if (!string.IsNullOrEmpty(ipAddr))
+                {
+                    ipDic.TryGetValue(ipAddr, out item);
+                }
+                else if (0 <= index)
+                {
+                    indexDic.TryGetValue(index, out item);
+                }
+
+                if (null == item)
+                {
+                    item = new HttpItem()
+                    {
+                        index = index,
+                        IPAddr = ipAddr
+                    };
+                }
+
+                if (!string.IsNullOrEmpty(ipAddr))
+                {
+                    ipDic[ipAddr] = item;
+                }
+
+                if (0 <= index)
+                {
+                    indexDic[index] = item;
+                }
+            }
+
+            public void Add(string ipAddr)
+            {
+                Add(ipAddr, -1);
+            }
+
+            public void Add(int index)
+            {
+                Add(null, index);
+            }
+
+            IEnumerator<HttpItem> IEnumerable<HttpItem>.GetEnumerator()
+            {
+                return enumerableItem;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return enumerableItem;
+            }
+
+            class EnumerableItem : IEnumerator<HttpItem>, IEnumerator
+            {
+                HttpItem IEnumerator<HttpItem>.Current => throw new NotImplementedException();
+
+                object IEnumerator.Current => throw new NotImplementedException();
+
+                void IDisposable.Dispose()
+                {
+                    throw new NotImplementedException();
+                }
+
+                bool IEnumerator.MoveNext()
+                {
+                    throw new NotImplementedException();
+                }
+
+                void IEnumerator.Reset()
+                {
+                    throw new NotImplementedException();
+                }
+            }
+        }
     }
 }
