@@ -105,8 +105,14 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string newClassName = dataModelType.Name + "Copy";
             string typeName = newNamespace + "." + newClassName;
 
+            Dictionary<string, List<string>> ignoreFieldsDic = null;
+            if (null != lazyIgnoreDic)
+            {
+                if (0 < lazyIgnoreDic.Count) ignoreFieldsDic = lazyIgnoreDic;
+            }
+
             Type type1 = DJTools.GetDynamicType(typeName);
-            if (null != type1)
+            if ((null != type1) && (null == ignoreFieldsDic))
             {
                 dtModel = Activator.CreateInstance(type1);
                 return dtModel;
@@ -117,12 +123,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 type1 = dic[dataModelType];
                 dtModel = Activator.CreateInstance(type1);
                 return dtModel;
-            }
-
-            Dictionary<string, List<string>> ignoreFields = null;
-            if (null != lazyIgnoreDic)
-            {
-                if (0 < lazyIgnoreDic.Count) ignoreFields = lazyIgnoreDic;
             }
 
             Attribute att = null;
@@ -268,14 +268,14 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 }
                             }
                             DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Where({0});", s);
-                            if (null != ignoreFields)
+                            if (null != ignoreFieldsDic)
                             {
                                 string fnLower = fn.ToLower();
-                                if (ignoreFields.ContainsKey(fnLower))
+                                if (ignoreFieldsDic.ContainsKey(fnLower))
                                 {
-                                    if (0 < ignoreFields[fnLower].Count)
+                                    if (0 < ignoreFieldsDic[fnLower].Count)
                                     {
-                                        string fns = string.Join("\", \"", ignoreFields[fnLower].ToArray());
+                                        string fns = string.Join("\", \"", ignoreFieldsDic[fnLower].ToArray());
                                         if (!string.IsNullOrEmpty(fns)) fns = "\"" + fns + "\"";
                                         DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnore({0});", fns);
                                         DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnoreLazy(\"{0}\", {1});", fnLower, fns);
