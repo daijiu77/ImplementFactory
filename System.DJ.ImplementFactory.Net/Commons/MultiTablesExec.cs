@@ -46,7 +46,7 @@ namespace System.DJ.ImplementFactory.Commons
             string conn = ImplementAdapter.DbHelper.connectString;
             if (string.IsNullOrEmpty(conn)) return dbName;
             Regex rg = new Regex(@"(database\s*\=\s*(?<DbName>[a-z0-9_\-]+))|(Initial\s+Catalog\s*\=\s*(?<DbName>[a-z0-9_\-]+))", RegexOptions.IgnoreCase);
-            if(!rg.IsMatch(conn)) return dbName;
+            if (!rg.IsMatch(conn)) return dbName;
             dbName = rg.Match(conn).Groups["DbName"].Value;
             return dbName;
         }
@@ -101,14 +101,14 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
         {
             get
             {
-                ImplementAdapter.task.Wait();
+                if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
                 return _tableDic;
             }
         }
 
         public static void SetTable(string tableName)
         {
-            ImplementAdapter.task.Wait();
+            if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             string tb = tableName.ToLower();
             if (!_tableDic.ContainsKey(tb))
             {
@@ -901,7 +901,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             OptDatas = 0;
             threadDic.Clear();
             tasks.Clear();
-            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             if (0 == tbDic.Count) return;
 
             Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
@@ -938,7 +938,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IMultiTablesExec.Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            ImplementAdapter.task.Wait();
+            if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             initBasicExecForSQL(dbAdapter, dbHelper);
             if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, ImplementAdapter.DbHelper);
             createNewTable.SplitTable(sql);
@@ -970,7 +970,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             threadDic.Clear();
             tasks.Clear();
             RecordQuantity = 0;
-            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             if (0 == tbDic.Count) return;
 
             Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();
@@ -1017,7 +1017,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             OptDatas = 0;
             threadDic.Clear();
             tasks.Clear();
-            if (null != ImplementAdapter.task) ImplementAdapter.task.Wait();
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             if (0 == tbDic.Count) return;
 
             Dictionary<string, string> AliasTbNameDic = new Dictionary<string, string>();

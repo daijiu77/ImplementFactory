@@ -50,8 +50,8 @@ namespace System.DJ.ImplementFactory
         private static Dictionary<string, InstanceObj> interfaceImplements = new Dictionary<string, InstanceObj>();
 
         public static readonly SysConfig sysConfig1 = new SysConfig();
-        public static Task task = null;
-        public static Task task1 = null;
+        public static Task taskMultiTablesExec = null;
+        public static Task taskUpdateTableDesign = null;
         public static Type dataCache = null;
 
         static ImplementAdapter()
@@ -230,7 +230,7 @@ namespace System.DJ.ImplementFactory
                     dbHelper1.disposableAndClose = DbConnectionFreeStrategy.disposeAndClose == dbInfo.dbConnectionFreeStrategy;
                 }
                 dbHelper1.isNormalBatchInsert = InsertBatchStrategy.normalBatch == dbInfo.insertBatchStrategy;
-                task = Task.Run(() =>
+                taskMultiTablesExec = Task.Run(() =>
                 {
                     new MultiTablesExec(dbInfo, dbHelper1);
                 });
@@ -241,7 +241,7 @@ namespace System.DJ.ImplementFactory
                      * 不能与上面的 MultiTablesExec 放在同一个 Task 里，
                      * 因为 updateTableDesign.TableScheme() 需要等待上边的 task 执行完毕才能工作
                      * **/
-                    task1 = Task.Run(() =>
+                    taskUpdateTableDesign = Task.Run(() =>
                     {
                         UpdateTableDesign updateTableDesign = new UpdateTableDesign(dbTableScheme);
                         updateTableDesign.AddTable(typeof(DataCacheTable));
@@ -252,91 +252,6 @@ namespace System.DJ.ImplementFactory
                 new PersistenceCache();
             }
             IsDbUsed = dbInfo.IsDbUsed;
-        }
-
-        static T loadInterfaceInstance_old<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
-        {
-            asse = null;
-            object _obj = default(T);
-            string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
-            string[] files = Directory.GetFiles(binPath, "*.dll");
-            string file = "";
-            if (!string.IsNullOrEmpty(likeName))
-            {
-                Regex rg = new Regex(@".*" + likeName + @".*\.dll$", RegexOptions.IgnoreCase);
-                foreach (var item in files)
-                {
-                    if (rg.IsMatch(item))
-                    {
-                        file = item;
-                        break;
-                    }
-                }
-            }
-
-            bool isExist = false;
-            Type tType = typeof(T);
-            Action<Type[]> action = types1 =>
-            {
-                foreach (var type in types1)
-                {
-                    if (type.IsAbstract) continue;
-                    if (type.IsInterface) continue;
-                    if (!tType.IsAssignableFrom(type)) continue;
-                    if (null != excludeTypes)
-                    {
-                        isExist = false;
-                        foreach (var excludeType in excludeTypes)
-                        {
-                            if (null == excludeType) continue;
-                            if (type.Equals(excludeType))
-                            {
-                                isExist = true;
-                                break;
-                            }
-                        }
-                        if (isExist) continue;
-                    }
-
-                    try
-                    {
-                        _obj = (T)Activator.CreateInstance(type);
-                    }
-                    catch { }
-                    if (null != _obj) break;
-                }
-            };
-
-            Type[] types = null;
-            if (!string.IsNullOrEmpty(file))
-            {
-                try
-                {
-                    asse = Assembly.LoadFrom(file);
-                    types = asse.GetTypes();
-                    action(types);
-                }
-                catch { }
-            }
-
-            if (null == _obj)
-            {
-                foreach (var item in files)
-                {
-                    try
-                    {
-                        asse = Assembly.LoadFrom(item);
-                        types = asse.GetTypes();
-                        action(types);
-                    }
-                    catch { }
-                    if (null != _obj) break;
-                }
-            }
-
-            if (null == _obj) return default(T);
-
-            return (T)_obj;
         }
 
         static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)

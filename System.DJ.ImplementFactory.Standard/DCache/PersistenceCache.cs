@@ -19,8 +19,8 @@ namespace System.DJ.ImplementFactory.DCache
         {
             task = Task.Run(() =>
             {
-                ImplementAdapter.task.Wait();
-                if (null != ImplementAdapter.task1) ImplementAdapter.task1.Wait();
+                if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+                if (null != ImplementAdapter.taskUpdateTableDesign) ImplementAdapter.taskUpdateTableDesign.Wait();
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<DataCacheTable>());
                 int recordCount = sqlScheme.Count();

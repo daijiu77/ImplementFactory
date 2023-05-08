@@ -176,7 +176,8 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         public static TableInfoDetail GetTableInfoDetail()
         {
-            ImplementAdapter.task1.Wait();
+            if (null == ImplementAdapter.taskUpdateTableDesign) throw new Exception("Set the UpdateTableDesign node in the configuration file 'ImplementFactory.xml' to true");
+            ImplementAdapter.taskUpdateTableDesign.Wait();
             return tableFieldInfos;
         }
 

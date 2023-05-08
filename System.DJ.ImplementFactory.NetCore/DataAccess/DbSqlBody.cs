@@ -18,7 +18,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         private List<ConditionItem> conditionItems = new List<ConditionItem>();
         private Dictionary<string, object> dicPara = new Dictionary<string, object>();
 
-        protected string EnDH = "{#$}";
+        protected const string EnDH = "{#$}";
 
         public DbSqlBody() { }
 
@@ -181,6 +181,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             fieldName = fieldName.Trim();
             if (string.IsNullOrEmpty(fieldName)) return this;
             if (0 == fieldName.Length) return this;
+            if (0 == childFields.Length) return this;
 
             string fnLower = fieldName.ToLower();
 
