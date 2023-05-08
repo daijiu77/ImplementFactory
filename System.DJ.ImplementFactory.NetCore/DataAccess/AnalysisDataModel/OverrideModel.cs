@@ -13,6 +13,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
     {
         public const string CopyParentModel = "CopyParentModel";
 
+        private const string WhereIgnoreFieldLazy = "WhereIgnoreFieldLazy";
+
         private Dictionary<Type, Type> dic = new Dictionary<Type, Type>();
         private enum PropType
         {
@@ -91,6 +93,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
         public object CreateDataModel(Type dataModelType)
         {
+            return CreateDataModel(dataModelType, null);
+        }
+
+        public object CreateDataModel(Type dataModelType, Dictionary<string, List<string>> lazyIgnoreDic)
+        {
             object dtModel = null;
             if (null == dataModelType) return null;
             if (!typeof(AbsDataModel).IsAssignableFrom(dataModelType)) return null;
@@ -112,6 +119,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 return dtModel;
             }
 
+            Dictionary<string, List<string>> ignoreFields = null;
+            if (null != lazyIgnoreDic)
+            {
+                if (0 < lazyIgnoreDic.Count) ignoreFields = lazyIgnoreDic;
+            }
 
             Attribute att = null;
             Constraint constraint = null;
@@ -256,6 +268,20 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 }
                             }
                             DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Where({0});", s);
+                            if (null != ignoreFields)
+                            {
+                                string fnLower = fn.ToLower();
+                                if (ignoreFields.ContainsKey(fnLower))
+                                {
+                                    if (0 < ignoreFields[fnLower].Count)
+                                    {
+                                        string fns = string.Join("\", \"", ignoreFields[fnLower].ToArray());
+                                        if (!string.IsNullOrEmpty(fns)) fns = "\"" + fns + "\"";
+                                        DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnore({0});", fns);
+                                        DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnoreLazy(\"{0}\", {1});", fnLower, fns);
+                                    }
+                                }
+                            }
                             if (PropType.isArray == propType)
                             {
                                 DJTools.append(ref GetBody, level, "IList<{0}> results = scheme.ToList<{0}>();", typeName);

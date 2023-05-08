@@ -167,6 +167,38 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
+        protected Dictionary<string, List<string>> lazyIgnoreDic = new Dictionary<string, List<string>>();
+        /// <summary>
+        /// Properties that ignore child objects when lazy loading is set by this method to generate a where condition condition (including properties with condition identifiers)
+        /// </summary>
+        /// <param name="fieldName">The current object property name</param>
+        /// <param name="childFields">A collection of child object property names</param>
+        public void WhereIgnoreLazy(string fieldName, params string[] childFields)
+        {
+            if (null == fieldName || null == childFields) return;
+            fieldName = fieldName.Trim();
+            if (string.IsNullOrEmpty(fieldName)) return;
+            if (0 == fieldName.Length) return;
+
+            string fnLower = fieldName.ToLower();
+
+            List<string> fields = null;
+            lazyIgnoreDic.TryGetValue(fnLower, out fields);
+            if (null == fields) fields = new List<string>();
+
+            string fn = "";
+            foreach (var item in childFields)
+            {
+                if (null == item) continue;
+                fn = item.Trim().ToLower();
+                if (string.IsNullOrEmpty(fn)) continue;
+                if (fields.Contains(fn)) continue;
+                fields.Add(fn);
+            }
+            if (0 == fields.Count) return;
+            lazyIgnoreDic[fnLower] = fields;
+        }
+
         private string GetSelectPart()
         {
             string selectPart = "";
