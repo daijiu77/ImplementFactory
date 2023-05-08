@@ -122,10 +122,11 @@ namespace System.DJ.ImplementFactory.DataAccess
         public int pageNumber { get; set; } = -1;
         public int top { get; set; }
 
-        public void SetParameter(string parameterName, object parameterValue)
+        public DbSqlBody SetParameter(string parameterName, object parameterValue)
         {
             if (dicPara.ContainsKey(parameterName)) dicPara.Remove(parameterName);
             dicPara.Add(parameterName, parameterValue);
+            return this;
         }
 
         public void Clear()
@@ -158,13 +159,14 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// Automatically generate a where condition (including properties with a Condition identifier) by setting the ignore property by this method
         /// </summary>
         /// <param name="fieldNames">Field names</param>
-        public void WhereIgnore(params string[] fieldNames)
+        public DbSqlBody WhereIgnore(params string[] fieldNames)
         {
-            if (null == fieldNames) return;
+            if (null == fieldNames) return this;
             foreach (var item in fieldNames)
             {
                 whereIgnoreConditions.Add(item);
             }
+            return this;
         }
 
         protected Dictionary<string, List<string>> lazyIgnoreDic = new Dictionary<string, List<string>>();
@@ -173,12 +175,12 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// </summary>
         /// <param name="fieldName">The current object property name</param>
         /// <param name="childFields">A collection of child object property names</param>
-        public void WhereIgnoreLazy(string fieldName, params string[] childFields)
+        public DbSqlBody WhereIgnoreLazy(string fieldName, params string[] childFields)
         {
-            if (null == fieldName || null == childFields) return;
+            if (null == fieldName || null == childFields) return this;
             fieldName = fieldName.Trim();
-            if (string.IsNullOrEmpty(fieldName)) return;
-            if (0 == fieldName.Length) return;
+            if (string.IsNullOrEmpty(fieldName)) return this;
+            if (0 == fieldName.Length) return this;
 
             string fnLower = fieldName.ToLower();
 
@@ -195,8 +197,9 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (fields.Contains(fn)) continue;
                 fields.Add(fn);
             }
-            if (0 == fields.Count) return;
+            if (0 == fields.Count) return this;
             lazyIgnoreDic[fnLower] = fields;
+            return this;
         }
 
         private string GetSelectPart()
