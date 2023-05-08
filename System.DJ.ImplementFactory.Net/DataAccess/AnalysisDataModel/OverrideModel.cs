@@ -133,7 +133,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string s = "";
             string GetBody = "";
             string tag = "";
-            string tpName = "";
+            string model_type = dataModelType.Name.ToLower();
             const string getFlag = "{#GetBody}";
             Type pt = null;
             Type[] types = null;
@@ -150,7 +150,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Pipelines" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
-
+                        
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
                 pro = "";
@@ -190,7 +190,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     {
                         propType = PropType.none;
                         typeName = "";
-                        tpName = "";
                         if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && (typeof(string) != type))
                         {
                             if (type.IsArray)
@@ -198,7 +197,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 propType = PropType.isArray;
                                 typeName = type.TypeToString(true);
                                 typeName = typeName.Replace("[]", "");
-                                tpName = type.Name.Replace("[]", "");
                                 uskv.Add(new CKeyValue() { Key = type.Namespace });
                             }
                             else
@@ -208,7 +206,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 {
                                     propType = PropType.isList;
                                     typeName = types[0].TypeToString(true);
-                                    tpName = types[0].Name;
                                     uskv.Add(new CKeyValue() { Key = types[0].Namespace });
                                 }
                             }
@@ -217,7 +214,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         {
                             propType = PropType.isClass;
                             typeName = type.TypeToString(true);
-                            tpName = type.Name;
                             uskv.Add(new CKeyValue() { Key = type.Namespace });
                         }
 
@@ -282,7 +278,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 string field_name = "";
                                 int dotIndex = 0;
                                 bool mbool = false;
-                                tpName = tpName.ToLower();
                                 foreach (var item in ignoreFieldsDic)
                                 {
                                     if (null == item.Value) continue;
@@ -295,8 +290,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                     {
                                         type_name = field_name.Substring(0, dotIndex);
                                         field_name = field_name.Substring(dotIndex + 1);
-                                        mbool = type_name.Equals(tpName);
-                                    }                                    
+                                        mbool = type_name.Equals(model_type);
+                                    }
                                     fns = string.Join("\", \"", item.Value.ToArray());
                                     if (!string.IsNullOrEmpty(fns)) fns = "\"" + fns + "\"";
                                     if (field_name.Equals(fnLower) && mbool)
