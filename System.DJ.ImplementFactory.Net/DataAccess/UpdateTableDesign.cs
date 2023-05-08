@@ -176,6 +176,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         public static TableInfoDetail GetTableInfoDetail()
         {
+            ImplementAdapter.task1.Wait();
             return tableFieldInfos;
         }
 
