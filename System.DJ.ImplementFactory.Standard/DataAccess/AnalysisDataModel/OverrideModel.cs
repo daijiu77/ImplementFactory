@@ -133,6 +133,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string s = "";
             string GetBody = "";
             string tag = "";
+            string tpName = "";
             const string getFlag = "{#GetBody}";
             Type pt = null;
             Type[] types = null;
@@ -189,6 +190,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     {
                         propType = PropType.none;
                         typeName = "";
+                        tpName = "";
                         if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && (typeof(string) != type))
                         {
                             if (type.IsArray)
@@ -196,6 +198,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 propType = PropType.isArray;
                                 typeName = type.TypeToString(true);
                                 typeName = typeName.Replace("[]", "");
+                                tpName = type.Name.Replace("[]", "");
                                 uskv.Add(new CKeyValue() { Key = type.Namespace });
                             }
                             else
@@ -205,6 +208,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 {
                                     propType = PropType.isList;
                                     typeName = types[0].TypeToString(true);
+                                    tpName = types[0].Name;
                                     uskv.Add(new CKeyValue() { Key = types[0].Namespace });
                                 }
                             }
@@ -213,6 +217,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         {
                             propType = PropType.isClass;
                             typeName = type.TypeToString(true);
+                            tpName = type.Name;
                             uskv.Add(new CKeyValue() { Key = type.Namespace });
                         }
 
@@ -271,16 +276,36 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             if (null != ignoreFieldsDic)
                             {
                                 string fnLower = fn.ToLower();
-                                if (ignoreFieldsDic.ContainsKey(fnLower))
+                                string fns = "";
+                                string ignoreStr = "";
+                                string type_name = "";
+                                string field_name = "";
+                                int dotIndex = 0;
+                                bool mbool = false;
+                                tpName = tpName.ToLower();
+                                foreach (var item in ignoreFieldsDic)
                                 {
-                                    if (0 < ignoreFieldsDic[fnLower].Count)
+                                    if (null == item.Value) continue;
+                                    if (0 == item.Value.Count) continue;
+                                    type_name = "";
+                                    mbool = true;
+                                    field_name = item.Key.ToLower();
+                                    dotIndex = field_name.IndexOf(".");
+                                    if (0 < dotIndex)
                                     {
-                                        string fns = string.Join("\", \"", ignoreFieldsDic[fnLower].ToArray());
-                                        if (!string.IsNullOrEmpty(fns)) fns = "\"" + fns + "\"";
+                                        type_name = field_name.Substring(0, dotIndex);
+                                        field_name = field_name.Substring(dotIndex + 1);
+                                        mbool = type_name.Equals(tpName);
+                                    }                                    
+                                    fns = string.Join("\", \"", item.Value.ToArray());
+                                    if (!string.IsNullOrEmpty(fns)) fns = "\"" + fns + "\"";
+                                    if (field_name.Equals(fnLower) && mbool)
+                                    {
                                         DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnore({0});", fns);
-                                        DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnoreLazy(\"{0}\", {1});", fnLower, fns);
                                     }
+                                    ignoreStr += ".WhereIgnoreLazy(\"{0}\", {1})".ExtFormat(item.Key.ToLower(), fns);
                                 }
+                                DJTools.append(ref GetBody, level, "scheme.dbSqlBody{0};", ignoreStr);
                             }
                             if (PropType.isArray == propType)
                             {
