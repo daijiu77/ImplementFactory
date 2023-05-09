@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
@@ -21,7 +23,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private const string _configFile = "MicroServiceRoute.xml";
         private const string _microServiceRoutes = "MicroServiceRoutes";
         private const string _ServiceManager = "ServiceManager";
+        private const string _RegisterActionType = "RegisterActionType";
         private const string _Routes = "Routes";
+        private const string _Route = "Route";
+        private const string _Groups = "Groups";
         private const string _ServiceName = "ServiceName";
         private const string _Port = "Port";
 
@@ -38,6 +43,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// key: serviceName_lower, value: node
         /// </summary>
         private static Dictionary<string, XmlElement> s_eleDic = new Dictionary<string, XmlElement>();
+
+        /// <summary>
+        /// key: groupsName_lower, value: groupsRoute
+        /// </summary>
+        private static Dictionary<string, GroupsRoute> s_groupDic = new Dictionary<string, GroupsRoute>();
 
         public static MServiceManager s_serviceManager = null;
         public static string s_ServiceName { get; private set; } = "";
@@ -66,6 +76,48 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         public MicroServiceRoute(string RouteName)
         {
             msr(this, RouteName, null);
+        }
+
+        /// <summary>
+        /// Load the routing cluster
+        /// </summary>
+        /// <typeparam name="T">A valid microservices interface type</typeparam>
+        /// <returns>Returns the routed cluster interface instance class</returns>
+        public static List<T> GroupsRouteVisit<T>()
+        {
+            List<T> list = new List<T>();
+            if ((null == ImplementAdapter.microServiceMethod) || (null == ImplementAdapter.codeCompiler)) return list;
+
+            Type interfaceType = typeof(T);
+            if (!interfaceType.IsInterface) return list;
+
+            MicroServiceRoute msr = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true) as MicroServiceRoute;
+            if (msr == null) return list;
+
+            string groupName = msr.RouteName;
+            GroupsRoute groupsRoute = null;
+            s_groupDic.TryGetValue(groupName.ToLower(), out groupsRoute);
+            if (null == groupsRoute) return list;
+            string controllerName = msr.ControllerName;
+            Type type = null;
+            object iObj = null;
+            AutoCall autoCall = new AutoCall();
+            foreach (var item in groupsRoute)
+            {
+                type = ImplementAdapter.microServiceMethod.GetMS(ImplementAdapter.codeCompiler, autoCall, new MicroServiceRoute(item.Name, controllerName), interfaceType);
+                if (null == type) continue;
+                try
+                {
+                    iObj = Activator.CreateInstance(type);
+                    list.Add((T)iObj);
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+            return list;
         }
 
         private static void ResetServiceManager(XmlNode serviceManagerNode)
@@ -136,7 +188,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 XmlElement routeNodes = doc.CreateElement(_Routes);
                 XMLroot.AppendChild(routeNodes);
 
-                XmlElement route = doc.CreateElement("Route");
+                XmlElement route = doc.CreateElement(_Route);
                 RouteAttr route_attr = new RouteAttr()
                 {
                     Name = "ServiceRoute1",
@@ -154,9 +206,51 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     ele.InnerText = fv.ToString().Trim();
                     route.AppendChild(ele);
                 });
-                route.SetAttribute("RegisterActionType", "post");
-
+                route.SetAttribute(_RegisterActionType, "post");
                 routeNodes.AppendChild(route);
+
+                #region 路由集群，表示所有路由目标地址都有相同的访问接口，可以通过 GroupsRouteVisit 静态方法获取                
+                List<RouteAttr> groups = new List<RouteAttr>();
+                groups.Add(new RouteAttr()
+                {
+                    Name = "MemberService",
+                    Uri = "http://127.0.0.1:5000",
+                    RegisterAddr = "/Home/RegisterIP",
+                    TestAddr = "/Home/Test",
+                    RegisterActionType = MethodTypes.Post,
+                    ContractKey = "abc"
+                });
+
+                groups.Add(new RouteAttr()
+                {
+                    Name = "OrderService",
+                    Uri = "http://127.0.0.1:5001",
+                    RegisterAddr = "/Home/RegisterIP",
+                    TestAddr = "/Home/Test",
+                    RegisterActionType = MethodTypes.Post,
+                    ContractKey = "abc"
+                });
+
+                XmlElement groupsNode = doc.CreateElement(_Groups);
+                groupsNode.SetAttribute("Name", "BaseInfoRoutes");
+                XMLroot.AppendChild(groupsNode);
+
+                foreach (RouteAttr item in groups)
+                {
+                    route = doc.CreateElement(_Route);
+                    item.ForeachProperty((pi, pt, fn, fv) =>
+                    {
+                        if (typeof(MethodTypes) == pt) return;
+                        XmlElement ele = doc.CreateElement(fn);
+                        if (null == fv) fv = "";
+                        ele.InnerText = fv.ToString().Trim();
+                        route.AppendChild(ele);
+                    });
+                    route.SetAttribute(_RegisterActionType, "post");
+                    groupsNode.AppendChild(route);
+                }
+
+                #endregion
 
                 try
                 {
@@ -182,11 +276,35 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null != atr) s_Port = atr.Value.Trim();
                 if (string.IsNullOrEmpty(s_Port)) s_Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
 
+                Func<XmlElement, RouteAttr> func = _ele =>
+                {
+                    RouteAttr _routeAttr1 = new RouteAttr();
+                    foreach (XmlAttribute item in _ele.Attributes)
+                    {
+                        _routeAttr1.SetPropertyValue(item.Name, item.Value);
+                    }
+
+                    _routeAttr1.GetType().ForeachProperty((pi, pt, fn) =>
+                    {
+                        string txt = XmlDoc.GetChildTextByNodeName(_ele, fn);
+                        if (!string.IsNullOrEmpty(txt)) _routeAttr1.SetPropertyValue(fn, txt);
+                    });
+
+                    if (false == string.IsNullOrEmpty(_routeAttr1.Name)
+                                && false == string.IsNullOrEmpty(_routeAttr1.Uri))
+                    {
+                        string routeName1 = _routeAttr1.Name.ToLower();
+                        if (s_routeAttrDic.ContainsKey(routeName1)) return _routeAttr1;
+                        s_routeAttrDic.Add(routeName1, _routeAttr1);
+                        s_eleDic.Add(routeName1, (XmlElement)_ele);
+                    }
+                    return _routeAttr1;
+                };
+
                 string nodeName = "";
-                string routeName1 = "";
-                string txt = "";
                 string serviceManagerLower = _ServiceManager.ToLower();
                 string routesLower = _Routes.ToLower();
+                string groupsLower = _Groups.ToLower();
                 RouteAttr routeAttr1 = null;
                 s_rootElement.ForeachChildNode(node =>
                 {
@@ -195,30 +313,27 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         ResetServiceManager(node);
                     }
+                    else if (nodeName.Equals(groupsLower))
+                    {
+                        XmlAttribute attr = node.Attributes["Name"];
+                        if (null == attr) attr = node.Attributes["name"];
+                        if (null == attr) return;
+                        string groupName = attr.Value;
+                        GroupsRoute groupsRoute = new GroupsRoute();
+                        groupsRoute.Name = groupName;
+                        s_groupDic[groupName.ToLower()] = groupsRoute;
+                        node.ForeachChildNode(_routeItem =>
+                        {
+                            routeAttr1 = func(_routeItem);
+                            groupsRoute.Children.Add(routeAttr1);      
+                            return true;
+                        });
+                    }
                     else if (nodeName.Equals(routesLower))
                     {
                         node.ForeachChildNode(_routeItem =>
                         {
-                            routeAttr1 = new RouteAttr();
-                            foreach (XmlAttribute item in _routeItem.Attributes)
-                            {
-                                routeAttr1.SetPropertyValue(item.Name, item.Value);
-                            }
-
-                            routeAttr1.GetType().ForeachProperty((pi, pt, fn) =>
-                            {
-                                txt = XmlDoc.GetChildTextByNodeName(_routeItem, fn);
-                                if (!string.IsNullOrEmpty(txt)) routeAttr1.SetPropertyValue(fn, txt);
-                            });
-
-                            if (false == string.IsNullOrEmpty(routeAttr1.Name)
-                                && false == string.IsNullOrEmpty(routeAttr1.Uri))
-                            {
-                                routeName1 = routeAttr1.Name.ToLower();
-                                if (s_routeAttrDic.ContainsKey(routeName1)) return true;
-                                s_routeAttrDic.Add(routeName1, routeAttr1);
-                                s_eleDic.Add(routeName1, (XmlElement)_routeItem);
-                            }
+                            routeAttr1 = func(_routeItem);                            
                             return true;
                         });
                     }
@@ -365,7 +480,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                 if (null == svrMngNode)
                 {
-                    svrMngNode =  XmlDoc.GetChildNodeByNodeName(s_rootElement, _ServiceManager) as XmlElement;
+                    svrMngNode = XmlDoc.GetChildNodeByNodeName(s_rootElement, _ServiceManager) as XmlElement;
                 }
 
                 if (null == svrMngNode)

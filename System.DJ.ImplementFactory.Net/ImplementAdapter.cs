@@ -45,7 +45,6 @@ namespace System.DJ.ImplementFactory
         private static List<Assembly> assemblies = null;
         private static List<Assembly> assembliesOfTemp = new List<Assembly>();
         private static Type UserType = null;
-        private static IMicroServiceMethod microServiceMethod = null;
 
         private static Dictionary<string, InstanceObj> interfaceImplements = new Dictionary<string, InstanceObj>();
 
@@ -478,6 +477,8 @@ namespace System.DJ.ImplementFactory
         public static IInstanceCodeCompiler codeCompiler { get; set; }
 
         public static IDbConnectionState dbConnectionState { get; set; }
+
+        public static IMicroServiceMethod microServiceMethod { get; set; }
 
         public static ServiceRegisterMessage serviceRegisterMessage { get; set; }
 
