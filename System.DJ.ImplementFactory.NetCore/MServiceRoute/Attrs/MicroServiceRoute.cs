@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Routing;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Entities;
@@ -159,98 +160,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 XmlDoc doc = new XmlDoc();
                 XmlElement XMLroot = doc.RootNode(_microServiceRoutes);
-                MServiceManager serviceMng = new MServiceManager()
-                {
-                    Name = _ServiceManager,
-                    Uri = "http://127.0.0.1:5000/api",
-                    ServiceManagerAddr = "/Home/ReceiveManage",
-                    ServiceManagerActionType = MethodTypes.Post,
-                    RegisterAddr = "/Home/RegisterIP",
-                    TestAddr = "/Home/Test",
-                    RegisterActionType = MethodTypes.Post,
-                    ContractKey = "abc2233"
-                };
-                XMLroot.SetAttribute(_ServiceName, "MemberService");
-                XMLroot.SetAttribute(_Port, "5000");
+                InitXml_ServiceManage(doc, XMLroot);
 
-                XmlElement serviceManagerNodes = doc.CreateElement(_ServiceManager);
-                XMLroot.AppendChild(serviceManagerNodes);
+                InitXml_Routes(doc, XMLroot);
 
-                XmlElement smItem = null;
-                serviceMng.ForeachProperty((pi, pt, fn, fv) =>
-                {
-                    if (null == fv) return;
-                    smItem = doc.CreateElement(fn);
-                    smItem.InnerText = fv.ToString();
-                    serviceManagerNodes.AppendChild(smItem);
-                });
-
-                XmlElement routeNodes = doc.CreateElement(_Routes);
-                XMLroot.AppendChild(routeNodes);
-
-                XmlElement route = doc.CreateElement(_Route);
-                RouteAttr route_attr = new RouteAttr()
-                {
-                    Name = "ServiceRoute1",
-                    Uri = "http://127.0.0.1:8080,http://127.0.0.1:8081",
-                    RegisterAddr = "/Home/RegisterIP",
-                    TestAddr = "/Home/Test",
-                    RegisterActionType = MethodTypes.Post,
-                    ContractKey = "abc"
-                };
-                route_attr.ForeachProperty((pi, pt, fn, fv) =>
-                {
-                    if (typeof(MethodTypes) == pt) return;
-                    XmlElement ele = doc.CreateElement(fn);
-                    if (null == fv) fv = "";
-                    ele.InnerText = fv.ToString().Trim();
-                    route.AppendChild(ele);
-                });
-                route.SetAttribute(_RegisterActionType, "post");
-                routeNodes.AppendChild(route);
-
-                #region 路由集群，表示所有路由目标地址都有相同的访问接口，可以通过 GroupsRouteVisit 静态方法获取                
-                List<RouteAttr> groups = new List<RouteAttr>();
-                groups.Add(new RouteAttr()
-                {
-                    Name = "MemberService",
-                    Uri = "http://127.0.0.1:5000",
-                    RegisterAddr = "/Home/RegisterIP",
-                    TestAddr = "/Home/Test",
-                    RegisterActionType = MethodTypes.Post,
-                    ContractKey = "abc"
-                });
-
-                groups.Add(new RouteAttr()
-                {
-                    Name = "OrderService",
-                    Uri = "http://127.0.0.1:5001",
-                    RegisterAddr = "/Home/RegisterIP",
-                    TestAddr = "/Home/Test",
-                    RegisterActionType = MethodTypes.Post,
-                    ContractKey = "abc"
-                });
-
-                XmlElement groupsNode = doc.CreateElement(_Groups);
-                groupsNode.SetAttribute("Name", "BaseInfoRoutes");
-                XMLroot.AppendChild(groupsNode);
-
-                foreach (RouteAttr item in groups)
-                {
-                    route = doc.CreateElement(_Route);
-                    item.ForeachProperty((pi, pt, fn, fv) =>
-                    {
-                        if (typeof(MethodTypes) == pt) return;
-                        XmlElement ele = doc.CreateElement(fn);
-                        if (null == fv) fv = "";
-                        ele.InnerText = fv.ToString().Trim();
-                        route.AppendChild(ele);
-                    });
-                    route.SetAttribute(_RegisterActionType, "post");
-                    groupsNode.AppendChild(route);
-                }
-
-                #endregion
+                InitXml_Groups(doc, XMLroot);
 
                 try
                 {
@@ -325,7 +239,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         node.ForeachChildNode(_routeItem =>
                         {
                             routeAttr1 = func(_routeItem);
-                            groupsRoute.Children.Add(routeAttr1);      
+                            groupsRoute.Children.Add(routeAttr1);
                             return true;
                         });
                     }
@@ -333,7 +247,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         node.ForeachChildNode(_routeItem =>
                         {
-                            routeAttr1 = func(_routeItem);                            
+                            routeAttr1 = func(_routeItem);
                             return true;
                         });
                     }
@@ -347,6 +261,111 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (null == routeAttr) return;
             microServiceRoute.uri_str = routeAttr.Uri;
         }
+
+        #region Initial defaul datas in the configuration file
+        private static void InitXml_ServiceManage(XmlDoc doc, XmlElement XMLroot)
+        {
+            MServiceManager serviceMng = new MServiceManager()
+            {
+                Name = _ServiceManager,
+                Uri = "http://127.0.0.1:5000/api",
+                ServiceManagerAddr = "/Home/ReceiveManage",
+                ServiceManagerActionType = MethodTypes.Post,
+                RegisterAddr = "/Home/RegisterIP",
+                TestAddr = "/Home/Test",
+                RegisterActionType = MethodTypes.Post,
+                ContractKey = "abc2233"
+            };
+            XMLroot.SetAttribute(_ServiceName, "MemberService");
+            XMLroot.SetAttribute(_Port, "5000");
+
+            XmlElement serviceManagerNodes = doc.CreateElement(_ServiceManager);
+            XMLroot.AppendChild(serviceManagerNodes);
+
+            XmlElement smItem = null;
+            serviceMng.ForeachProperty((pi, pt, fn, fv) =>
+            {
+                if (null == fv) return;
+                smItem = doc.CreateElement(fn);
+                smItem.InnerText = fv.ToString();
+                serviceManagerNodes.AppendChild(smItem);
+            });
+        }
+
+        private static void InitXml_Routes(XmlDoc doc, XmlElement XMLroot)
+        {
+            XmlElement routeNodes = doc.CreateElement(_Routes);
+            XMLroot.AppendChild(routeNodes);
+
+            XmlElement route = doc.CreateElement(_Route);
+            RouteAttr route_attr = new RouteAttr()
+            {
+                Name = "ServiceRoute1",
+                Uri = "http://127.0.0.1:8080,http://127.0.0.1:8081",
+                RegisterAddr = "/Home/RegisterIP",
+                TestAddr = "/Home/Test",
+                RegisterActionType = MethodTypes.Post,
+                ContractKey = "abc"
+            };
+            route_attr.ForeachProperty((pi, pt, fn, fv) =>
+            {
+                if (typeof(MethodTypes) == pt) return;
+                XmlElement ele = doc.CreateElement(fn);
+                if (null == fv) fv = "";
+                ele.InnerText = fv.ToString().Trim();
+                route.AppendChild(ele);
+            });
+            route.SetAttribute(_RegisterActionType, "post");
+            routeNodes.AppendChild(route);
+        }
+
+        public static void InitXml_Groups(XmlDoc doc, XmlElement XMLroot)
+        {
+            #region 路由集群，表示所有路由目标地址都有相同的访问接口，可以通过 GroupsRouteVisit 静态方法获取                
+            List<RouteAttr> groups = new List<RouteAttr>();
+            groups.Add(new RouteAttr()
+            {
+                Name = "MemberService",
+                Uri = "http://127.0.0.1:5000",
+                RegisterAddr = "/Home/RegisterIP",
+                TestAddr = "/Home/Test",
+                RegisterActionType = MethodTypes.Post,
+                ContractKey = "abc"
+            });
+
+            groups.Add(new RouteAttr()
+            {
+                Name = "OrderService",
+                Uri = "http://127.0.0.1:5001",
+                RegisterAddr = "/Home/RegisterIP",
+                TestAddr = "/Home/Test",
+                RegisterActionType = MethodTypes.Post,
+                ContractKey = "abc"
+            });
+
+            XmlElement groupsNode = doc.CreateElement(_Groups);
+            groupsNode.SetAttribute("Name", "BaseInfoRoutes");
+            XMLroot.AppendChild(groupsNode);
+
+            XmlElement route = null;
+            foreach (RouteAttr item in groups)
+            {
+                route = doc.CreateElement(_Route);
+                item.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (typeof(MethodTypes) == pt) return;
+                    XmlElement ele = doc.CreateElement(fn);
+                    if (null == fv) fv = "";
+                    ele.InnerText = fv.ToString().Trim();
+                    route.AppendChild(ele);
+                });
+                route.SetAttribute(_RegisterActionType, "post");
+                groupsNode.AppendChild(route);
+            }
+
+            #endregion
+        }
+        #endregion
 
         public string RouteName { get { return route_name; } }
 
