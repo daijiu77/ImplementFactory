@@ -363,6 +363,7 @@ namespace System.DJ.ImplementFactory.DCache
             {
                 lock (this)
                 {
+                    if (!dic.ContainsKey(key)) return null;
                     return dic[key].GetValue();
                 }
             }

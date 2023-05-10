@@ -196,6 +196,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 else
                 {
                     s = fieldValueOfBaseValue.ToString();
+                    if (string.IsNullOrEmpty(s)) return wherePart;
                     string alias = "";
                     string field = "";
                     bool mbool = IsAliasField(s, ref alias, ref field);
