@@ -816,6 +816,12 @@ namespace System.DJ.ImplementFactory.DataAccess
                 sets = "";
             }, (fn, fv, constraint, pi) =>
             {
+                Attribute attr = pi.GetCustomAttribute(typeof(IgnoreField), true);
+                if (null != attr)
+                {
+                    IgnoreField ignoreField = (IgnoreField)attr;
+                    if (IgnoreField.IgnoreType.Update == (ignoreField.ignoreType & IgnoreField.IgnoreType.Update)) return;
+                }
                 fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
                 if (null != fm)
                 {
@@ -889,6 +895,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                 vals = "";
             }, (fn, fv, constraint, pi) =>
             {
+                Attribute attr = pi.GetCustomAttribute(typeof(IgnoreField), true);
+                if (null != attr)
+                {
+                    IgnoreField ignoreField = (IgnoreField)attr;
+                    if (IgnoreField.IgnoreType.Insert == (ignoreField.ignoreType & IgnoreField.IgnoreType.Insert)) return;
+                }
+
                 fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
                 if (null != fm)
                 {
