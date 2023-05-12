@@ -74,3 +74,7 @@
 *.out
 *.app
 /.vs/System.DJ.ImplementFactory/FileContentIndex
+/Web.NetCore/.config/dotnet-tools.json
+/Web.NetCore/Properties/PublishProfiles/FolderProfile.pubxml
+/Web.NetCore/Properties/PublishProfiles/FolderProfile.pubxml.user
+/Web.NetCore/Web.NetCore.csproj.user
