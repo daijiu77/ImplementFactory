@@ -340,7 +340,9 @@ namespace System.DJ.ImplementFactory.DCache
                 {
                     lock (this)
                     {
-                        return dic[key];
+                        DataItem dataItem = null;
+                        dic.TryGetValue(key, out dataItem);
+                        return dataItem;
                     }
                 }
             }
