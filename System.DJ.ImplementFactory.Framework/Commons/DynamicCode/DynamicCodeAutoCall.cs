@@ -1103,7 +1103,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
         void DataRowToEntity(MethodInformation method, LeftSpaceLevel leftSpaceLevel, string typeName, ref string code)
         {
             //method.append(ref code, leftSpaceLevel, "foreach (System.Reflection.PropertyInfo pi in piArr)");
-            method.append(ref code, leftSpaceLevel, "ForechExtends fe = new ForechExtends();");
+            method.append(ref code, leftSpaceLevel, "ForeachExtends fe = new ForeachExtends();");
             method.append(ref code, leftSpaceLevel, "fe.ForeachProperty(typeof({0}), (pi, pt, fn) =>", typeName);
             method.append(ref code, leftSpaceLevel, "{");
             if ((method.methodComponent.IsAsync || method.methodComponent.EnabledBuffer)

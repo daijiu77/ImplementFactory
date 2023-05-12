@@ -92,7 +92,7 @@ namespace System.DJ.Net.CodeCompiler
                     // 编译成功则从内存中加载程序集
                     ms.Seek(0, SeekOrigin.Begin);
                     byte[] dts = ms.ToArray();
-                    asse = Assembly.Load(dts);
+                    //asse = Assembly.Load(dts);
                     string f = ((IInstanceCodeCompiler)this).SavePathOfDll;
                     if (!string.IsNullOrEmpty(f))
                     {
@@ -113,7 +113,7 @@ namespace System.DJ.Net.CodeCompiler
                         try
                         {
                             fs = File.OpenWrite(f);
-                            fs.Write(dts, 0, dts.Length);
+                            fs.Write(dts, 0, dts.Length);                            
                         }
                         catch (Exception)
                         {
@@ -126,6 +126,16 @@ namespace System.DJ.Net.CodeCompiler
                             {
                                 fs.Close();
                                 fs.Dispose();
+                                try
+                                {
+                                    asse = Assembly.LoadFrom(f);
+                                }
+                                catch { }
+                            }
+
+                            if (null == asse)
+                            {
+                                asse = Assembly.Load(dts);
                             }
                         }
 

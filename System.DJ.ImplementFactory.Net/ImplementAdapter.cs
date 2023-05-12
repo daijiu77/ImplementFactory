@@ -204,6 +204,9 @@ namespace System.DJ.ImplementFactory
 
             serviceRegisterMessage = loadInterfaceInstance<ServiceRegisterMessage>("", null, ref asse3);
             if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
+
+            autoCall = loadInterfaceInstance<AutoCall>("", null, ref asse3);
+            if (null == autoCall) autoCall = new AutoCall();
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
@@ -253,10 +256,18 @@ namespace System.DJ.ImplementFactory
             IsDbUsed = dbInfo.IsDbUsed;
         }
 
-        static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        private static T loadInterfaceInstance<T>(string likeName, Type[] excludeTypes, ref Assembly asse)
+        {
+            Type type = typeof(T);
+            object vObj = loadInterfaceInstance(type, likeName, excludeTypes, ref asse);
+            if (null == vObj) return default(T);
+            return (T)vObj;
+        }
+
+        private static object loadInterfaceInstance(Type tegartType, string likeName, Type[] excludeTypes, ref Assembly asse)
         {
             asse = null;
-            object _obj = default(T);
+            object _obj = null;
             string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
             string[] files = Directory.GetFiles(binPath, "*.dll");
             string file = "";
@@ -318,7 +329,7 @@ namespace System.DJ.ImplementFactory
             };
 
             Type[] types = null;
-            Type srcType = typeof(T);
+            Type srcType = tegartType;
             Type finallyType = srcType;
             if (!string.IsNullOrEmpty(file))
             {
@@ -330,7 +341,7 @@ namespace System.DJ.ImplementFactory
                 }
                 catch { }
 
-                _obj = createObj(finallyType, srcType);                
+                _obj = createObj(finallyType, srcType);
             }
 
             if (null == _obj)
@@ -353,9 +364,9 @@ namespace System.DJ.ImplementFactory
                 _obj = createObj(finallyType, srcType);
             }
 
-            if (null == _obj) return default(T);
+            if (null == _obj) return null;
 
-            return (T)_obj;
+            return _obj;
         }
 
         static void getTempBin()
@@ -482,6 +493,8 @@ namespace System.DJ.ImplementFactory
 
         public static ServiceRegisterMessage serviceRegisterMessage { get; set; }
 
+        public static AutoCall autoCall { get; set; }
+
         public static string ServerFile { get { return svrFile; } }
 
         public static DbInfo dbInfo1 { get { return dbInfo; } }
@@ -568,6 +581,12 @@ namespace System.DJ.ImplementFactory
             }
         }
 
+        public ImplementAdapter(ParameterInfo parameterInfo, Action<object> action)
+        {
+            object para = InjectInstance(autoCall, parameterInfo.ParameterType, null, parameterInfo);
+
+        }
+
         private ImplementAdapter(object currentObj)
         {
             this.currentObj = currentObj;
@@ -587,14 +606,9 @@ namespace System.DJ.ImplementFactory
             public ImplAdapter(object currentObj) : base(currentObj) { }
         }
 
-        void Adapter()
+        public object InjectInstance(AutoCall autoCall, Type interfaceType, MemberInfo memberInfo, ParameterInfo parameterInfo)
         {
-            if (string.IsNullOrEmpty(rootPath)) return;
-
-            object[] arr = null;
-
             string resetKeyName = "";
-            Type interfaceType = null;
             Type implType = null;
             CKeyValue kv = null;
             MatchRule mr = null;
@@ -606,19 +620,10 @@ namespace System.DJ.ImplementFactory
             bool isSingleCall = false;
             bool isSingleInstance = false;
             bool isUnSingleInstance = false;
-            InstanceObj instanceObj = null;
+            bool isIgnoreCase = false;
 
-            string unSingleInstanceStr = typeof(IUnSingleInstance).FullName;
-
-            TempImplCode temp = new TempImplCode();
-            temp.codeCompiler = codeCompiler;
-            temp.IsShowCodeOfAll = sysConfig1.IsShowCode;
-
-            bool enableCompiler = false;
-            if (null != codeCompiler && null != dataServerProvider && null != dbHelper1)
-            {
-                enableCompiler = true;
-            }
+            string implName = "";
+            Regex rg = null;
 
             Action<object, Action> action = (obj, action1) =>
             {
@@ -684,9 +689,261 @@ namespace System.DJ.ImplementFactory
                 return (sysConfig1.Recomplie || null == impl_type || null == t1);
             };
 
-            Regex rg = null;
-            string implName = "";
-            bool isIgnoreCase = false;
+            if (!autoCall.LoadBeforeFilter(interfaceType)) return impl;
+
+            impl = null;
+            impl_1 = null;
+            implType = null;
+            implNew = null;
+            resetKeyName = null;
+            isSingleInstance = false;
+            isUnSingleInstance = false;
+            InstanceObj instanceObj = null;
+
+            if (null != memberInfo)
+            {
+                object[] arr = memberInfo.GetCustomAttributes(typeof(SingleCall), true);
+                isSingleCall = 0 < arr.Length;
+            }
+
+            resetKeyName = DJTools.GetClassName(interfaceType, true);
+            interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
+            if (null != instanceObj) impl = instanceObj.newInstance;
+            if (null != instanceObj)
+            {
+                implName = "";
+                rg = null;
+                isIgnoreCase = false;
+                AutoCallMatch(autoCall, ref implName, ref rg, ref isIgnoreCase);
+                if (null != rg)
+                {
+                    if (!MatchImpl(rg, instanceObj.oldInstanceType, implName, isIgnoreCase)) impl = null;
+                }
+            }
+            impl_1 = impl;
+
+            action(impl, () =>
+            {
+                impl = null;
+            });
+
+            if (!string.IsNullOrEmpty(autoCall.MatchRuleOrClassName))
+            {
+                isSingleCall = true;
+                impl = null;
+            }
+
+            if (null == impl)
+            {
+                bool enableCompiler = false;
+                if (null != codeCompiler && null != dataServerProvider && null != dbHelper1)
+                {
+                    enableCompiler = true;
+                }
+
+                TempImplCode temp = new TempImplCode();
+                temp.codeCompiler = codeCompiler;
+                temp.IsShowCodeOfAll = sysConfig1.IsShowCode;
+
+                kv = GetKvByInterfaceType(interfaceType);
+                mr = null == kv ? null : ((MatchRule)kv.Value);
+                isShowCode = false;                
+                if (interfaceType.IsInterface)
+                {
+                    Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
+                    if (null != msAtt)
+                    {
+                        if (null != microServiceMethod)
+                        {
+                            MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
+                            implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
+                        }
+                        else
+                        {
+                            string err = "成员变量 {0} -> {1} 注入失败, 未引入微服务组件";
+                            if (null != memberInfo)
+                            {
+                                err = err.ExtFormat(currentObj.GetType().TypeToString(true), memberInfo.Name);
+                            }
+                            else
+                            {
+                                err = err.ExtFormat(currentObj.GetType().TypeToString(true), parameterInfo.Name);
+                            }
+                            autoCall.e(err, ErrorLevels.severe);
+                            return impl;
+                        }
+                    }
+
+                    if (null == implType)
+                    {
+                        implType = GetImplementTypeOfTemp(interfaceType, autoCall);
+                        if (null == implType)
+                        {
+                            if (null != mr)
+                            {
+                                isShowCode = mr.IsShowCode;
+                                implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
+                            }
+                            else
+                            {
+                                implType = LoadImplementTypeByInterface(interfaceType, autoCall);
+                            }
+
+                            if (null == implType)
+                            {
+                                implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
+                            }
+
+                            if (enableCompiler && null == (autoCall as ExistCall))
+                            {
+                                if (func_IsCompile(interfaceType, implType))
+                                {
+                                    implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
+                                }
+                            }
+                        }
+                    }
+
+                    if (null == impl)
+                    {
+                        try
+                        {
+                            if (null != implNew)
+                            {
+                                impl = Activator.CreateInstance(implNew);
+                                SetAssembliesOfTemp(implNew);
+                            }
+                            else if (null != implType)
+                            {
+                                impl = GetInstanceByType(implType);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            string err = "[" + implType.FullName + "] 实例可能缺少一个无参构造函数(或该类访问权限不够)\r\n" + ex.ToString();
+                            autoCall.ExecuteException(interfaceType, null, null, null, new Exception(err));
+                            //throw;
+                        }
+                    }
+                }
+                else
+                {
+                    implNew = null;
+                    implType = GetImplementTypeOfTemp(interfaceType, autoCall);
+                    if (null == implType)
+                    {
+                        implType = LoadImplementTypeByAssemblies(interfaceType);
+
+                        if (enableCompiler)
+                        {
+                            if (func_IsCompile(interfaceType, implType))
+                            {
+                                implType = interfaceType;
+                                interfaceType = typeof(IEmplyInterface);
+                                implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
+                            }
+                        }
+                    }
+
+                    if (null == impl)
+                    {
+                        try
+                        {
+                            if (null != implNew)
+                            {
+                                impl = Activator.CreateInstance(implNew);
+                                SetAssembliesOfTemp(implNew);
+                            }
+                            else if (null != implType)
+                            {
+                                impl = GetInstanceByType(implType);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            string err = "[" + implType.FullName + "] 实例可能缺少一个无参构造函数(或该类访问权限不够)\r\n" + ex.ToString();
+                            autoCall.ExecuteException(interfaceType, null, null, null, new Exception(err));
+                            //throw;
+                        }
+                    }
+                }
+
+                if (false == isUnSingleInstance)
+                {
+                    action(impl, null);
+                }
+
+                if (null != impl && null == impl_1 && false == isSingleCall)
+                {
+                    SetInterfaceImplements(resetKeyName, implType, ref impl, out instanceObj);
+                }
+            }
+
+            if (null == impl) return impl;
+
+            isSingleInstance = false;
+            if (null != (impl as ISingleInstance))
+            {
+                isSingleInstance = true;
+            }
+
+            if (isSingleInstance)
+            {
+                if (null == ((ISingleInstance)impl).Instance)
+                {
+                    object inst = impl;
+                    PropertyInfo pi = impl.GetType().GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
+                    if (null != pi)
+                    {
+                        inst = pi.GetValue(impl);
+                    }
+                    ((ISingleInstance)impl).Instance = inst;
+                }
+            }
+
+            if (!autoCall.LoadAfterFilter(impl)) return impl;
+
+            return impl;
+        }
+
+        private object GetInstanceByType(Type implType)
+        {
+            ParameterInfo[] paras = null;
+            DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();
+            int paraCount = dynamicCodeTempImpl.GetConstructors(implType, ref paras);
+            object impl = null;
+            if (0 == paraCount)
+            {
+                impl = Activator.CreateInstance(implType);
+            }
+            else if (0 < paras.Length)
+            {
+                List<object> paraList = new List<object>();
+                object impl_2 = null;
+                Assembly asse = null;
+                foreach (ParameterInfo paraItem in paras)
+                {
+                    impl_2 = loadInterfaceInstance(paraItem.ParameterType, "", null, ref asse);
+                    if (null == impl_2)
+                    {
+                        impl_2 = InjectInstance(autoCall, paraItem.ParameterType, null, paraItem);
+                    }
+                    paraList.Add(impl_2);
+                }
+                impl = Activator.CreateInstance(implType, paraList.ToArray());
+            }
+            return impl;
+        }
+
+        void Adapter()
+        {
+            if (string.IsNullOrEmpty(rootPath)) return;
+
+            object[] arr = null;
+
+            Type interfaceType = null;
+            object impl = null;
+            string unSingleInstanceStr = typeof(IUnSingleInstance).FullName;
 
             AutoCall autoCall = null;
             FieldInfo[] fArr = null; // currentObj.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
@@ -728,199 +985,8 @@ namespace System.DJ.ImplementFactory
                     }
 
                     interfaceType = p.FieldType;
-
-                    if (!autoCall.LoadBeforeFilter(interfaceType)) continue;
-
-                    impl = null;
-                    impl_1 = null;
-                    implType = null;
-                    implNew = null;
-                    resetKeyName = null;
-                    isSingleInstance = false;
-                    isUnSingleInstance = false;
-                    instanceObj = null;
-
-                    arr = p.GetCustomAttributes(typeof(SingleCall), true);
-                    isSingleCall = 0 < arr.Length;
-
-                    resetKeyName = DJTools.GetClassName(interfaceType, true);
-                    interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
-                    if (null != instanceObj) impl = instanceObj.newInstance;
-                    if (null != instanceObj)
-                    {
-                        implName = "";
-                        rg = null;
-                        isIgnoreCase = false;
-                        AutoCallMatch(autoCall, ref implName, ref rg, ref isIgnoreCase);
-                        if (null != rg)
-                        {
-                            if (!MatchImpl(rg, instanceObj.oldInstanceType, implName, isIgnoreCase)) impl = null;
-                        }
-                    }
-                    impl_1 = impl;
-
-                    action(impl, () =>
-                    {
-                        impl = null;
-                    });
-
-                    if (!string.IsNullOrEmpty(autoCall.MatchRuleOrClassName))
-                    {
-                        isSingleCall = true;
-                        impl = null;
-                    }
-
-                    if (null == impl)
-                    {
-                        kv = GetKvByInterfaceType(interfaceType);
-                        mr = null == kv ? null : ((MatchRule)kv.Value);
-                        isShowCode = false;
-                        if (interfaceType.IsInterface)
-                        {
-                            Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
-                            if (null != msAtt)
-                            {
-                                if (null != microServiceMethod)
-                                {
-                                    MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
-                                    implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
-                                }
-                                else
-                                {
-                                    string err = "成员变量 {0} -> {1} 注入失败, 未引入微服务组件";
-                                    err = err.ExtFormat(currentObj.GetType().TypeToString(true), p.Name);
-                                    autoCall.e(err, ErrorLevels.severe);
-                                    continue;
-                                }
-                            }
-
-                            if (null == implType)
-                            {
-                                implType = GetImplementTypeOfTemp(interfaceType, autoCall);
-                                if (null == implType)
-                                {
-                                    if (null != mr)
-                                    {
-                                        isShowCode = mr.IsShowCode;
-                                        implType = LoadImplementTypeByMatchRule(mr, interfaceType, autoCall);
-                                    }
-                                    else
-                                    {
-                                        implType = LoadImplementTypeByInterface(interfaceType, autoCall);
-                                    }
-
-                                    if (null == implType)
-                                    {
-                                        implType = LoadImplementTypeByAssemblies(interfaceType, autoCall);
-                                    }
-
-                                    if (enableCompiler && null == (autoCall as ExistCall))
-                                    {
-                                        if (func_IsCompile(interfaceType, implType))
-                                        {
-                                            implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (null == impl)
-                            {
-                                try
-                                {
-                                    if (null != implNew)
-                                    {
-                                        impl = Activator.CreateInstance(implNew);
-                                        SetAssembliesOfTemp(implNew);
-                                    }
-                                    else if (null != implType)
-                                    {
-                                        impl = Activator.CreateInstance(implType);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    string err = "[" + implType.FullName + "] 实例可能缺少一个无参构造函数(或该类访问权限不够)\r\n" + ex.ToString();
-                                    autoCall.ExecuteException(interfaceType, null, null, null, new Exception(err));
-                                    //throw;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
-                            if (null == implType)
-                            {
-                                implType = LoadImplementTypeByAssemblies(interfaceType);
-
-                                if (enableCompiler)
-                                {
-                                    if (func_IsCompile(interfaceType, implType))
-                                    {
-                                        implType = interfaceType;
-                                        interfaceType = typeof(IEmplyInterface);
-                                        implNew = temp.NewImplement(interfaceType, implType, autoCall, isShowCode, false);
-                                    }
-                                }
-                            }
-
-                            if (null == impl)
-                            {
-                                try
-                                {
-                                    if (null != implNew)
-                                    {
-                                        impl = Activator.CreateInstance(implNew);
-                                        SetAssembliesOfTemp(implNew);
-                                    }
-                                    else if (null != implType)
-                                    {
-                                        impl = Activator.CreateInstance(implType);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    string err = "[" + implType.FullName + "] 实例可能缺少一个无参构造函数(或该类访问权限不够)\r\n" + ex.ToString();
-                                    autoCall.ExecuteException(interfaceType, null, null, null, new Exception(err));
-                                    //throw;
-                                }
-                            }
-                        }
-
-                        if (false == isUnSingleInstance)
-                        {
-                            action(impl, null);
-                        }
-
-                        if (null != impl && null == impl_1 && false == isSingleCall)
-                        {
-                            SetInterfaceImplements(resetKeyName, implType, ref impl, out instanceObj);
-                        }
-                    }
-
+                    impl = InjectInstance(autoCall, interfaceType, p, null);
                     if (null == impl) continue;
-
-                    isSingleInstance = false;
-                    if (null != (impl as ISingleInstance))
-                    {
-                        isSingleInstance = true;
-                    }
-
-                    if (isSingleInstance)
-                    {
-                        if (null == ((ISingleInstance)impl).Instance)
-                        {
-                            object inst = impl;
-                            PropertyInfo pi = impl.GetType().GetProperty(DynamicCodeTempImpl.InterfaceInstanceType);
-                            if (null != pi)
-                            {
-                                inst = pi.GetValue(impl);
-                            }
-                            ((ISingleInstance)impl).Instance = inst;
-                        }
-                    }
-
-                    if (!autoCall.LoadAfterFilter(impl)) continue;
 
                     p.SetValue(currentObj, impl);
                 }

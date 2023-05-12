@@ -96,8 +96,8 @@ namespace Test.NetCore
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            //testObj.test_user();
-            string un = testObj.VisitService();
+            testObj.test_user();
+            //string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 
@@ -455,7 +455,7 @@ namespace Test.NetCore
                 }
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
-                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(2, 5).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
                 int ncount = scheme.Count();
                 int recordCount = scheme.RecordCount;

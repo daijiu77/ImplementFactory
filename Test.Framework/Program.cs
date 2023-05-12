@@ -96,8 +96,8 @@ namespace Test.Framework
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            //testObj.test_user();
-            string un = testObj.VisitService();
+            testObj.test_user();
+            //string un = testObj.VisitService();
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 

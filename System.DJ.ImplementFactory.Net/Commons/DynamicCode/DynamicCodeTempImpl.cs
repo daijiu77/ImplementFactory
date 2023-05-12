@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Microsoft.CodeAnalysis;
+using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DCache;
@@ -6,6 +7,7 @@ using System.DJ.ImplementFactory.DCache.Attrs;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -753,6 +755,104 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return dv;
         }
 
+        public int GetConstructors(Type instanceType, ref ParameterInfo[] parameterInfos)
+        {
+            parameterInfos = null;
+            if (null == instanceType) return -1;
+            ConstructorInfo[] constructorInfos = instanceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+            ParameterInfo[] paras = null;
+            bool isBaseType = false;
+            int len = -1;
+            foreach (ConstructorInfo constructorInfo in constructorInfos)
+            {
+                paras = constructorInfo.GetParameters();
+                if (-1 == len) len = paras.Length;
+                if (len > paras.Length) len = paras.Length;
+                isBaseType = false;
+                foreach (ParameterInfo paramItem in paras)
+                {
+                    if (paramItem.IsOut || paramItem.IsRetval)
+                    {
+                        isBaseType = true;
+                        break;
+                    }
+
+                    if ((false == paramItem.ParameterType.IsClass)
+                        && (false == paramItem.ParameterType.IsInterface))
+                    {
+                        if (paramItem.ParameterType.IsAbstract) continue;
+                        isBaseType = true;
+                        break;
+                    }
+                    else if (paramItem.ParameterType == typeof(string))
+                    {
+                        isBaseType = true;
+                        break;
+                    }
+                }
+                if (isBaseType) continue;
+                if (null == parameterInfos) parameterInfos = constructorInfo.GetParameters();
+                if (parameterInfos.Length < constructorInfo.GetParameters().Length) parameterInfos = constructorInfo.GetParameters();
+            }
+            return len;
+        }
+
+        class ImplAdapter : ImplementAdapter
+        {
+            //
+        }
+
+        private string GetStringConstructor(string space, Type type, EList<CKeyValue> uskv, ref string impl_name)
+        {
+            impl_name = "{0}_a1".ExtFormat(type.Name);
+            string txt = "";
+            ParameterInfo[] parameterInfos = null;
+            int len = GetConstructors(type, ref parameterInfos);
+            if (0 == len)
+            {
+                txt = "{0} {1} = ({0})ImplementAdapter.Register(new {0}());".ExtFormat(type.Name, impl_name);
+            }
+            else if (0 < parameterInfos.Length)
+            {
+                ImplementAdapter adapter = new ImplAdapter();
+                object impl = null;
+                string s = "";
+                string impl_name_1 = "";
+                string names = "";
+                txt = "";
+                foreach (ParameterInfo paramInfo in parameterInfos)
+                {
+                    impl = adapter.InjectInstance(ImplementAdapter.autoCall, paramInfo.ParameterType, null, paramInfo);
+                    if (null != impl)
+                    {
+                        string nps = impl.GetType().Namespace;
+                        uskv.Add(new CKeyValue() { Key = impl.GetType().Namespace });
+                        s = GetStringConstructor(space, impl.GetType(), uskv, ref impl_name_1);
+                    }
+                    else
+                    {
+                        uskv.Add(new CKeyValue() { Key = paramInfo.ParameterType.Namespace });
+                        s = GetStringConstructor(space, paramInfo.ParameterType, uskv, ref impl_name_1);
+                    }
+
+                    names += ", " + impl_name_1;
+                    if (string.IsNullOrEmpty(txt))
+                    {
+                        txt = s;
+                    }
+                    else
+                    {
+                        txt += "\r\n" + space + s;
+                    }
+                }
+                names = names.Substring(1);
+                names = names.Trim();
+                s = "{0} {1} = ({0})ImplementAdapter.Register(new {0}({2}));".ExtFormat(type.Name, impl_name, names);
+                txt += "\r\n" + space + s;
+            }
+            return txt;
+        }
+
         public string GetCodeByImpl(Type interfaceType, Type implementType, AutoCall autoCall_Impl, ref string classPath)
         {
             MethodInformation mInfo = new MethodInformation();
@@ -860,7 +960,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             string autocall_name = autocallImplName1 + "_01";
             if (null != implementType && false == isNotInheritInterface)
             {
-                mInfo.append(ref code, LeftSpaceLevel.three, "private {0} {1} = ({0})ImplementAdapter.Register(new {0}());", implName, impl_name1);
+                mInfo.append(ref code, LeftSpaceLevel.three, "private {0} {1} = null;", implName, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
                 mInfo.append(ref code, LeftSpaceLevel.three, "public {0} {1} { get { return {2}; } }", DJTools.GetClassName(implementType, true), InterfaceInstanceType, impl_name1);
                 mInfo.append(ref code, LeftSpaceLevel.one, "");
@@ -1480,6 +1580,17 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 mInfo.append(ref code, "");
                 mInfo.append(ref code, LeftSpaceLevel.three, "public {0}_{1}()", implName, dt);
                 mInfo.append(ref code, LeftSpaceLevel.three, "{");
+
+                if (null != implementType && false == isNotInheritInterface)
+                {
+                    string implVarName = "";
+                    string space = mInfo.getSpace((int)LeftSpaceLevel.four);
+                    string txt = GetStringConstructor(space, implementType, uskv, ref implVarName);
+                    mInfo.append(ref code, LeftSpaceLevel.four, txt);
+                    mInfo.append(ref code, LeftSpaceLevel.four, "{0} = ({1}){2};", impl_name1, implName, implVarName);
+                    mInfo.append(ref code, LeftSpaceLevel.one, "");
+                }
+
                 mInfo.append(ref code, LeftSpaceLevel.four, "FieldInfo[] fiArr = this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);");
                 mInfo.append(ref code, LeftSpaceLevel.four, "foreach (FieldInfo fi in fiArr)");
                 mInfo.append(ref code, LeftSpaceLevel.four, "{");
@@ -1535,7 +1646,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     if (false == impl_name1.Equals("null"))
                     {
                         impl_name = interfaceType.TypeToString(false) + "_01";
-                        if(string.IsNullOrEmpty(privateVarNameCode))
+                        if (string.IsNullOrEmpty(privateVarNameCode))
                         {
                             mInfo.append(ref privateVarNameCode, LeftSpaceLevel.one, "private {0} {1} = null;", interfaceName, impl_name);
                         }

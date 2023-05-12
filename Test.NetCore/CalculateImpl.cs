@@ -17,6 +17,15 @@ namespace Test.NetCore
         [MyAutoCall]
         IUserInfo userInfo;
 
+        private MyCache _myCache = null;
+        private IDepart _depart = null;
+
+        public CalculateImpl(MyCache myCache, IDepart depart)
+        {
+            _depart = depart;
+            _myCache = myCache;
+        }
+
         private event getData GetData;
 
         event getData ICalculate.GetData

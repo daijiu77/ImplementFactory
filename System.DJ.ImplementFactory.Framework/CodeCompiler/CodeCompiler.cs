@@ -75,7 +75,26 @@ namespace System.DJ.Framework.CodeCompiler
             }
 
             Assembly asse = null;
-            if (string.IsNullOrEmpty(err)) asse = cr.CompiledAssembly;
+            if (string.IsNullOrEmpty(err))
+            {
+                if (!string.IsNullOrEmpty(f))
+                {
+                    try
+                    {
+                        asse = Assembly.LoadFrom(f);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+
+                if(null == asse)
+                {
+                    asse = cr.CompiledAssembly;
+                }
+            }
 
             return asse;
         }
