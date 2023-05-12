@@ -33,14 +33,17 @@ namespace System.DJ.ImplementFactory.Commons
             Type implType = null;
 
             string dir = Path.Combine(rootPath, dirName);
+            dir.InitDirectory(true);
             if (!Directory.Exists(dir)) return implType;
             DynamicCodeTempImpl dynamicCode = new DynamicCodeTempImpl(dirName);
             string classPath = "";
             string code = dynamicCode.GetCodeByImpl(interfaceType, implementType, autoCall_Impl, ref classPath);
             if (!string.IsNullOrEmpty(code))
             {
+                string tg = "\\";
+                if (-1 != dir.IndexOf("/")) tg = "/";
                 string fn = Guid.NewGuid().ToString().Replace("-", "_");
-                string fn1 = libName + "\\" + fn + ".dll";
+                string fn1 = libName + tg + fn + ".dll";
 
                 string dllFilePath = Path.Combine(dir, fn1);
                 dllFilePath.InitDirectory();
