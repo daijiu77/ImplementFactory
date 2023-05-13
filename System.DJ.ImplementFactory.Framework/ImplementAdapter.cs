@@ -143,6 +143,9 @@ namespace System.DJ.ImplementFactory
             Assembly asse = null;
             Type dspType = null;
 
+            autoCall = loadInterfaceInstance<AutoCall>("", null, ref asse);
+            if (null == autoCall) autoCall = new AutoCall();
+
             string f = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
             if (DJTools.isWeb) f = "bin\\" + f;
             f = Path.Combine(rootPath, f);
@@ -184,9 +187,6 @@ namespace System.DJ.ImplementFactory
 
             serviceRegisterMessage = loadInterfaceInstance<ServiceRegisterMessage>("", null, ref asse3);
             if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
-
-            autoCall = loadInterfaceInstance<AutoCall>("", null, ref asse3);
-            if (null == autoCall) autoCall = new AutoCall();
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;

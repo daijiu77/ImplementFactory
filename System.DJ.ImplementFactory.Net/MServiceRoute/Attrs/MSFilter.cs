@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.Linq;
 using System.Reflection;
@@ -51,6 +52,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 List<TokenObj> tokens = new List<TokenObj>();
                 foreach (var item in tokenKV)
                 {
+                    //Trace.WriteLine("Start: {0}, End: {1}".ExtFormat(item.Value.startTime.ToString("yyyy-MM-dd HH:mm:ss"), item.Value.endTime.ToString("yyyy-MM-dd HH:mm:ss")));
                     if (item.Value.endTime <= dt)
                     {
                         tokens.Add(item.Value);
@@ -200,21 +202,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        private static string GetIP_Token(string token)
-        {
-            lock (mSFilter)
-            {
-                return GetIP_Token(token, null);
-            }
-        }
-
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             string clientIP = GetIP(context.HttpContext);
             object controller = context.Controller;
             MethodInfo mi = GetActionMethod(context);
             if (null != ImplementAdapter.mSFilterMessage)
-            {                
+            {
                 try
                 {
                     ImplementAdapter.mSFilterMessage.ClientIP(clientIP, controller, mi);
@@ -274,8 +268,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                     if (!mbool)
                     {
-                        ip2 = GetIP_Token(token);
-                        mbool = ip2.Equals(ip1);
+                        GetIP_Token(token, token1 =>
+                        {
+                            mbool = token1.ip.Equals(ip1);
+                            if (mbool) token1.SetStartTime(DateTime.Now);
+                        });
                     }
                     string msg = "Original ip: {0}, Current ip: {1}, Token: {2}".ExtFormat(ip2, ip1, token);
                     PrintIpToLogs(msg);
@@ -314,7 +311,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 {
                     throw new Exception(err);
                 }
-                                
+
                 PrintIpToLogs("IP: " + clientIP);
                 attr = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
                 if ((false == IsExistIP(clientIP)) && (null == attr))
