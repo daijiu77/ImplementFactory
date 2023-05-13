@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons.Attrs;
-using System.Linq;
+﻿using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
 {

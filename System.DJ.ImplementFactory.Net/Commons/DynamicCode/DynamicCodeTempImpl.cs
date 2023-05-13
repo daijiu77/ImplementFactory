@@ -755,10 +755,12 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return dv;
         }
 
-        public int GetConstructors(Type instanceType, ref ParameterInfo[] parameterInfos)
+        public int GetConstructor(Type instanceType, ref ParameterInfo[] parameterInfos)
         {
-            parameterInfos = null;
+            parameterInfos = new ParameterInfo[] { };
             if (null == instanceType) return -1;
+            if (instanceType.IsBaseType()) return -1;
+            if (instanceType.IsEnum) return -1;
             ConstructorInfo[] constructorInfos = instanceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
             ParameterInfo[] paras = null;
             bool isBaseType = false;
@@ -791,7 +793,6 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
                 }
                 if (isBaseType) continue;
-                if (null == parameterInfos) parameterInfos = constructorInfo.GetParameters();
                 if (parameterInfos.Length < constructorInfo.GetParameters().Length) parameterInfos = constructorInfo.GetParameters();
             }
             return len;
@@ -807,12 +808,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             impl_name = "{0}_a1".ExtFormat(type.Name);
             string txt = "";
             ParameterInfo[] parameterInfos = null;
-            int len = GetConstructors(type, ref parameterInfos);
-            if (0 == len)
-            {
-                txt = "{0} {1} = ({0})ImplementAdapter.Register(new {0}());".ExtFormat(type.Name, impl_name);
-            }
-            else if (0 < parameterInfos.Length)
+            int len = GetConstructor(type, ref parameterInfos);
+            if (0 < parameterInfos.Length)
             {
                 ImplementAdapter adapter = new ImplAdapter();
                 object impl = null;
@@ -849,6 +846,10 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                 names = names.Trim();
                 s = "{0} {1} = ({0})ImplementAdapter.Register(new {0}({2}));".ExtFormat(type.Name, impl_name, names);
                 txt += "\r\n" + space + s;
+            }
+            else if (0 == len)
+            {
+                txt = "{0} {1} = ({0})ImplementAdapter.Register(new {0}());".ExtFormat(type.Name, impl_name);
             }
             return txt;
         }

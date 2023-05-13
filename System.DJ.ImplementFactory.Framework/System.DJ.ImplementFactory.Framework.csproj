@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\DataModelMapping.cs" />
     <Compile Include="Entities\GroupsRoute.cs" />
     <Compile Include="Commons\EMD5.cs" />
     <Compile Include="MServiceRoute\ServiceRegisterMessage.cs" />

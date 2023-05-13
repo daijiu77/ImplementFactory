@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
@@ -85,8 +86,66 @@ namespace Test.NetCore
             MoveWindow(hWin, x, y, rc.right - rc.left, rc.bottom - rc.top, true);
         }
 
+        class TestAbc
+        {
+            private IMSUserInfo _mSUserInfo;
+            private ICalculate _calculate;
+            public TestAbc() { }
+            public TestAbc(IMSUserInfo mSUserInfo, ICalculate calculate)
+            {
+                _mSUserInfo = mSUserInfo;
+                _calculate = calculate;
+            }
+        }
+
+        class ImplAdapter: ImplementAdapter
+        {
+            //
+        }
+
+        class Test_abc
+        {
+            public string Name { get; set; }
+            public List<Test_abc> Items { get; set; }
+        }
+
+        class Test_EE
+        {
+            public string Name { get; set; }
+            public List<Test_EE> Items { get; set; }
+        }
+
         static void Main(string[] args)
         {
+            Test_abc abc = new Test_abc()
+            {
+                Name = "a1",
+                Items = new List<Test_abc>()
+                {
+                    new Test_abc()
+                    {
+                        Name="ba"
+                    },
+                    new Test_abc()
+                    {
+                        Name="bbc",
+                        Items = new List<Test_abc>()
+                        {
+                            new Test_abc()
+                            {
+                                Name="cc"
+                            }
+                        }
+                    }
+                }
+            };
+
+            Test_EE ee = abc.ToObjectFrom<Test_EE>();
+
+            ParameterInfo[] paras = null;
+            int size = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
+            ImplAdapter implAdapter = new ImplAdapter();
+            object testAbs = implAdapter.GetInstanceByType(typeof(TestAbc));
             //Test1 test1 = new Test1();
             //test1.Test();
             //MService.Start();

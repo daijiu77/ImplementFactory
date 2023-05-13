@@ -581,12 +581,6 @@ namespace System.DJ.ImplementFactory
             }
         }
 
-        public ImplementAdapter(ParameterInfo parameterInfo, Action<object> action)
-        {
-            object para = InjectInstance(autoCall, parameterInfo.ParameterType, null, parameterInfo);
-
-        }
-
         private ImplementAdapter(object currentObj)
         {
             this.currentObj = currentObj;
@@ -906,12 +900,14 @@ namespace System.DJ.ImplementFactory
             return impl;
         }
 
-        private object GetInstanceByType(Type implType)
+        public object GetInstanceByType(Type implType)
         {
+            if (null == implType) return null;
+            if (implType.IsBaseType()) return null;
+            if (implType.IsEnum) return null;
             ParameterInfo[] paras = null;
             DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();
-            int paraCount = dynamicCodeTempImpl.GetConstructors(implType, ref paras);
-            if (null == paras) paras = new ParameterInfo[] { };
+            int paraCount = dynamicCodeTempImpl.GetConstructor(implType, ref paras);
             object impl = null;
             if (0 < paras.Length)
             {
@@ -920,10 +916,10 @@ namespace System.DJ.ImplementFactory
                 Assembly asse = null;
                 foreach (ParameterInfo paraItem in paras)
                 {
-                    impl_2 = loadInterfaceInstance(paraItem.ParameterType, "", null, ref asse);
+                    impl_2 = InjectInstance(autoCall, paraItem.ParameterType, null, paraItem);
                     if (null == impl_2)
                     {
-                        impl_2 = InjectInstance(autoCall, paraItem.ParameterType, null, paraItem);
+                        impl_2 = loadInterfaceInstance(paraItem.ParameterType, "", null, ref asse);
                     }
                     paraList.Add(impl_2);
                 }
@@ -933,7 +929,18 @@ namespace System.DJ.ImplementFactory
             {
                 impl = Activator.CreateInstance(implType);
             }
+
+            if (null != impl)
+            {
+                ImplementAdapter.Register(impl);
+            }
             return impl;
+        }
+
+        public static int GetConstructor(Type type, ref ParameterInfo[] paras)
+        {
+            DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();
+            return dynamicCodeTempImpl.GetConstructor(type, ref paras);
         }
 
         void Adapter()
