@@ -987,7 +987,14 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (typeof(IList) == type.GetInterface("IList"))
                 {
-                    tn += "<" + types[0].TypeToString(isFullName) + ">";
+                    if (0 < types.Length)
+                    {
+                        tn += "<" + types[0].TypeToString(isFullName) + ">";
+                    }
+                    else
+                    {
+                        tn = type.TypeToString(isFullName);
+                    }
                 }
                 else if (0 < types.Length)
                 {

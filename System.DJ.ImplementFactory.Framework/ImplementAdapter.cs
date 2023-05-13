@@ -747,7 +747,7 @@ namespace System.DJ.ImplementFactory
 
                 kv = GetKvByInterfaceType(interfaceType);
                 mr = null == kv ? null : ((MatchRule)kv.Value);
-                isShowCode = false;                
+                isShowCode = false;
                 if (interfaceType.IsInterface)
                 {
                     Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
@@ -911,12 +911,9 @@ namespace System.DJ.ImplementFactory
             ParameterInfo[] paras = null;
             DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();
             int paraCount = dynamicCodeTempImpl.GetConstructors(implType, ref paras);
+            if (null == paras) paras = new ParameterInfo[] { };
             object impl = null;
-            if (0 == paraCount)
-            {
-                impl = Activator.CreateInstance(implType);
-            }
-            else if (0 < paras.Length)
+            if (0 < paras.Length)
             {
                 List<object> paraList = new List<object>();
                 object impl_2 = null;
@@ -931,6 +928,10 @@ namespace System.DJ.ImplementFactory
                     paraList.Add(impl_2);
                 }
                 impl = Activator.CreateInstance(implType, paraList.ToArray());
+            }
+            else if (0 == paraCount)
+            {
+                impl = Activator.CreateInstance(implType);
             }
             return impl;
         }
