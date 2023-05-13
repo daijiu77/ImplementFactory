@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -132,6 +132,7 @@
     <Compile Include="Commons\DataModelMapping.cs" />
     <Compile Include="Entities\GroupsRoute.cs" />
     <Compile Include="Commons\EMD5.cs" />
+    <Compile Include="MServiceRoute\Attrs\AbsSysAttributer.cs" />
     <Compile Include="MServiceRoute\ServiceRegisterMessage.cs" />
     <Compile Include="MServiceRoute\Attrs\MSApiReceiverAction.cs" />
     <Compile Include="MServiceRoute\Attrs\MServiceManagerConfigAction.cs" />

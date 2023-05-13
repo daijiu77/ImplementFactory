@@ -262,27 +262,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         private static void exec_serviceManage()
         {
-            if (null == s_serviceManager) return;
-            if (string.IsNullOrEmpty(s_serviceManager.Uri)
-                || string.IsNullOrEmpty(s_serviceManager.ServiceManagerAddr)
-                || string.IsNullOrEmpty(s_serviceManager.ContractKey)) return;
+            if (null == MicroServiceRoute.ServiceManager) return;
+            if (string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.Uri)
+                || string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.ServiceManagerAddr)
+                || string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.ContractKey)) return;
 
-            if (!httpRg.IsMatch(s_serviceManager.Uri)) return;
+            if (!httpRg.IsMatch(MicroServiceRoute.ServiceManager.Uri)) return;
 
             Regex rg = new Regex(@"(?<controllerName>[a-z0-9_]+)controller$", RegexOptions.IgnoreCase);
             Regex rg1 = new Regex(@"(\[controller\])|(\{controller\})", RegexOptions.IgnoreCase);
             string controllerName = "";
             string actionName = "";
-
-            Type[] attrTypes = new Type[]
-            {
-                    typeof(MSAddServiceRouteItemAction),
-                    typeof(MSClientRegisterAction),
-                    typeof(MSConfiguratorAction),
-                    typeof(MServiceManagerConfigAction),
-                    typeof(DbConfigAction),
-                    typeof(MSRemoveServiceRouteItemAction)
-            };
 
             Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
             PipleList pipleList = new PipleList();
@@ -296,7 +286,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             Regex rgPKT = new Regex(@"PublicKeyToken\=null", RegexOptions.IgnoreCase);
             string assembleStr = "";
             binPath = DJTools.isWeb ? (binPath + "\\bin") : binPath;
-            List<Assembly> assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/TempImpl/bin/" });
+            List<Assembly> assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/{0}/{1}/".ExtFormat(TempImplCode.dirName, TempImplCode.libName) });
             foreach (Assembly assembly in assemblies)
             {
                 Type[] types = assembly.GetTypes();
@@ -335,12 +325,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         if (string.IsNullOrEmpty(assembleStr)) assembleStr = "";
                         if (!rgPKT.IsMatch(assembleStr)) continue;
 
-                        Attribute atr = null;
-                        foreach (Type t in attrTypes)
-                        {
-                            atr = mi.GetCustomAttribute(t, true);
-                            if (null != atr) break;
-                        }
+                        Attribute atr = mi.GetCustomAttribute(typeof(AbsSysAttributer), true);
 
                         PipleItem info = null;
                         if (null != atr)
@@ -434,19 +419,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             jsonData = jsonData.Substring(1);
             jsonData = jsonData.Trim();
 
-            string port = null == s_Port ? "" : s_Port;
+            string port = null == MicroServiceRoute.Port ? "" : MicroServiceRoute.Port;
             string svrContractKey = MSServiceImpl.GetContractValue();
             jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"{2}\": \"{3}\", \"Data\": [{4}], \"CrateTime\": \"{5}\"}"
-                .ExtFormat(s_ServiceName, port, MServiceConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                .ExtFormat(MicroServiceRoute.ServiceName, port, MServiceConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            string svrUrl = s_serviceManager.Uri;
+            string svrUrl = MicroServiceRoute.ServiceManager.Uri;
             string s1 = svrUrl.Substring(svrUrl.Length - 1);
             if (s1.Equals("\\") || s1.Equals("/"))
             {
                 svrUrl = svrUrl.Substring(0, svrUrl.Length - 1);
             }
 
-            string ServiceManagerAddr = s_serviceManager.ServiceManagerAddr;
+            string ServiceManagerAddr = MicroServiceRoute.ServiceManager.ServiceManagerAddr;
             s1 = ServiceManagerAddr.Substring(0, 1);
             if (s1.Equals("\\") || s1.Equals("/"))
             {
@@ -456,10 +441,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             svrUrl += "/" + ServiceManagerAddr;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(MServiceConst.contractKey, s_serviceManager.ContractKey);
+            headers.Add(MServiceConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
 
             IHttpHelper httpHelper = new HttpHelper();
-            MethodTypes methodTypes1 = s_serviceManager.ServiceManagerActionType;
+            MethodTypes methodTypes1 = MicroServiceRoute.ServiceManager.ServiceManagerActionType;
             string printMsg = "It has been successfully sent data to the ServiceManage: {0}";
             bool success = false;
             int timeNum = 0;

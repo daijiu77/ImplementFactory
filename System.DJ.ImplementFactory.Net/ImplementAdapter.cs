@@ -109,7 +109,7 @@ namespace System.DJ.ImplementFactory
             DbAdapter.SetConfig(dbInfo.DatabaseType);
 
             string binPath = DJTools.isWeb ? (rootPath + "\\bin") : rootPath;
-            assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/TempImpl/bin/" });
+            assemblies = DJTools.GetAssemblyCollection(binPath, new string[] { "/{0}/{1}/".ExtFormat(TempImplCode.dirName, TempImplCode.libName) });
             AutoCall.AssemblyCollection = assemblies;
             AutoCall.SetDataProviderAssemble(dbInfo.SqlProviderRelativePathOfDll);
             AutoCall.RootPath = rootPath;
@@ -141,7 +141,6 @@ namespace System.DJ.ImplementFactory
             };
 
             Assembly asse = null;
-            IDataServerProvider dsp = null;
             Type dspType = null;
 
             string f = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
@@ -156,7 +155,7 @@ namespace System.DJ.ImplementFactory
             dspType = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
             try
             {
-                dsp = (IDataServerProvider)Activator.CreateInstance(dspType);
+                defaultDataServerProvider = (IDataServerProvider)Activator.CreateInstance(dspType);
             }
             catch (Exception)
             {
@@ -164,35 +163,16 @@ namespace System.DJ.ImplementFactory
                 //throw;
             }
 
-            type1 = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
-            Type[] dsTypes = new Type[] { dspType, type1 };
+            LoadDataServerProvider();
 
             Assembly asse1 = null;
             dbHelper1 = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbAccessHelper) }, ref asse1);
             if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
+            dbHelper1.dataServerProvider = dataServerProvider;
 
             mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
             if (null == mSService) mSService = new MSServiceImpl();
             AbsActionFilterAttribute.SetMSServiceInstance(mSService);
-
-            string dsFlag = "ms";
-            if (db_dialect.mysql == DbAdapter.dbDialect)
-            {
-                dsFlag = "mysql";
-            }
-            else if (db_dialect.oracle == DbAdapter.dbDialect)
-            {
-                dsFlag = "oracle";
-            }
-            Assembly asse2 = null;
-            dataServerProvider = DJTools.GetInstanceByType<IDataServerProvider>(dsFlag);
-            //dataServerProvider = loadInterfaceInstance<IDataServerProvider>(dsFlag, dsTypes, ref asse2);
-            if (null == dataServerProvider) dataServerProvider = dsp;
-            dbHelper1.dataServerProvider = dataServerProvider;
-
-            DbVisitor.sqlAnalysis = DJTools.GetInstanceByType<ISqlAnalysis>(dsFlag);
-
-            IDbTableScheme dbTableScheme = DJTools.GetInstanceByType<IDbTableScheme>(dsFlag);
 
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
@@ -484,7 +464,8 @@ namespace System.DJ.ImplementFactory
         public static IMSService mSService { get; set; }
         public static IMSFilterMessage mSFilterMessage { get; set; }
         public static IDataServerProvider dataServerProvider { get; set; }
-
+        public static IDataServerProvider defaultDataServerProvider { get; private set; }
+        public static IDbTableScheme dbTableScheme { get; set; }
         public static IInstanceCodeCompiler codeCompiler { get; set; }
 
         public static IDbConnectionState dbConnectionState { get; set; }
@@ -551,6 +532,25 @@ namespace System.DJ.ImplementFactory
         {
             if (!IsDbUsed) return;
             if (null != (dbHelper as IDisposable)) ((IDisposable)dbHelper).Dispose();
+        }
+
+        public static void LoadDataServerProvider()
+        {
+            string dsFlag = "ms";
+            if (db_dialect.mysql == DbAdapter.dbDialect)
+            {
+                dsFlag = "mysql";
+            }
+            else if (db_dialect.oracle == DbAdapter.dbDialect)
+            {
+                dsFlag = "oracle";
+            }
+
+            dataServerProvider = DJTools.GetInstanceByType<IDataServerProvider>(dsFlag);
+            if (null == dataServerProvider) dataServerProvider = defaultDataServerProvider;
+
+            DbVisitor.sqlAnalysis = DJTools.GetInstanceByType<ISqlAnalysis>(dsFlag);
+            dbTableScheme = DJTools.GetInstanceByType<IDbTableScheme>(dsFlag);
         }
 
         static SynchronizationContext _SynicContext = null;
@@ -935,6 +935,14 @@ namespace System.DJ.ImplementFactory
                 ImplementAdapter.Register(impl);
             }
             return impl;
+        }
+
+        public T GetInstanceByType<T>()
+        {
+            Type type = typeof(T);
+            object impl = GetInstanceByType(type);
+            if (null == impl) return default(T);
+            return (T)impl;
         }
 
         public static int GetConstructor(Type type, ref ParameterInfo[] paras)

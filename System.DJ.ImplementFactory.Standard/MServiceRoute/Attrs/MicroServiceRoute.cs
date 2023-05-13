@@ -49,9 +49,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// </summary>
         private static Dictionary<string, GroupsRoute> s_groupDic = new Dictionary<string, GroupsRoute>();
 
-        public static MServiceManager s_serviceManager = null;
-        public static string s_ServiceName { get; private set; } = "";
-        public static string s_Port { get; private set; } = "";
+        public static MServiceManager ServiceManager = null;
+        public static string ServiceName { get; private set; } = "";
+        public static string Port { get; private set; } = "";
 
         static MicroServiceRoute()
         {
@@ -124,21 +124,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         {
             lock (s_MSObject)
             {
-                if (null == s_serviceManager) s_serviceManager = new MServiceManager();
+                if (null == MicroServiceRoute.ServiceManager) MicroServiceRoute.ServiceManager = new MServiceManager();
                 serviceManagerNode.ForeachChildNode(item =>
                 {
-                    s_serviceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
+                    MicroServiceRoute.ServiceManager.SetPropertyValue(item.Name, item.InnerText.Trim());
                 });
 
-                if ((false == string.IsNullOrEmpty(s_serviceManager.Uri))
-                    && (false == string.IsNullOrEmpty(s_serviceManager.Name))
-                    && (false == string.IsNullOrEmpty(s_serviceManager.RegisterAddr)))
+                if ((false == string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.Uri))
+                    && (false == string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.Name))
+                    && (false == string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.RegisterAddr)))
                 {
-                    string routeName1 = s_serviceManager.Name.ToLower();
+                    string routeName1 = MicroServiceRoute.ServiceManager.Name.ToLower();
                     s_routeAttrDic.Remove(routeName1);
                     s_eleDic.Remove(routeName1);
 
-                    s_routeAttrDic.Add(routeName1, s_serviceManager);
+                    s_routeAttrDic.Add(routeName1, MicroServiceRoute.ServiceManager);
                     s_eleDic.Add(routeName1, (XmlElement)serviceManagerNode);
                 }
             }
@@ -182,12 +182,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null == s_rootElement) return;
 
                 XmlAttribute atr = s_rootElement.Attributes[_ServiceName];
-                if (null != atr) s_ServiceName = atr.Value.Trim();
-                if (string.IsNullOrEmpty(s_ServiceName)) s_ServiceName = XmlDoc.GetChildTextByNodeName(s_rootElement, _ServiceName);
+                if (null != atr) MicroServiceRoute.ServiceName = atr.Value.Trim();
+                if (string.IsNullOrEmpty(MicroServiceRoute.ServiceName)) MicroServiceRoute.ServiceName = XmlDoc.GetChildTextByNodeName(s_rootElement, _ServiceName);
 
                 atr = s_rootElement.Attributes[_Port];
-                if (null != atr) s_Port = atr.Value.Trim();
-                if (string.IsNullOrEmpty(s_Port)) s_Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
+                if (null != atr) MicroServiceRoute.Port = atr.Value.Trim();
+                if (string.IsNullOrEmpty(MicroServiceRoute.Port)) MicroServiceRoute.Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
 
                 Func<XmlElement, RouteAttr> func = _ele =>
                 {

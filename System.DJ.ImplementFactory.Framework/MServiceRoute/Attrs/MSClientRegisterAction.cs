@@ -8,7 +8,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// <summary>
     /// Identify the client registration method, which must have a 'ContractKey' parameter of character type
     /// </summary>
-    public class MSClientRegisterAction : AbsActionFilterAttribute
+    public class MSClientRegisterAction : AbsSysAttributer
     {
         private string _contractKey = MServiceConst.contractKey.ToLower();
         /// <summary>

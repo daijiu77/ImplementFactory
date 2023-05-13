@@ -16,8 +16,8 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class TempImplCode
     {
-        public static string dirName = "TempImpl";
-        public static string libName = "bin";
+        public const string dirName = "TempImpl";
+        public const string libName = "bin";
         static string rootPath = "";
 
         static string[] dllArr = new string[] { "System.dll", "System.Xml.dll" };

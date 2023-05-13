@@ -8,7 +8,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// <summary>
     /// Remove the children under the Routes node in the MicroServiceRoute.xml file based on the Route-Name value
     /// </summary>
-    public class MSRemoveServiceRouteItemAction : AbsActionFilterAttribute
+    public class MSRemoveServiceRouteItemAction : AbsSysAttributer
     {
         private string ServiceRouteName = "RouteName";
         /// <summary>

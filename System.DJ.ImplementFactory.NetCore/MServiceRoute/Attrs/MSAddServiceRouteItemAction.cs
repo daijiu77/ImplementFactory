@@ -10,7 +10,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// <summary>
     /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)
     /// </summary>
-    public class MSAddServiceRouteItemAction : AbsActionFilterAttribute
+    public class MSAddServiceRouteItemAction : AbsSysAttributer
     {
         #region Variable names are prohibited from being changed
         private string NameMapping = "Name";

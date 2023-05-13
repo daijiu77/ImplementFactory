@@ -125,10 +125,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             Task.Run(() =>
             {
-                if (null == s_serviceManager) return;
-                if (string.IsNullOrEmpty(s_serviceManager.Uri)
-                    || string.IsNullOrEmpty(s_serviceManager.ServiceManagerAddr)
-                    || string.IsNullOrEmpty(s_serviceManager.ContractKey)) return;
+                if (null == ServiceManager) return;
+                if (string.IsNullOrEmpty(ServiceManager.Uri)
+                    || string.IsNullOrEmpty(ServiceManager.ServiceManagerAddr)
+                    || string.IsNullOrEmpty(ServiceManager.ContractKey)) return;
 
                 Regex rg = new Regex(@"(?<controllerName>[a-z0-9_]+)controller$", RegexOptions.IgnoreCase);
                 Regex rg1 = new Regex(@"(\[controller\])|(\{controller\})", RegexOptions.IgnoreCase);
@@ -271,16 +271,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 if (!string.IsNullOrEmpty(jsonData)) jsonData = jsonData.Substring(1);
                 jsonData = jsonData.Trim();
-                jsonData = "{\"ServiceName\": \"{0}\", \"Data\": [{1}], \"CrateTime\": \"{2}\"}".ExtFormat(s_ServiceName, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                jsonData = "{\"ServiceName\": \"{0}\", \"Data\": [{1}], \"CrateTime\": \"{2}\"}".ExtFormat(ServiceName, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                string svrUrl = s_serviceManager.Uri;
+                string svrUrl = ServiceManager.Uri;
                 string s1 = svrUrl.Substring(svrUrl.Length - 1);
                 if (s1.Equals("\\") || s1.Equals("/"))
                 {
                     svrUrl = svrUrl.Substring(0, svrUrl.Length - 1);
                 }
 
-                string ServiceManagerAddr = s_serviceManager.ServiceManagerAddr;
+                string ServiceManagerAddr = ServiceManager.ServiceManagerAddr;
                 s1 = ServiceManagerAddr.Substring(0, 1);
                 if (s1.Equals("\\") || s1.Equals("/"))
                 {
@@ -290,10 +290,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 svrUrl += "/" + ServiceManagerAddr;
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add(MServiceConst.contractKey, s_serviceManager.ContractKey);
+                headers.Add(MServiceConst.contractKey, ServiceManager.ContractKey);
 
                 IHttpHelper httpHelper = new HttpHelper();
-                MethodTypes methodTypes1 = s_serviceManager.ServiceManagerActionType;
+                MethodTypes methodTypes1 = ServiceManager.ServiceManagerActionType;
                 bool success = false;
                 while (true)
                 {

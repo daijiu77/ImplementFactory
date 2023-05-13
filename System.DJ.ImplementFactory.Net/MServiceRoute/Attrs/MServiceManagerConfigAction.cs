@@ -8,7 +8,7 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
-    public class MServiceManagerConfigAction : AbsActionFilterAttribute
+    public class MServiceManagerConfigAction : AbsSysAttributer
     {
         #region Variable names are prohibited from being changed
         private string NameMapping = "serviceManagerName";

@@ -6,7 +6,7 @@ using System.Xml;
 
 namespace System.DJ.ImplementFactory.Commons.Attrs
 {
-    public class DbConfigAction : AbsActionFilterAttribute
+    public class DbConfigAction : AbsSysAttributer
     {
         private string dbConnectionStringMapping = "dbConeectionString";
         private string dbTypeMapping = "dbType";
@@ -63,7 +63,14 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
             if (!string.IsNullOrEmpty(dbTypeVal))
             {
                 bool mbool = DbAdapter.SetConfig(dbTypeVal);
-                if (!mbool) dbTypeVal = "";
+                if (mbool)
+                {
+                    ImplementAdapter.LoadDataServerProvider();
+                }
+                else
+                {
+                    dbTypeVal = "";
+                }
             }
 
             if (!string.IsNullOrEmpty(dbConeectionString))
@@ -119,16 +126,16 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                     if (!string.IsNullOrEmpty(dbConeectionString))
                     {
                         item.InnerText = dbConeectionString;
+                        num2++;
                     }
-                    num2++;
                 }
                 else if (fn.Equals(dbTypeName))
                 {
                     if (!string.IsNullOrEmpty(dbTypeVal))
                     {
                         item.InnerText = dbTypeVal;
+                        num2++;
                     }
-                    num2++;
                 }
                 if (num1 == num2) return false;
                 return true;
