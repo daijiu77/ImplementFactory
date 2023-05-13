@@ -937,6 +937,14 @@ namespace System.DJ.ImplementFactory
             return impl;
         }
 
+        public T GetInstanceByType<T>()
+        {
+            Type type = typeof(T);
+            object impl = GetInstanceByType(type);
+            if (null == impl) return default(T);
+            return (T)impl;
+        }
+
         public static int GetConstructor(Type type, ref ParameterInfo[] paras)
         {
             DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();
