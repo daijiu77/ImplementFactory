@@ -29,6 +29,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private const string _Groups = "Groups";
         private const string _ServiceName = "ServiceName";
         private const string _Port = "Port";
+        private const string _DataSync = "DataSyncs";
 
         private static string s_config_path = "";
         private static object s_MSObject = new object();
@@ -49,6 +50,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// </summary>
         private static Dictionary<string, GroupsRoute> s_groupDic = new Dictionary<string, GroupsRoute>();
 
+        /// <summary>
+        /// The data sync dictionary.
+        /// </summary>
+        public static Dictionary<string, DataSync> DataSyncDic = new Dictionary<string, DataSync>();
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
@@ -161,6 +166,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 XmlElement XMLroot = doc.RootNode(_microServiceRoutes);
                 InitXml_ServiceManage(doc, XMLroot);
 
+                InitXml_DataSync(doc, XMLroot);
+
                 InitXml_Routes(doc, XMLroot);
 
                 InitXml_Groups(doc, XMLroot);
@@ -189,35 +196,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null != atr) MicroServiceRoute.Port = atr.Value.Trim();
                 if (string.IsNullOrEmpty(MicroServiceRoute.Port)) MicroServiceRoute.Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
 
-                Func<XmlElement, RouteAttr> func = _ele =>
-                {
-                    RouteAttr _routeAttr1 = new RouteAttr();
-                    foreach (XmlAttribute item in _ele.Attributes)
-                    {
-                        _routeAttr1.SetPropertyValue(item.Name, item.Value);
-                    }
-
-                    _routeAttr1.GetType().ForeachProperty((pi, pt, fn) =>
-                    {
-                        string txt = XmlDoc.GetChildTextByNodeName(_ele, fn);
-                        if (!string.IsNullOrEmpty(txt)) _routeAttr1.SetPropertyValue(fn, txt);
-                    });
-
-                    if (false == string.IsNullOrEmpty(_routeAttr1.Name)
-                                && false == string.IsNullOrEmpty(_routeAttr1.Uri))
-                    {
-                        string routeName1 = _routeAttr1.Name.ToLower();
-                        if (s_routeAttrDic.ContainsKey(routeName1)) return _routeAttr1;
-                        s_routeAttrDic.Add(routeName1, _routeAttr1);
-                        s_eleDic.Add(routeName1, (XmlElement)_ele);
-                    }
-                    return _routeAttr1;
-                };
-
                 string nodeName = "";
                 string serviceManagerLower = _ServiceManager.ToLower();
                 string routesLower = _Routes.ToLower();
                 string groupsLower = _Groups.ToLower();
+                string dataSyncLower = _DataSync.ToLower();
                 RouteAttr routeAttr1 = null;
                 s_rootElement.ForeachChildNode(node =>
                 {
@@ -225,6 +208,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     if (nodeName.Equals(serviceManagerLower))
                     {
                         ResetServiceManager(node);
+                    }
+                    else if (nodeName.Equals(dataSyncLower))
+                    {
+                        DataSync dataSync = null;
+                        node.ForeachChildNode(nodeItem =>
+                        {
+                            dataSync = InitValFromNode<DataSync>(nodeItem);
+                            if (string.IsNullOrEmpty(dataSync.GroupName)) throw new Exception("The Uri '{0}' lost a value of GroupName in the data sync.".ExtFormat(dataSync.Uri));
+                            DataSyncDic[dataSync.GroupName] = dataSync;
+                        });
                     }
                     else if (nodeName.Equals(groupsLower))
                     {
@@ -237,7 +230,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         s_groupDic[groupName.ToLower()] = groupsRoute;
                         node.ForeachChildNode(_routeItem =>
                         {
-                            routeAttr1 = func(_routeItem);
+                            routeAttr1 = InitValFromNode<RouteAttr>(_routeItem);
                             groupsRoute.Children.Add(routeAttr1);
                             return true;
                         });
@@ -246,7 +239,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         node.ForeachChildNode(_routeItem =>
                         {
-                            routeAttr1 = func(_routeItem);
+                            routeAttr1 = InitValFromNode<RouteAttr>(_routeItem);
                             return true;
                         });
                     }
@@ -261,7 +254,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             microServiceRoute.uri_str = routeAttr.Uri;
         }
 
-        #region Initial defaul datas in the configuration file
+        #region Initial defaul datas in the configuration file        
         private static void InitXml_ServiceManage(XmlDoc doc, XmlElement XMLroot)
         {
             MServiceManager serviceMng = new MServiceManager()
@@ -318,7 +311,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             routeNodes.AppendChild(route);
         }
 
-        public static void InitXml_Groups(XmlDoc doc, XmlElement XMLroot)
+        private static void InitXml_Groups(XmlDoc doc, XmlElement XMLroot)
         {
             #region 路由集群，表示所有路由目标地址都有相同的访问接口，可以通过 GroupsRouteVisit 静态方法获取                
             List<RouteAttr> groups = new List<RouteAttr>();
@@ -364,7 +357,69 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
             #endregion
         }
+
+        private static void InitXml_DataSync(XmlDoc doc, XmlElement XMLroot)
+        {
+            List<DataSync> groups = new List<DataSync>();
+            groups.Add(new DataSync()
+            {
+                GroupName = "UserInfoSync",
+                Name = "MemberService",
+                Uri = "http://127.0.0.1:5000",
+                RegisterAddr = "/Home/RegisterIP",
+                TestAddr = "/Home/Test",
+                RegisterActionType = MethodTypes.Post,
+                ContractKey = "abc"
+            });
+
+            XmlElement dataSyncNodes = doc.CreateElement(_DataSync);
+            XMLroot.AppendChild(dataSyncNodes);
+
+            string registerAction = _RegisterActionType.ToLower();
+            foreach (DataSync item in groups)
+            {
+                XmlElement route = doc.CreateElement(_routeItem);
+                dataSyncNodes.AppendChild(route);
+                item.ForeachProperty((pi, pt, fn, fv) =>
+                {
+                    if (fn.ToLower().Equals(registerAction)) return false;
+                    if (null == fv) fv = "";
+                    XmlElement ele = doc.CreateElement(fn);
+                    ele.InnerText = fv.ToString();
+                    route.AppendChild(ele);
+                    return true;
+                });
+                XmlElement registerNode = doc.CreateElement(_RegisterActionType);
+                registerNode.InnerText = Enum.GetName(typeof(MethodTypes), item.RegisterActionType);
+                route.AppendChild(registerNode);
+            }
+        }
         #endregion
+
+        private static T InitValFromNode<T>(XmlElement _ele) where T : RouteAttr
+        {
+            T _routeAttr1 = (T)Activator.CreateInstance(typeof(T));
+            foreach (XmlAttribute item in _ele.Attributes)
+            {
+                _routeAttr1.SetPropertyValue(item.Name, item.Value);
+            }
+
+            _routeAttr1.GetType().ForeachProperty((pi, pt, fn) =>
+            {
+                string txt = XmlDoc.GetChildTextByNodeName(_ele, fn);
+                if (!string.IsNullOrEmpty(txt)) _routeAttr1.SetPropertyValue(fn, txt);
+            });
+
+            if (false == string.IsNullOrEmpty(_routeAttr1.Name)
+                        && false == string.IsNullOrEmpty(_routeAttr1.Uri))
+            {
+                string routeName1 = _routeAttr1.Name.ToLower();
+                if (s_routeAttrDic.ContainsKey(routeName1)) return (T)_routeAttr1;
+                s_routeAttrDic.Add(routeName1, _routeAttr1);
+                s_eleDic.Add(routeName1, (XmlElement)_ele);
+            }
+            return (T)_routeAttr1;
+        }
 
         public string RouteName { get { return route_name; } }
 
