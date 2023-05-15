@@ -163,7 +163,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (null == fm.FieldType) fm.FieldType = type1;
                     if (0 == fm.Length) fm.Length = length;
                     fieldMappings.Add(fm);
-                    tableFieldInfos.Add(tbName, fm.FieldName, null, 0);
+                    tableFieldInfos.Add(tbName, fm.FieldName, null, length, !fm.NoNull, fm.IsPrimaryKey);
                 });
                 DbAdapter.printSql(autoCall, "Table name: <" + tbName + ">, fields mapping count: " + fieldMappings.Count);
                 if (0 == fieldMappings.Count) continue;
@@ -228,7 +228,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 fn1 = item.Name.ToLower();
                 if (fieldDic.ContainsKey(fn1)) continue;
-                tableFieldInfos.Add(tableName, item.Name, item.ValueType, item.Length);
+                tableFieldInfos.Add(tableName, item.Name, item.ValueType, item.Length, item.IsNull, item.IsPrimaryKey);
                 fieldDic.Add(fn1, item.Name);
             }
 

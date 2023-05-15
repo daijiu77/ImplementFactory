@@ -15,6 +15,8 @@ namespace System.DJ.ImplementFactory.Entities
         public string ValueType { get; private set; }
         public int Length { get; private set; }
 
+        public bool IsNull { get; private set; }
+        public bool IsPrimaryKey { get; private set; }
         public TableFieldInfo SetTableName(string tableName)
         {
             TableName = tableName;
@@ -36,6 +38,18 @@ namespace System.DJ.ImplementFactory.Entities
         public TableFieldInfo SetLength(int length)
         {
             this.Length = length;
+            return this;
+        }
+
+        public TableFieldInfo SetIsNull(bool isNull)
+        {
+            IsNull = isNull;
+            return this;
+        }
+
+        public TableFieldInfo SetIsPrimaryKey(bool isPrimaryKey)
+        {
+            IsPrimaryKey = isPrimaryKey;
             return this;
         }
     }

@@ -50,7 +50,7 @@ namespace System.DJ.ImplementFactory.Entities
             return this;
         }
 
-        public TableDetail Add(string fieldName, string fieldType, int valueLength)
+        public TableDetail Add(string fieldName, string fieldType, int valueLength, bool isNull, bool isPrimaryKey)
         {
             string key = fieldName.ToLower();
             if (!dic.ContainsKey(key))
@@ -59,7 +59,9 @@ namespace System.DJ.ImplementFactory.Entities
                 tableFieldInfo.SetTableName(Name)
                     .SetName(fieldName)
                     .SetValueType(fieldType)
-                    .SetLength(valueLength);
+                    .SetLength(valueLength)
+                    .SetIsNull(isNull)
+                    .SetIsPrimaryKey(isPrimaryKey);
                 dic[key] = tableFieldInfo;
                 list.Add(key);
                 fields.Add(fieldName);

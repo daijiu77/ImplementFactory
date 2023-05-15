@@ -20,9 +20,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             get { return enumerableItem[index]; }
         }
 
-        public TableInfoDetail Add(string tableName, string fieldName, string fieldType, int valueLength)
+        public TableInfoDetail Add(string tableName, string fieldName, string fieldType, int valueLength, bool isNull, bool isPrimaryKey)
         {
-            enumerableItem.Add(tableName, fieldName, fieldType, valueLength);
+            enumerableItem.Add(tableName, fieldName, fieldType, valueLength, isNull, isPrimaryKey);
             return this;
         }
 
@@ -69,7 +69,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
             }
 
-            public void Add(string tableName, string fieldName, string fieldType, int valueLength)
+            public void Add(string tableName, string fieldName, string fieldType, int valueLength, bool isNull, bool isPrimaryKey)
             {
                 string key = tableName.ToLower();
                 TableDetail tableDetail = null;
@@ -85,7 +85,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     _names.Add(key);
                     _tableNames.Add(tableName);
                 }
-                tableDetail.Add(fieldName, fieldType, valueLength);
+                tableDetail.Add(fieldName, fieldType, valueLength, isNull, isPrimaryKey);
             }
 
             public int Count => _names.Count;
