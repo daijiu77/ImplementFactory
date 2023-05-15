@@ -8,7 +8,7 @@ namespace System.DJ.ImplementFactory.Entities
     {
         private Dictionary<string, Guid> serviceFlagDic = new Dictionary<string, Guid>();
         public Dictionary<string, Guid> ServiceFlagDic { get { return serviceFlagDic; } }
-
-        public DataSyncItem dataSyncItem { get; set; }
+        public string Key { get; set; }
+        public DataSyncItem DataSyncOption { get; set; }
     }
 }

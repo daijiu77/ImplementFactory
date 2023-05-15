@@ -162,6 +162,7 @@ namespace Web.NetCore
                 {
                     txt = JsonConvert.SerializeObject(jObject);
                     para = DataTranslation.JsonToObject(txt);
+                    if (null == para) para = jObject;
                 }
                 else if (typeof(byte[]) == type || typeof(Stream).IsAssignableFrom(type) || typeof(Stream) == type)
                 {

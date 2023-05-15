@@ -35,6 +35,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static object s_MSObject = new object();
         private static XmlDoc s_document = new XmlDoc();
         private static XmlElement s_rootElement = null;
+        private static Guid s_id = Guid.NewGuid();
 
         /// <summary>
         /// key: serviceName_lower, value: RouteAttr
@@ -57,6 +58,22 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
+
+        public static Guid ID
+        {
+            get
+            {
+                return s_id;
+            }
+        }
+
+        public static string Key
+        {
+            get
+            {
+                return ServiceName + "@" + s_id.ToString();
+            }
+        }
 
         static MicroServiceRoute()
         {
@@ -86,7 +103,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// Load the routing cluster
         /// </summary>
-        /// <typeparam name="T">A valid microservices interface type</typeparam>
+        /// <typeparam name="T">An interface type identified by the MicroServiceRoute property</typeparam>
         /// <returns>Returns the routed cluster interface instance class</returns>
         public static List<T> GroupsRouteVisit<T>()
         {
