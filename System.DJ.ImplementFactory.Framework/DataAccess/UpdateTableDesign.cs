@@ -181,10 +181,42 @@ namespace System.DJ.ImplementFactory.DataAccess
             return tableFieldInfos;
         }
 
+        private Type getTypeByName(string typeName, int len)
+        {
+            Type type = typeof(string);
+            if (null == type) return type;
+            string tn = typeName.Trim().ToLower();
+            if (-1 != tn.IndexOf("bit") || (-1 != tn.IndexOf("int") && 1 == len) || (-1 != tn.IndexOf("number") && 1 == len))
+            {
+                type = typeof(bool);
+            }
+            else if (-1 != tn.IndexOf("bigint"))
+            {
+                type = typeof(long);
+            }
+            else if ((-1 != tn.IndexOf("money")) || (-1 != tn.IndexOf("num")))
+            {
+                type = typeof(double);
+            }
+            else if ((-1 != tn.IndexOf("float")) || (-1 != tn.IndexOf("real")))
+            {
+                type = typeof(float);
+            }
+            else if (-1 != tn.IndexOf("int"))
+            {
+                type = typeof(int);
+            }
+            else if ((-1 != tn.IndexOf("binary")) || (-1 != tn.IndexOf("image")))
+            {
+                type = typeof(byte[]);
+            }
+            return type;
+        }
+
         private void AddField(string tableName, Type type)
         {
             //select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';
-            List<string> list = dbTableScheme.GetFields(tableName);
+            List<FieldInformation> list = dbTableScheme.GetFields(tableName);
             if (null == list) return;
             if (0 == list.Count) return;
             IDbHelper dbHelper = ImplementAdapter.DbHelper;
@@ -194,10 +226,10 @@ namespace System.DJ.ImplementFactory.DataAccess
             string err = "";
             foreach (var item in list)
             {
-                fn1 = item.ToLower();
+                fn1 = item.Name.ToLower();
                 if (fieldDic.ContainsKey(fn1)) continue;
-                tableFieldInfos.Add(tableName, item, null, 0);
-                fieldDic.Add(fn1, item);
+                tableFieldInfos.Add(tableName, item.Name, item.ValueType, item.Length);
+                fieldDic.Add(fn1, item.Name);
             }
 
             FieldMapping fm = null;

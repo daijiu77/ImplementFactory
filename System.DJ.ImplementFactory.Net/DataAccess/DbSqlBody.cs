@@ -203,6 +203,30 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        private Dictionary<Type, FieldItemList<FieldItem>> selectFieldDic = new Dictionary<Type, FieldItemList<FieldItem>>();
+        public DbSqlBody Select<T>(params FieldItem[] selectFields) where T : AbsDataModel
+        {
+            if (null == selectFields) return this;
+            if (0 == selectFields.Length) return this;
+            Type mType = typeof(T);
+            FieldItemList<FieldItem> fields = null;
+            selectFieldDic.TryGetValue(mType, out fields);
+            if (null == fields)
+            {
+                fields = new FieldItemList<FieldItem>();
+                selectFieldDic.Add(mType, fields);
+            }
+
+            string fName = "";
+            foreach (FieldItem item in selectFields)
+            {
+                if (null == item) continue;
+                fName = item.Name.Trim();
+                fields.Add(item);
+            }
+            return this;
+        }
+
         private string GetSelectPart()
         {
             string selectPart = "";
@@ -245,6 +269,31 @@ namespace System.DJ.ImplementFactory.DataAccess
                     selectPart += ", " + sqlAnalysis.GetFieldAlias(s, item.Key);
                 }
             }
+
+            if (0 < selectFieldDic.Count)
+            {
+                Dictionary<Type, string> aliasDic = new Dictionary<Type, string>();
+                foreach (SqlFromUnit item in fromUnits)
+                {
+                    aliasDic[item.modelType] = item.alias;
+                }
+
+                string tbAlias = "";
+                string fAlias = "";
+                foreach (KeyValuePair<Type, FieldItemList<FieldItem>> item in selectFieldDic)
+                {
+                    tbAlias = "";
+                    aliasDic.TryGetValue(item.Key, out tbAlias);
+                    if (!string.IsNullOrEmpty(tbAlias)) tbAlias += ".";
+                    foreach (FieldItem fItem in item.Value)
+                    {
+                        fAlias = "";
+                        if (!string.IsNullOrEmpty(fItem.Alias)) fAlias = " " + fItem.Alias;
+                        selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fItem.Name, fAlias);
+                    }
+                }
+            }
+
             if (!string.IsNullOrEmpty(selectPart)) selectPart = selectPart.Substring(1);
             selectPart = selectPart.Trim();
             if (string.IsNullOrEmpty(selectPart)) selectPart = "*";

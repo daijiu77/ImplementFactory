@@ -1,6 +1,6 @@
 ﻿namespace System.DJ.ImplementFactory.Entities
 {
-    public class DataSync : RouteAttr
+    public class DataSyncConfig : RouteAttr
     {
         public string GroupName { get; set; }
     }

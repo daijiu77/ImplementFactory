@@ -20,7 +20,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             get { return enumerableItem[index]; }
         }
 
-        public TableInfoDetail Add(string tableName, string fieldName, Type fieldType, int valueLength)
+        public TableInfoDetail Add(string tableName, string fieldName, string fieldType, int valueLength)
         {
             enumerableItem.Add(tableName, fieldName, fieldType, valueLength);
             return this;
@@ -69,7 +69,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
             }
 
-            public void Add(string tableName, string fieldName, Type fieldType, int valueLength)
+            public void Add(string tableName, string fieldName, string fieldType, int valueLength)
             {
                 string key = tableName.ToLower();
                 TableDetail tableDetail = null;

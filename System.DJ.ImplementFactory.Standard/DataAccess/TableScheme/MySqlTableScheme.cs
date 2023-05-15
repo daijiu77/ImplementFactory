@@ -10,10 +10,8 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
-    public class MySqlTableScheme : IDbTableScheme
+    public class MySqlTableScheme : AbsTableScheme, IDbTableScheme
     {
-        private AutoCall autoCall = new AutoCall();
-
         private ISqlAnalysis sqlAnalysis = new MySqlAnalysis();
 
         ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
@@ -126,25 +124,11 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             return sql;
         }
 
-        List<string> IDbTableScheme.GetFields(string tableName)
+        List<FieldInformation> IDbTableScheme.GetFields(string tableName)
         {
-            string sql = "select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';";
-            sql = sql.ExtFormat(tableName);
-
-            IDbHelper dbHelper = ImplementAdapter.DbHelper;
-            string err = "";
-            DataTable dt = dbHelper.query(autoCall, sql, false, null, ref err);
-            List<string> list = new List<string>();
-            if (null == dt) return list;
-            if (0 == dt.Rows.Count) return list;
-            string fn = "";
-            foreach (DataRow item in dt.Rows)
-            {
-                if (System.DBNull.Value == item[0]) continue;
-                fn = item[0].ToString();
-                list.Add(fn);
-            }
-            ImplementAdapter.Destroy(dbHelper);
+            string sql = "select COLUMN_NAME {1},DATA_TYPE {2},CHARACTER_MAXIMUM_LENGTH {3},IS_NULLABLE {4} from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';";
+            sql = sql.ExtFormat(tableName, fName, fType, fLen, fIsNull);
+            List<FieldInformation> list = GetFieldInfos(sql);
             return list;
         }
 

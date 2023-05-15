@@ -10,10 +10,8 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
-    public class OracleTableScheme : IDbTableScheme
+    public class OracleTableScheme : AbsTableScheme, IDbTableScheme
     {
-        private AutoCall autoCall = new AutoCall();
-
         private ISqlAnalysis sqlAnalysis = new OracleSqlAnalysis();
 
         ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
@@ -108,25 +106,11 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             return sql;
         }
 
-        List<string> IDbTableScheme.GetFields(string tableName)
+        List<FieldInformation> IDbTableScheme.GetFields(string tableName)
         {
-            string sql = "select COLUMN_NAME from USER_TAB_COLUMNS where TABLE_NAME='{0}';";
-            sql = sql.ExtFormat(tableName);
-
-            IDbHelper dbHelper = ImplementAdapter.DbHelper;
-            string err = "";
-            DataTable dt = dbHelper.query(null, sql, false, null, ref err);
-            List<string> list = new List<string>();
-            if (null == dt) return list;
-            if (0 == dt.Rows.Count) return list;
-            string fn = "";
-            foreach (DataRow item in dt.Rows)
-            {
-                if (System.DBNull.Value == item[0]) continue;
-                fn = item[0].ToString();
-                list.Add(fn);
-            }
-            ImplementAdapter.Destroy(dbHelper);
+            string sql = "select COLUMN_NAME {1},DATA_TYPE {2},DATA_LENGTH {3},NULLABLE {4} from USER_TAB_COLUMNS where TABLE_NAME='{0}';";
+            sql = sql.ExtFormat(tableName, fName, fType, fLen, fIsNull);
+            List<FieldInformation> list = GetFieldInfos(sql);
             return list;
         }
 

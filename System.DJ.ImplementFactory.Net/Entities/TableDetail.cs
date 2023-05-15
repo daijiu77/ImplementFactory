@@ -50,7 +50,7 @@ namespace System.DJ.ImplementFactory.Entities
             return this;
         }
 
-        public TableDetail Add(string fieldName, Type fieldType, int valueLength)
+        public TableDetail Add(string fieldName, string fieldType, int valueLength)
         {
             string key = fieldName.ToLower();
             if (!dic.ContainsKey(key))
@@ -67,7 +67,7 @@ namespace System.DJ.ImplementFactory.Entities
             return this;
         }
 
-        public void Foreach(Func<string, Type, int, bool> func)
+        public void Foreach(Func<string, string, int, bool> func)
         {
             if (null == func) return;
             Foreach(fInfo =>
@@ -76,7 +76,7 @@ namespace System.DJ.ImplementFactory.Entities
             });
         }
 
-        public void Foreach(Action<string, Type, int> action)
+        public void Foreach(Action<string, string, int> action)
         {
             if (null == action) return;
             Foreach(fInfo =>

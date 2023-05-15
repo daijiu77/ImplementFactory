@@ -8,10 +8,8 @@ using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
-    public class MSTableScheme : IDbTableScheme
+    public class MSTableScheme : AbsTableScheme, IDbTableScheme
     {
-        private AutoCall autoCall = new AutoCall();
-
         private ISqlAnalysis sqlAnalysis = new MSqlAnalysis();
 
         ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
@@ -108,27 +106,13 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             //throw new NotImplementedException();
         }
 
-        List<string> IDbTableScheme.GetFields(string tableName)
+        List<FieldInformation> IDbTableScheme.GetFields(string tableName)
         {
-            string sql = "select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';";
-            sql = sql.ExtFormat(tableName);
+            string sql = "select COLUMN_NAME {1},DATA_TYPE {2},CHARACTER_MAXIMUM_LENGTH {3},IS_NULLABLE {4} from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='{0}';";
+            sql = sql.ExtFormat(tableName, fName, fType, fLen, fIsNull);
 
-            IDbHelper dbHelper = ImplementAdapter.DbHelper;
-            string err = "";
-            DataTable dt = dbHelper.query(null, sql, false, null, ref err);
-            List<string> list = new List<string>();
-            if (null == dt) return list;
-            if (0 == dt.Rows.Count) return list;
-            string fn = "";
-            foreach (DataRow item in dt.Rows)
-            {
-                if (System.DBNull.Value == item[0]) continue;
-                fn = item[0].ToString();
-                list.Add(fn);
-            }
-            ImplementAdapter.Destroy(dbHelper);
+            List<FieldInformation> list = GetFieldInfos(sql);
             return list;
-            //throw new NotImplementedException();
         }
 
         string IDbTableScheme.GetTableScheme(string tableName, List<FieldMapping> fieldMappings)

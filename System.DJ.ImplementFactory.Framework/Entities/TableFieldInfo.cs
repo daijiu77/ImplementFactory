@@ -12,7 +12,7 @@ namespace System.DJ.ImplementFactory.Entities
         /// Field Name
         /// </summary>
         public string Name { get; private set; }
-        public Type ValueType { get; private set; }
+        public string ValueType { get; private set; }
         public int Length { get; private set; }
 
         public TableFieldInfo SetTableName(string tableName)
@@ -27,7 +27,7 @@ namespace System.DJ.ImplementFactory.Entities
             return this;
         }
 
-        public TableFieldInfo SetValueType(Type valueType)
+        public TableFieldInfo SetValueType(string valueType)
         {
             this.ValueType = valueType;
             return this;

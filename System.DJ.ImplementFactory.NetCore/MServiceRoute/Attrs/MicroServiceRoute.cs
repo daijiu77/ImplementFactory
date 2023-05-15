@@ -53,7 +53,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// The data sync dictionary.
         /// </summary>
-        public static Dictionary<string, DataSync> DataSyncDic = new Dictionary<string, DataSync>();
+        public static Dictionary<string, DataSyncConfig> DataSyncDic = new Dictionary<string, DataSyncConfig>();
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
@@ -211,10 +211,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     }
                     else if (nodeName.Equals(dataSyncLower))
                     {
-                        DataSync dataSync = null;
+                        DataSyncConfig dataSync = null;
                         node.ForeachChildNode(nodeItem =>
                         {
-                            dataSync = InitValFromNode<DataSync>(nodeItem);
+                            dataSync = InitValFromNode<DataSyncConfig>(nodeItem);
                             if (string.IsNullOrEmpty(dataSync.GroupName)) throw new Exception("The Uri '{0}' lost a value of GroupName in the data sync.".ExtFormat(dataSync.Uri));
                             DataSyncDic[dataSync.GroupName] = dataSync;
                         });
@@ -360,8 +360,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         private static void InitXml_DataSync(XmlDoc doc, XmlElement XMLroot)
         {
-            List<DataSync> groups = new List<DataSync>();
-            groups.Add(new DataSync()
+            List<DataSyncConfig> groups = new List<DataSyncConfig>();
+            groups.Add(new DataSyncConfig()
             {
                 GroupName = "UserInfoSync",
                 Name = "MemberService",
@@ -376,7 +376,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             XMLroot.AppendChild(dataSyncNodes);
 
             string registerAction = _RegisterActionType.ToLower();
-            foreach (DataSync item in groups)
+            foreach (DataSyncConfig item in groups)
             {
                 XmlElement route = doc.CreateElement(_routeItem);
                 dataSyncNodes.AppendChild(route);
