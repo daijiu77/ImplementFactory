@@ -185,7 +185,7 @@ namespace System.DJ.ImplementFactory
 
             mSFilterMessage = loadInterfaceInstance<IMSFilterMessage>("", null, ref asse3);
 
-            msDataSync = loadInterfaceInstance<IMSDataSync>("", null, ref asse3);
+            msDataSync = loadInterfaceInstance<IMSDataSyncInput>("", null, ref asse3);
 
             serviceRegisterMessage = loadInterfaceInstance<ServiceRegisterMessage>("", null, ref asse3);
             if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
@@ -469,7 +469,7 @@ namespace System.DJ.ImplementFactory
         /// <summary>
         /// Data sync interface
         /// </summary>
-        public static IMSDataSync msDataSync { get; set; }
+        public static IMSDataSyncInput msDataSync { get; set; }
 
         public static IDataServerProvider dataServerProvider { get; set; }
         public static IDataServerProvider defaultDataServerProvider { get; private set; }
