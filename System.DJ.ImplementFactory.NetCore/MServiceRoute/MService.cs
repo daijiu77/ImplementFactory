@@ -293,7 +293,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 if (DataTypes.Add == (item.DataType & DataTypes.Add))
                 {
-                    ImplementAdapter.msDataSync.Insert(item);
+                    ImplementAdapter.msDataSync.Insert(item.DataSyncsName, item);
                 }
             }
             catch (Exception)
@@ -309,7 +309,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 if (DataTypes.Change == (item.DataType & DataTypes.Change))
                 {
-                    ImplementAdapter.msDataSync.Update(item);
+                    ImplementAdapter.msDataSync.Update(item.DataSyncsName, item);
                 }
             }
             catch (Exception)
@@ -325,7 +325,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 if (DataTypes.Delete == (item.DataType & DataTypes.Delete))
                 {
-                    ImplementAdapter.msDataSync.Delete(item);
+                    ImplementAdapter.msDataSync.Delete(item.DataSyncsName, item);
                 }
             }
             catch (Exception)

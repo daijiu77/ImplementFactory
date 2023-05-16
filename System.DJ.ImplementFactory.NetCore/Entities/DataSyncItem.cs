@@ -9,7 +9,14 @@
 
     public class DataSyncItem
     {
+        public string DataSyncsName { get; private set; }
         public DataTypes DataType { get; set; }
         public object Data { get; set; }
+
+        public DataSyncItem SetDataSyncsName(string dataSyncsName)
+        {
+            this.DataSyncsName = dataSyncsName;
+            return this;
+        }
     }
 }

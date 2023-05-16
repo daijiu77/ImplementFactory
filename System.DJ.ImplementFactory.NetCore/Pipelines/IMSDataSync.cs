@@ -4,8 +4,8 @@ namespace System.DJ.ImplementFactory.Pipelines
 {
     public interface IMSDataSync
     {
-        bool Insert(DataSyncItem item);
-        bool Update(DataSyncItem item);
-        bool Delete(DataSyncItem item);
+        bool Insert(string dataSyncsName, DataSyncItem item);
+        bool Update(string dataSyncsName, DataSyncItem item);
+        bool Delete(string dataSyncsName, DataSyncItem item);
     }
 }

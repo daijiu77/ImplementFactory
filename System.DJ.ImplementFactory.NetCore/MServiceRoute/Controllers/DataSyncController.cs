@@ -24,7 +24,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 
             DataSyncMessage syncMessage = ToDataSyncMessage(txt);
             if (null == syncMessage) return ResultData(err, false);
-            if (syncMessage.Key.Equals(MicroServiceRoute.Key)) return ResultData("Data sync end.", false);
+            if (syncMessage.ResourceKey.Equals(MicroServiceRoute.Key)) return ResultData("Data sync end.", false);
 
             if (!syncMessage.ServiceFlagDic.ContainsKey(MicroServiceRoute.Key))
             {
@@ -40,13 +40,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         {
             DataSyncMessage syncMessage = null;
             JToken jtk = JToken.Parse(txt);
-            JToken Key = jtk[MSConst.Key];
+            JToken ResourceKey = jtk[MSConst.ResourceKey];
+            JToken DataSyncsName = jtk[MSConst.DataSyncsName];
             JToken ServiceFlagDic = jtk[MSConst.ServiceFlagDic];
             JToken DataSyncOption = jtk[MSConst.DataSyncOption];
-            if ((null == Key) || (null == ServiceFlagDic) || (null == DataSyncOption)) return syncMessage;
+            if ((null == ResourceKey)
+                || (null == DataSyncsName)
+                || (null == ServiceFlagDic)
+                || (null == DataSyncOption)) return syncMessage;
 
+            string dataSyncsName = DataSyncsName.ToString();
             syncMessage = new DataSyncMessage();
-            syncMessage.Key = Key.ToString();
+            syncMessage.SetDataSyncsName(dataSyncsName)
+                .SetResourceKey(ResourceKey.ToString());
 
             Guid id = Guid.Empty;
             JObject jObj = ServiceFlagDic.ToObject<JObject>();
@@ -59,6 +65,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             }
 
             syncMessage.DataSyncOption = new DataSyncItem();
+            syncMessage.DataSyncOption.SetDataSyncsName(dataSyncsName);
 
             string dtType = DataSyncOption[MSConst.DataType].ToString();
             int num = 0;
@@ -80,6 +87,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 /*
 DataSyncMessage syncMessage = new DataSyncMessage();
 syncMessage.Key = "MemberService@88ce3e04-396a-4634-933c-1a46ab2fb416";
+syncMessage.SetDataSyncsName("TokenSync");
 
 syncMessage.ServiceFlagDic.Add(Guid.NewGuid().ToString(), Guid.NewGuid());
 syncMessage.ServiceFlagDic.Add(Guid.NewGuid().ToString(), Guid.NewGuid());
@@ -94,11 +102,12 @@ syncMessage.dataSyncItem = new DataSyncItem()
 string result = JsonConvert.SerializeObject(syncMessage);
 
 result 的值：
-{"Key": "MemberService@88ce3e04-396a-4634-933c-1a46ab2fb416", "ServiceFlagDic":{"e59a600d-19b3-48be-9b99-169d681aaafb":"88ce3e04-396a-4634-933c-1a46ab2fb416","bfec59b8-d613-4891-90be-38e55eed52cc":"0e4a533f-7c53-419f-a54c-e7e4d7f822bb"},"DataSyncOption":{"DataType":1,"Data":{"Message":"Test","Success":true}}}
+{"Key": "MemberService@88ce3e04-396a-4634-933c-1a46ab2fb416", "DataSyncsName": "TokenSync", "ServiceFlagDic":{"e59a600d-19b3-48be-9b99-169d681aaafb":"88ce3e04-396a-4634-933c-1a46ab2fb416","bfec59b8-d613-4891-90be-38e55eed52cc":"0e4a533f-7c53-419f-a54c-e7e4d7f822bb"},"DataSyncOption":{"DataType":1,"Data":{"Message":"Test","Success":true}}}
 
 格式化为：
 {
     "Key": "MemberService@88ce3e04-396a-4634-933c-1a46ab2fb416",
+    "DataSyncsName": "TokenSync",
 	"ServiceFlagDic": {
 		"e59a600d-19b3-48be-9b99-169d681aaafb": "88ce3e04-396a-4634-933c-1a46ab2fb416",
 		"bfec59b8-d613-4891-90be-38e55eed52cc": "0e4a533f-7c53-419f-a54c-e7e4d7f822bb"
