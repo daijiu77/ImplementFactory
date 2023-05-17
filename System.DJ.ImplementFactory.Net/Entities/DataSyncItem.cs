@@ -9,7 +9,16 @@
 
     public class DataSyncItem
     {
+        public string DataSyncsName { get; private set; }
         public DataTypes DataType { get; set; }
         public object Data { get; set; }
+
+        public Guid ID { get; set; } = Guid.NewGuid();
+
+        public DataSyncItem SetDataSyncsName(string dataSyncsName)
+        {
+            this.DataSyncsName = dataSyncsName;
+            return this;
+        }
     }
 }

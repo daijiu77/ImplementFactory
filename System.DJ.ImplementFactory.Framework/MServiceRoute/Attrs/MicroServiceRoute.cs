@@ -35,6 +35,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static object s_MSObject = new object();
         private static XmlDoc s_document = new XmlDoc();
         private static XmlElement s_rootElement = null;
+        private static Guid s_id = Guid.NewGuid();
 
         /// <summary>
         /// key: serviceName_lower, value: RouteAttr
@@ -51,12 +52,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static Dictionary<string, GroupsRoute> s_groupDic = new Dictionary<string, GroupsRoute>();
 
         /// <summary>
-        /// The data sync dictionary.
+        /// key: DataSyncs-Name_Lower, value: config and data
         /// </summary>
-        public static Dictionary<string, DataSyncConfig> DataSyncDic = new Dictionary<string, DataSyncConfig>();
+        private static Dictionary<string, DataSyncConfig> DataSyncDic = new Dictionary<string, DataSyncConfig>();
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
+
+        public static Guid ID
+        {
+            get
+            {
+                return s_id;
+            }
+        }
+
+        public static string Key
+        {
+            get
+            {
+                return ServiceName + "@" + s_id.ToString();
+            }
+        }
 
         static MicroServiceRoute()
         {
@@ -86,7 +103,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// Load the routing cluster
         /// </summary>
-        /// <typeparam name="T">A valid microservices interface type</typeparam>
+        /// <typeparam name="T">An interface type identified by the MicroServiceRoute property</typeparam>
         /// <returns>Returns the routed cluster interface instance class</returns>
         public static List<T> GroupsRouteVisit<T>()
         {
@@ -216,7 +233,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                         {
                             dataSync = InitValFromNode<DataSyncConfig>(nodeItem);
                             if (string.IsNullOrEmpty(dataSync.GroupName)) throw new Exception("The Uri '{0}' lost a value of GroupName in the data sync.".ExtFormat(dataSync.Uri));
-                            DataSyncDic[dataSync.GroupName] = dataSync;
+                            DataSyncDic[dataSync.GroupName.ToLower()] = dataSync;
                         });
                     }
                     else if (nodeName.Equals(groupsLower))
@@ -535,6 +552,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (string.IsNullOrEmpty(name)) return routeAttr;
                 s_routeAttrDic.TryGetValue(name.ToLower(), out routeAttr);
                 return routeAttr;
+            }
+        }
+
+        public static DataSyncConfig GetDataSyncMessageByName(string name)
+        {
+            lock (s_MSObject)
+            {
+                string dn = name.Trim().ToLower();
+                DataSyncConfig syncConfig = null;
+                DataSyncDic.TryGetValue(dn, out syncConfig);
+                return syncConfig;
             }
         }
 

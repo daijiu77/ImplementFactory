@@ -13,6 +13,8 @@
         public DataTypes DataType { get; set; }
         public object Data { get; set; }
 
+        public Guid ID { get; set; } = Guid.NewGuid();
+
         public DataSyncItem SetDataSyncsName(string dataSyncsName)
         {
             this.DataSyncsName = dataSyncsName;

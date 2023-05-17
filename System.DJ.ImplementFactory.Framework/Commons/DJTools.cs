@@ -157,6 +157,7 @@ namespace System.DJ.ImplementFactory.Commons
                             break;
                         }
                     }
+                    if (null == enumV) enumV = num;
                 }
                 else if (value.GetType() == type)
                 {

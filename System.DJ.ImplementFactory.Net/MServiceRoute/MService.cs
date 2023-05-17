@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
@@ -18,6 +19,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private static int maxNum = 50;
         private static int maxNumber = 50;
         private const int sleepNum = 1000 * 3;
+
+        private static List<DataSyncItem> DataSyncItems = new List<DataSyncItem>();
+        private static object _DataSyncLock = new object();
+        private static bool IsExecDataSync = false;
+        private static DataSyncItem syncItem = null;
+        private static int dataSyncPulse = 0;
+
         /// <summary>
         /// Start the service registration mechanism, which should be executed at project startup.
         /// </summary>
@@ -28,6 +36,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             if (0 >= maxNumber) maxNum = 1;
             register();
             serviceManage();
+            exec_dataSync();
             if (null != ImplementAdapter.mSService)
             {
                 ImplementAdapter.mSService.ChangeEnabled += MSService_ChangeEnabled;
@@ -221,6 +230,116 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 timeNum++;
                 Thread.Sleep(sleepNum);
+            }
+        }
+
+        private static void exec_dataSync()
+        {
+            if (null == ImplementAdapter.msDataSync) return;
+            Task.Run(() =>
+            {
+                IsExecDataSync = false;
+                while (true)
+                {
+                    ExecDataSyncItem();
+                    Thread.Sleep(sleepNum);
+                }
+            });
+
+            Task.Run(() =>
+            {
+                int Muniter = sleepNum * 20;
+                int maxNum = (Muniter * 2) / sleepNum;
+                while (true)
+                {
+                    if (IsExecDataSync) dataSyncPulse++;
+                    if (maxNum <= dataSyncPulse)
+                    {
+                        if (null != syncItem) DataSyncItems.Remove(syncItem);
+                        syncItem = null;
+                        dataSyncPulse = 0;
+                        IsExecDataSync = false;
+                    }
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
+        private static void ExecDataSyncItem()
+        {
+            lock (_DataSyncLock)
+            {
+                if (0 == DataSyncItems.Count) return;
+                if (IsExecDataSync) return;
+                IsExecDataSync = true;
+                dataSyncPulse = 0;
+                syncItem = DataSyncItems[0];
+                Task.Run(() =>
+                {
+                    DataSync_Add(syncItem);
+                    DataSync_Change(syncItem);
+                    DataSync_Delete(syncItem);
+
+                    DataSyncItems.Remove(syncItem);
+                    syncItem = null;
+                    IsExecDataSync = false;
+                });
+            }
+        }
+
+        private static void DataSync_Add(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Add == (item.DataType & DataTypes.Add))
+                {
+                    ImplementAdapter.msDataSync.Insert(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        private static void DataSync_Change(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Change == (item.DataType & DataTypes.Change))
+                {
+                    ImplementAdapter.msDataSync.Update(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        private static void DataSync_Delete(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Delete == (item.DataType & DataTypes.Delete))
+                {
+                    ImplementAdapter.msDataSync.Delete(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        public static void DataSyncToLocal(DataSyncItem item)
+        {
+            lock (_DataSyncLock)
+            {
+                DataSyncItems.Add(item);
             }
         }
 

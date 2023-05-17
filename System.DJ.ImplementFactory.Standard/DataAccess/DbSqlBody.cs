@@ -73,6 +73,30 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        private Dictionary<Type, FieldItemList<FieldItem>> selectFieldDic = new Dictionary<Type, FieldItemList<FieldItem>>();
+        public DbSqlBody Select<T>(params FieldItem[] selectFields) where T : AbsDataModel
+        {
+            if (null == selectFields) return this;
+            if (0 == selectFields.Length) return this;
+            Type mType = typeof(T);
+            FieldItemList<FieldItem> fields = null;
+            selectFieldDic.TryGetValue(mType, out fields);
+            if (null == fields)
+            {
+                fields = new FieldItemList<FieldItem>();
+                selectFieldDic.Add(mType, fields);
+            }
+
+            string fName = "";
+            foreach (FieldItem item in selectFields)
+            {
+                if (null == item) continue;
+                fName = item.Name.Trim();
+                fields.Add(item);
+            }
+            return this;
+        }
+
         public DbSqlBody Group(string field)
         {
             groupFields.Remove(field);
@@ -200,30 +224,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             if (0 == fields.Count) return this;
             lazyIgnoreDic[fnLower] = fields;
-            return this;
-        }
-
-        private Dictionary<Type, FieldItemList<FieldItem>> selectFieldDic = new Dictionary<Type, FieldItemList<FieldItem>>();
-        public DbSqlBody Select<T>(params FieldItem[] selectFields) where T : AbsDataModel
-        {
-            if (null == selectFields) return this;
-            if (0 == selectFields.Length) return this;
-            Type mType = typeof(T);
-            FieldItemList<FieldItem> fields = null;
-            selectFieldDic.TryGetValue(mType, out fields);
-            if (null == fields)
-            {
-                fields = new FieldItemList<FieldItem>();
-                selectFieldDic.Add(mType, fields);
-            }
-
-            string fName = "";
-            foreach (FieldItem item in selectFields)
-            {
-                if (null == item) continue;
-                fName = item.Name.Trim();
-                fields.Add(item);
-            }
             return this;
         }
 

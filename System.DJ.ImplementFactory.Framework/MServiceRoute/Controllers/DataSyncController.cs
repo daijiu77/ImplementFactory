@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.Web.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
@@ -10,8 +10,8 @@ using System.Text;
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 {
     [Route("DataSync")]
-    [ApiController]
-    public class DataSyncController : ControllerBase
+    
+    public class DataSyncController : Controller
     {
         [HttpPost, Route("Receiver")]
         public ActionResult Receiver(object data)

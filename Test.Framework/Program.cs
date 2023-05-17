@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -98,50 +99,13 @@ namespace Test.Framework
             }
         }
 
-        class ImplAdapter: ImplementAdapter
+        class ImplAdapter : ImplementAdapter
         {
             //
         }
 
-        class Test_abc
-        {
-            public string Name { get; set; }
-            public List<Test_abc> Items { get; set; }
-        }
-
-        class Test_EE
-        {
-            public string Name { get; set; }
-            public List<Test_EE> Items { get; set; }
-        }
-
         static void Main(string[] args)
         {
-            Test_abc abc = new Test_abc()
-            {
-                Name = "a1",
-                Items = new List<Test_abc>()
-                {
-                    new Test_abc()
-                    {
-                        Name="ba"
-                    },
-                    new Test_abc()
-                    {
-                        Name="bbc",
-                        Items = new List<Test_abc>()
-                        {
-                            new Test_abc()
-                            {
-                                Name="cc"
-                            }
-                        }
-                    }
-                }
-            };
-
-            Test_EE ee = abc.ToObjectFrom<Test_EE>();
-
             ParameterInfo[] paras = null;
             int size = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
             ImplAdapter implAdapter = new ImplAdapter();
@@ -561,18 +525,18 @@ namespace Test.Framework
                     PName = "abc",
                     plan = new Plan() { PName = "abc-123" },
                     plans = new List<Plan>()
-                {
-                    new Plan()
                     {
-                        PName="abc-321",
-                        plan=new Plan(){PName="abc-321-01"}
-                    },
-                    new Plan()
-                    {
-                        PName="abc-567",
-                        plan=new Plan(){PName="abc-567-01"}
+                        new Plan()
+                        {
+                            PName="abc-321",
+                            plan=new Plan(){PName="abc-321-01"}
+                        },
+                        new Plan()
+                        {
+                            PName="abc-567",
+                            plan=new Plan(){PName="abc-567-01"}
+                        }
                     }
-                }
                 };
 
                 PlanCopy plan1 = plan.ToObjectFrom<PlanCopy>();
