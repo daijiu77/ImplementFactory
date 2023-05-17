@@ -77,10 +77,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             Task.Run(() =>
             {
                 task.Wait();
-
                 const int sleepNum = 1000 * 3;
                 DataSyncMessage syncMessage = null;
-                MethodList methodList = null;
                 MyMethod myMethod = null;
                 DataSyncConfig syncConfig = null;
                 string routeName = "";
@@ -96,37 +94,115 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                             switch (syncMessage.DataSyncOption.DataType)
                             {
                                 case DataTypes.Add:
-                                    myMethod = methodList[_Insert];
                                     if (null != myMethod)
                                     {
                                         Send(routeName, syncMessage);
                                     }
                                     break;
                                 case DataTypes.Change:
-                                    myMethod = methodList[_Update];
                                     if (null != myMethod)
                                     {
                                         Send(routeName, syncMessage);
                                     }
                                     break;
                                 case DataTypes.Delete:
-                                    myMethod = methodList[_Delete];
                                     if (null != myMethod)
                                     {
                                         Send(routeName, syncMessage);
                                     }
                                     break;
                             }
-                        }                        
-                        foreach (var item in outputDic)
-                        {
-                            methodList = item.Value;
                         }
                         dataSyncMessages.Remove(syncMessage);
                     }
                     Thread.Sleep(sleepNum);
                 }
             });
+
+            Task.Run(() =>
+            {
+                task.Wait();
+                const int sleepNum = 1000 * 3;
+                while (true)
+                {
+                    GetDataByPipleLine();
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
+        private static void GetDataByPipleLine()
+        {
+            if (0 == outputDic.Count) return;
+            MethodList methodList = null;
+            DataSyncMessage syncMessage = null;
+            object instance = null;
+            foreach (var item in outputDic)
+            {
+                instance = item.Key;
+                methodList = item.Value;
+                methodList.Foreach(myMethod =>
+                {
+                    if (null == myMethod.microServiceRoute) return;
+                    if (SyncCylces.Always != myMethod.dataSyncCylceAttribute.Cylce)
+                    {
+                        if (((int)myMethod.dataSyncCylceAttribute.Cylce) <= myMethod.ExecTime) return;
+                        myMethod.ExecTime++;
+                    }
+                    syncMessage = ExecuteMethod(instance, myMethod);
+                    if (null == syncMessage) return;
+                    AddExchnage(syncMessage);
+                    Thread.Sleep(100);
+                });
+                Thread.Sleep(100);
+            }
+        }
+
+        private static DataSyncMessage ExecuteMethod(object instance, MyMethod myMethod)
+        {
+            DataSyncMessage syncMessage = null;
+            object data = null;
+            try
+            {
+                data = myMethod.GetMethodInfo().Invoke(instance, null);
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+
+            if (null == data) return syncMessage;
+
+            DataSyncItem syncItem = new DataSyncItem()
+            {
+                Data = data
+            };
+
+            string dataSyncsName = MicroServiceRoute.GetDataSyncsNameByRouteName(myMethod.microServiceRoute.RouteName);
+            syncItem.SetDataSyncsName(dataSyncsName);
+
+            syncMessage = new DataSyncMessage()
+            {
+                DataSyncOption = syncItem,
+            };
+            syncMessage.SetDataSyncsName(dataSyncsName);
+            syncMessage.SetResourceKey(MicroServiceRoute.Key);
+
+            switch (myMethod.Name)
+            {
+                case _Insert:
+                    syncItem.DataType = DataTypes.Add;
+                    break;
+                case _Update:
+                    syncItem.DataType = DataTypes.Change;
+                    break;
+                case _Delete:
+                    syncItem.DataType = DataTypes.Delete;
+                    break;
+            }
+
+            return syncMessage;
         }
 
         public static void AddExchnage(DataSyncMessage syncMessage)
@@ -151,15 +227,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                 if (url.Substring(url.Length - 1).Equals("/")) url = url.Substring(0, url.Length - 1);
 
-                url += "/DataSync/Receiver";
+                url += "/";
+                Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)\/.+\/$", RegexOptions.IgnoreCase);
+                if (rg.IsMatch(url))
+                {
+                    Match m = rg.Match(url);
+                    string HttpHeader = m.Groups["HttpHeader"].Value;
+                    string HttpBody = m.Groups["HttpBody"].Value;
+                    url = "{0}://{1}/".ExtFormat(HttpHeader, HttpBody);
+                }
+                url += "DataSync/Receiver";
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add(MServiceConst.contractKey, routeAttr.ContractKey);
-
-                if (!message.ServiceFlagDic.ContainsKey(MicroServiceRoute.Key))
-                {
-                    message.ServiceFlagDic.Add(MicroServiceRoute.Key, MicroServiceRoute.ID);
-                }
 
                 httpHelper.SendData(url, headers, message, true, (resultObj, err) =>
                 {
@@ -170,7 +250,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         class MyMethod : EMethodInfo
         {
-            public MicroServiceRoute microServiceRoute { get; set; }
+            /// <summary>
+            /// 执行次数
+            /// </summary>
+            public int ExecTime { get; set; }
+            public MicroServiceRoute microServiceRoute { get; private set; }
+            public DataSyncCylceAttribute dataSyncCylceAttribute { get; private set; }
             public MyMethod(MethodInfo mi, Type instanceType) : base(mi)
             {
                 SetImplementType(instanceType);
@@ -179,6 +264,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     if (0 < attrs.Length) microServiceRoute = (MicroServiceRoute)attrs[0];
                 }
+
+                attrs = WholeAttributes(typeof(DataSyncCylceAttribute), true);
+                if (null != attrs)
+                {
+                    if (0 < attrs.Length) dataSyncCylceAttribute = (DataSyncCylceAttribute)attrs[0];
+                }
+
+                if (null == dataSyncCylceAttribute) dataSyncCylceAttribute = new DataSyncCylceAttribute();
             }
         }
 

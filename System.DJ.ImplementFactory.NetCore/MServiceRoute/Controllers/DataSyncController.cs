@@ -25,6 +25,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             if (null == syncMessage) return ResultData(err, false);
             if (syncMessage.ResourceKey.Equals(MicroServiceRoute.Key)) return ResultData("Data sync end.", false);
 
+            if (!syncMessage.ServiceFlagDic.ContainsKey(MicroServiceRoute.Key))
+            {
+                syncMessage.ServiceFlagDic.Add(MicroServiceRoute.Key, MicroServiceRoute.ID);
+            }
+
             DataSyncExchange.AddExchnage(syncMessage);
             MService.DataSyncToLocal(syncMessage.DataSyncOption);
             byte[] dt = Encoding.UTF8.GetBytes(txt);

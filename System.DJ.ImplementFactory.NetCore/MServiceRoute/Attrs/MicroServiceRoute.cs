@@ -52,6 +52,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static Dictionary<string, GroupsRoute> s_groupDic = new Dictionary<string, GroupsRoute>();
 
         /// <summary>
+        /// key: routeName_Lower, value: DataSyncs-Name
+        /// </summary>
+        private static Dictionary<string, string> s_routeName_syncName = new Dictionary<string, string>();
+
+        /// <summary>
         /// key: DataSyncs-Name_Lower, value: config and data
         /// </summary>
         private static Dictionary<string, DataSyncConfig> DataSyncDic = new Dictionary<string, DataSyncConfig>();
@@ -234,6 +239,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                             dataSync = InitValFromNode<DataSyncConfig>(nodeItem);
                             if (string.IsNullOrEmpty(dataSync.GroupName)) throw new Exception("The Uri '{0}' lost a value of GroupName in the data sync.".ExtFormat(dataSync.Uri));
                             DataSyncDic[dataSync.GroupName.ToLower()] = dataSync;
+                            s_routeName_syncName[dataSync.Name.ToLower()] = dataSync.GroupName;
                         });
                     }
                     else if (nodeName.Equals(groupsLower))
@@ -618,6 +624,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 s_document.Save(s_config_path);
                 ResetServiceManager(svrMngNode);
             }
+        }
+
+        public static string GetDataSyncsNameByRouteName(string routeName)
+        {
+            if(null == routeName) return null;
+            string fn = routeName.Trim().ToLower();
+            if (s_routeName_syncName.ContainsKey(fn)) return null;      
+            return s_routeName_syncName[fn];
         }
 
     }
