@@ -31,7 +31,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             }
 
             DataSyncExchange.AddExchnage(syncMessage);
-            MService.DataSyncToLocal(syncMessage.DataSyncOption);
+            DataSyncExchange.DataSyncToLocal(syncMessage.DataSyncOption);
             byte[] dt = Encoding.UTF8.GetBytes(txt);
             int size = dt.Length;
             return ResultData("Data size: {0} B.".ExtFormat(size.ToString()), true);

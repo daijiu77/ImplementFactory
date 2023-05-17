@@ -243,6 +243,11 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             return implMethod;
         }
 
+        public MethodInfo GetMethodInfo()
+        {
+            return _mi;
+        }
+
         /// <summary>
         /// 判断是否是 async Task 方法或 Task 方法，及返回方法值类型
         /// </summary>

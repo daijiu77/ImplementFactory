@@ -129,6 +129,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Attrs\DataSyncCylceAttribute.cs" />
+    <Compile Include="MServiceRoute\DataSyncConfigList.cs" />
     <Compile Include="MServiceRoute\Controllers\DataSyncController.cs" />
     <Compile Include="MServiceRoute\MSConst.cs" />
     <Compile Include="MServiceRoute\DataSyncExchange.cs" />

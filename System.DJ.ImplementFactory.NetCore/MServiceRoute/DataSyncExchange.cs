@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +24,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         private const string _Update = "Update";
         private const string _Delete = "Delete";
 
+        private static List<DataSyncItem> DataSyncItems = new List<DataSyncItem>();
+        private static object _ReceiveDataSyncLock = new object();
+        private static bool IsExecDataSync = false;
+        private static DataSyncItem syncItem = null;
+        private static int dataSyncPulse = 0;
+
         static DataSyncExchange()
         {
             httpHelper = new HttpHelper();
@@ -39,8 +43,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     types = assembly.GetTypes();
                     foreach (Type type in types)
-                    {
-                        Thread.Sleep(100);
+                    {                        
                         if (type.IsInterface || type.IsEnum || type.IsAbstract) continue;
                         if (!dataSyncOutputType.IsAssignableFrom(type)) continue;
                         try
@@ -79,8 +82,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 task.Wait();
                 const int sleepNum = 1000 * 3;
                 DataSyncMessage syncMessage = null;
-                MyMethod myMethod = null;
-                DataSyncConfig syncConfig = null;
+                DataSyncConfigList<DataSyncConfig> syncConfig = null;
                 string routeName = "";
                 while (true)
                 {
@@ -90,28 +92,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         syncConfig = MicroServiceRoute.GetDataSyncMessageByName(syncMessage.DataSyncsName);
                         if (null != syncConfig)
                         {
-                            routeName = syncConfig.Name;
-                            switch (syncMessage.DataSyncOption.DataType)
+                            syncConfig.Foreach(routeAttr =>
                             {
-                                case DataTypes.Add:
-                                    if (null != myMethod)
-                                    {
-                                        Send(routeName, syncMessage);
-                                    }
-                                    break;
-                                case DataTypes.Change:
-                                    if (null != myMethod)
-                                    {
-                                        Send(routeName, syncMessage);
-                                    }
-                                    break;
-                                case DataTypes.Delete:
-                                    if (null != myMethod)
-                                    {
-                                        Send(routeName, syncMessage);
-                                    }
-                                    break;
-                            }
+                                routeName = routeAttr.Name;
+                                Send(routeName, syncMessage);                                
+                            });                            
                         }
                         dataSyncMessages.Remove(syncMessage);
                     }
@@ -129,6 +114,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     Thread.Sleep(sleepNum);
                 }
             });
+
+            exec_dataSync();
         }
 
         private static void GetDataByPipleLine()
@@ -143,6 +130,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 methodList = item.Value;
                 methodList.Foreach(myMethod =>
                 {
+                    Thread.Sleep(100);
                     if (null == myMethod.microServiceRoute) return;
                     if (SyncCylces.Always != myMethod.dataSyncCylceAttribute.Cylce)
                     {
@@ -151,8 +139,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
                     syncMessage = ExecuteMethod(instance, myMethod);
                     if (null == syncMessage) return;
-                    AddExchnage(syncMessage);
-                    Thread.Sleep(100);
+                    AddExchnage(syncMessage);                    
                 });
                 Thread.Sleep(100);
             }
@@ -248,12 +235,131 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
+        #region Data receive
+        private static void exec_dataSync()
+        {
+            if (null == ImplementAdapter.msDataSync) return;
+
+            const int sleepNum = 1000 * 3;
+            Task.Run(() =>
+            {
+                IsExecDataSync = false;
+                while (true)
+                {
+                    ExecDataSyncItem();
+                    Thread.Sleep(sleepNum);
+                }
+            });
+
+            Task.Run(() =>
+            {
+                int Muniter = sleepNum * 20;
+                int maxNum = (Muniter * 2) / sleepNum;
+                while (true)
+                {
+                    if (IsExecDataSync) dataSyncPulse++;
+                    if (maxNum <= dataSyncPulse)
+                    {
+                        if (null != syncItem) DataSyncItems.Remove(syncItem);
+                        syncItem = null;
+                        dataSyncPulse = 0;
+                        IsExecDataSync = false;
+                    }
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
+        private static void ExecDataSyncItem()
+        {
+            lock (_ReceiveDataSyncLock)
+            {
+                if (0 == DataSyncItems.Count) return;
+                if (IsExecDataSync) return;
+                IsExecDataSync = true;
+                dataSyncPulse = 0;
+                syncItem = DataSyncItems[0];
+                Task.Run(() =>
+                {
+                    DataSync_Add(syncItem);
+                    DataSync_Change(syncItem);
+                    DataSync_Delete(syncItem);
+
+                    DataSyncItems.Remove(syncItem);
+                    syncItem = null;
+                    IsExecDataSync = false;
+                });
+            }
+        }
+
+        private static void DataSync_Add(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Add == (item.DataType & DataTypes.Add))
+                {
+                    ImplementAdapter.msDataSync.Insert(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        private static void DataSync_Change(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Change == (item.DataType & DataTypes.Change))
+                {
+                    ImplementAdapter.msDataSync.Update(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        private static void DataSync_Delete(DataSyncItem item)
+        {
+            try
+            {
+                if (DataTypes.Delete == (item.DataType & DataTypes.Delete))
+                {
+                    ImplementAdapter.msDataSync.Delete(item.DataSyncsName, item);
+                }
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+
+        public static void DataSyncToLocal(DataSyncItem item)
+        {
+            lock (_ReceiveDataSyncLock)
+            {
+                DataSyncItems.Add(item);
+            }
+        }
+        #endregion
+
         class MyMethod : EMethodInfo
         {
+            private int _execTime = -1;
             /// <summary>
             /// 执行次数
             /// </summary>
-            public int ExecTime { get; set; }
+            public int ExecTime
+            {
+                get { return _execTime; }
+                set { _execTime = value; }
+            }
             public MicroServiceRoute microServiceRoute { get; private set; }
             public DataSyncCylceAttribute dataSyncCylceAttribute { get; private set; }
             public MyMethod(MethodInfo mi, Type instanceType) : base(mi)

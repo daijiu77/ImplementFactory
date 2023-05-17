@@ -59,7 +59,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// key: DataSyncs-Name_Lower, value: config and data
         /// </summary>
-        private static Dictionary<string, DataSyncConfig> DataSyncDic = new Dictionary<string, DataSyncConfig>();
+        private static Dictionary<string, DataSyncConfigList<DataSyncConfig>> DataSyncDic = new Dictionary<string, DataSyncConfigList<DataSyncConfig>>();
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
@@ -223,6 +223,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 string routesLower = _Routes.ToLower();
                 string groupsLower = _Groups.ToLower();
                 string dataSyncLower = _DataSync.ToLower();
+                string dataSyncsName = "";
                 RouteAttr routeAttr1 = null;
                 s_rootElement.ForeachChildNode(node =>
                 {
@@ -233,12 +234,25 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     }
                     else if (nodeName.Equals(dataSyncLower))
                     {
+                        XmlAttribute attr = node.Attributes["Name"];
+                        if (null == attr) attr = node.Attributes["name"];
+                        if (null == attr) return;
+                        dataSyncsName = attr.Value.Trim();
+                        string dataSyncsNameLower = dataSyncsName.ToLower();
                         DataSyncConfig dataSync = null;
+                        DataSyncConfigList<DataSyncConfig> dataSyncConfigs = null;
+                        DataSyncDic.TryGetValue(dataSyncsNameLower, out dataSyncConfigs);
+                        if (null == dataSyncConfigs)
+                        {
+                            dataSyncConfigs = new DataSyncConfigList<DataSyncConfig>();
+                            DataSyncDic[dataSyncsNameLower] = dataSyncConfigs;
+                        }
                         node.ForeachChildNode(nodeItem =>
                         {
                             dataSync = InitValFromNode<DataSyncConfig>(nodeItem);
+                            dataSync.GroupName = dataSyncsName;
                             if (string.IsNullOrEmpty(dataSync.GroupName)) throw new Exception("The Uri '{0}' lost a value of GroupName in the data sync.".ExtFormat(dataSync.Uri));
-                            DataSyncDic[dataSync.GroupName.ToLower()] = dataSync;
+                            dataSyncConfigs.Add(dataSync);
                             s_routeName_syncName[dataSync.Name.ToLower()] = dataSync.GroupName;
                         });
                     }
@@ -561,14 +575,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
-        public static DataSyncConfig GetDataSyncMessageByName(string name)
+        public static DataSyncConfigList<DataSyncConfig> GetDataSyncMessageByName(string datSyncsName)
         {
             lock (s_MSObject)
             {
-                string dn = name.Trim().ToLower();
-                DataSyncConfig syncConfig = null;
-                DataSyncDic.TryGetValue(dn, out syncConfig);
-                return syncConfig;
+                string dn = datSyncsName.Trim().ToLower();
+                DataSyncConfigList<DataSyncConfig> syncConfigs = null;
+                DataSyncDic.TryGetValue(dn, out syncConfigs);
+                return syncConfigs;
             }
         }
 
@@ -628,9 +642,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
         public static string GetDataSyncsNameByRouteName(string routeName)
         {
-            if(null == routeName) return null;
+            if (null == routeName) return null;
             string fn = routeName.Trim().ToLower();
-            if (s_routeName_syncName.ContainsKey(fn)) return null;      
+            if (!s_routeName_syncName.ContainsKey(fn)) return null;
             return s_routeName_syncName[fn];
         }
 

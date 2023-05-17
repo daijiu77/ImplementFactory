@@ -1,4 +1,4 @@
-﻿namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
+namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 {
     public enum SyncCylces
     {
