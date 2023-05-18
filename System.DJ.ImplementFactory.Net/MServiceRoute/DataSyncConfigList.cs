@@ -6,6 +6,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     public class DataSyncConfigList<T> where T : DataSyncConfig
     {
         private Dictionary<string, T> _configDic = new Dictionary<string, T>();
+        private List<string> _routeNames = new List<string>();
 
         public T this[string routeName]
         {
@@ -19,6 +20,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
+        public T this[int index]
+        {
+            get
+            {
+                T tObj = default(T);
+                if (0 > index) return tObj;
+                if (_routeNames.Count <= index) return tObj;
+                string key = _routeNames[index];
+                _configDic.TryGetValue(key, out tObj);
+                return tObj;
+            }
+        }
+
         public void Add(T dataSyncConfig)
         {
             if (null == dataSyncConfig) return;
@@ -26,6 +40,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string key = dsc.Name.Trim().ToLower();
             if (_configDic.ContainsKey(key)) return;
             _configDic.Add(key, dataSyncConfig);
+            _routeNames.Add(key);
         }
 
         public void Remove(string routeName)

@@ -129,7 +129,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MServiceRoute\Attrs\DataSyncCylceAttribute.cs" />
+    <Compile Include="Commons\EventMessage.cs" />
+    <Compile Include="MServiceRoute\Attrs\MSDataSyncCylceAttribute.cs" />
+    <Compile Include="MServiceRoute\Attrs\MSDataSyncReceiverAttribute.cs" />
+    <Compile Include="Pipelines\IMSDataSyncBase.cs" />
     <Compile Include="MServiceRoute\DataSyncConfigList.cs" />
     <Compile Include="MServiceRoute\Controllers\DataSyncController.cs" />
     <Compile Include="MServiceRoute\MSConst.cs" />

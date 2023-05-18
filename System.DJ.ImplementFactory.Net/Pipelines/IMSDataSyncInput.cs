@@ -2,7 +2,7 @@
 
 namespace System.DJ.ImplementFactory.Pipelines
 {
-    public interface IMSDataSyncInput
+    public interface IMSDataSyncInput : IMSDataSyncBase
     {
         bool Insert(string dataSyncsName, DataSyncItem item);
         bool Update(string dataSyncsName, DataSyncItem item);

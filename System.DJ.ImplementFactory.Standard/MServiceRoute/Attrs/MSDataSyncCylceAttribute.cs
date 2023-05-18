@@ -14,13 +14,13 @@
         Always
     }
 
-    public class DataSyncCylceAttribute : Attribute
+    public class MSDataSyncCylceAttribute : Attribute
     {
         private SyncCylces syncCylces = SyncCylces.OnlyOne;
 
-        public DataSyncCylceAttribute() { }
+        public MSDataSyncCylceAttribute() { }
 
-        public DataSyncCylceAttribute(SyncCylces syncCylces)
+        public MSDataSyncCylceAttribute(SyncCylces syncCylces)
         {
             this.syncCylces = syncCylces;
         }

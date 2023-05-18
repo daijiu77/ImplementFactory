@@ -4,7 +4,7 @@ using System.Text;
 
 namespace System.DJ.ImplementFactory.Pipelines
 {
-    public interface IMSDataSyncOutput
+    public interface IMSDataSyncOutput : IMSDataSyncBase
     {
         object Insert();
         object Update();
