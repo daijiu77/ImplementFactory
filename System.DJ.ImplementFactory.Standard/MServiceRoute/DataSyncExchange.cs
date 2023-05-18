@@ -151,6 +151,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
                         if ((null == routeAttr) || success)
                         {
+                            syncConfigIndex = 0;
                             dataSyncMessages.Remove(syncMessage);
                         }
                     }
