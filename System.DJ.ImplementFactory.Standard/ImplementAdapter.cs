@@ -144,7 +144,16 @@ namespace System.DJ.ImplementFactory
             Type dspType = null;
 
             autoCall = loadInterfaceInstance<AutoCall>("", null, ref asse);
-            if (null == autoCall) autoCall = new AutoCall();
+            if (null == autoCall)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { autoCall = Activator.CreateInstance(type) as AutoCall; } catch { }
+                }, () =>
+                {
+                    if (null == autoCall) autoCall = new AutoCall();
+                }, typeof(AutoCall), true);
+            }
 
             string f = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
             if (DJTools.isWeb) f = "bin\\" + f;
@@ -152,9 +161,18 @@ namespace System.DJ.ImplementFactory
             Type type1 = getInstanceTypeByInterfaceType(f, typeof(IInstanceCodeCompiler));
 
             codeCompiler = loadInterfaceInstance<IInstanceCodeCompiler>("CodeCompiler", new Type[] { type1 }, ref asse);
-            if (null == codeCompiler) codeCompiler = new CodeCompiler();
-            codeCompiler.SetRootPath(rootPath);
-
+            if (null == codeCompiler)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { codeCompiler = Activator.CreateInstance(type) as IInstanceCodeCompiler; } catch { }
+                }, () =>
+                {
+                    if (null == codeCompiler) codeCompiler = new CodeCompiler();
+                    codeCompiler.SetRootPath(rootPath);
+                }, typeof(IInstanceCodeCompiler), true);
+            }
+            
             dspType = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
             try
             {
@@ -170,23 +188,73 @@ namespace System.DJ.ImplementFactory
 
             Assembly asse1 = null;
             dbHelper1 = loadInterfaceInstance<IDbHelper>("DbHelper", new Type[] { typeof(DbAccessHelper) }, ref asse1);
-            if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
-            dbHelper1.dataServerProvider = dataServerProvider;
-
+            if (null == dbHelper1)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { dbHelper1 = Activator.CreateInstance(type) as IDbHelper; } catch { }
+                }, () =>
+                {
+                    if (null == dbHelper1) dbHelper1 = new DbAccessHelper();
+                    dbHelper1.dataServerProvider = dataServerProvider;
+                }, typeof(IDbHelper), true);
+            }
+            
             mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
-            //if (null == mSService) mSService = new MSServiceImpl();
-            //AbsActionFilterAttribute.SetMSServiceInstance(mSService);
-
+            if(null == mSService)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { mSService = Activator.CreateInstance(type) as IMSService; } catch { }
+                }, () =>
+                {
+                    //if (null == mSService) mSService = new MSServiceImpl();
+                    //AbsActionFilterAttribute.SetMSServiceInstance(mSService);
+                }, typeof(IMSService), true);
+            }
+            
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
-            dbHelper1.dbConnectionState = dbConnectionState;
+            if (null == dbConnectionState)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { dbHelper1.dbConnectionState = Activator.CreateInstance(type) as IDbConnectionState; } catch { }
+                }, () =>
+                {
+                    //
+                }, typeof(IDbConnectionState), true);
+            }
 
             microServiceMethod = loadInterfaceInstance<IMicroServiceMethod>("", null, ref asse3);
+            if (null == microServiceMethod)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { microServiceMethod = Activator.CreateInstance(type) as IMicroServiceMethod; } catch { }
+                }, typeof(IMicroServiceMethod), true);
+            }
 
             mSFilterMessage = loadInterfaceInstance<IMSFilterMessage>("", null, ref asse3);
+            if (null == mSFilterMessage)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { mSFilterMessage = Activator.CreateInstance(type) as IMSFilterMessage; } catch { }
+                }, typeof(IMSFilterMessage), true);
+            }
 
             serviceRegisterMessage = loadInterfaceInstance<ServiceRegisterMessage>("", null, ref asse3);
-            if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
+            if (null == serviceRegisterMessage)
+            {
+                GlobalEvents.ForeachType(type =>
+                {
+                    try { serviceRegisterMessage = Activator.CreateInstance(type) as ServiceRegisterMessage; } catch { }
+                }, () =>
+                {
+                    if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
+                }, typeof(ServiceRegisterMessage), true);
+            }            
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
@@ -196,6 +264,8 @@ namespace System.DJ.ImplementFactory
 
             dataCache = typeof(DataCachePool).GetTypeByParentType(typeof(DataCachePool));
             if (null == dataCache) dataCache = typeof(DataCachePool);
+
+            GlobalEvents.LoadTypes();
 
             if (null != dbHelper1)
             {
@@ -320,26 +390,6 @@ namespace System.DJ.ImplementFactory
                     finallyType = func(types, finallyType);
                 }
                 catch { }
-
-                _obj = createObj(finallyType, srcType);
-            }
-
-            if (null == _obj)
-            {
-                finallyType = srcType;
-                foreach (Assembly asseItem in assemblies)
-                {
-                    try
-                    {
-                        types = asseItem.GetTypes();
-                        finallyType = func(types, finallyType);
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
-                }
 
                 _obj = createObj(finallyType, srcType);
             }
@@ -921,6 +971,13 @@ namespace System.DJ.ImplementFactory
                     if (null == impl_2)
                     {
                         impl_2 = loadInterfaceInstance(paraItem.ParameterType, "", null, ref asse);
+                        if(null == impl_2)
+                        {
+                            GlobalEvents.ForeachType(tp1 =>
+                            {
+                                try { impl_2 = Activator.CreateInstance(tp1); } catch { }
+                            }, paraItem.ParameterType, true);
+                        }
                     }
                     paraList.Add(impl_2);
                 }
