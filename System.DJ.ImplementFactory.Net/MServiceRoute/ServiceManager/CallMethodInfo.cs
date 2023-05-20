@@ -7,5 +7,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     {
         public Type ControllerType {  get; set; }
         public string MethodName { get; set; }
+        public string[] MethodNames { get; set; }
     }
 }

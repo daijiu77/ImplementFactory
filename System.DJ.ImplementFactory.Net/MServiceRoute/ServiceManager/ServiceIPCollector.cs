@@ -36,6 +36,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                         {
                             mbool = mMethodInfo.MethodName.ToLower().Equals(methodName);
                         }
+                        else if (null != mMethodInfo.MethodNames)
+                        {
+                            if (0 < mMethodInfo.MethodNames.Length)
+                            {
+                                foreach (string mName in mMethodInfo.MethodNames)
+                                {
+                                    if (mName.Trim().ToLower().Equals(methodName))
+                                    {
+                                        mbool = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                mbool = true;
+                            }
+                        }
                         else
                         {
                             mbool = true;
