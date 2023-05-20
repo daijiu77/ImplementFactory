@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.Entities;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -581,7 +583,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string wherePart,
             Action<AbsDataModel, string, string> fromUnitAction,
             Action<string, object, Constraint, PropertyInfo> propertyAction,
-            Action propEndAction)
+            Action propEndAction, IgnoreField.IgnoreType ignoreType)
         {
             Attribute att = null;
             string tbName = "";
@@ -683,6 +685,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             fromUnitAction(dataModel, tbName, wherePart);
             if (null == propertyAction) return;
             Constraint constraint = null;
+            Attribute attrIF = null;
             dataModel.ForeachProperty((pi, type, fn, fv) =>
             {
                 if (null == fv) return;
@@ -742,14 +745,14 @@ namespace System.DJ.ImplementFactory.DataAccess
                                 if (null == (item as AbsDataModel)) break;
                                 ws = funcItemWhere(dataModel, item, constraint, tbName);
                                 if (string.IsNullOrEmpty(ws)) break;
-                                GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction);
+                                GetPropertyOfModel((AbsDataModel)item, ws, fromUnitAction, propertyAction, propEndAction, ignoreType);
                             }
                         }
                         else if (typeof(AbsDataModel).IsAssignableFrom(type))
                         {
                             ws = funcItemWhere(dataModel, fv, constraint, tbName);
                             if (string.IsNullOrEmpty(ws)) return;
-                            GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction);
+                            GetPropertyOfModel((AbsDataModel)fv, ws, fromUnitAction, propertyAction, propEndAction, ignoreType);
                         }
                         return;
                     }
@@ -759,16 +762,27 @@ namespace System.DJ.ImplementFactory.DataAccess
                     v2 = (int)fv;
                 }
                 field = fn.ToLower();
+                attrIF = pi.GetCustomAttribute(typeof(IgnoreField), true);
+                
                 if (0 < dicContains.Count)
                 {
                     if (!dicContains.ContainsKey(field)) field = "";
+                    attrIF = null;
                 }
                 if (string.IsNullOrEmpty(field)) return;
+
                 if (0 < dicExcludes.Count)
                 {
                     if (dicExcludes.ContainsKey(field)) field = "";
                 }
                 if (string.IsNullOrEmpty(field)) return;
+
+                if (null != attrIF)
+                {
+                    if (ignoreType == (((IgnoreField)attrIF).ignoreType & ignoreType)) field = "";
+                }
+                if (string.IsNullOrEmpty(field)) return;
+
                 propertyAction(fn, v2, constraint, pi);
             });
             if (null != propEndAction) propEndAction();
@@ -785,6 +799,20 @@ namespace System.DJ.ImplementFactory.DataAccess
             Action<string, object, Constraint, PropertyInfo> propertyAction,
             Action propEndAction)
         {
+            StackTrace trace = new StackTrace();
+            StackFrame stackFrame = trace.GetFrame(1);
+            MethodBase mb = stackFrame.GetMethod();
+            string srcMethodName = mb.Name.ToLower();
+            IgnoreField.IgnoreType dataOptType = IgnoreField.IgnoreType.none;
+            if (-1 != srcMethodName.IndexOf("insert"))
+            {
+                dataOptType = IgnoreField.IgnoreType.Insert;
+            }
+            else if (-1 != srcMethodName.IndexOf("update"))
+            {
+                dataOptType = IgnoreField.IgnoreType.Update;
+            }
+
             string wherePart = "";
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
             foreach (SqlFromUnit item in fromUnits)
@@ -801,7 +829,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                 }
 
-                GetPropertyOfModel(item.dataModel, wherePart, fromUnitAction, propertyAction, propEndAction);
+                GetPropertyOfModel(item.dataModel, wherePart, fromUnitAction, propertyAction, propEndAction, dataOptType);
             }
         }
 
@@ -865,12 +893,6 @@ namespace System.DJ.ImplementFactory.DataAccess
                 sets = "";
             }, (fn, fv, constraint, pi) =>
             {
-                Attribute attr = pi.GetCustomAttribute(typeof(IgnoreField), true);
-                if (null != attr)
-                {
-                    IgnoreField ignoreField = (IgnoreField)attr;
-                    if (IgnoreField.IgnoreType.Update == (ignoreField.ignoreType & IgnoreField.IgnoreType.Update)) return;
-                }
                 fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
                 if (null != fm)
                 {
@@ -944,13 +966,6 @@ namespace System.DJ.ImplementFactory.DataAccess
                 vals = "";
             }, (fn, fv, constraint, pi) =>
             {
-                Attribute attr = pi.GetCustomAttribute(typeof(IgnoreField), true);
-                if (null != attr)
-                {
-                    IgnoreField ignoreField = (IgnoreField)attr;
-                    if (IgnoreField.IgnoreType.Insert == (ignoreField.ignoreType & IgnoreField.IgnoreType.Insert)) return;
-                }
-
                 fm = pi.GetCustomAttribute(typeof(FieldMapping)) as FieldMapping;
                 if (null != fm)
                 {

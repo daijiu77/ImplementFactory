@@ -215,6 +215,11 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                     sign = string.Format(sign, s);
                 }
             }
+            else if (fieldValueOfBaseValue.GetType() == typeof(bool))
+            {
+                bool mbool = (bool)fieldValueOfBaseValue;
+                sign = string.Format(sign, (mbool ? "1" : "0"));
+            }
             else
             {
                 sign = string.Format(sign, fieldValueOfBaseValue.ToString());
