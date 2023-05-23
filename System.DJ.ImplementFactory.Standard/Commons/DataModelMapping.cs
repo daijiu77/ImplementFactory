@@ -14,10 +14,11 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public T ToObjectFrom<T>(object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public T ToObjectFrom<T>(object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
             T tObj = default(T);
             if (srcObj.GetType().IsBaseType()) return tObj;
@@ -65,7 +66,7 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         Type srcParaType = pt.GetGenericArguments()[0];
                         Type tegartParaType = tgPropertyInfo.PropertyType.GetGenericArguments()[0];
-                        vObj = ExecuteStaticMethod("ToListData", new Type[] { tegartParaType, srcParaType }, new object[] { vObj, funcAssign, funcVal });
+                        vObj = ExecuteStaticMethod("ToListData", new Type[] { tegartParaType, srcParaType }, new object[] { vObj, isTrySetVal, funcAssign, funcVal });
                     }
                     else if (pt.IsClass
                         && (false == pt.IsBaseType())
@@ -76,7 +77,7 @@ namespace System.DJ.ImplementFactory.Commons
                         && (false == piType.IsAbstract)
                         && (false == piType.IsInterface))
                     {
-                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType }, new object[] { vObj, funcAssign, funcVal });
+                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType }, new object[] { vObj, isTrySetVal, funcAssign, funcVal });
                     }
                 }
 
@@ -86,7 +87,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 catch (Exception)
                 {
-                    tObj.SetMethodValue(fn, fv, vObj);
+                    if (isTrySetVal) tObj.SetMethodValue(fn, fv, vObj);
                     //throw;
                 }
                 return true;
@@ -129,10 +130,13 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcM">Data source entity</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns></returns>
-        private T ToObjectData<T>(object srcM, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        private T ToObjectData<T>(object srcM, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
-            return ToObjectFrom<T>(srcM, funcAssign, funcVal);
+            return ToObjectFrom<T>(srcM, isTrySetVal, funcAssign, funcVal);
         }
 
         /// <summary>
@@ -141,10 +145,13 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns></returns>
-        private List<T> ToListData<T, TT>(IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        private List<T> ToListData<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
-            return (List<T>)ToListFrom<T, TT>(srcList, funcAssign, funcVal);
+            return (List<T>)ToListFrom<T, TT>(srcList, isTrySetVal, funcAssign, funcVal);
         }
         #endregion
 
@@ -154,10 +161,11 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public IList<T> ToListFrom<T, TT>(IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public IList<T> ToListFrom<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
         {
             if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
             IList<T> list = new List<T>();
@@ -166,7 +174,7 @@ namespace System.DJ.ImplementFactory.Commons
             T t = default(T);
             foreach (TT item in srcList)
             {
-                t = ToObjectFrom<T>(item, funcAssign, funcVal);
+                t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, funcVal);
                 list.Add(t);
             }
             return list;
