@@ -53,6 +53,15 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// 分表时单表最大记录量
         /// </summary>
         long splitTablesRecordQuantity { get; set; }
+        
+        /// <summary>
+        /// 测试数据库连接状态
+        /// </summary>
+        /// <param name="dataServerProvider"></param>
+        /// <param name="connectionString"></param>
+        /// <param name="err"></param>
+        /// <returns></returns>
+        bool TestDbConnectionState(IDataServerProvider dataServerProvider, string connectionString, ref string err);
 
         DataTable query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);

@@ -100,6 +100,11 @@ namespace System.DJ.ImplementFactory.Commons
             Exec(autoCall, sql, null, parameters, ref err, action, func);
         }
 
+        public bool DbConnectionState(ref string err)
+        {
+            return dbAdapter.DbConnectionState(ref err);
+        }
+
         void IDisposable.Dispose()
         {
             if (null != dbAdapter) ((IDisposable)dbAdapter).Dispose();

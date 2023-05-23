@@ -216,6 +216,11 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public bool DbConnectionState(ref string err)
+        {
+            return DbConnct(ref err);
+        }
+
         public bool IgnoreError { get; set; }
         void IDisposable.Dispose()
         {
