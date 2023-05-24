@@ -262,11 +262,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static bool IsBaseType(this Type type)
         {
-            byte[] arr = type.Assembly.GetName().GetPublicKeyToken();
-            if (0 == arr.Length)
-            {
-                return type.IsEnum;
-            }
+            if (type.IsEnum) return true;
             bool mbool = ((typeof(ValueType) == type.BaseType)
                 || (typeof(string) == type))
                 || typeof(Guid) == type
