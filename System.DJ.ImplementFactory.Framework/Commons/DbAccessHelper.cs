@@ -439,14 +439,19 @@ namespace System.DJ.ImplementFactory.Commons
             if (null != deleteBatch) ((IDisposable)deleteBatch).Dispose();
         }
 
-        bool IDbHelper.TestDbConnectionState(IDataServerProvider dataServerProvider, string connectionString, ref string err)
+        bool IDbHelper.TestDbConnectionState(IDataServerProvider dataServerProvider, string connectionString, bool ignoreError, ref string err)
         {
             BasicExecForSQL basicExecForSQL = BasicExecForSQL.Instance;
             basicExecForSQL.dataServerProvider = dataServerProvider;
             basicExecForSQL.dbConnectionString = connectionString;
-            bool mbool = basicExecForSQL.DbConnectionState(ref err);
+            bool mbool = basicExecForSQL.DbConnectionState(ignoreError, ref err);
             ((IDisposable)basicExecForSQL).Dispose();
             return mbool;
+        }
+
+        bool IDbHelper.TestDbConnectionState(IDataServerProvider dataServerProvider, string connectionString, ref string err)
+        {
+            return ((IDbHelper)this).TestDbConnectionState(dataServerProvider, connectionString, false, ref err);
         }
     }
 }

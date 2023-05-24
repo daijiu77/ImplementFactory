@@ -81,7 +81,33 @@ namespace System.DJ.ImplementFactory.Commons
                 return mbool;
             }
 
-            conn = dataServerProvider.CreateDbConnection(dbConnectionString);
+            try
+            {
+                conn = dataServerProvider.CreateDbConnection(dbConnectionString);
+            }
+            catch (Exception ex)
+            {
+                err = ex.ToString();
+                DJTools.append(ref err, "");
+                DJTools.append(ref err, "ConnectionString: {0}", dbConnectionString);
+                mbool = false;
+                if (false == IgnoreError)
+                {
+                    AutoCall.Instance.e(err, ErrorLevels.severe);
+                }
+                else
+                {
+                    err = ex.Message;
+                }
+
+                if (null != dbConnectionState)
+                {
+                    dbConnectionState.DbConnection_CreatedFail(new Exception(err));
+                }
+                IgnoreError = false;
+                //throw;
+            }
+            
             if (null == conn) return mbool;
 
             if (null != dbConnectionState)
@@ -115,6 +141,11 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     AutoCall.Instance.e(err, ErrorLevels.severe);
                 }
+                else
+                {
+                    err = ex.Message;
+                }
+
                 if (null != dbConnectionState)
                 {
                     dbConnectionState.DbConnection_CreatedFail(new Exception(err));
@@ -172,7 +203,27 @@ namespace System.DJ.ImplementFactory.Commons
                 printSql(autoCall, sql);
                 if (DbConnct(ref err))
                 {
-                    DbCommand cmd = dataServerProvider.CreateDbCommand(sql, conn);
+                    DbCommand cmd = null;
+                    try
+                    {
+                        cmd = dataServerProvider.CreateDbCommand(sql, conn);
+                    }
+                    catch (Exception ex)
+                    {
+                        conn.Close();
+                        conn.Dispose();
+                        conn = null;
+
+                        err = ex.ToString();
+                        err += "\r\n\r\n" + sql;
+                        if (null != autoCall && false == IgnoreError)
+                        {
+                            autoCall.ExecuteException(this.GetType(), this, "Exec", null, new Exception(err));
+                        }
+                        //throw;
+                    }
+                    if (null == cmd) return;
+
                     if (null != parameters)
                     {
                         foreach (var item in parameters)

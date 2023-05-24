@@ -100,8 +100,9 @@ namespace System.DJ.ImplementFactory.Commons
             Exec(autoCall, sql, null, parameters, ref err, action, func);
         }
 
-        public bool DbConnectionState(ref string err)
+        public bool DbConnectionState(bool ignoreError,ref string err)
         {
+            dbAdapter.IgnoreError = ignoreError;
             return dbAdapter.DbConnectionState(ref err);
         }
 
