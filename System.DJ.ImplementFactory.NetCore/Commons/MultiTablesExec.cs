@@ -662,6 +662,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 s = rg1.Replace(s, "");
             }
 
+            s = s.Trim();
+            if (s.Substring(s.Length - 1).Equals(";")) s = s.Substring(s.Length - 1);
+
             string s1 = "select count(1) ncount from ({0}) t".ExtFormat(s);
             string err = "";
             initBasicExecForSQL(dbAdapter, dbHelper);
