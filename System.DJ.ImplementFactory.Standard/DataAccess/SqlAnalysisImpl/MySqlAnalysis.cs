@@ -4,6 +4,7 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
+using System.Drawing.Printing;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -53,21 +54,28 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetPageChange(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int pageSize1, int pageNumber1)
         {
+            ISqlAnalysis sqlAnalysis = this;
             return GetPageChange(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, pageSize1, pageNumber1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber)
                 {
                     string sql = "select {0} from {1}{2}{3}{4} limit {5}, {6};";
-                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, (pageSize * (pageNumber - 1)).ToString(), pageSize.ToString());
+                    sqlAnalysis.StartQuantitySignOfSql = (pageSize * (pageNumber - 1)).ToString();
+                    sqlAnalysis.PageSizeSignOfSql = pageSize.ToString();
+                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart,
+                        sqlAnalysis.StartQuantitySignOfSql, sqlAnalysis.PageSizeSignOfSql);
                     return sql;
                 });
         }
 
         string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int length1)
         {
+            ISqlAnalysis sqlAnalysis = this;
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, length1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int length)
                 {
                     string sql = "select {1} from {2}{3}{4}{5} limit {0};";
+                    sqlAnalysis.StartQuantitySignOfSql = "0";
+                    sqlAnalysis.PageSizeSignOfSql = length.ToString();
                     sql = sql.ExtFormat(length.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
                     return sql;
                 });            
@@ -75,10 +83,13 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int startNumber1, int length1)
         {
+            ISqlAnalysis sqlAnalysis = this;
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, startNumber1, length1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
                 {
                     string sql = "select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4} limit {5}, {6};";
+                    sqlAnalysis.StartQuantitySignOfSql = startNumber.ToString();
+                    sqlAnalysis.PageSizeSignOfSql = length.ToString();
                     sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), length.ToString());
                     return sql;
                 });      

@@ -72,7 +72,10 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, top1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
                 {
-                    string sql = "select * from (select {1} from {2}{3}{4}{5}) tb where ROWNUM<={0};";
+                    string sql = "select * from (select {1} from {2}{3}{4}{5}) tb where ROWNUM<={0} and ROWNUM>0;";
+                    ISqlAnalysis sqlAnalysis = this;
+                    sqlAnalysis.PageSizeSignOfSql = "ROWNUM<=";
+                    sqlAnalysis.StartQuantitySignOfSql = "ROWNUM>";
                     sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
                     return sql;
                 });            
@@ -85,6 +88,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 {
                     int end = startNumber + length;
                     string sql = "select * from (select rownum,{0} from {1}{2}{3}{4}) tb where ROWNUM>={5} and ROWNUM<{6};";
+                    ISqlAnalysis sqlAnalysis = this;
+                    sqlAnalysis.PageSizeSignOfSql = "ROWNUM<";
+                    sqlAnalysis.StartQuantitySignOfSql = "ROWNUM>=";
                     sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
                     return sql;
                 });
