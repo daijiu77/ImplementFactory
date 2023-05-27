@@ -25,7 +25,7 @@ namespace System.DJ.ImplementFactory.Commons
         sqlserverce //sqlserverce
     }
 
-    class DbAdapter : IDisposable
+    public class DbAdapter : IDisposable
     {
         private DbConnection conn = null;
         private static DbAdapter dbAdapter = null;
