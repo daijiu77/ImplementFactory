@@ -1046,6 +1046,11 @@ namespace System.DJ.ImplementFactory.Commons
                             s = s.Substring(0, s.Length - 1);
                         }
                     }
+
+                    if (isFullName)
+                    {
+                        s = s.Replace("+", ".");
+                    }
                 }
             }
 
