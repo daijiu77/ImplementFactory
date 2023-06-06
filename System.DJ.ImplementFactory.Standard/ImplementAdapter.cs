@@ -1003,6 +1003,12 @@ namespace System.DJ.ImplementFactory
             return (T)impl;
         }
 
+        /// <summary>
+        /// Get min quantity of parameters of constructor
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="paras"></param>
+        /// <returns></returns>
         public static int GetConstructor(Type type, ref ParameterInfo[] paras)
         {
             DynamicCodeTempImpl dynamicCodeTempImpl = new DynamicCodeTempImpl();

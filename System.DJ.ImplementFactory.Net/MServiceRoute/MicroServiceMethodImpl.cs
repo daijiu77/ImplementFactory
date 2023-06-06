@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
@@ -73,14 +74,67 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             mInfo.append(ref structorMethod, LeftSpaceLevel.three, "}");
             code = code.Replace("{#structorMethod}", structorMethod);
 
-            Regex rg = new Regex(@"\`[0-9]+\[");
+
+            string propCode = "";
+            string propMethod = "";
             Attribute attr = null;
+            Dictionary<string, string> propMethodDic = new Dictionary<string, string>();
+            PropertyInfo[] props = interfaceType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (PropertyInfo pi in props)
+            {
+                propMethod = "get_" + pi.Name;
+                if (!propMethodDic.ContainsKey(propMethod)) propMethodDic[propMethod] = propMethod;
+
+                propMethod = "set_" + pi.Name;
+                if (!propMethodDic.ContainsKey(propMethod)) propMethodDic[propMethod] = propMethod;
+
+                propCode = "";
+                returnType = pi.PropertyType.TypeToString(true);
+                s = "private {0} _{1} = {2};";
+                attr = pi.GetCustomAttribute(typeof(RouteNameAttribute), true);
+                if (null != attr)
+                {
+                    s = s.ExtFormat(returnType, pi.Name, "\"" + microServiceRoute.RouteName + "\"");
+                }
+                else
+                {
+                    s = s.ExtFormat(returnType, pi.Name, "default(" + returnType + ")");
+                }
+                mInfo.append(ref propCode, LeftSpaceLevel.three, s);
+
+                s = "{0} {1}.{2}".ExtFormat(returnType, interfaceName, pi.Name);
+                mInfo.append(ref propCode, LeftSpaceLevel.three, s);
+                mInfo.append(ref propCode, LeftSpaceLevel.three, "{");
+                if (pi.CanRead)
+                {
+                    mInfo.append(ref propCode, LeftSpaceLevel.three + 1, "get { return _{0}; }", pi.Name);
+                }
+                if (pi.CanWrite)
+                {
+                    mInfo.append(ref propCode, LeftSpaceLevel.three + 1, "set { _{0} = value; }", pi.Name);
+                }
+                mInfo.append(ref propCode, LeftSpaceLevel.three, "}");
+
+                if (string.IsNullOrEmpty(propertyList))
+                {
+                    propertyList = propCode;
+                }
+                else
+                {
+                    mInfo.append(ref propertyList, "");
+                    mInfo.append(ref propertyList, propCode);
+                }
+            }
+
+            Regex rg = new Regex(@"\`[0-9]+\[");
             RequestMapping requestMapping = null;
             EMethodInfo eMethod = null;
             DynamicCodeTempImpl tempImp = new DynamicCodeTempImpl();
             MethodInfo[] ms = interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             foreach (MethodInfo miItem in ms)
             {
+                if (propMethodDic.ContainsKey(miItem.Name)) continue;
+
                 paraList = "";
                 data = "";
                 err = "";
@@ -229,48 +283,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     mInfo.append(ref methodList, "");
                     mInfo.append(ref methodList, methodCode);
-                }
-            }
-
-            string propCode = "";
-            PropertyInfo[] props = interfaceType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo pi in props)
-            {
-                propCode = "";
-                returnType = pi.PropertyType.TypeToString(true);
-                s = "private {0} _{1} = {2};";
-                attr = pi.GetCustomAttribute(typeof(RouteNameAttribute), true);
-                if (null != attr)
-                {
-                    s = s.ExtFormat(returnType, pi.Name, "\"" + microServiceRoute.RouteName + "\"");
-                }
-                else
-                {
-                    s = s.ExtFormat(returnType, pi.Name, "default(" + returnType + ")");
-                }
-                mInfo.append(ref propCode, LeftSpaceLevel.three, s);
-
-                s = "{0} {1}.{2}".ExtFormat(returnType, interfaceName, pi.Name);
-                mInfo.append(ref propCode, LeftSpaceLevel.three, s);
-                mInfo.append(ref propCode, LeftSpaceLevel.three, "{");
-                if (pi.CanRead)
-                {
-                    mInfo.append(ref propCode, LeftSpaceLevel.three + 1, "get { return _{0}; }", pi.Name);
-                }
-                if (pi.CanWrite)
-                {
-                    mInfo.append(ref propCode, LeftSpaceLevel.three + 1, "set { _{0} = value; }", pi.Name);
-                }
-                mInfo.append(ref propCode, LeftSpaceLevel.three, "}");
-
-                if (string.IsNullOrEmpty(propertyList))
-                {
-                    propertyList = propCode;
-                }
-                else
-                {
-                    mInfo.append(ref propertyList, "");
-                    mInfo.append(ref propertyList, propCode);
                 }
             }
 

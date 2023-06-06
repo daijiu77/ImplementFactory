@@ -92,11 +92,13 @@ namespace Test.Framework
             private IMSUserInfo _mSUserInfo;
             private ICalculate _calculate;
             public TestAbc() { }
+            public TestAbc(IMSUserInfo mSUserInfo) { _mSUserInfo = mSUserInfo; }
             public TestAbc(IMSUserInfo mSUserInfo, ICalculate calculate)
             {
                 _mSUserInfo = mSUserInfo;
                 _calculate = calculate;
             }
+            
         }
 
         class ImplAdapter : ImplementAdapter
@@ -107,7 +109,7 @@ namespace Test.Framework
         static void Main(string[] args)
         {
             ParameterInfo[] paras = null;
-            int size = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
+            int param_min_count = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
             ImplAdapter implAdapter = new ImplAdapter();
             object testAbs = implAdapter.GetInstanceByType(typeof(TestAbc));
             //Test1 test1 = new Test1();
