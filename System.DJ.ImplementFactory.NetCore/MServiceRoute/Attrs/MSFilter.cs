@@ -270,6 +270,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         GetIP_Token(token, token1 =>
                         {
+                            if (null == token1) return;
                             mbool = token1.ip.Equals(ip1);
                             if (mbool) token1.SetStartTime(DateTime.Now);
                         });
