@@ -10,7 +10,6 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
