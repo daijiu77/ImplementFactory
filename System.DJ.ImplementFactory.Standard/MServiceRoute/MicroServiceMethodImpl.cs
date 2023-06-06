@@ -10,7 +10,6 @@ using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using static System.DJ.ImplementFactory.MServiceRoute.Attrs.MicroServiceRoute;
 
 namespace System.DJ.ImplementFactory.MServiceRoute
 {
@@ -73,7 +72,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             //mInfo.append(ref structorMethod, LeftSpaceLevel.four, "");
             mInfo.append(ref structorMethod, LeftSpaceLevel.three, "}");
             code = code.Replace("{#structorMethod}", structorMethod);
-
 
             string propCode = "";
             string propMethod = "";
