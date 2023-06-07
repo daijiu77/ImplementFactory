@@ -267,6 +267,73 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public void ExecSql<T>(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<T> action)
+        {
+            if (null == dataServerProvider) throw new Exception("DataServerProvider is not null.");
+            AutoCall autoCall1 = autoCall;
+            if (null == autoCall) autoCall1 = new AutoCall();
+            string msg = "";
+            ExecSql(autoCall1, sql, parameters, ref err, dtVal =>
+            {
+                try
+                {
+                    action((T)dtVal);
+                }
+                catch (Exception ex)
+                {
+                    msg = ex.ToString();
+                    //throw;
+                }
+            }, cmd =>
+            {
+                object vObj = default(T);
+                if (typeof(T) == typeof(DataTable))
+                {                    
+                    try
+                    {
+                        DataTable dt = null;
+                        DataSet ds = new DataSet();
+                        DataAdapter adapter = dataServerProvider.CreateDataAdapter(cmd);
+                        adapter.Fill(ds);
+                        if (null != ds)
+                        {
+                            if (0 < ds.Tables.Count) dt = ds.Tables[0];
+                        }
+                        vObj = dt;
+                    }
+                    catch (Exception ex)
+                    {
+                        msg = ex.ToString();
+                        //throw;
+                    }
+                }
+                else
+                {
+                    int num = 0;
+                    try
+                    {
+                        num = cmd.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        msg = ex.ToString();
+                        //throw;
+                    }
+
+                    if (typeof(T) == typeof(bool))
+                    {
+                        vObj = 0 < num;
+                    }
+                    else
+                    {
+                        vObj = num;
+                    }
+                }
+                return vObj;
+            });
+            if (!string.IsNullOrEmpty(msg)) err = msg;
+        }
+
         public bool DbConnectionState(ref string err)
         {
             return DbConnct(ref err);
