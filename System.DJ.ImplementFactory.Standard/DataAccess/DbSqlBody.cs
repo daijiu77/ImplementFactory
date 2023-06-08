@@ -1031,6 +1031,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string wherePart = "";
 
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
+            InitWhereIgnore(fieldDic);
             string selectPart = GetSelectPart();
             string fromPart = GetFromPart(ref wherePart, fieldDic);
             wherePart = GetWherePart(wherePart, fieldDic);
@@ -1073,14 +1074,15 @@ namespace System.DJ.ImplementFactory.DataAccess
 
             string selectPart = GetSelectPart();
             string fromPart = GetFromPart(ref wherePart, fieldDic);
+
             wherePart = GetWherePart(wherePart, fieldDic);
+            wherePart += GetWhereByProperty(this, fieldDic);
+
             string groupPart = GetGroupPart();
             string orderbyPart = GetOrderbyPart();
 
             orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
             groupPart = sqlAnalysis.GetGroupBy(groupPart);
-
-            wherePart += GetWhereByProperty(this, fieldDic);
 
             wherePart = wherePart.Trim();
             groupPart = groupPart.Trim();

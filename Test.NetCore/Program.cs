@@ -481,6 +481,7 @@ namespace Test.NetCore
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
                 int ncount = scheme.Count();
                 int recordCount = scheme.RecordCount;

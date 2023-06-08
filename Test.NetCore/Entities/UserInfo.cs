@@ -41,6 +41,9 @@ namespace Test.NetCore.Entities
         [Condition]
         public virtual bool IsDeleted { get; set; }
 
+        [Condition]
+        public virtual bool IsEnabled { get; set; } = true;
+
         public UserType userType { get; set; }
 
         public DateTime cdatetime { get; set; }
