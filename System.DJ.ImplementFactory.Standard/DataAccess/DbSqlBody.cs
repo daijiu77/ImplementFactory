@@ -1034,6 +1034,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string selectPart = GetSelectPart();
             string fromPart = GetFromPart(ref wherePart, fieldDic);
             wherePart = GetWherePart(wherePart, fieldDic);
+            wherePart += GetWhereByProperty(this, fieldDic);
             string groupPart = GetGroupPart();
 
             string sql = sqlAnalysis.GetCount(fromPart, wherePart, groupPart);

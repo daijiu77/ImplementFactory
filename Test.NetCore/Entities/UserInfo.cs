@@ -38,6 +38,9 @@ namespace Test.NetCore.Entities
         [Condition("like", Condition.WhereIgrons.igroneEmpty | Condition.WhereIgrons.igroneNull)]
         public string address { get; set; }
 
+        [Condition]
+        public virtual bool IsDeleted { get; set; }
+
         public UserType userType { get; set; }
 
         public DateTime cdatetime { get; set; }
