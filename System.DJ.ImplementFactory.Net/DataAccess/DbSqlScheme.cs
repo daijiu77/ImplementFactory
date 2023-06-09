@@ -360,7 +360,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (!mbool) continue;
                 if (isUseConstraintLoad)
                 {
-                    ele = overrideModel.CreateDataModel(modelType, lazyIgnoreDic);
+                    ele = overrideModel.CreateDataModel(modelType, this);
                 }
                 else
                 {

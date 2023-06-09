@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess;
 
@@ -25,18 +26,23 @@ namespace Test.NetCore.Entities
     public class UserInfo : AbsDataModel
     {
         [ExtFieldMapping("id", typeof(Guid), 1, "", true, true)]
-        public Guid id { get; set; }
+        public virtual Guid id { get; set; }
+
+        public virtual Guid parentId { get; set; }
+
+        [Constraint(foreignKey: "id", refrenceKey: "parentId")]
+        public virtual List<UserInfo> children { get; set; }
 
         [Condition("like", Condition.WhereIgrons.igroneEmptyNull)]
-        public string name { get; set; }
+        public virtual string name { get; set; }
 
         [Condition("=", Condition.WhereIgrons.igroneZero)]
-        public int age { get; set; }
+        public virtual int age { get; set; }
 
         //Condition.WhereIgrons.igroneEmpty | Condition.WhereIgrons.igroneNull 
         //µÈÍ¬ÓÚ Condition.WhereIgrons.igroneEmptyNull
         [Condition("like", Condition.WhereIgrons.igroneEmpty | Condition.WhereIgrons.igroneNull)]
-        public string address { get; set; }
+        public virtual string address { get; set; }
 
         [Condition]
         public virtual bool IsDeleted { get; set; }
@@ -44,8 +50,8 @@ namespace Test.NetCore.Entities
         [Condition]
         public virtual bool IsEnabled { get; set; } = true;
 
-        public UserType userType { get; set; }
+        public virtual UserType userType { get; set; }
 
-        public DateTime cdatetime { get; set; }
+        public virtual DateTime cdatetime { get; set; }
     }
 }

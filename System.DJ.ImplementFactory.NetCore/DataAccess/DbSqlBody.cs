@@ -49,7 +49,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
-        protected List<OrderbyItem> orderbyItems = new List<OrderbyItem>();
+        protected OrderbyList<OrderbyItem> orderbyItems = new OrderbyList<OrderbyItem>();
+        public OrderbyList<OrderbyItem> OrderbyItemList { get { return orderbyItems; } }
+
         public DbSqlBody Orderby(params OrderbyItem[] orderbyItems)
         {
             if (null != orderbyItems)
@@ -58,6 +60,29 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     this.orderbyItems.Add(item);
                 }
+            }
+            return this;
+        }
+
+        private Dictionary<string, OrderbyList<OrderbyItem>> lazyOrderbyDic = new Dictionary<string, OrderbyList<OrderbyItem>>();
+        public Dictionary<string, OrderbyList<OrderbyItem>> LazyOrderbyDictionary { get { return lazyOrderbyDic; } }
+
+        public DbSqlBody OrderbyLazy(string fieldName, params OrderbyItem[] orderbyItems)
+        {
+            if (string.IsNullOrEmpty(fieldName)) return this;
+            if (null == orderbyItems) return this;
+            string fn = fieldName.ToLower().Trim();
+            OrderbyList<OrderbyItem> list = null;
+            lazyOrderbyDic.TryGetValue(fn, out list);
+            if (null == list)
+            {
+                list = new OrderbyList<OrderbyItem>();
+                lazyOrderbyDic[fn] = list;
+            }
+
+            foreach (var item in orderbyItems)
+            {
+                list.Add(item);
             }
             return this;
         }
@@ -181,6 +206,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private List<string> whereIgnoreConditions = new List<string>();
+        public List<string> WhereIgnoreList { get { return whereIgnoreConditions; } }
         /// <summary>
         /// Automatically generate a where condition (including properties with a Condition identifier) by setting the ignore property by this method
         /// </summary>
@@ -196,6 +222,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         protected Dictionary<string, List<string>> lazyIgnoreDic = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> LazyIgonreDictionary { get { return lazyIgnoreDic; } }
+
         /// <summary>
         /// Properties that ignore child objects when lazy loading is set by this method to generate a where condition (including properties with condition identifiers)
         /// </summary>
@@ -763,7 +791,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 field = fn.ToLower();
                 attrIF = pi.GetCustomAttribute(typeof(IgnoreField), true);
-                
+
                 if (0 < dicContains.Count)
                 {
                     if (!dicContains.ContainsKey(field)) field = "";

@@ -480,8 +480,10 @@ namespace Test.Framework
                 }
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
-                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abcd")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
+                List<UserInfo> children = users[1].children;
                 int ncount = scheme.Count();
                 int recordCount = scheme.RecordCount;
                 int pageCount = scheme.PageCount;

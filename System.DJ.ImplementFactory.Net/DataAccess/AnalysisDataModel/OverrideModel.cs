@@ -5,6 +5,7 @@ using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
+using System.Net;
 using System.Reflection;
 
 namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
@@ -96,7 +97,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return CreateDataModel(dataModelType, null);
         }
 
-        public object CreateDataModel(Type dataModelType, Dictionary<string, List<string>> lazyIgnoreDic)
+        public object CreateDataModel(Type dataModelType, DbSqlBody dbSqlBody)
         {
             object dtModel = null;
             if (null == dataModelType) return null;
@@ -106,13 +107,20 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string typeName = newNamespace + "." + newClassName;
 
             Dictionary<string, List<string>> ignoreFieldsDic = null;
-            if (null != lazyIgnoreDic)
+            Dictionary<string, OrderbyList<OrderbyItem>> lazyOrderbyDic = null;
+            OrderbyList<OrderbyItem> orderbyItemList = null;
+            List<string> whereIgnoreList = null;
+            if (null != dbSqlBody)
             {
-                if (0 < lazyIgnoreDic.Count) ignoreFieldsDic = lazyIgnoreDic;
+                if (0 < dbSqlBody.LazyIgonreDictionary.Count) ignoreFieldsDic = dbSqlBody.LazyIgonreDictionary;
+                if (0 < dbSqlBody.WhereIgnoreList.Count) whereIgnoreList = dbSqlBody.WhereIgnoreList;
+
+                if (0 < dbSqlBody.LazyOrderbyDictionary.Count) lazyOrderbyDic = dbSqlBody.LazyOrderbyDictionary;
+                if (0 < dbSqlBody.OrderbyItemList.Count) orderbyItemList = dbSqlBody.OrderbyItemList;
             }
 
             Type type1 = DJTools.GetDynamicType(typeName);
-            if ((null != type1) && (null == ignoreFieldsDic))
+            if ((null != type1) && (null == dbSqlBody))
             {
                 dtModel = Activator.CreateInstance(type1);
                 return dtModel;
@@ -133,12 +141,37 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string s = "";
             string GetBody = "";
             string tag = "";
+            string whereIgnoreStr = "";
+            string orderbyStr = "";
             string model_type = dataModelType.Name.ToLower();
+            string model_fullType = dataModelType.TypeToString(true).ToLower();
+
+            string fnLower = "";
+            string type_name = "";
+            string field_name = "";
+            int dotIndex = 0;
+            bool mbool = false;
+
             const string getFlag = "{#GetBody}";
             Type pt = null;
             Type[] types = null;
             PropType propType = PropType.none;
             int level = 0;
+
+            if (null != whereIgnoreList)
+            {
+                whereIgnoreStr = string.Join("\",\"", whereIgnoreList);
+                whereIgnoreStr = "\"" + whereIgnoreStr + "\"";
+            }
+
+            if (null != orderbyItemList)
+            {
+                foreach (OrderbyItem item in orderbyItemList)
+                {
+                    orderbyStr += ",OrderbyItem.Me.Set(\"{0}\", OrderByRule.{1})".ExtFormat(item.FieldName, (OrderByRule.Asc == item.Rule ? "Asc" : "Desc"));
+                }
+                orderbyStr = orderbyStr.Substring(1);
+            }
 
             EList<CKeyValue> uskv = new EList<CKeyValue>();
             uskv.Add(new CKeyValue() { Key = "System" });
@@ -150,9 +183,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Pipelines" });
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
-                        
+            uskv.Add(new CKeyValue() { Key = typeof(OrderbyItem).Namespace });
+
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
+                fnLower = fn.ToLower();
                 pro = "";
                 level = 2;
 
@@ -269,15 +304,19 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 }
                             }
                             DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Where({0});", s);
+
+                            if (null != whereIgnoreList)
+                            {
+                                if (typeName.ToLower().Equals(model_fullType))
+                                {
+                                    DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnore({0});", whereIgnoreStr);
+                                }
+                            }
+
                             if (null != ignoreFieldsDic)
                             {
-                                string fnLower = fn.ToLower();
                                 string fns = "";
                                 string ignoreStr = "";
-                                string type_name = "";
-                                string field_name = "";
-                                int dotIndex = 0;
-                                bool mbool = false;
                                 foreach (var item in ignoreFieldsDic)
                                 {
                                     if (null == item.Value) continue;
@@ -302,6 +341,51 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 }
                                 DJTools.append(ref GetBody, level, "scheme.dbSqlBody{0};", ignoreStr);
                             }
+
+                            if (null != orderbyItemList)
+                            {
+                                if (typeName.ToLower().Equals(model_fullType))
+                                {
+                                    DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Orderby({0});", orderbyStr);
+                                }
+                            }
+
+                            if (null != lazyOrderbyDic)
+                            {
+                                string lazyOrderbyStr = "";
+                                string los = "";
+                                foreach (var item in lazyOrderbyDic)
+                                {
+                                    if (null == item.Value) continue;
+                                    if (0 == item.Value.Count) continue;
+                                    type_name = "";
+                                    mbool = true;
+                                    field_name = item.Key.ToLower();
+                                    dotIndex = field_name.IndexOf(".");
+                                    if (0 < dotIndex)
+                                    {
+                                        type_name = field_name.Substring(0, dotIndex);
+                                        field_name = field_name.Substring(dotIndex + 1);
+                                        mbool = type_name.Equals(model_type);
+                                    }
+
+                                    los = "";
+                                    foreach (var item1 in item.Value)
+                                    {
+                                        los += ",OrderbyItem.Me.Set(\"{0}\", OrderByRule.{1})".ExtFormat(item1.FieldName, (OrderByRule.Asc == item1.Rule ? "Asc" : "Desc"));
+                                    }
+                                    if (string.IsNullOrEmpty(los)) continue;
+                                    los = los.Substring(1);
+
+                                    if (field_name.Equals(fnLower) && mbool)
+                                    {
+                                        DJTools.append(ref GetBody, level, "scheme.dbSqlBody.Orderby({0});", los);
+                                    }
+                                    lazyOrderbyStr += ".OrderbyLazy(\"{0}\", {1})".ExtFormat(item.Key.ToLower(), los);
+                                }
+                                DJTools.append(ref GetBody, level, "scheme.dbSqlBody{0};", lazyOrderbyStr);
+                            }
+
                             if (PropType.isArray == propType)
                             {
                                 DJTools.append(ref GetBody, level, "IList<{0}> results = scheme.ToList<{0}>();", typeName);
