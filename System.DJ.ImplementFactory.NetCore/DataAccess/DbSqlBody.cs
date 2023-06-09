@@ -197,7 +197,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected Dictionary<string, List<string>> lazyIgnoreDic = new Dictionary<string, List<string>>();
         /// <summary>
-        /// Properties that ignore child objects when lazy loading is set by this method to generate a where condition condition (including properties with condition identifiers)
+        /// Properties that ignore child objects when lazy loading is set by this method to generate a where condition (including properties with condition identifiers)
         /// </summary>
         /// <param name="fieldName">The current object property name</param>
         /// <param name="childFields">A collection of child object property names</param>
