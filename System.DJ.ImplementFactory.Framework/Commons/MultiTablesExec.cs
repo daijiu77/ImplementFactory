@@ -82,7 +82,9 @@ namespace System.DJ.ImplementFactory.Commons
             else if (dbInfo.DatabaseType.Equals("oracle"))
             {
                 //SELECT TABLE_NAME FROM all_tables WHERE OWNER='{0}'
-                sql = "SELECT TABLE_NAME FROM all_tables";
+
+                //获取当前登录用户下的所表
+                sql = "SELECT TABLE_NAME FROM user_tables";
                 /*
              获取所有的表字段，类型，长度和注释
 

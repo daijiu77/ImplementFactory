@@ -67,6 +67,12 @@ namespace System.DJ.ImplementFactory.DataAccess
         private Dictionary<string, OrderbyList<OrderbyItem>> lazyOrderbyDic = new Dictionary<string, OrderbyList<OrderbyItem>>();
         public Dictionary<string, OrderbyList<OrderbyItem>> LazyOrderbyDictionary { get { return lazyOrderbyDic; } }
 
+        /// <summary>
+        /// This method sets the properties of the current object, the rules for sorting of the object (when a lazy load is performed)
+        /// </summary>
+        /// <param name="fieldName">The current object property name</param>
+        /// <param name="orderbyItems">Rules for sorting</param>
+        /// <returns></returns>
         public DbSqlBody OrderbyLazy(string fieldName, params OrderbyItem[] orderbyItems)
         {
             if (string.IsNullOrEmpty(fieldName)) return this;
