@@ -172,7 +172,7 @@ namespace System.DJ.ImplementFactory
                     codeCompiler.SetRootPath(rootPath);
                 }, typeof(IInstanceCodeCompiler), true);
             }
-            
+
             dspType = getInstanceTypeByInterfaceType(f, typeof(IDataServerProvider));
             try
             {
@@ -199,9 +199,9 @@ namespace System.DJ.ImplementFactory
                     dbHelper1.dataServerProvider = dataServerProvider;
                 }, typeof(IDbHelper), true);
             }
-            
+
             mSService = loadInterfaceInstance<IMSService>("", new Type[] { typeof(MSServiceImpl) }, ref asse1);
-            if(null == mSService)
+            if (null == mSService)
             {
                 GlobalEvents.ForeachType(type =>
                 {
@@ -212,7 +212,7 @@ namespace System.DJ.ImplementFactory
                     AbsActionFilterAttribute.SetMSServiceInstance(mSService);
                 }, typeof(IMSService), true);
             }
-            
+
             Assembly asse3 = null;
             dbConnectionState = loadInterfaceInstance<IDbConnectionState>("ConnectionState", null, ref asse3);
             if (null == dbConnectionState)
@@ -254,7 +254,7 @@ namespace System.DJ.ImplementFactory
                 {
                     if (null == serviceRegisterMessage) serviceRegisterMessage = new ServiceRegisterMessage();
                 }, typeof(ServiceRegisterMessage), true);
-            }            
+            }
             #endregion
 
             DbList<Data.Common.DbParameter>.dataServerProvider = dataServerProvider;
@@ -536,7 +536,11 @@ namespace System.DJ.ImplementFactory
         private static string _connStr = "";
         public static string dbConnectionString
         {
-            get { return _connStr; }
+            get
+            {
+                if (string.IsNullOrEmpty(_connStr)) _connStr = dbInfo.ConnectionString;
+                return _connStr;
+            }
             set
             {
                 _connStr = value;
@@ -971,7 +975,7 @@ namespace System.DJ.ImplementFactory
                     if (null == impl_2)
                     {
                         impl_2 = loadInterfaceInstance(paraItem.ParameterType, "", null, ref asse);
-                        if(null == impl_2)
+                        if (null == impl_2)
                         {
                             GlobalEvents.ForeachType(tp1 =>
                             {
