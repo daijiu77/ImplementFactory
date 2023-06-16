@@ -889,6 +889,8 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected List<SqlDataItem> GetUpdate()
         {
+            sqlAnalysis.AliasDic = aliasDic;
+
             List<SqlDataItem> list = new List<SqlDataItem>();
             SqlDataItem dataItem = null;
             DbParameter para = null;
@@ -1042,6 +1044,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected List<SqlDataItem> GetDelete()
         {
+            sqlAnalysis.AliasDic = aliasDic;
             List<SqlDataItem> list = new List<SqlDataItem>();
             string sql = "";
             string whereStr = "";
@@ -1062,6 +1065,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected string GetCountSql()
         {
+            sqlAnalysis.AliasDic = aliasDic;
             string wherePart = "";
 
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
@@ -1081,6 +1085,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         private string GetTop(int start, int top)
         {
+            sqlAnalysis.AliasDic = aliasDic;
             string wherePart = "";
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
             InitWhereIgnore(fieldDic);
@@ -1102,6 +1107,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected string GetSql()
         {
+            sqlAnalysis.AliasDic = aliasDic;
             string wherePart = "";
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
             InitWhereIgnore(fieldDic);

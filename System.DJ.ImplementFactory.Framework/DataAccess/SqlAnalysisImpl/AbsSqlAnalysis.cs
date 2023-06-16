@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.DJ.ImplementFactory.Commons;
@@ -153,7 +154,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return mbool;
         }
 
-        protected string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
+        protected string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue, Dictionary<string, string> aliasDic)
         {
             string wherePart = "";
             if (null == fieldValueOfBaseValue) return wherePart;
@@ -197,17 +198,22 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 {
                     s = fieldValueOfBaseValue.ToString();
                     if (string.IsNullOrEmpty(s)) return wherePart;
+                    if (null == aliasDic) aliasDic = new Dictionary<string, string>();
                     string alias = "";
                     string field = "";
-                    bool mbool = IsAliasField(s, ref alias, ref field);
+                    bool mbool = IsAliasField(s, ref alias, ref field);                    
+                    if (mbool)
+                    {
+                        string aliasLower = alias.ToLower();
+                        mbool = aliasDic.ContainsKey(aliasLower);
+                    }
                     if (mbool)
                     {
                         s = ((ISqlAnalysis)this).GetFieldName(alias, field);
                     }
                     else if (!specialRg.IsMatch(s))
                     {
-                        if (false == s.Substring(0, 1).Equals("'") && false == s.Substring(s.Length - 1).Equals("'")
-                            && false == s.Substring(0, 1).Equals("\"") && false == s.Substring(s.Length - 1).Equals("\""))
+                        if (false == s.Substring(0, 1).Equals("'") && false == s.Substring(s.Length - 1).Equals("'"))
                         {
                             s = "'" + s + "'";
                         }

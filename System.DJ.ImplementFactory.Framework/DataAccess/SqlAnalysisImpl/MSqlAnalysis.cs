@@ -17,12 +17,13 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             rightTag = ']';
         }
 
+        Dictionary<string, string> ISqlAnalysis.AliasDic { get; set; }
         string ISqlAnalysis.PageSizeSignOfSql { get; set; }
         string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
 
         string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
-            return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue);
+            return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue, ((ISqlAnalysis)this).AliasDic);
         }
 
         string ISqlAnalysis.GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection)

@@ -10,6 +10,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected int startNumber = 0;
         protected List<SqlFromUnit> fromUnits = new List<SqlFromUnit>();
+        protected Dictionary<string, string> aliasDic = new Dictionary<string, string>();
         protected bool isUseConstraintLoad = false;
         public IDbSqlScheme CreateSqlFrom(bool isUseConstraintLoad, params SqlFromUnit[] sqlFromUnits)
         {
@@ -18,9 +19,18 @@ namespace System.DJ.ImplementFactory.DataAccess
             dbSqlStructure.isUseConstraintLoad = isUseConstraintLoad;
             if (null != sqlFromUnits)
             {
+                string alias = "";
                 foreach (var item in sqlFromUnits)
                 {
                     dbSqlStructure.fromUnits.Add(item);
+                    if (!string.IsNullOrEmpty(item.alias))
+                    {
+                        alias = item.alias.Trim();
+                        if (!string.IsNullOrEmpty(alias))
+                        {
+                            aliasDic[alias.ToLower()] = alias;
+                        }
+                    }
                 }
             }
             return dbSqlStructure;
