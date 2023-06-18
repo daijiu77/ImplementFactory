@@ -11,6 +11,7 @@ using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -53,7 +54,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             _recordCount = 0;
             _pageCount = 0;
             DataTable dt = null;
-            IDbHelper dbHelper = DbHelper;
+            IDbHelper dbHelper = new DbAccessHelper();
             DataPage dataPage = null;
             if (0 < pageSize)
             {
@@ -64,6 +65,31 @@ namespace System.DJ.ImplementFactory.DataAccess
                     PageSizeSignOfSql = PageSizeSignOfSql,
                     StartQuantitySignOfSql = StartQuantitySignOfSql
                 };
+
+                string tableName = "";
+                dataPage.InitSql(ref sql, ref tableName);
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    Regex rg = new Regex(@"(?<tbFlag>[a-z0-9_]+)\.((rowNumber)|(ROWNUM))\s*[\<\>\=\!]", RegexOptions.IgnoreCase);
+                    string tb = "";
+                    if (rg.IsMatch(dataPage.PageSizeSignOfSql))
+                    {
+                        tb = rg.Match(dataPage.PageSizeSignOfSql).Groups["tbFlag"].Value;
+                        if (!tableName.Equals(tb))
+                        {
+                            dataPage.PageSizeSignOfSql = dataPage.PageSizeSignOfSql.Replace(tb + ".", tableName + ".");
+                        }
+                    }
+
+                    if (rg.IsMatch(dataPage.StartQuantitySignOfSql))
+                    {
+                        tb = rg.Match(dataPage.StartQuantitySignOfSql).Groups["tbFlag"].Value;
+                        if (!tableName.Equals(tb))
+                        {
+                            dataPage.StartQuantitySignOfSql = dataPage.StartQuantitySignOfSql.Replace(tb + ".", tableName + ".");
+                        }
+                    }
+                }
 
                 if (0 < top)
                 {
@@ -84,7 +110,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 dt = data;
             }, ref err);
-            ImplementAdapter.Destroy(dbHelper);
+            ((IDisposable)dbHelper).Dispose();
             if (null == dt) dt = new DataTable();
             if (0 < dt.Rows.Count && null != dataPage)
             {

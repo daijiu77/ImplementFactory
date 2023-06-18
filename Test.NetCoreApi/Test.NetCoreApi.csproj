@@ -15,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ImplementFactory.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="MicroServiceRoute.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

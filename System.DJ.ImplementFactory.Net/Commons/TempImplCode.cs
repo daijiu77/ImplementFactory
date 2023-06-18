@@ -84,10 +84,7 @@ namespace System.DJ.ImplementFactory.Commons
                     autoCall_Impl.ExecuteException(interfaceType, null, null, null, new Exception(err));
                 }
 
-                isShowCode = dynamicCode.IsDataInterface ? IsShowCodeOfDataResourceDLL : isShowCode;
-                isShowCode = IsShowCodeOfAll ? IsShowCodeOfAll : isShowCode;
-
-                if (isShowCode)
+                if (ImplementAdapter.dbInfo1.IsShowCode)
                 {
                     if (!string.IsNullOrEmpty(err))
                     {
@@ -95,13 +92,7 @@ namespace System.DJ.ImplementFactory.Commons
                         s += "\r\n********/";
                         code += s;
                     }
-                    string fn2 = fn + ".cs";
-                    string f2 = Path.Combine(dir, fn2);
-                    try
-                    {
-                        File.WriteAllText(f2, code);
-                    }
-                    catch { }
+                    PrintCode(code, fn);
                 }
             }
 
@@ -166,6 +157,34 @@ namespace System.DJ.ImplementFactory.Commons
                     File.Delete(f);
                 }
                 catch { }
+            }
+        }
+
+        private static Dictionary<string, string> printDic = new Dictionary<string, string>();
+        private static object TempImplCodeLock = new object();
+        public static void PrintCode(string code, string fileName)
+        {
+            lock (TempImplCodeLock)
+            {
+                if (!ImplementAdapter.dbInfo1.IsShowCode) return;
+                if (printDic.ContainsKey(fileName)) return;
+                printDic.Add(fileName, fileName);
+                string fn = fileName + ".cs";
+                string f = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
+                if (!Directory.Exists(f))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(f);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+                f = Path.Combine(f, fn);
+                File.WriteAllText(f, code);
             }
         }
 

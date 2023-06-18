@@ -1,12 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Data;
+using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.DataAccess;
+using System.DJ.ImplementFactory.DataAccess.FromUnit;
+using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
+using Test.NetCoreApi.Entities;
 
 namespace Test.NetCoreApi.Controllers
 {
@@ -54,6 +61,22 @@ namespace Test.NetCoreApi.Controllers
             string Password = jt["Password"].ToString();
             string AuthCode = jt["AuthCode"].ToString();
             return DJTools.ExtFormat("[{0}] 登录成功！", UserName);
+        }
+
+        [HttpPost, Route("GetUserInfos")]
+        public Task<object> GetUserInfos()
+        {
+            return Task.Run(() =>
+            {
+                DbVisitor db = new DbVisitor();
+                IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                scheme.dbSqlBody.WhereIgnore("IsEnabled");
+                IList<UserInfo> users = scheme.ToList<UserInfo>();
+                int recordCount = scheme.RecordCount;
+                int pageCount = scheme.PageCount;
+                return (object)new { data = users, recordCount, pageCount };
+            });
         }
 
         private static object _getCode = new object();

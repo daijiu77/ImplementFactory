@@ -322,9 +322,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     txt += "\r\n\r\n/**\r\n" + err + "\r\n**/";
                 }
-                clssPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
-                clssPath = Path.Combine(clssPath, clssName + ".cs");
-                File.WriteAllText(clssPath, txt);
+                TempImplCode.PrintCode(txt, clssName);
             }
 
             return type;

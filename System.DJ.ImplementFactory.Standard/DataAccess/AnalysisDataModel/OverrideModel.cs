@@ -441,26 +441,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 level--;
                 DJTools.append(ref code, level, "}");
 
-                if (ImplementAdapter.dbInfo1.IsShowCode)
-                {
-                    string fn = newClassName + ".txt";
-                    string f = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
-                    if (!Directory.Exists(f))
-                    {
-                        try
-                        {
-                            Directory.CreateDirectory(f);
-                        }
-                        catch (Exception)
-                        {
-
-                            //throw;
-                        }
-                    }
-                    f = Path.Combine(f, fn);
-                    File.WriteAllText(f, code);
-                }
-
                 string err = "";
                 typeName = newNamespace + "." + newClassName;
                 try
@@ -484,6 +464,16 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
 
                     //throw;
+                }
+
+                if (ImplementAdapter.dbInfo1.IsShowCode)
+                {
+                    string txt = code;
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        txt += "\r\n\r\n/**\r\n" + err + "\r\n**/";
+                    }
+                    TempImplCode.PrintCode(txt, newClassName);
                 }
             }
             return dtModel;

@@ -110,7 +110,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         public static void SetTable(string tableName)
         {
-            if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             string tb = tableName.ToLower();
             if (!_tableDic.ContainsKey(tb))
             {
@@ -943,7 +943,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
 
         void IMultiTablesExec.Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
             initBasicExecForSQL(dbAdapter, dbHelper);
             if (null == createNewTable) createNewTable = new CreateNewTable(autoCall, dbInfo, dbAdapter, ImplementAdapter.DbHelper);
             createNewTable.SplitTable(sql);
@@ -1133,17 +1133,11 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                     DataTable dt = null;
                     AutoCall autoCall1 = autoCall as AutoCall;
                     string _err = "";
-                    dbAdapter.ExecSql(autoCall1, sql, parameters, ref _err, val =>
+                    DataPage dataPage = new DataPage();
+                    dataPage.InitSql(ref sql);
+                    dbAdapter.ExecSql<DataTable>(autoCall1, sql, parameters, ref _err, val =>
                     {
-                        dt = val as DataTable;
-                    }, cmd =>
-                    {
-                        DataTable dataTable = null;
-                        DataSet ds = new DataSet();
-                        Data.Common.DataAdapter da = MultiTablesExec.dbHelper.dataServerProvider.CreateDataAdapter(cmd);
-                        da.Fill(ds);
-                        if (0 < ds.Tables.Count) dataTable = ds.Tables[0];
-                        return dataTable;
+                        dt = val;
                     });
                     err = _err;
                     this.multiTablesExec.QueryResult(this, dt);

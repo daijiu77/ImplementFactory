@@ -88,7 +88,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, startNumber1, length1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
                 {
-                    string sql = "select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4} limit {5}, {6};";
+                    string sql = "select {0} from {1}{2}{3}{4} limit {5}, {6};";
                     sqlAnalysis.StartQuantitySignOfSql = startNumber.ToString();
                     sqlAnalysis.PageSizeSignOfSql = length.ToString();
                     sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), length.ToString());
