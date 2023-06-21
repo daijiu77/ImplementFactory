@@ -480,7 +480,13 @@ namespace Test.Framework
                 }
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
-                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abcd")).Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
+                IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
+                scheme1.dbSqlBody.Where(ConditionItem.Me.And("Age", ConditionRelation.Equals, 21));
+                scheme1.dbSqlBody.Select("Age", "age");
+
+                scheme.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Contain, "abc"),
+                    ConditionItem.Me.AndUnit("Age", ConditionRelation.NotIn, scheme1.dbSqlBody))
+                    .Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
                 scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
                 List<UserInfo> children = users[1].children;

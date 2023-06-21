@@ -138,6 +138,9 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 case ConditionRelation.In:
                     sign = "in {0}";
                     break;
+                case ConditionRelation.NotIn:
+                    sign = "not in {0}";
+                    break;
             }
             return sign;
         }

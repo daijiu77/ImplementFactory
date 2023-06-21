@@ -40,9 +40,13 @@ namespace System.DJ.ImplementFactory.DataAccess
         /// </summary>
         RightContain,
         /// <summary>
-        /// 
+        /// In 条件
         /// </summary>
-        In
+        In,
+        /// <summary>
+        /// not in 条件
+        /// </summary>
+        NotIn
     }
 
     public class ConditionItem
@@ -97,6 +101,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             IsOr = false;
             FieldName = fieldName;
             Relation = relation;
+            FieldValue = dbSqlBody;
             this.dbSqlBody = dbSqlBody;
             return this;
         }
