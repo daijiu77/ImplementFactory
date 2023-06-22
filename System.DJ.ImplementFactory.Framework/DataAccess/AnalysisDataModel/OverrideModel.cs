@@ -17,7 +17,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
         private const string WhereIgnoreFieldLazy = "WhereIgnoreFieldLazy";
 
-        private static Dictionary<Type, Type> modelCopyDic = new Dictionary<Type, Type>();
+        private static Dictionary<string, SrcModelCopy> modelCopyDic = new Dictionary<string, SrcModelCopy>();
 
         private enum PropType
         {
@@ -94,16 +94,24 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return typeof(AbsDataModel).IsAssignableFrom(modelType);
         }
 
-        public object CreateDataModel(Type dataModelType)
+        public object CreateDataModel(Type srcType, MethodInfo methodInfo, Type dataModelType)
         {
-            return CreateDataModel(dataModelType, null);
+            return CreateDataModel(srcType, methodInfo, dataModelType, null);
         }
 
-        public object CreateDataModel(Type dataModelType, DbSqlBody dbSqlBody)
+        public object CreateDataModel(Type srcType, MethodInfo methodInfo, Type dataModelType, DbSqlBody dbSqlBody)
         {
             object dtModel = null;
             if (null == dataModelType) return null;
             if (!typeof(AbsDataModel).IsAssignableFrom(dataModelType)) return null;
+
+            Type newType = ModelCopy(srcType, methodInfo, dataModelType, null);
+            if (null != newType)
+            {
+                dtModel = Activator.CreateInstance(newType);
+                return dtModel;
+            }
+
             string newNamespace = dataModelType.Namespace + ".ModelMirror";
             string newClassName = dataModelType.Name + "Copy";
             string typeName = newNamespace + "." + newClassName;
@@ -125,13 +133,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             if ((null != type1) && (null == dbSqlBody))
             {
                 dtModel = Activator.CreateInstance(type1);
-                return dtModel;
-            }
-
-            Type newType = ModelCopy(dataModelType, null);
-            if (null != newType)
-            {
-                dtModel = Activator.CreateInstance(newType);
                 return dtModel;
             }
 
@@ -458,7 +459,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     if (null != assembly && string.IsNullOrEmpty(err))
                     {
                         Type t = assembly.GetType(typeName);
-                        ModelCopy(dataModelType, t);
+                        ModelCopy(srcType, methodInfo, dataModelType, t);
                         DJTools.AddDynamicType(t);
                         dtModel = Activator.CreateInstance(t);
                     }
@@ -483,23 +484,58 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
         }
 
         private static object _ModelCopyLock = new object();
-        private static Type ModelCopy(Type dataModelType, Type newType)
+        private static Type ModelCopy(Type srcType, MethodInfo methodInfo, Type dataModelType, Type newType)
         {
             lock (_ModelCopyLock)
             {
+                SrcModelCopy srcModel = null;
                 Type modelType = null;
-                modelCopyDic.TryGetValue(dataModelType, out modelType);
+                string tpName = srcType.TypeToString(true) + "." + methodInfo.Name;
+                modelCopyDic.TryGetValue(tpName, out srcModel);
                 if (null != newType)
                 {
-                    if (null == modelType)
+                    if (null == srcModel)
                     {
-                        modelCopyDic[dataModelType] = newType;
+                        srcModel = new SrcModelCopy();
+                        modelCopyDic.Add(tpName, srcModel);
                     }
+
+                    srcModel[dataModelType] = newType;
+                    modelType = newType;
+                }
+                else if (null != srcModel)
+                {
+                    modelType = srcModel[dataModelType];
                 }
                 return modelType;
             }
         }
 
+        class SrcModelCopy
+        {
+            private Dictionary<Type, Type> modelCopyDic = new Dictionary<Type, Type>();
+            public Type this[Type srcModelType]
+            {
+                get
+                {
+                    Type t = null;
+                    modelCopyDic.TryGetValue(srcModelType, out t);
+                    return t;
+                }
+                set
+                {
+                    modelCopyDic[srcModelType] = value;
+                }
+            }
+
+            public void Add(Type srcModelType, Type newType)
+            {
+                Type t = null;
+                modelCopyDic.TryGetValue(srcModelType, out t);
+                if (null != t) return;
+                modelCopyDic.Add(srcModelType, newType);
+            }
+        }
         public string error { get; set; }
     }
 }

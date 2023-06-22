@@ -1195,8 +1195,9 @@ namespace System.DJ.ImplementFactory.Commons
                 _entityPropertyDic.TryGetValue(OverrideModel.CopyParentModel.ToLower(), out pi1);
                 if (null == attr || null != pi1) return v;
 
+                MethodInfo srcMethod = GetSrcTypeMethod(typeof(DJTools)) as MethodInfo;
                 OverrideModel overrideModel = new OverrideModel();
-                object vObj = overrideModel.CreateDataModel(entity.GetType());
+                object vObj = overrideModel.CreateDataModel(srcMethod.DeclaringType, srcMethod, entity.GetType());
                 if (null == vObj) return v;
 
                 vObj.SetPropertyFrom(entity);
@@ -1678,39 +1679,19 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
+        private static CommonMethods commonMethods = new CommonMethods();
+        private static object _GetSrcTypeLock = new object();
         /// <summary>
         /// 获取调用方法所属类的类型,但要排除指定的类型
         /// </summary>
         /// <param name="excludeType">排除指定的类型</param>
         /// <returns></returns>
-        public static Type GetSrcType(Type excludeType)
+        public static MethodBase GetSrcTypeMethod(params Type[] excludeTypes)
         {
-            StackTrace trace = new StackTrace();
-            StackFrame stackFrame = null;
-            MethodBase mb = null;
-            Type meType = typeof(DJTools);
-            Type pt = null;
-            Type srcType = null;
-            Regex rg = new Regex(@"^\<\>.+", RegexOptions.IgnoreCase);
-            const int maxNum = 10;
-            int num = 0;
-            while (num <= maxNum)
+            lock (_GetSrcTypeLock)
             {
-                stackFrame = trace.GetFrame(num);
-                if (null == stackFrame) break;
-                mb = stackFrame.GetMethod();
-                if (null == mb) break;
-                pt = mb.DeclaringType;
-                if (null == pt) break;
-                if ((pt != excludeType) && (pt != meType) && (false == rg.IsMatch(pt.Name)))
-                {
-                    srcType = pt;
-                    break;
-                }
-                num++;
+                return commonMethods.GetSrcTypeMethod(excludeTypes);
             }
-
-            return srcType;
         }
 
         /// <summary>
@@ -1718,10 +1699,28 @@ namespace System.DJ.ImplementFactory.Commons
         /// </summary>
         /// <typeparam name="T">排除指定的类型</typeparam>
         /// <returns></returns>
+        public static MethodBase GetSrcTypeMethod<T>()
+        {
+            lock (_GetSrcTypeLock)
+            {
+                return commonMethods.GetSrcTypeMethod<T>();
+            }
+        }
+
+        public static Type GetSrcType(params Type[] excludeTypes)
+        {
+            lock (_GetSrcTypeLock)
+            {
+                return commonMethods.GetSrcType(excludeTypes);
+            }
+        }
+
         public static Type GetSrcType<T>()
         {
-            Type excludeType = typeof(T);
-            return GetSrcType(excludeType);
+            lock (_GetSrcTypeLock)
+            {                
+                return commonMethods.GetSrcType<T>();
+            }
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]

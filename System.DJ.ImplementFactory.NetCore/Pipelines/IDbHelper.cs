@@ -73,7 +73,7 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <returns></returns>
         bool TestDbConnectionState(IDataServerProvider dataServerProvider, string connectionString, bool ignoreError, ref string err);
 
-        object query(object autoCall, string sql, Type dataModelType, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<object> resultAction, ref int recordCount, ref string err);
+        object query(object autoCall, string sql, DataRowToObj dataRowToObj, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<object> resultAction, ref int recordCount, ref string err);
         DataTable query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);
         DataTable query(object autoCall, string sql, DataPage dataPage, bool isDataPage, bool EnabledBuffer, Action<DataTable> resultAction, ref string err);

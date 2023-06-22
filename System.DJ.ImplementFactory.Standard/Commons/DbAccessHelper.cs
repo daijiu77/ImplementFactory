@@ -221,7 +221,7 @@ namespace System.DJ.ImplementFactory.Commons
                 num = 0;
                 BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                 basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                basicExecForSQL1.Exec(autoCall_1, sql, null, parameters, ref err, result =>
+                basicExecForSQL1.Exec(autoCall_1, sql, parameters, ref err, result =>
                 {
                     if (null == result) result = 0;
                     int.TryParse(result.ToString(), out num);
@@ -280,7 +280,7 @@ namespace System.DJ.ImplementFactory.Commons
             return num;
         }
 
-        object IDbHelper.query(object autoCall, string sql, Type dataModelType, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<object> resultAction, ref int recordCount, ref string err)
+        object IDbHelper.query(object autoCall, string sql, DataRowToObj dataRowToObj, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<object> resultAction, ref int recordCount, ref string err)
         {
             object dt = null;
             if (string.IsNullOrEmpty(sql)) return dt;
@@ -293,7 +293,7 @@ namespace System.DJ.ImplementFactory.Commons
                 bool isExec = true;
                 BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                 basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                basicExecForSQL1.Exec(autoCall_1, sql, dataModelType, dataPage, parameters, ref recordCount1, ref msg, result =>
+                basicExecForSQL1.Exec(autoCall_1, sql, dataRowToObj, dataPage, parameters, ref recordCount1, ref msg, result =>
                 {                    
                     dt = result;
 

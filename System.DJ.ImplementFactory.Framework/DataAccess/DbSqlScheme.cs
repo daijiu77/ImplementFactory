@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.Exts;
@@ -12,6 +13,7 @@ using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -126,8 +128,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             int recordCount1 = 0;
             dbHelper.query(autoCall, sql, null, dataPage, true, null, false, data =>
             {
-                if(null!=data) dt = (DataTable)data;
-            }, ref recordCount1, ref err);            
+                if (null != data) dt = (DataTable)data;
+            }, ref recordCount1, ref err);
             Page_Count(dataPage, recordCount1);
             ((IDisposable)dbHelper).Dispose();
             if (null == dt) dt = new DataTable();
@@ -383,13 +385,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             object ele = null;
             bool mbool = false;
+            CommonMethods commonMethods = new CommonMethods();
+            MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
             foreach (DataRow dr in dt.Rows)
             {
                 mbool = FuncResult(dr, sfList, dic);
                 if (!mbool) continue;
                 if (isUseConstraintLoad)
                 {
-                    ele = overrideModel.CreateDataModel(modelType, this);
+                    ele = overrideModel.CreateDataModel(srcMethod.DeclaringType, srcMethod, modelType, this);
                 }
                 else
                 {
@@ -410,34 +414,47 @@ namespace System.DJ.ImplementFactory.DataAccess
             string sql = GetSql();
             _recordCount = 0;
             _pageCount = 0;
-            object list = null;
             IDbHelper dbHelper = new DbAccessHelper();
             DataPage dataPage = getDataPage(sql);
             int recordCount1 = 0;
-            dbHelper.query(autoCall, sql, typeof(List<T>), dataPage, true, null, false, data =>
+            object ele = null;
+            bool mbool = false;
+            CommonMethods commonMethods = new CommonMethods();
+            MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
+            Type modelType = typeof(T);
+            List<SqlFromUnit> sfList = GetSqlFromUnits();
+            IList<T> dataList = new List<T>();
+            dbHelper.query(autoCall, sql, delegate (DataRow dr, Dictionary<string, string> dic)
             {
-                list = data;
-            }, ref recordCount1, ref err);
+                mbool = FuncResult(dr, sfList, dic);
+                if (!mbool) return null;
+                if (isUseConstraintLoad)
+                {
+                    ele = overrideModel.CreateDataModel(srcMethod.DeclaringType, srcMethod, modelType, this);
+                }
+                else
+                {
+                    ele = Activator.CreateInstance(modelType);
+                }
+                if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
+                if (null == ele) ele = Activator.CreateInstance(modelType);
+                ((AbsDataModel)ele).parentModel = this.parentModel;
+                DataRowToObj(dr, ele, dic);
+                dataList.Add((T)ele);
+                return ele;
+            }, dataPage, true, null, false, data => { }, ref recordCount1, ref err);
             Page_Count(dataPage, recordCount1);
             ((IDisposable)dbHelper).Dispose();
-            if (null != list) return (IList<T>)list;
-            return null;
+            return dataList;
         }
 
         T IDbSqlScheme.DefaultFirst<T>()
         {
-            string sql = GetSql();
-            _recordCount = 0;
-            _pageCount = 0;
-            object vData = null;
-            IDbHelper dbHelper = new DbAccessHelper();
-            int recordCount1 = 0;
-            dbHelper.query(autoCall, sql, typeof(T), null, false, null, false, data =>
+            IList<T> list = ((IDbSqlScheme)this).ToList<T>();
+            if (null != list)
             {
-                vData = data;
-            }, ref recordCount1, ref err);
-            ((IDisposable)dbHelper).Dispose();
-            if (null != vData) return (T)vData;
+                if (0 < list.Count) return list[0];
+            }
             return default(T);
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using MySqlX.XDevAPI.Relational;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -24,7 +25,7 @@ namespace System.DJ.ImplementFactory.Commons
         private AutoCall autoCall = new AutoCall();
         private static DbInfo dbInfo = null;
         private static IDbHelper dbHelper = null;
-        private Type dataModelType = null;
+        private DataRowToObj dataRowToObj = null;
         private object queryDatas = null;
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
@@ -846,9 +847,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             int n = 0;
             bool isList = false;
             DataTable dt = null;
-            if (null != dataModelType)
+            if (null != dataRowToObj)
             {
-                isList = typeof(IList).IsAssignableFrom(dataModelType);
+                isList = true;
             }
 
             foreach (SqlItem item in sqlList)
@@ -872,7 +873,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadDic.Add(threadOpt.ID, threadOpt);
                 threadOpt.query(autoCall, sql, parameters);
                 threadOpt.task.Wait();
-                if (null == dataModelType)
+                if (null == dataRowToObj)
                 {
                     dt = (DataTable)queryDatas;
                     if (0 < dt.Rows.Count)
@@ -999,9 +1000,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
-        void IMultiTablesExec.Query(AutoCall autoCall, string sql, Type dataModelType, DataPage dataPage, List<DbParameter> parameters, ref int recordCount, ref string err, Action<object> action, Func<DbCommand, object> func)
+        void IMultiTablesExec.Query(AutoCall autoCall, string sql, DataRowToObj dataRowToObj, DataPage dataPage, List<DbParameter> parameters, ref int recordCount, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            this.dataModelType = dataModelType;
+            this.dataRowToObj = dataRowToObj;
             queryDatas = null;
             threadDic.Clear();
             tasks.Clear();
@@ -1089,7 +1090,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 if ((null != data) && threadDic.ContainsKey(id))
                 {
                     DataTable dt = data as DataTable;
-                    if (null == dataModelType)
+                    if (null == dataRowToObj)
                     {
                         if (null == queryDatas)
                         {
@@ -1104,80 +1105,64 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                                 {
                                     table.Columns.Add(dc.ColumnName, dc.DataType);
                                 }
-                                //table.Columns.Add(RecordQuantityFN, typeof(int));
                             }
+
                             DataRow dr = table.NewRow();
                             foreach (DataColumn dc in dt.Columns)
                             {
                                 dr[dc.ColumnName] = item[dc.ColumnName];
                             }
-
-                            //dr[RecordQuantityFN] = RecordQuantity;
                             table.Rows.Add(dr);
                         }
                     }
                     else
                     {
-                        Type modelType = null;
-                        bool isList = false;
-                        if (typeof(IList).IsAssignableFrom(dataModelType))
+                        Dictionary<string, string> dic = new Dictionary<string, string>();
+                        foreach (DataColumn item in dt.Columns)
                         {
-                            Type[] types = dataModelType.GetGenericArguments();
-                            modelType = types[0];
-                            isList = true;
-                        }
-                        else
-                        {
-                            modelType = dataModelType;
+                            dic.Add(item.ColumnName.ToLower(), item.ColumnName);
                         }
 
-                        if (null == modelType) return;
-                        if (null == queryDatas)
-                        {
-                            if (isList)
-                            {
-                                try
-                                {
-                                    queryDatas = ExtCollection.createListByType(dataModelType);
-                                }
-                                catch (Exception ex)
-                                {
-                                    autoCall.e(ex.ToString());
-                                    //throw;
-                                }
-                                if (null == queryDatas) return;
-                            }
-                        }
-
-                        Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
-                        modelType.ForeachProperty((pi, pt, fn1) =>
-                        {
-                            piDic[fn1.ToLower()] = pi;
-                        });
-
-                        string fn = "";
-                        object v = null;
-                        object m = null;
+                        object vModel = null;
+                        bool isTable = false;
+                        DataTable table1 = null;
                         foreach (DataRow item in dt.Rows)
                         {
-                            m = Activator.CreateInstance(modelType);
-                            foreach (DataColumn c in dt.Columns)
+                            vModel = dataRowToObj(item, dic);
+                            if (null == queryDatas)
                             {
-                                fn = c.ColumnName.ToLower();
-                                if (!piDic.ContainsKey(fn)) continue;
-                                if (DBNull.Value == item[c.ColumnName]) continue;
-                                v = item[c.ColumnName];
-                                m.SetPropertyValue(fn, v);
+                                if (null != vModel)
+                                {
+                                    queryDatas = ExtCollection.createListByType(vModel.GetType());
+                                }
+                                else
+                                {
+                                    isTable = true;
+                                    queryDatas = new DataTable();
+                                    table1 = (DataTable)queryDatas;
+                                    if (0 == table1.Columns.Count)
+                                    {
+                                        foreach (DataColumn dc in dt.Columns)
+                                        {
+                                            table1.Columns.Add(dc.ColumnName, dc.DataType);
+                                        }
+                                    }
+                                }
                             }
 
-                            if (isList)
+                            if (isTable)
                             {
-                                ExtCollection.listAdd(queryDatas, m);
+                                table1 = (DataTable)queryDatas;
+                                DataRow dr = table1.NewRow();
+                                foreach (DataColumn dc in dt.Columns)
+                                {
+                                    dr[dc.ColumnName] = item[dc.ColumnName];
+                                }
+                                table1.Rows.Add(dr);
                             }
-                            else
+                            else if(null != vModel)
                             {
-                                queryDatas = m;
-                                break;
+                                ExtCollection.listAdd(queryDatas, vModel);
                             }
                         }
                     }
