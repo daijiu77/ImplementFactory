@@ -71,13 +71,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             elist.Add(new CKeyValue() { Key = typeof(RouteAttr).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MicroServiceRoute).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MethodTypes).Namespace });
+            elist.Add(new CKeyValue() { Key = typeof(ISingleInstance).Namespace });
 
             string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
             string clssPath = namespaceStr + "." + clssName;
             MethodInformation mInfo = new MethodInformation();
             mInfo.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);
             mInfo.append(ref code, "{");
-            mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}", clssName, DJTools.GetClassName(interfaceType, true));
+            mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}, ISingleInstance", clssName, DJTools.GetClassName(interfaceType, true));
             mInfo.append(ref code, LeftSpaceLevel.two, "{");
             mInfo.append(ref code, "");
 
@@ -94,6 +95,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             //mInfo.append(ref structorMethod, LeftSpaceLevel.four, "");
             mInfo.append(ref structorMethod, LeftSpaceLevel.three, "}");
             code = code.Replace("{#structorMethod}", structorMethod);
+
+            mInfo.append(ref propertyList, "");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "object ISingleInstance.Instance { get; set; }");
+            mInfo.append(ref propertyList, "");
 
             string propCode = "";
             string propMethod = "";

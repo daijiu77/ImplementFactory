@@ -827,8 +827,13 @@ namespace System.DJ.ImplementFactory
                     {
                         if (null != microServiceMethod)
                         {
-                            MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
-                            implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
+                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
+                            if(null == implType)
+                            {
+                                MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
+                                implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
+                                implNew = implType;
+                            }                            
                         }
                         else
                         {
