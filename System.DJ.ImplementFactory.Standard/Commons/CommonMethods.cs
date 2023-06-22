@@ -27,6 +27,9 @@ namespace System.DJ.ImplementFactory.Commons
             }
             const int maxNum = 50;
             const string threadSP = "System.Threading";
+            Dictionary<string, string> kDic = new Dictionary<string, string>();
+            kDic.Add(threadSP.ToLower(), threadSP);
+
             int spLen = threadSP.Length;
             string tpName = "";
             string spName = "";
@@ -40,10 +43,13 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null == methodBase) break;
                 pt = methodBase.DeclaringType;
                 if (null == pt) break;
-                spName = pt.Namespace;
+                spName = pt.FullName;
+                if (null == spName) spName = pt.Namespace;
+                if (null == spName) spName = "";
                 if (spName.Length >= spLen)
                 {
-                    if (spName.Substring(0, spLen).Equals(threadSP))
+                    spName = spName.Substring(0, spLen).ToLower();
+                    if (kDic.ContainsKey(spName))
                     {
                         num++;
                         continue;

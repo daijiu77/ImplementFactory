@@ -446,12 +446,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
                 string err = "";
                 typeName = newNamespace + "." + newClassName;
+                string guid = Guid.NewGuid().ToString().Replace("-", "_");
                 try
                 {
                     string dllPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
                     dllPath = Path.Combine(dllPath, TempImplCode.libName);
                     DJTools.InitDirectory(dllPath, true);
-                    string guid = Guid.NewGuid().ToString().Replace("-", "_");
                     dllPath = Path.Combine(dllPath, newClassName + "_" + guid + ".dll");
                     ImplementAdapter.codeCompiler.SavePathOfDll = dllPath;
                     Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
@@ -473,11 +473,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 if (ImplementAdapter.dbInfo1.IsShowCode)
                 {
                     string txt = code;
+                    string tpName = srcType.TypeToString(true) + "." + methodInfo.Name;
+                    txt = "//" + tpName + "\r\n\r\n" + txt;
                     if (!string.IsNullOrEmpty(err))
                     {
                         txt += "\r\n\r\n/**\r\n" + err + "\r\n**/";
                     }
-                    TempImplCode.PrintCode(txt, newClassName);
+                    TempImplCode.PrintCode(txt, newClassName + "_" + guid);
                 }
             }
             return dtModel;

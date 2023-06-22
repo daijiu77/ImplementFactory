@@ -1690,7 +1690,16 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_GetSrcTypeLock)
             {
-                return commonMethods.GetSrcTypeMethod(excludeTypes);
+                List<Type> list = new List<Type>();
+                list.Add(typeof(DJTools));
+                if (null != excludeTypes)
+                {
+                    foreach (var item in excludeTypes)
+                    {
+                        list.Add(item);
+                    }
+                }
+                return commonMethods.GetSrcTypeMethod(list.ToArray());
             }
         }
 
@@ -1703,7 +1712,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_GetSrcTypeLock)
             {
-                return commonMethods.GetSrcTypeMethod<T>();
+                return commonMethods.GetSrcTypeMethod(typeof(T), typeof(DJTools));
             }
         }
 
@@ -1711,15 +1720,24 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_GetSrcTypeLock)
             {
-                return commonMethods.GetSrcType(excludeTypes);
+                List<Type> list = new List<Type>();
+                list.Add(typeof(DJTools));
+                if (null != excludeTypes)
+                {
+                    foreach (var item in excludeTypes)
+                    {
+                        list.Add(item);
+                    }
+                }
+                return commonMethods.GetSrcType(list.ToArray());
             }
         }
 
         public static Type GetSrcType<T>()
         {
             lock (_GetSrcTypeLock)
-            {                
-                return commonMethods.GetSrcType<T>();
+            {
+                return commonMethods.GetSrcType(typeof(DJTools), typeof(T));
             }
         }
 
