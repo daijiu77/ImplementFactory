@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <MicroServiceRoute>
   <Routes>
-    <Route Name="route1" Uri="http://localhost:81/api/" RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc" />
+    <Route Name="route1" Uri="http://localhost:88/api/" RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc123456" />
   </Routes>  
 </MicroServiceRoute>

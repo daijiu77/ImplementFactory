@@ -15,8 +15,32 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MicroServiceMethodImpl : IMicroServiceMethod
     {
+        private static Dictionary<string, Type> _keyDic = new Dictionary<string, Type>();
+        private static object _MicroServiceMethodImplLock = new object();
+
+        private static Type MSTypeDic(string key, Type type)
+        {
+            lock (_MicroServiceMethodImplLock)
+            {
+                Type msType = null;
+                _keyDic.TryGetValue(key, out msType);
+                if (null != type)
+                {
+                    _keyDic[key] = type;
+                }
+                return msType;
+            }
+        }
+
         Type IMicroServiceMethod.GetMS(IInstanceCodeCompiler instanceCodeCompiler, AutoCall autoCall, MicroServiceRoute microServiceRoute, Type interfaceType)
         {
+            string interfaceName = interfaceType.TypeToString(true);
+            string controllerName = interfaceType.Name;
+            if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
+            string msKey = interfaceName + "-" + controllerName + "-" + microServiceRoute.RouteName;
+            Type msType = MSTypeDic(msKey, null);
+            if (null != msType) return msType;
+
             string usingList = "";
             string methodList = "";
             string methodCode = "";
@@ -27,17 +51,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string data = "";
             string s = "";
             string err = "";
-            string interfaceName = interfaceType.TypeToString(true);
             string returnType = "";
+            string actionName = "";
             string code = "{#usingList}";
             string namespaceStr = "System.DJ.MicroService." + TempImplCode.dirName + "." + TempImplCode.libName;
-            string controllerName = interfaceType.Name;
-            string actionName = "";
 
             const string taskRunStartTag = "[_Task.Run-Start_]";
             const string taskRunEndTag = "[_Task.Run-End_]";
-
-            if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
 
             EList<CKeyValue> elist = new EList<CKeyValue>();
             elist.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory" });
@@ -48,6 +68,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             elist.Add(new CKeyValue() { Key = "Newtonsoft.Json" });
             elist.Add(new CKeyValue() { Key = typeof(ExtMethod).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MSDataVisitor).Namespace });
+            elist.Add(new CKeyValue() { Key = typeof(RouteAttr).Namespace });
+            elist.Add(new CKeyValue() { Key = typeof(MicroServiceRoute).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(MethodTypes).Namespace });
 
             string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
@@ -208,9 +230,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         }
                     }
 
+                    mInfo.append(ref s, LeftSpaceLevel.four, "RouteAttr routeAttr = MicroServiceRoute.GetRouteAttributeByName(\"{0}\");", microServiceRoute.RouteName);
                     mInfo.append(ref s, LeftSpaceLevel.four, "MSDataVisitor dataVisitor = new MSDataVisitor();");
-                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", methodTypes, {5});",
-                        microServiceRoute.RouteName, microServiceRoute.Uri, controllerName, actionName, contractKey, data);
+                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", routeAttr.Uri, \"{1}\", \"{2}\", routeAttr.ContractKey, methodTypes, {3});",
+                        microServiceRoute.RouteName, controllerName, actionName, data);
                     mInfo.append(ref s, LeftSpaceLevel.four, "");
                     mInfo.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
                     mInfo.append(ref s, LeftSpaceLevel.one, "");
@@ -308,6 +331,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 try
                 {
                     type = assObj.GetType(clssPath);
+                    MSTypeDic(msKey, type);
                 }
                 catch (Exception ex)
                 {
@@ -328,5 +352,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return type;
             //throw new NotImplementedException();
         }
+
     }
 }

@@ -98,7 +98,7 @@ namespace Test.Framework
                 _mSUserInfo = mSUserInfo;
                 _calculate = calculate;
             }
-            
+
         }
 
         class ImplAdapter : ImplementAdapter
@@ -121,10 +121,13 @@ namespace Test.Framework
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            testObj.test_user();
-            //string un = testObj.VisitService();
+            //testObj.test_user();
+            string un = testObj.VisitService("aa");
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
+
+            testObj = new TestObj();
+            un = testObj.VisitService("bb");
 
             TableInfoDetail details = UpdateTableDesign.GetTableInfoDetail();
             foreach (TableDetail item in details)
@@ -433,15 +436,15 @@ namespace Test.Framework
                 Console.WriteLine("");
             }
 
-            public string VisitService()
+            public string VisitService(string msg)
             {
-                string un = userInfo2.UserName("LiShi").Result;
+                string un = userInfo2.UserName("LiShi: " + msg).Result;
                 Console.WriteLine("MicroService Visitor: " + un);
 
-                un = userInfo2.UserName("LiShi-123").Result;
+                un = userInfo2.UserName("LiShi-123: " + msg).Result;
                 Console.WriteLine("MicroService Visitor: " + un);
 
-                un = userInfo2.UserName("LiShi-321").Result;
+                un = userInfo2.UserName("LiShi-321: " + msg).Result;
                 Console.WriteLine("MicroService Visitor: " + un);
                 return un;
             }
