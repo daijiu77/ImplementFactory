@@ -221,7 +221,7 @@ namespace System.DJ.ImplementFactory.Commons
                 num = 0;
                 BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                 basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                basicExecForSQL1.Exec(autoCall_1, sql, parameters, ref err, result =>
+                basicExecForSQL1.Exec(autoCall_1, sql, null, parameters, ref err, result =>
                 {
                     if (null == result) result = 0;
                     int.TryParse(result.ToString(), out num);
@@ -275,40 +275,27 @@ namespace System.DJ.ImplementFactory.Commons
             DataOpt(EnabledBuffer, autoCall_1, sql, parameters, data =>
             {
                 num = Convert.ToInt32(data);
-                if(null != resultAction) resultAction(num);
+                if (null != resultAction) resultAction(num);
             }, ref err);
             return num;
         }
 
-        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        object IDbHelper.query(object autoCall, string sql, Type dataModelType, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<object> resultAction, ref int recordCount, ref string err)
         {
-            DataTable dt = new DataTable();
+            object dt = null;
             if (string.IsNullOrEmpty(sql)) return dt;
             string msg = "";
             AutoCall autoCall_1 = autoCall as AutoCall;
 
+            int recordCount1 = 0;
             Action action = () =>
             {
                 bool isExec = true;
                 BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                 basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                basicExecForSQL1.Exec(autoCall_1, sql, dataPage, parameters, ref msg, result =>
-                {
-                    if (null != result)
-                    {
-                        if (result.GetType() == typeof(int))
-                        {
-                            dt = new DataTable();
-                            dt.Columns.Add(MultiTablesExec.RecordQuantityFN, typeof(int));
-                            DataRow dataRow = dt.NewRow();
-                            dataRow[MultiTablesExec.RecordQuantityFN] = result;
-                            dt.Rows.Add(dataRow);
-                        }
-                        else
-                        {
-                            dt = result as DataTable;
-                        }
-                    }  
+                basicExecForSQL1.Exec(autoCall_1, sql, dataModelType, dataPage, parameters, ref recordCount1, ref msg, result =>
+                {                    
+                    dt = result;
 
                     if (null != resultAction && isExec)
                     {
@@ -383,6 +370,36 @@ namespace System.DJ.ImplementFactory.Commons
                 action();
             }
             err = msg;
+            recordCount = recordCount1;
+            return dt;
+        }
+
+        DataTable IDbHelper.query(object autoCall, string sql, DataPage dataPage, bool isDataPage, List<DbParameter> parameters, bool EnabledBuffer, Action<DataTable> resultAction, ref string err)
+        {
+            DataTable dt = null;
+            int recordCount1 = 0;
+            ((IDbHelper)this).query(autoCall, sql, null, dataPage, isDataPage, parameters, EnabledBuffer, result =>
+            {
+                if (null != result)
+                {
+                    if (result.GetType() == typeof(int))
+                    {
+                        dt = new DataTable();
+                        dt.Columns.Add(MultiTablesExec.RecordQuantityFN, typeof(int));
+                        DataRow dataRow = dt.NewRow();
+                        dataRow[MultiTablesExec.RecordQuantityFN] = result;
+                        dt.Rows.Add(dataRow);
+                    }
+                    else
+                    {
+                        dt = result as DataTable;
+                    }
+                }
+                if (null != resultAction)
+                {
+                    resultAction(dt);
+                }
+            }, ref recordCount1, ref err);
             return dt;
         }
 

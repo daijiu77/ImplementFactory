@@ -151,7 +151,7 @@ namespace System.DJ.ImplementFactory.Commons
                         if (null == td) continue;
                         BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                         basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                        basicExecForSQL1.Exec(td.autoCall, td.sql, td.parameters, ref err, td.resultOfOpt, td.dataOpt);
+                        basicExecForSQL1.Exec(td.autoCall, td.sql, null, td.parameters, ref err, td.resultOfOpt, td.dataOpt);
                         ((IDisposable)basicExecForSQL1).Dispose();
                         tempDatas1.RemoveAt(0);
                     }
@@ -164,7 +164,7 @@ namespace System.DJ.ImplementFactory.Commons
                         if (null == td) continue;
                         BasicExecForSQL basicExecForSQL1 = BasicExecForSQL.Instance;
                         basicExecForSQL1.SetPropertyFrom(basicExecForSQL);
-                        basicExecForSQL1.Exec(td.autoCall, td.sql, td.parameters, ref err, td.resultOfOpt, td.dataOpt);
+                        basicExecForSQL1.Exec(td.autoCall, td.sql, null, td.parameters, ref err, td.resultOfOpt, td.dataOpt);
                         ((IDisposable)basicExecForSQL1).Dispose();
                         tempDatas2.RemoveAt(0);
                     }

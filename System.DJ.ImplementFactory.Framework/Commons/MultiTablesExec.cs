@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -21,7 +24,8 @@ namespace System.DJ.ImplementFactory.Commons
         private AutoCall autoCall = new AutoCall();
         private static DbInfo dbInfo = null;
         private static IDbHelper dbHelper = null;
-        private DataTable queryDatas = null;
+        private Type dataModelType = null;
+        private object queryDatas = null;
         private DbAdapter dbAdapter = DbAdapter.Instance;
         private CreateNewTable createNewTable = null;
         private int OptDatas = 0;
@@ -838,7 +842,15 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 }
                 return _s;
             };
+
             int n = 0;
+            bool isList = false;
+            DataTable dt = null;
+            if (null != dataModelType)
+            {
+                isList = typeof(IList).IsAssignableFrom(dataModelType);
+            }
+
             foreach (SqlItem item in sqlList)
             {
                 record += item.RecordCount;
@@ -860,10 +872,28 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 threadDic.Add(threadOpt.ID, threadOpt);
                 threadOpt.query(autoCall, sql, parameters);
                 threadOpt.task.Wait();
-                if (0 < queryDatas.Rows.Count)
+                if (null == dataModelType)
                 {
-                    startQuantity = (dataPage.StartQuantity + queryDatas.Rows.Count);
-                    pageSize = (pgSize - queryDatas.Rows.Count);
+                    dt = (DataTable)queryDatas;
+                    if (0 < dt.Rows.Count)
+                    {
+                        startQuantity = (dataPage.StartQuantity + dt.Rows.Count);
+                        pageSize = (pgSize - dt.Rows.Count);
+                    }
+                }
+                else if (null != queryDatas)
+                {
+                    int size = 1;
+                    if (isList)
+                    {
+                        size = ((IList)queryDatas).Count;
+                    }
+
+                    if (0 < size)
+                    {
+                        startQuantity = (dataPage.StartQuantity + size);
+                        pageSize = (pgSize - size);
+                    }
                 }
 
                 if (0 >= pageSize) break;
@@ -969,9 +999,10 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             DataOpt(autoCall, sql, parameters, action, ref err);
         }
 
-        void IMultiTablesExec.Query(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        void IMultiTablesExec.Query(AutoCall autoCall, string sql, Type dataModelType, DataPage dataPage, List<DbParameter> parameters, ref int recordCount, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            queryDatas = new DataTable();
+            this.dataModelType = dataModelType;
+            queryDatas = null;
             threadDic.Clear();
             tasks.Clear();
             RecordQuantity = 0;
@@ -999,6 +1030,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 if (null == tableOrderBies) tableOrderBies = getOrderByDataPages(dataPage, sql, AliasTbNameDic);
                 ResetTableIndex(tableOrderBies, sqlList, dataPage, parameters);
                 getPageData(sqlList, dataPage, parameters, action);
+                recordCount = RecordQuantity;
                 return;
             }
 
@@ -1015,6 +1047,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             {
                 action(queryDatas);
             });
+            recordCount = RecordQuantity;
         }
 
         void IMultiTablesExec.Count(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
@@ -1056,24 +1089,97 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 if ((null != data) && threadDic.ContainsKey(id))
                 {
                     DataTable dt = data as DataTable;
-                    foreach (DataRow item in dt.Rows)
+                    if (null == dataModelType)
                     {
-                        if (0 == queryDatas.Columns.Count)
+                        if (null == queryDatas)
                         {
+                            queryDatas = new DataTable();
+                        }
+                        DataTable table = (DataTable)queryDatas;
+                        foreach (DataRow item in dt.Rows)
+                        {
+                            if (0 == table.Columns.Count)
+                            {
+                                foreach (DataColumn dc in dt.Columns)
+                                {
+                                    table.Columns.Add(dc.ColumnName, dc.DataType);
+                                }
+                                //table.Columns.Add(RecordQuantityFN, typeof(int));
+                            }
+                            DataRow dr = table.NewRow();
                             foreach (DataColumn dc in dt.Columns)
                             {
-                                queryDatas.Columns.Add(dc.ColumnName, dc.DataType);
+                                dr[dc.ColumnName] = item[dc.ColumnName];
                             }
-                            queryDatas.Columns.Add(RecordQuantityFN, typeof(int));
+
+                            //dr[RecordQuantityFN] = RecordQuantity;
+                            table.Rows.Add(dr);
                         }
-                        DataRow dr = queryDatas.NewRow();
-                        foreach (DataColumn dc in dt.Columns)
+                    }
+                    else
+                    {
+                        Type modelType = null;
+                        bool isList = false;
+                        if (typeof(IList).IsAssignableFrom(dataModelType))
                         {
-                            dr[dc.ColumnName] = item[dc.ColumnName];
+                            Type[] types = dataModelType.GetGenericArguments();
+                            modelType = types[0];
+                            isList = true;
+                        }
+                        else
+                        {
+                            modelType = dataModelType;
                         }
 
-                        dr[RecordQuantityFN] = RecordQuantity;
-                        queryDatas.Rows.Add(dr);
+                        if (null == modelType) return;
+                        if (null == queryDatas)
+                        {
+                            if (isList)
+                            {
+                                try
+                                {
+                                    queryDatas = ExtCollection.createListByType(dataModelType);
+                                }
+                                catch (Exception ex)
+                                {
+                                    autoCall.e(ex.ToString());
+                                    //throw;
+                                }
+                                if (null == queryDatas) return;
+                            }
+                        }
+
+                        Dictionary<string, PropertyInfo> piDic = new Dictionary<string, PropertyInfo>();
+                        modelType.ForeachProperty((pi, pt, fn1) =>
+                        {
+                            piDic[fn1.ToLower()] = pi;
+                        });
+
+                        string fn = "";
+                        object v = null;
+                        object m = null;
+                        foreach (DataRow item in dt.Rows)
+                        {
+                            m = Activator.CreateInstance(modelType);
+                            foreach (DataColumn c in dt.Columns)
+                            {
+                                fn = c.ColumnName.ToLower();
+                                if (!piDic.ContainsKey(fn)) continue;
+                                if (DBNull.Value == item[c.ColumnName]) continue;
+                                v = item[c.ColumnName];
+                                m.SetPropertyValue(fn, v);
+                            }
+
+                            if (isList)
+                            {
+                                ExtCollection.listAdd(queryDatas, m);
+                            }
+                            else
+                            {
+                                queryDatas = m;
+                                break;
+                            }
+                        }
                     }
                 }
 

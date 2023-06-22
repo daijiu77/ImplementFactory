@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Google.Protobuf.WellKnownTypes;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
@@ -16,7 +17,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
         private const string WhereIgnoreFieldLazy = "WhereIgnoreFieldLazy";
 
-        private Dictionary<Type, Type> dic = new Dictionary<Type, Type>();
+        private static Dictionary<Type, Type> modelCopyDic = new Dictionary<Type, Type>();
+
         private enum PropType
         {
             none,
@@ -126,10 +128,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 return dtModel;
             }
 
-            if (dic.ContainsKey(dataModelType))
+            Type newType = ModelCopy(dataModelType, null);
+            if (null != newType)
             {
-                type1 = dic[dataModelType];
-                dtModel = Activator.CreateInstance(type1);
+                dtModel = Activator.CreateInstance(newType);
                 return dtModel;
             }
 
@@ -448,14 +450,15 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     string dllPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
                     dllPath = Path.Combine(dllPath, TempImplCode.libName);
                     DJTools.InitDirectory(dllPath, true);
-                    dllPath = Path.Combine(dllPath, newClassName + ".dll");
+                    string guid = Guid.NewGuid().ToString().Replace("-", "_");
+                    dllPath = Path.Combine(dllPath, newClassName + "_" + guid + ".dll");
                     ImplementAdapter.codeCompiler.SavePathOfDll = dllPath;
                     Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
                     if (!string.IsNullOrEmpty(err)) error = err;
                     if (null != assembly && string.IsNullOrEmpty(err))
                     {
                         Type t = assembly.GetType(typeName);
-                        dic.Add(dataModelType, t);
+                        ModelCopy(dataModelType, t);
                         DJTools.AddDynamicType(t);
                         dtModel = Activator.CreateInstance(t);
                     }
@@ -477,6 +480,24 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
             }
             return dtModel;
+        }
+
+        private static object _ModelCopyLock = new object();
+        private static Type ModelCopy(Type dataModelType, Type newType)
+        {
+            lock (_ModelCopyLock)
+            {
+                Type modelType = null;
+                modelCopyDic.TryGetValue(dataModelType, out modelType);
+                if (null != newType)
+                {
+                    if (null == modelType)
+                    {
+                        modelCopyDic[dataModelType] = newType;
+                    }
+                }
+                return modelType;
+            }
         }
 
         public string error { get; set; }

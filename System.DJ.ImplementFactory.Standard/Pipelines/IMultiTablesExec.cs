@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.Pipelines
         bool ExistMultiTables(string sql);
 
         void Count(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func);
-        void Query(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func);
+        void Query(AutoCall autoCall, string sql, Type dataModelType, DataPage dataPage, List<DbParameter> parameters, ref int recordCount, ref string err, Action<object> action, Func<DbCommand, object> func);
 
         void Insert(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func);
 

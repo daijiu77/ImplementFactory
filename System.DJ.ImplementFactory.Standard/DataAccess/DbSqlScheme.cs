@@ -48,13 +48,8 @@ namespace System.DJ.ImplementFactory.DataAccess
             return num;
         }
 
-        DataTable IDbSqlScheme.ToDataTable()
+        private DataPage getDataPage(string sql)
         {
-            string sql = GetSql();
-            _recordCount = 0;
-            _pageCount = 0;
-            DataTable dt = null;
-            IDbHelper dbHelper = new DbAccessHelper();
             DataPage dataPage = null;
             if (0 < pageSize)
             {
@@ -106,28 +101,36 @@ namespace System.DJ.ImplementFactory.DataAccess
                     });
                 }
             }
-            dbHelper.query(autoCall, sql, dataPage, true, false, data =>
+            return dataPage;
+        }
+
+        private void Page_Count(DataPage dataPage, int recordCount)
+        {
+            _recordCount = recordCount;
+            if (0 < _recordCount)
             {
-                dt = data;
-            }, ref err);
+                _pageCount = _recordCount / dataPage.PageSize;
+                if (0 < (_recordCount % dataPage.PageSize)) _pageCount++;
+            }
+        }
+
+        DataTable IDbSqlScheme.ToDataTable()
+        {
+            string sql = GetSql();
+            _recordCount = 0;
+            _pageCount = 0;
+            string err = "";
+            DataTable dt = null;
+            IDbHelper dbHelper = new DbAccessHelper();
+            DataPage dataPage = getDataPage(sql);
+            int recordCount1 = 0;
+            dbHelper.query(autoCall, sql, null, dataPage, true, null, false, data =>
+            {
+                if(null!=data) dt = (DataTable)data;
+            }, ref recordCount1, ref err);            
+            Page_Count(dataPage, recordCount1);
             ((IDisposable)dbHelper).Dispose();
             if (null == dt) dt = new DataTable();
-            if (0 < dt.Rows.Count && null != dataPage)
-            {
-                foreach (DataColumn item in dt.Columns)
-                {
-                    if (item.ColumnName.Equals(MultiTablesExec.RecordQuantityFN))
-                    {
-                        _recordCount = Convert.ToInt32(dt.Rows[0][item.ColumnName]);
-                        if (0 < _recordCount)
-                        {
-                            _pageCount = _recordCount / dataPage.PageSize;
-                            if (0 < (_recordCount % dataPage.PageSize)) _pageCount++;
-                        }
-                        break;
-                    }
-                }
-            }
             return dt;
             //throw new NotImplementedException();
         }
@@ -404,27 +407,37 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         IList<T> IDbSqlScheme.ToList<T>()
         {
-            DataTable dt = ((IDbSqlScheme)this).ToDataTable();
-            IList<T> list = new List<T>();
-            IList<object> results = GetList(dt, typeof(T));
-            if (null != results)
+            string sql = GetSql();
+            _recordCount = 0;
+            _pageCount = 0;
+            object list = null;
+            IDbHelper dbHelper = new DbAccessHelper();
+            DataPage dataPage = getDataPage(sql);
+            int recordCount1 = 0;
+            dbHelper.query(autoCall, sql, typeof(List<T>), dataPage, true, null, false, data =>
             {
-                foreach (var item in results)
-                {
-                    list.Add((T)item);
-                }
-            }
-            return list;
+                list = data;
+            }, ref recordCount1, ref err);
+            Page_Count(dataPage, recordCount1);
+            ((IDisposable)dbHelper).Dispose();
+            if (null != list) return (IList<T>)list;
+            return null;
         }
 
         T IDbSqlScheme.DefaultFirst<T>()
         {
-            DataTable dt = ((IDbSqlScheme)this).ToDataTable();
-            IList<object> list = GetList(dt, typeof(T));
-            if (0 < list.Count)
+            string sql = GetSql();
+            _recordCount = 0;
+            _pageCount = 0;
+            object vData = null;
+            IDbHelper dbHelper = new DbAccessHelper();
+            int recordCount1 = 0;
+            dbHelper.query(autoCall, sql, typeof(T), null, false, null, false, data =>
             {
-                return (T)list[0];
-            }
+                vData = data;
+            }, ref recordCount1, ref err);
+            ((IDisposable)dbHelper).Dispose();
+            if (null != vData) return (T)vData;
             return default(T);
         }
 

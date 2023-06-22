@@ -53,7 +53,7 @@ namespace System.DJ.ImplementFactory.Commons
             dbAdapter.ExecSql(autoCall, sql, parameters, ref err, action, func);
         }
 
-        public void Exec(AutoCall autoCall, string sql, DataPage dataPage, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        public void Exec(AutoCall autoCall, string sql, Type dataModelType, DataPage dataPage, List<DbParameter> parameters, ref int recordCount, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
             StackTrace trace = new StackTrace();
             StackFrame stackFrame = trace.GetFrame(1);
@@ -73,7 +73,7 @@ namespace System.DJ.ImplementFactory.Commons
                 switch (sign)
                 {
                     case "select":
-                        multiTablesExec.Query(autoCall, sql, dataPage, parameters, ref err, action, func);
+                        multiTablesExec.Query(autoCall, sql, dataModelType, dataPage, parameters, ref recordCount, ref err, action, func);
                         break;
                     case "count":
                         multiTablesExec.Count(autoCall, sql, parameters, ref err, action, func);
@@ -95,12 +95,13 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
-        public void Exec(AutoCall autoCall, string sql, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
+        public void Exec(AutoCall autoCall, string sql, Type dataModelType, List<DbParameter> parameters, ref string err, Action<object> action, Func<DbCommand, object> func)
         {
-            Exec(autoCall, sql, null, parameters, ref err, action, func);
+            int recordCount = 0;
+            Exec(autoCall, sql, null, null, parameters, ref recordCount, ref err, action, func);
         }
 
-        public bool DbConnectionState(bool ignoreError,ref string err)
+        public bool DbConnectionState(bool ignoreError, ref string err)
         {
             dbAdapter.IgnoreError = ignoreError;
             return dbAdapter.DbConnectionState(ref err);

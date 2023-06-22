@@ -110,7 +110,10 @@ namespace System.DJ.ImplementFactory.Commons.Exts
                 {
                     v = Activator.CreateInstance(asseName, dicTypeName) as ObjectHandle;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
                 object list = null;
                 if (null == v) return list;
                 list = ((ObjectHandle)v).Unwrap();

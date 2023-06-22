@@ -756,10 +756,10 @@ namespace System.DJ.ImplementFactory
             }
 
             resetKeyName = DJTools.GetClassName(interfaceType, true);
-            interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
-            if (null != instanceObj) impl = instanceObj.newInstance;
+            instanceObj = InterfaceImplementCollection(resetKeyName, null, null);
             if (null != instanceObj)
             {
+                impl = instanceObj.newInstance;
                 implName = "";
                 rg = null;
                 isIgnoreCase = false;
@@ -780,6 +780,29 @@ namespace System.DJ.ImplementFactory
             {
                 isSingleCall = true;
                 impl = null;
+            }
+
+            isSingleInstance = false;
+            if (null != interfaceType)
+            {
+                isSingleInstance = typeof(ISingleInstance).IsAssignableFrom(interfaceType);
+            }
+
+            if ((isSingleCall || isSingleInstance) && (null != instanceObj))
+            {
+                try
+                {
+                    impl = GetInstanceByType(instanceObj.newInstanceType);
+                    if (null != impl)
+                    {
+                        return impl;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    autoCall.e(ex.ToString(), ErrorLevels.severe);
+                    //throw;
+                }
             }
 
             if (null == impl)
@@ -922,9 +945,9 @@ namespace System.DJ.ImplementFactory
                     action(impl, null);
                 }
 
-                if (null != impl && null == impl_1 && false == isSingleCall)
+                if ((null != impl) && (false == string.IsNullOrEmpty(resetKeyName)))
                 {
-                    SetInterfaceImplements(resetKeyName, implType, ref impl, out instanceObj);
+                    InterfaceImplementCollection(resetKeyName, implType, impl);
                 }
             }
 
@@ -1088,25 +1111,32 @@ namespace System.DJ.ImplementFactory
         }
 
         private static object _adapterOfImplement = new object();
-        private void SetInterfaceImplements(string resetKeyName, Type implType, ref object impl, out InstanceObj instanceObj)
+        private InstanceObj InterfaceImplementCollection(string resetKeyName, Type oldImplType, object impl)
         {
             lock (_adapterOfImplement)
             {
-                object impl_1 = impl;
+                InstanceObj instanceObj = null;
                 interfaceImplements.TryGetValue(resetKeyName, out instanceObj);
-                if (null == instanceObj)
+                if (null != impl)
                 {
-                    interfaceImplements.Add(resetKeyName, new InstanceObj()
+                    if (null == instanceObj)
                     {
-                        newInstance = impl_1,
-                        oldInstanceType = implType
-                    });
+                        instanceObj = new InstanceObj()
+                        {
+                            newInstance = impl,
+                            newInstanceType = impl.GetType(),
+                            oldInstanceType = oldImplType
+                        };
+                        interfaceImplements.Add(resetKeyName, instanceObj);
+                    }
+                    else
+                    {
+                        instanceObj.newInstance = impl;
+                        instanceObj.newInstanceType = impl.GetType();
+                        instanceObj.oldInstanceType = oldImplType;
+                    }
                 }
-                else
-                {
-                    if (null != (impl_1 as IDisposable)) ((IDisposable)impl_1).Dispose();
-                    impl_1 = instanceObj.newInstance;
-                }
+                return instanceObj;
             }
         }
 
