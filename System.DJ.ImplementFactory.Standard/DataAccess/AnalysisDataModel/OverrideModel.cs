@@ -13,6 +13,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 {
     public class OverrideModel
     {
+        public const string Copy = "Copy";
         public const string CopyParentModel = "CopyParentModel";
 
         private const string WhereIgnoreFieldLazy = "WhereIgnoreFieldLazy";
@@ -113,7 +114,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             }
 
             string newNamespace = dataModelType.Namespace + ".ModelMirror";
-            string newClassName = dataModelType.Name + "Copy";
+            string newClassName = dataModelType.Name + Copy;
             string typeName = newNamespace + "." + newClassName;
 
             Dictionary<string, List<string>> ignoreFieldsDic = null;
@@ -485,6 +486,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return dtModel;
         }
 
+        class ImplAdapter : ImplementAdapter
+        {
+            public ImplAdapter() { }
+        }
+
+        private static ImplAdapter implAdapter = new ImplAdapter();
         private static object _ModelCopyLock = new object();
         private static Type ModelCopy(Type srcType, MethodInfo methodInfo, Type dataModelType, Type newType)
         {
@@ -514,6 +521,15 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 else if (null != srcModel)
                 {
                     modelType = srcModel[dataModelType];
+                }
+                else
+                {
+                    int len = Copy.Length;
+                    modelType = implAdapter.GetImplementTypeOfTemp(dataModelType, null, pt =>
+                    {
+                        if (len >= pt.Name.Length) return false;
+                        return pt.Name.Substring(pt.Name.Length - len).Equals(Copy);
+                    });
                 }
                 return modelType;
             }

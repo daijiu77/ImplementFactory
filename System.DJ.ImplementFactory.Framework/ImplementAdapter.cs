@@ -839,7 +839,7 @@ namespace System.DJ.ImplementFactory
                                 return tp.FullName.Equals(clsPath);
                             });
                             if (null == implType)
-                            {                                
+                            {
                                 implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
                                 implNew = implType;
                             }
@@ -1242,36 +1242,45 @@ namespace System.DJ.ImplementFactory
             return mbool;
         }
 
-        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall, Func<Type, bool> func)
+        public Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall, Func<Type, bool> func)
         {
-            string fn1 = "";
-            Regex rg1 = null;
-            bool isIgnoreCase = false;
-            AutoCallMatch(autoCall, ref fn1, ref rg1, ref isIgnoreCase);
-
-            Type[] types = null;
-            Type impl_type = null;
-            foreach (var item in assembliesOfTemp)
+            lock (_SetAssembliesOfTemp)
             {
-                try
+                string fn1 = "";
+                Regex rg1 = null;
+                bool isIgnoreCase = false;
+                if (null != autoCall)
                 {
-                    types = item.GetTypes();
-                    impl_type = GetImplTypeByTypes(types, interfaceType, autoCall, rg1, fn1, isIgnoreCase);
-                    if ((null != func) && (null != impl_type))
-                    {
-                        if (!func(impl_type)) continue;
-                    }
+                    AutoCallMatch(autoCall, ref fn1, ref rg1, ref isIgnoreCase);
                 }
-                catch { }
 
-                if (null != impl_type) break;
-            }
-            return impl_type;
+                Type[] types = null;
+                Type impl_type = null;
+                foreach (var item in assembliesOfTemp)
+                {
+                    try
+                    {
+                        types = item.GetTypes();
+                        impl_type = GetImplTypeByTypes(types, interfaceType, autoCall, rg1, fn1, isIgnoreCase);
+                        if ((null != func) && (null != impl_type))
+                        {
+                            if (!func(impl_type)) continue;
+                        }
+                    }
+                    catch { }
+
+                    if (null != impl_type) break;
+                }
+                return impl_type;
+            }            
         }
 
-        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
+        public Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
         {
-            return GetImplementTypeOfTemp(interfaceType, autoCall, null);
+            lock (_SetAssembliesOfTemp)
+            {
+                return GetImplementTypeOfTemp(interfaceType, autoCall, null);
+            }            
         }
 
         /// <summary>
