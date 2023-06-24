@@ -522,7 +522,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
                     modelType = srcModel[dataModelType];
                 }
-                else
+
+                if (null == modelType)
                 {
                     int len = Copy.Length;
                     modelType = implAdapter.GetImplementTypeOfTemp(dataModelType, null, pt =>
