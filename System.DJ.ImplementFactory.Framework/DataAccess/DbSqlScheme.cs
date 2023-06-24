@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
@@ -409,7 +410,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             return list;
         }
 
-        private void ListData(Type modelType, object srcObj, Action<object> action)
+        private void ListData(Type modelType, Action<object> action)
         {
             string sql = GetSql();
             _recordCount = 0;
@@ -422,7 +423,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             CommonMethods commonMethods = new CommonMethods();
             MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
             Type srcType = srcMethod.DeclaringType;
-            if (null != srcObj) srcType = srcObj.GetType();
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             dbHelper.query(autoCall, sql, delegate (DataRow dr, Dictionary<string, string> dic)
             {
@@ -447,41 +447,31 @@ namespace System.DJ.ImplementFactory.DataAccess
             ((IDisposable)dbHelper).Dispose();
         }
 
-        IList<T> IDbSqlScheme.ToList<T>(object srcObj)
+        IList<T> IDbSqlScheme.ToList<T>()
         {
             Type modelType = typeof(T);
             IList<T> dataList = new List<T>();
-            ListData(modelType, srcObj, ele =>
+            ListData(modelType, ele =>
             {
                 dataList.Add((T)ele);
             });
             return dataList;
         }
 
-        IList<T> IDbSqlScheme.ToList<T>()
-        {
-            return ((IDbSqlScheme)this).ToList<T>(null);
-        }
-
-        IList<object> IDbSqlScheme.ToList(Type modelType, object srcObj)
+        IList<object> IDbSqlScheme.ToList(Type modelType)
         {
             IList<object> dataList = new List<object>();
-            ListData(modelType, srcObj, ele =>
+            ListData(modelType, ele =>
             {
                 dataList.Add(ele);
             });
             return dataList;
         }
 
-        IList<object> IDbSqlScheme.ToList(Type modelType)
+        T IDbSqlScheme.DefaultFirst<T>()
         {
-            IList<object> list = ((IDbSqlScheme)this).ToList(modelType, null);
-            return list;
-        }
-
-        T IDbSqlScheme.DefaultFirst<T>(object srcObj)
-        {
-            IList<T> list = ((IDbSqlScheme)this).ToList<T>(srcObj);
+            Skip(1, 1);
+            IList<T> list = ((IDbSqlScheme)this).ToList<T>();
             if (null != list)
             {
                 if (0 < list.Count) return list[0];
@@ -489,9 +479,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             return default(T);
         }
 
-        T IDbSqlScheme.DefaultFirst<T>()
+        object IDbSqlScheme.DefaultFirst(Type modelType)
         {
-            return ((IDbSqlScheme)this).DefaultFirst<T>(null);
+            Skip(1, 1);
+            IList<object> list1 = ((IDbSqlScheme)this).ToList(modelType);
+            if (null != list1)
+            {
+                if (0 < list1.Count) return list1[0];
+            }
+            return null;
         }
 
         int IDbSqlScheme.Update()
@@ -568,16 +564,6 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             SetAppendInsert(keyValue);
             return ((IDbSqlScheme)this).Insert();
-        }
-
-        object IDbSqlScheme.DefaultFirst(Type modelType)
-        {
-            IList<object> list1 = ((IDbSqlScheme)this).ToList(modelType, null);
-            if (null != list1)
-            {
-                if (0 < list1.Count) return list1[0];
-            }
-            return null;
         }
 
     }

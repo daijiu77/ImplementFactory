@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Org.BouncyCastle.Crypto;
+using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
@@ -32,6 +33,22 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
         }
 
+        public static string GetLegalText(string txt)
+        {
+            if (string.IsNullOrEmpty(txt)) return txt;
+            string s = txt.Trim();
+            if (string.IsNullOrEmpty(s)) return s;
+            Regex rg = new Regex(@"[^a-z0-9_]", RegexOptions.IgnoreCase);
+            int n = 0;
+            const int max = 100;
+            while (rg.IsMatch(txt) && (max > n))
+            {
+                s = rg.Replace(s, "_");
+                n++;
+            }
+            return s;
+        }
+
         Type IMicroServiceMethod.GetMS(IInstanceCodeCompiler instanceCodeCompiler, AutoCall autoCall, MicroServiceRoute microServiceRoute, Type interfaceType)
         {
             string interfaceName = interfaceType.TypeToString(true);
@@ -54,7 +71,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string returnType = "";
             string actionName = "";
             string code = "{#usingList}";
-            string namespaceStr = "System.DJ.MicroService." + TempImplCode.dirName + "." + TempImplCode.libName;
+            string namespaceStr = TempImplCode.msProjectName + "." + TempImplCode.dirName + "." + TempImplCode.libName;
 
             const string taskRunStartTag = "[_Task.Run-Start_]";
             const string taskRunEndTag = "[_Task.Run-End_]";
@@ -73,7 +90,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             elist.Add(new CKeyValue() { Key = typeof(MethodTypes).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(ISingleInstance).Namespace });
 
-            string clssName = interfaceType.Name + "_" + Guid.NewGuid().ToString().Replace("-", "_");
+            string clssName = interfaceType.Name + "_" + controllerName + "_" + GetLegalText(microServiceRoute.RouteName);
             string clssPath = namespaceStr + "." + clssName;
             MethodInformation mInfo = new MethodInformation();
             mInfo.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);

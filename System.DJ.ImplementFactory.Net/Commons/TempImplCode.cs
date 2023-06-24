@@ -18,6 +18,7 @@ namespace System.DJ.ImplementFactory.Commons
     {
         public const string dirName = "TempImpl";
         public const string libName = "bin";
+        public const string msProjectName = "System.DJ.MicroService";
         static string rootPath = "";
 
         static string[] dllArr = new string[] { "System.dll", "System.Xml.dll" };

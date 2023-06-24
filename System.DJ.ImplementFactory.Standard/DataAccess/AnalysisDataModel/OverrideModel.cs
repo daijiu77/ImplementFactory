@@ -492,7 +492,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             {
                 SrcModelCopy srcModel = null;
                 Type modelType = null;
-                string tpName = srcType.TypeToString(true) + "." + methodInfo.Name;
+                int paraNum = 0;
+                ParameterInfo[] paraInfos = methodInfo.GetParameters();
+                if (null != paraInfos)
+                {
+                    paraNum = paraInfos.Length;
+                }
+                string tpName = srcType.TypeToString(true) + "." + methodInfo.Name + "-" + paraNum;
                 modelCopyDic.TryGetValue(tpName, out srcModel);
                 if (null != newType)
                 {

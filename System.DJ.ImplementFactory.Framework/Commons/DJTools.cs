@@ -618,17 +618,39 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         private static Dictionary<string, DllPathDataCollection> dllPathDic = new Dictionary<string, DllPathDataCollection>();
+        private static object dllPathDicLock = new object();
+        private static List<string> DllPath_Dic(string rootPath, string key, List<string> anList)
+        {
+            lock (dllPathDicLock)
+            {
+                List<string> list = null;
+                DllPathDataCollection ddc = null;
+                dllPathDic.TryGetValue(rootPath, out ddc);
+                if (null != anList)
+                {
+                    if (null == ddc)
+                    {
+                        ddc = new DllPathDataCollection();
+                        dllPathDic.Add(rootPath, ddc);
+                    }
+                    ddc.Add(key, anList);
+                }
+
+                if (null != ddc)
+                {
+                    list = ddc[key];
+                }
+                return list;
+            }
+        }
+
         static List<string> GetDllPathCollection(string rootPath, string[] excludes)
         {
             string key = getKeyByExcludes(excludes);
-            DllPathDataCollection ddc = null;
-            if (dllPathDic.ContainsKey(rootPath))
-            {
-                ddc = dllPathDic[rootPath];
-                if (null != ddc[key]) return ddc[key];
-            }
+            List<string> anList = DllPath_Dic(rootPath, key, null);
+            if (null != anList) return anList;
 
-            List<string> anList = new List<string>();
+            anList = new List<string>();
 
             string[] dlls = Directory.GetFiles(rootPath, "*.dll");
             string[] exes = Directory.GetFiles(rootPath, "*.exe");
@@ -685,13 +707,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
-            if (null == ddc)
-            {
-                ddc = new DllPathDataCollection();
-                dllPathDic.Add(rootPath, ddc);
-            }
-
-            ddc.Add(key, anList);
+            DllPath_Dic(rootPath, key, anList);
             return anList;
         }
 
@@ -701,18 +717,40 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         private static Dictionary<string, AssembliesData> assesdic = new Dictionary<string, AssembliesData>();
+        private static object assesdicLock = new object();
+        private static List<Assembly> AssesDic(string rootPath, string key, List<Assembly> assemblies)
+        {
+            lock (assesdicLock)
+            {
+                List<Assembly> asslist = null;
+                AssembliesData ad = null;
+                assesdic.TryGetValue(rootPath, out ad);
+                if (null != assemblies)
+                {
+                    if (null == ad)
+                    {
+                        ad = new AssembliesData();
+                        assesdic[rootPath] = ad;
+                    }
+                    ad.Add(key, assemblies);
+                }
+
+                if (null != ad)
+                {
+                    asslist = ad[key];
+                }
+                return asslist;
+            }
+        }
+
         public static List<Assembly> GetAssemblyCollection(string rootPath, string[] excludes)
         {
             string key = getKeyByExcludes(excludes);
 
-            AssembliesData ad = null;
-            if (assesdic.ContainsKey(rootPath))
-            {
-                ad = assesdic[rootPath];
-                if (null != ad[key]) return ad[key];
-            }
+            List<Assembly> assemblies = AssesDic(rootPath, key, null);
+            if (null != assemblies) return assemblies;
 
-            List<Assembly> assemblies = new List<Assembly>();
+            assemblies = new List<Assembly>();
             string root_path = GetDllRootPath(rootPath);
             List<string> dllPathCollection = GetDllPathCollection(root_path, excludes);
 
@@ -727,13 +765,7 @@ namespace System.DJ.ImplementFactory.Commons
                 catch { }
             }
 
-            if (null == ad)
-            {
-                ad = new AssembliesData();
-                assesdic[rootPath] = ad;
-            }
-
-            ad.Add(key, assemblies);
+            AssesDic(rootPath, key, assemblies);
             return assemblies;
         }
 
@@ -1088,7 +1120,7 @@ namespace System.DJ.ImplementFactory.Commons
                 string[] arr = classPath.Split('+');
                 Type tp = arr[0].getTypeFromAssemblies();
                 if (null == tp) return classType;
-                classType = tp.GetNestedType(arr[1], BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                classType = tp.GetNestedType(arr[1], BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             }
             else
             {
@@ -1160,10 +1192,10 @@ namespace System.DJ.ImplementFactory.Commons
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
         private static object _initPropertyDic = new object();
         private static void initPropertyDic(object entity)
-        {
-            if (null == entity) return;
+        {            
             lock (_initPropertyDic)
             {
+                if (null == entity) return;
                 _entityType = null == _entityType ? entity.GetType() : _entityType;
                 if ((_entityType != entity.GetType()) || (0 == _entityPropertyDic.Count))
                 {
@@ -1679,8 +1711,6 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
-        private static CommonMethods commonMethods = new CommonMethods();
-        private static object _GetSrcTypeLock = new object();
         /// <summary>
         /// 获取调用方法所属类的类型,但要排除指定的类型
         /// </summary>
@@ -1688,19 +1718,17 @@ namespace System.DJ.ImplementFactory.Commons
         /// <returns></returns>
         public static MethodBase GetSrcTypeMethod(params Type[] excludeTypes)
         {
-            lock (_GetSrcTypeLock)
+            List<Type> list = new List<Type>();
+            list.Add(typeof(DJTools));
+            if (null != excludeTypes)
             {
-                List<Type> list = new List<Type>();
-                list.Add(typeof(DJTools));
-                if (null != excludeTypes)
+                foreach (var item in excludeTypes)
                 {
-                    foreach (var item in excludeTypes)
-                    {
-                        list.Add(item);
-                    }
+                    list.Add(item);
                 }
-                return commonMethods.GetSrcTypeMethod(list.ToArray());
             }
+            CommonMethods commonMethods = new CommonMethods();
+            return commonMethods.GetSrcTypeMethod(list.ToArray());
         }
 
         /// <summary>
@@ -1710,35 +1738,29 @@ namespace System.DJ.ImplementFactory.Commons
         /// <returns></returns>
         public static MethodBase GetSrcTypeMethod<T>()
         {
-            lock (_GetSrcTypeLock)
-            {
-                return commonMethods.GetSrcTypeMethod(typeof(T), typeof(DJTools));
-            }
+            CommonMethods commonMethods = new CommonMethods();
+            return commonMethods.GetSrcTypeMethod(typeof(T), typeof(DJTools));
         }
 
         public static Type GetSrcType(params Type[] excludeTypes)
         {
-            lock (_GetSrcTypeLock)
+            List<Type> list = new List<Type>();
+            list.Add(typeof(DJTools));
+            if (null != excludeTypes)
             {
-                List<Type> list = new List<Type>();
-                list.Add(typeof(DJTools));
-                if (null != excludeTypes)
+                foreach (var item in excludeTypes)
                 {
-                    foreach (var item in excludeTypes)
-                    {
-                        list.Add(item);
-                    }
+                    list.Add(item);
                 }
-                return commonMethods.GetSrcType(list.ToArray());
             }
+            CommonMethods commonMethods = new CommonMethods();
+            return commonMethods.GetSrcType(list.ToArray());
         }
 
         public static Type GetSrcType<T>()
         {
-            lock (_GetSrcTypeLock)
-            {
-                return commonMethods.GetSrcType(typeof(DJTools), typeof(T));
-            }
+            CommonMethods commonMethods = new CommonMethods();
+            return commonMethods.GetSrcType(typeof(DJTools), typeof(T));
         }
 
         [Obsolete("Please use method from class 'ExtCollection'.")]

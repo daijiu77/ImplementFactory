@@ -37,7 +37,7 @@ namespace System.DJ.ImplementFactory
         public const string _rootNodeName = "SystemBaseInfo";
         public const string _rootNodeName1 = "database";
 
-        private static readonly string svrFile = "svr_info.dt";
+        private const string svrFile = "svr_info.dt";
         private static string dbConnectionFreeStrategy = "";
         private static EList<CKeyValue> matchRules = null;
         private static DbInfo dbInfo = new DbInfo();
@@ -99,8 +99,8 @@ namespace System.DJ.ImplementFactory
             matchRules = MatchRules();
             AutoCall.errorLevels1 = errorLevels1;
 
-            getTempBin();
             if (DJTools.IsDebug(UserType)) clearTempImplBin();
+            getTempBin();
 
             TempImplCode tempImpl = new TempImplCode();
             tempImpl.SetRootPath(rootPath);
@@ -782,13 +782,15 @@ namespace System.DJ.ImplementFactory
                 impl = null;
             }
 
+            Attribute msAtt = null;
             isSingleInstance = false;
             if (null != interfaceType)
             {
                 isSingleInstance = typeof(ISingleInstance).IsAssignableFrom(interfaceType);
+                msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
             }
 
-            if ((isSingleCall || isSingleInstance) && (null != instanceObj))
+            if ((isSingleCall || isSingleInstance) && (null != instanceObj) && (null == msAtt))
             {
                 try
                 {
@@ -822,18 +824,25 @@ namespace System.DJ.ImplementFactory
                 isShowCode = false;
                 if (interfaceType.IsInterface)
                 {
-                    Attribute msAtt = interfaceType.GetCustomAttribute(typeof(MicroServiceRoute), true);
                     if (null != msAtt)
                     {
                         if (null != microServiceMethod)
                         {
-                            implType = GetImplementTypeOfTemp(interfaceType, autoCall);
-                            if(null == implType)
+                            MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
+                            string controllerName = interfaceType.Name;
+                            if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
+                            string clsPath = TempImplCode.msProjectName + "." + TempImplCode.dirName + "." + TempImplCode.libName;
+                            string clssName = interfaceType.Name + "_" + controllerName + "_" + MicroServiceMethodImpl.GetLegalText(microServiceRoute.RouteName);
+                            clsPath += "." + clssName;
+                            implType = GetImplementTypeOfTemp(interfaceType, autoCall, tp =>
                             {
-                                MicroServiceRoute microServiceRoute = (MicroServiceRoute)msAtt;
+                                return tp.FullName.Equals(clsPath);
+                            });
+                            if (null == implType)
+                            {                                
                                 implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
                                 implNew = implType;
-                            }                            
+                            }
                         }
                         else
                         {
@@ -950,7 +959,7 @@ namespace System.DJ.ImplementFactory
                     action(impl, null);
                 }
 
-                if ((null != impl) && (false == string.IsNullOrEmpty(resetKeyName)))
+                if ((null != impl) && (false == string.IsNullOrEmpty(resetKeyName)) && (null == msAtt))
                 {
                     InterfaceImplementCollection(resetKeyName, implType, impl);
                 }
@@ -1233,7 +1242,7 @@ namespace System.DJ.ImplementFactory
             return mbool;
         }
 
-        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
+        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall, Func<Type, bool> func)
         {
             string fn1 = "";
             Regex rg1 = null;
@@ -1248,12 +1257,21 @@ namespace System.DJ.ImplementFactory
                 {
                     types = item.GetTypes();
                     impl_type = GetImplTypeByTypes(types, interfaceType, autoCall, rg1, fn1, isIgnoreCase);
+                    if ((null != func) && (null != impl_type))
+                    {
+                        if (!func(impl_type)) continue;
+                    }
                 }
                 catch { }
 
                 if (null != impl_type) break;
             }
             return impl_type;
+        }
+
+        Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
+        {
+            return GetImplementTypeOfTemp(interfaceType, autoCall, null);
         }
 
         /// <summary>
@@ -1673,11 +1691,6 @@ namespace System.DJ.ImplementFactory
                 sysConfig1.Recomplie = true;
             }
 
-            if (sysConfig1.Recomplie)
-            {
-                clearTempImplBin();
-            }
-
             return list;
         }
 
@@ -1812,11 +1825,6 @@ namespace System.DJ.ImplementFactory
             if (DJTools.IsDebug(UserType))
             {
                 sysConfig1.Recomplie = true;
-            }
-
-            if (sysConfig1.Recomplie)
-            {
-                clearTempImplBin();
             }
 
             return list;
