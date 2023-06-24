@@ -528,9 +528,19 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     int len = Copy.Length;
                     modelType = implAdapter.GetImplementTypeOfTemp(dataModelType, null, pt =>
                     {
-                        if (len >= pt.Name.Length) return false;
+                        if (pt.Name.Length <= len) return false;
                         return pt.Name.Substring(pt.Name.Length - len).Equals(Copy);
                     });
+
+                    if (null != modelType)
+                    {
+                        if (null == srcModel)
+                        {
+                            srcModel = new SrcModelCopy();
+                            modelCopyDic.Add(tpName, srcModel);
+                        }
+                        srcModel[dataModelType] = modelType;
+                    }
                 }
                 return modelType;
             }
