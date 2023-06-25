@@ -59,7 +59,7 @@ namespace System.DJ.ImplementFactory.Commons
                 /*当出现 Task 异步调用 lambda 时,例 Task.Run(() => { })
                  * spName: UserService.DataSources.Implements.PM_UserDataSourceImpl+<>c__DisplayClass10_0
                  * mName: <UserService.DataSources.IPM_UserDataSource.QueryByUserAccount>b__1 或 <get_User>b__0
-                 *        或 泛型类 <UserService.DataSources.IPM_UserDataSource<System.String>.QueryByUserAccount>b__1
+                 *        或 泛型类方法 <UserService.DataSources.IPM_UserDataSource<System.String>.QueryByUserAccount>b__1
                  **/
                 if (rg1.IsMatch(spName) && rg2.IsMatch(mName))
                 {
