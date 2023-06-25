@@ -206,7 +206,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             int paraSize = paras.Length;
 
             string methodName = interfaceMethod.Name;
-            string methodName1 = interfaceMethod.DeclaringType.FullName + "." + methodName;
+            string methodName1 = interfaceMethod.DeclaringType.TypeToString(true) + "." + methodName;
             bool mbool = false;
             int n = 0;
             string mName = "";

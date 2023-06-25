@@ -64,6 +64,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     Type[] paramaterTypes = null;
                     PropertyInfo pi = pt.GetType().GetPropertyInfo("DeclaredFields");
+                    Regex rg3 = null;
                     if (null != pi)
                     {
                         var DeclaredFields = pi.GetValue(pt, null);
@@ -75,7 +76,7 @@ namespace System.DJ.ImplementFactory.Commons
                                 string fName = "";
                                 FieldInfo field = null;
                                 List<Type> typeList = new List<Type>();
-                                Regex rg3 = new Regex(@"\<\>[a-z0-9_]+", RegexOptions.IgnoreCase);
+                                rg3 = new Regex(@"\<\>[a-z0-9_]+", RegexOptions.IgnoreCase);
                                 foreach (var item in collection)
                                 {
                                     if (null == (item as FieldInfo)) continue;
@@ -89,15 +90,38 @@ namespace System.DJ.ImplementFactory.Commons
                             }
                         }
                     }
+                    rg3 = new Regex(@"^(?<ClsName>[a-z0-9_\.]+)\<(?<GType>[a-z0-9_\.\,\s]+)\>$", RegexOptions.IgnoreCase);
                     ClsName1 = rg1.Match(spName).Groups["ClsName"].Value;
+                    Type[] genericTypes1 = null;
+                    string GType = "";
+                    Match match = null;
+                    if (rg3.IsMatch(ClsName1))
+                    {
+                        match = rg3.Match(ClsName1);
+                        ClsName1 = match.Groups["ClsName"].Value + "`1";
+                        GType = match.Groups["GType"].Value.Trim();
+                        genericTypes1 = GenericTypes(GType);
+                    }
 
                     Match m2 = rg2.Match(mName);
                     ClsName2 = m2.Groups["ClsName"].Value;
                     MethodName2 = m2.Groups["MethodName"].Value;
                     if (string.IsNullOrEmpty(ClsName2)) ClsName2 = ClsName1;
+                    Type[] genericTypes2 = null;
+                    if (rg3.IsMatch(ClsName2))
+                    {
+                        match = rg3.Match(ClsName2);
+                        ClsName2 = match.Groups["ClsName"].Value + "`1";
+                        GType = match.Groups["GType"].Value.Trim();
+                        genericTypes2 = GenericTypes(GType);
+                    }
                     pt = DJTools.GetClassTypeByPath(ClsName2);
                     if (null != pt)
                     {
+                        if (null != genericTypes2)
+                        {
+                            pt = pt.MakeGenericType(genericTypes2);
+                        }
                         if (null == paramaterTypes) paramaterTypes = new Type[] { };
                         MethodInfo interfaceMethod = pt.GetMethod(MethodName2,
                             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, paramaterTypes, null);
@@ -114,6 +138,11 @@ namespace System.DJ.ImplementFactory.Commons
                             {
                                 num++;
                                 continue;
+                            }
+
+                            if (null != genericTypes1)
+                            {
+                                implType = implType.MakeGenericType(genericTypes1);
                             }
 
                             EMethodInfo eMethodInfo = new EMethodInfo(interfaceMethod);
@@ -133,6 +162,11 @@ namespace System.DJ.ImplementFactory.Commons
                             num++;
                             continue;
                         }
+                    }
+                    else
+                    {
+                        num++;
+                        continue;
                     }
                 }
                 else if (spName.Length >= spLen)
@@ -163,6 +197,21 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             return methodBase;
+        }
+
+        private Type[] GenericTypes(string types)
+        {
+            Type[] genericTypes = null;
+            if (string.IsNullOrEmpty(types)) return genericTypes;
+            string[] names = types.Split(',');
+            genericTypes = new Type[names.Length];
+            int n = 0;
+            foreach (var item in names)
+            {
+                genericTypes[n] = DJTools.GetTypeByFullName(item.Trim());
+                n++;
+            }
+            return genericTypes;
         }
 
         public MethodBase GetSrcTypeMethod<T>()

@@ -1050,6 +1050,30 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 //泛型
                 s = type.Name;
+                if (isFullName)
+                {
+                    s = type.FullName;
+                }
+                Regex rg1 = new Regex(@"^(?<TypeName>[a-z0-9_\.]+)\`1", RegexOptions.IgnoreCase);
+                if (rg1.IsMatch(s))
+                {
+                    s = rg1.Match(s).Groups["TypeName"].Value;
+                }
+
+                Type[] genericTypes = type.GetGenericArguments();
+                if (null != genericTypes)
+                {
+                    string gt = "";
+                    foreach (Type gtItem in genericTypes)
+                    {
+                        gt += ", " + gtItem.TypeToString(isFullName);
+                    }
+                    if (!string.IsNullOrEmpty(gt))
+                    {
+                        gt = gt.Substring(2);
+                        s += "<" + gt + ">";
+                    }
+                }
             }
             else if (IsBaseType(type))
             {
@@ -1192,7 +1216,7 @@ namespace System.DJ.ImplementFactory.Commons
         private static Dictionary<string, PropertyInfo> _entityPropertyDic = new Dictionary<string, PropertyInfo>();
         private static object _initPropertyDic = new object();
         private static void initPropertyDic(object entity)
-        {            
+        {
             lock (_initPropertyDic)
             {
                 if (null == entity) return;
