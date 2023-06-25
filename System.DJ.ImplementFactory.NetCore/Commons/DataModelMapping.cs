@@ -149,7 +149,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns></returns>
-        private List<T> ToListData<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        private List<T> ToListData<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             return (List<T>)ToListFrom<T, TT>(srcList, isTrySetVal, funcAssign, funcVal);
         }
@@ -165,7 +165,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public IList<T> ToListFrom<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public IList<T> ToListFrom<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
             IList<T> list = new List<T>();
@@ -174,7 +174,12 @@ namespace System.DJ.ImplementFactory.Commons
             T t = default(T);
             foreach (TT item in srcList)
             {
-                t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, funcVal);
+                t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, (targetEle, srcEle, fieldName, fieldValue) =>
+                {
+                    TT tt = default(TT);
+                    if (typeof(TT) == srcEle.GetType()) tt = (TT)item;
+                    return funcVal(targetEle, tt, fieldName, fieldValue);
+                });
                 list.Add(t);
             }
             return list;
