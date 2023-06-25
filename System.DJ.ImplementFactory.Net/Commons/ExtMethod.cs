@@ -590,7 +590,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToListFrom<T, TT>(srcList, false, funcAssign, funcVal);            
@@ -606,7 +606,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToListFrom<T, TT>(srcList, isTrySetVal, funcAssign, funcVal);
@@ -620,7 +620,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<T, object, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<T, TT, string, object, object> funcVal)
         {
             return srcList.ToListFrom<T, TT>(null, funcVal);
         }
@@ -634,7 +634,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
-        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<T, object, string, object, object> funcVal)
+        public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<T, TT, string, object, object> funcVal)
         {
             return srcList.ToListFrom<T, TT>(isTrySetVal, null, funcVal);
         }
@@ -699,7 +699,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object of type task</returns>
-        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<T, object, string, object, object> funcVal)
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, Func<T, TT, string, object, object> funcVal)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(null, funcVal);
             return Task.FromResult(list);
@@ -714,7 +714,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object of type task</returns>
-        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, bool isTrySetVal, Func<T, object, string, object, object> funcVal)
+        public static Task<IList<T>> ToTaskIListFrom<T, TT>(this IList<TT> srcList, bool isTrySetVal, Func<T, TT, string, object, object> funcVal)
         {
             IList<T> list = srcList.ToListFrom<T, TT>(isTrySetVal, null, funcVal);
             return Task.FromResult(list);
@@ -757,7 +757,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcList">Data source collection object</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned List element collection object of type task</returns>
-        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<T, object, string, object, object> funcVal)
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, Func<T, TT, string, object, object> funcVal)
         {
             List<T> list = (List<T>)srcList.ToListFrom<T, TT>(null, funcVal);
             return Task.FromResult(list);
@@ -772,7 +772,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned List element collection object of type task</returns>
-        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, bool isTrySetVal, Func<T, object, string, object, object> funcVal)
+        public static Task<List<T>> ToTaskListFrom<T, TT>(this IList<TT> srcList, bool isTrySetVal, Func<T, TT, string, object, object> funcVal)
         {
             List<T> list = (List<T>)srcList.ToListFrom<T, TT>(isTrySetVal, null, funcVal);
             return Task.FromResult(list);

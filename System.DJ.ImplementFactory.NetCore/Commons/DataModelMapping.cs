@@ -176,8 +176,11 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, (targetEle, srcEle, fieldName, fieldValue) =>
                 {
+                    if (null == funcVal) return fieldValue;
                     TT tt = default(TT);
-                    if (typeof(TT) == srcEle.GetType()) tt = (TT)item;
+                    Type ttType = typeof(TT);
+                    Type srcType = srcEle.GetType();
+                    if ((ttType == srcType) || ttType.IsAssignableFrom(srcType)) tt = (TT)srcEle;
                     return funcVal(targetEle, tt, fieldName, fieldValue);
                 });
                 list.Add(t);

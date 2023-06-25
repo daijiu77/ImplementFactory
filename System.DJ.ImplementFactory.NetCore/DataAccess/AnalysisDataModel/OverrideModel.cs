@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.WellKnownTypes;
+using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
@@ -153,6 +154,9 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string fnLower = "";
             string type_name = "";
             string field_name = "";
+            const string isFristTag = "_IsFrist_{0}";
+            string _is_frist_prop = "";
+            string _is_frist_var = "";
             int dotIndex = 0;
             bool mbool = false;
 
@@ -188,6 +192,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = "System.DJ.ImplementFactory.Commons.Attrs" });
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(OrderbyItem).Namespace });
+            uskv.Add(new CKeyValue() { Key = typeof(OverrideModel).Namespace });
 
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
@@ -225,8 +230,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         constraint = (Constraint)att;
                     }
 
+                    _is_frist_prop = "";
+                    _is_frist_var = "";
                     if (null != constraint)
                     {
+                        _is_frist_var = isFristTag.ExtFormat(fn);
+                        _is_frist_prop = "private bool {0} = true;".ExtFormat(_is_frist_var);
                         propType = PropType.none;
                         typeName = "";
                         if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && (typeof(string) != type))
@@ -267,21 +276,42 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             uskv.Add(new CKeyValue() { Key = typeof(SqlFromUnit).Namespace });
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionItem).Namespace });
                             uskv.Add(new CKeyValue() { Key = typeof(ConditionRelation).Namespace });
+                            DJTools.append(ref GetBody, level, "if (false == {0})", _is_frist_var);
+                            DJTools.append(ref GetBody, level, "{");
+                            DJTools.append(ref GetBody, level + 1, "if (null != base.{0})", fn);
+                            DJTools.append(ref GetBody, level + 1, "{");
+                            if (PropType.isArray == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 2, "if (0 < base.{0}.Length) return base.{0};", fn);
+                            }
+                            else if (PropType.isList == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 2, "if (0 < base.{0}.Count) return base.{0};", fn);
+                            }
+                            else
+                            {
+                                DJTools.append(ref GetBody, level + 2, "return base.{0};", fn);
+                            }
+                            DJTools.append(ref GetBody, level + 1, "}");
+                            DJTools.append(ref GetBody, level, "}");
+
+                            DJTools.append(ref GetBody, level, "");
                             DJTools.append(ref GetBody, level, "if (null != base.{0})", fn);
                             DJTools.append(ref GetBody, level, "{");
                             if (PropType.isArray == propType)
                             {
-                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Length) return base.{0};", fn);
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Length) {1} = false;", fn, _is_frist_var);
                             }
                             else if (PropType.isList == propType)
                             {
-                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Count) return base.{0};", fn);
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Count) {1} = false;", fn, _is_frist_var);
                             }
                             else
                             {
-                                DJTools.append(ref GetBody, level + 1, "return base.{0};", fn);
+                                DJTools.append(ref GetBody, level + 1, "{1} = false;", _is_frist_var);
                             }
                             DJTools.append(ref GetBody, level, "}");
+                            DJTools.append(ref GetBody, level, "");
                             DJTools.append(ref GetBody, level, "DbVisitor db = new DbVisitor();");
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
@@ -393,11 +423,27 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             if (PropType.isArray == propType)
                             {
                                 DJTools.append(ref GetBody, level, "IList<{0}> results = scheme.ToList<{0}>();", typeName);
-                                DJTools.append(ref GetBody, level, "base.{0} = ((List<{1}>)results).ToArray();", fn, typeName);
+                                DJTools.append(ref GetBody, level, "if (null == base.{0})", fn);
+                                DJTools.append(ref GetBody, level, "{");
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ((List<{1}>)results).ToArray();", fn, typeName);
+                                DJTools.append(ref GetBody, level, "}");
+                                DJTools.append(ref GetBody, level, "else");
+                                DJTools.append(ref GetBody, level, "{");
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = OverrideModel.MergeToArrayFromList<{1}>(base.{0}, results);", fn, typeName);
+                                DJTools.append(ref GetBody, level, "}");
                             }
                             else if (PropType.isList == propType)
                             {
-                                DJTools.append(ref GetBody, level, "base.{0} = ({1})scheme.ToList<{2}>();", fn, type.TypeToString(true), typeName);
+                                string srcTp = type.TypeToString(true);
+                                DJTools.append(ref GetBody, level, "if (null == base.{0})", fn);
+                                DJTools.append(ref GetBody, level, "{");
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})scheme.ToList<{2}>();", fn, srcTp, typeName);
+                                DJTools.append(ref GetBody, level, "}");
+                                DJTools.append(ref GetBody, level, "else");
+                                DJTools.append(ref GetBody, level, "{");
+                                DJTools.append(ref GetBody, level + 1, "IList<{0}> results = scheme.ToList<{0}>();", typeName);
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})OverrideModel.MergeToListFromIList<{2}>(base.{0}, results);", fn, srcTp, typeName);
+                                DJTools.append(ref GetBody, level, "}");
                             }
                             else
                             {
@@ -410,6 +456,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     tag = pi.GetGetMethod().IsVirtual ? "override" : "new";
                     s = "";
                     DJTools.append(ref s, level, "");
+                    if (!string.IsNullOrEmpty(_is_frist_prop))
+                    {
+                        DJTools.append(ref s, level, "{0}", _is_frist_prop);
+                    }
                     DJTools.append(ref s, level, "public {0} {1} {2}", tag, type.TypeToString(true), fn);
                     DJTools.append(ref s, level, "{");
                     DJTools.append(ref s, 0, pro);
@@ -421,7 +471,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     DJTools.append(ref codeBody, 0, s);
                 }
             });
-
+            
             if (!string.IsNullOrEmpty(codeBody))
             {
                 level = 0;
@@ -484,6 +534,48 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
             }
             return dtModel;
+        }
+
+        public static T[] MergeToArrayFromList<T>(ICollection arr, IList<T> list)
+        {
+            List<T> results = new List<T>();
+            if (null != arr)
+            {
+                foreach (var item in arr)
+                {
+                    results.Add((T)item);
+                }
+            }
+
+            if (null != list)
+            {
+                foreach (T item in list)
+                {
+                    results.Add(item);
+                }
+            }
+            return results.ToArray();
+        }
+
+        public static IList<T> MergeToListFromIList<T>(ICollection arr, IList<T> list)
+        {
+            IList<T> results = new List<T>();
+            if (null != arr)
+            {
+                foreach (var item in arr)
+                {
+                    results.Add((T)item);
+                }
+            }
+
+            if (null != list)
+            {
+                foreach (T item in list)
+                {
+                    results.Add(item);
+                }
+            }
+            return results;
         }
 
         class ImplAdapter : ImplementAdapter
