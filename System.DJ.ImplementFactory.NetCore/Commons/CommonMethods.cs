@@ -60,6 +60,7 @@ namespace System.DJ.ImplementFactory.Commons
                 /*当出现 Task 异步调用 lambda 时,例 Task.Run(() => { })
                  * spName: UserService.DataSources.Implements.PM_UserDataSourceImpl+<>c__DisplayClass10_0
                  * mName: <UserService.DataSources.IPM_UserDataSource.QueryByUserAccount>b__1 或 <get_User>b__0
+                 *        或 泛型类方法 <UserService.DataSources.IPM_UserDataSource<System.String>.QueryByUserAccount>b__1
                  **/
                 if (rg1.IsMatch(spName) && rg2.IsMatch(mName))
                 {
@@ -71,6 +72,7 @@ namespace System.DJ.ImplementFactory.Commons
                     Match match = null;
                     if (rg3.IsMatch(ClsName1))
                     {
+                        //泛型类 UserService.DataSources.IPM_UserDataSource<System.String>
                         match = rg3.Match(ClsName1);
                         ClsName1 = match.Groups["ClsName"].Value + "`1";
                         GType = match.Groups["GType"].Value.Trim();
@@ -84,6 +86,7 @@ namespace System.DJ.ImplementFactory.Commons
                     Type[] genericTypes2 = null;
                     if (rg3.IsMatch(ClsName2))
                     {
+                        //泛型类 UserService.DataSources.IPM_UserDataSource<System.String>
                         match = rg3.Match(ClsName2);
                         ClsName2 = match.Groups["ClsName"].Value + "`1";
                         GType = match.Groups["GType"].Value.Trim();
@@ -94,6 +97,7 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         if (null != genericTypes2)
                         {
+                            //创建泛型类型
                             pt = pt.MakeGenericType(genericTypes2);
                         }
                         if (null == paramaterTypes) paramaterTypes = new Type[] { };
@@ -118,6 +122,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                             if (null != genericTypes1)
                             {
+                                //创建泛型类型
                                 implType = implType.MakeGenericType(genericTypes1);
                             }
 
