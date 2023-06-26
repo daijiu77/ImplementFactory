@@ -296,22 +296,6 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             DJTools.append(ref GetBody, level, "}");
 
                             DJTools.append(ref GetBody, level, "");
-                            DJTools.append(ref GetBody, level, "if (null != base.{0})", fn);
-                            DJTools.append(ref GetBody, level, "{");
-                            if (PropType.isArray == propType)
-                            {
-                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Length) {1} = false;", fn, _is_frist_var);
-                            }
-                            else if (PropType.isList == propType)
-                            {
-                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Count) {1} = false;", fn, _is_frist_var);
-                            }
-                            else
-                            {
-                                DJTools.append(ref GetBody, level + 1, "{1} = false;", _is_frist_var);
-                            }
-                            DJTools.append(ref GetBody, level, "}");
-                            DJTools.append(ref GetBody, level, "");
                             DJTools.append(ref GetBody, level, "DbVisitor db = new DbVisitor();");
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
@@ -449,6 +433,24 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             {
                                 DJTools.append(ref GetBody, level, "base.{0} = scheme.DefaultFirst<{1}>();", fn, typeName);
                             }
+
+                            DJTools.append(ref GetBody, level, "");
+                            DJTools.append(ref GetBody, level, "if (null != base.{0})", fn);
+                            DJTools.append(ref GetBody, level, "{");
+                            if (PropType.isArray == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Length) {1} = false;", fn, _is_frist_var);
+                            }
+                            else if (PropType.isList == propType)
+                            {
+                                DJTools.append(ref GetBody, level + 1, "if (0 < base.{0}.Count) {1} = false;", fn, _is_frist_var);
+                            }
+                            else
+                            {
+                                DJTools.append(ref GetBody, level + 1, "{0} = false;", _is_frist_var);
+                            }
+                            DJTools.append(ref GetBody, level, "}");
+
                             level -= 2;
                         }
                     }

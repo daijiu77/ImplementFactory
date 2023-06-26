@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf.WellKnownTypes;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -62,35 +63,8 @@ namespace System.DJ.ImplementFactory.Commons
                  **/
                 if (rg1.IsMatch(spName) && rg2.IsMatch(mName))
                 {
-                    Type[] paramaterTypes = null;
-                    PropertyInfo pi = pt.GetType().GetPropertyInfo("DeclaredFields");
-                    Regex rg3 = null;
-                    if (null != pi)
-                    {
-                        var DeclaredFields = pi.GetValue(pt, null);
-                        if (null != DeclaredFields)
-                        {
-                            ICollection collection = DeclaredFields as ICollection;
-                            if (null != collection)
-                            {
-                                string fName = "";
-                                FieldInfo field = null;
-                                List<Type> typeList = new List<Type>();
-                                rg3 = new Regex(@"\<\>[a-z0-9_]+", RegexOptions.IgnoreCase);
-                                foreach (var item in collection)
-                                {
-                                    if (null == (item as FieldInfo)) continue;
-                                    field = item as FieldInfo;
-                                    fName = field.Name;
-                                    if (rg3.IsMatch(fName)) continue;
-
-                                    typeList.Add(field.FieldType);
-                                }
-                                paramaterTypes = typeList.ToArray();
-                            }
-                        }
-                    }
-                    rg3 = new Regex(@"^(?<ClsName>[a-z0-9_\.]+)\<(?<GType>[a-z0-9_\.\,\s]+)\>$", RegexOptions.IgnoreCase);
+                    Type[] paramaterTypes = GetParameterTypes(pt);
+                    Regex rg3 = new Regex(@"^(?<ClsName>[a-z0-9_\.]+)\<(?<GType>[a-z0-9_\.\,\s]+)\>$", RegexOptions.IgnoreCase);
                     ClsName1 = rg1.Match(spName).Groups["ClsName"].Value;
                     Type[] genericTypes1 = null;
                     string GType = "";
@@ -125,6 +99,8 @@ namespace System.DJ.ImplementFactory.Commons
                         if (null == paramaterTypes) paramaterTypes = new Type[] { };
                         MethodInfo interfaceMethod = pt.GetMethod(MethodName2,
                             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, paramaterTypes, null);
+
+                        if (null == interfaceMethod) interfaceMethod = GetMethodBy(pt, MethodName2, paramaterTypes);
                         if (null == interfaceMethod)
                         {
                             num++;
@@ -197,6 +173,120 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             return methodBase;
+        }
+
+        private MethodInfo GetMethodBy(Type objType, string methodName, Type[] parameterTypes)
+        {
+            MethodInfo method = null;
+            if ((null == objType) || string.IsNullOrEmpty(methodName)) return method;
+            MethodInfo[] methodInfos = objType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            List<MethodData> list = new List<MethodData>();
+            string name = "";
+            foreach (MethodInfo item in methodInfos)
+            {
+                name = item.Name;
+                if (name.Equals(methodName))
+                {
+                    list.Add(new MethodData()
+                    {
+                        method = item
+                    });
+                }
+            }
+
+            if (0 == list.Count) return method;
+            if (1 == list.Count) return list[0].method;
+            if (null == parameterTypes) return method;
+
+            MethodData mData = new MethodData();
+            int size = parameterTypes.Length;
+            foreach (Type ts in parameterTypes)
+            {
+                foreach (MethodData item in list)
+                {
+                    if (item.parameterTypeDic.ContainsKey(ts))
+                    {
+                        item.matchCount++;
+                    }
+
+                    if (item.parameterCount <= size)
+                    {
+                        item.matchCount++;
+                    }
+
+                    if ((null == method) || (mData.matchCount < item.matchCount))
+                    {
+                        method = item.method;
+                        mData = item;
+                    }
+                }
+            }
+
+            return method;
+        }
+
+        class MethodData
+        {
+            public int matchCount { get; set; }
+            private Dictionary<Type, Type> paraTypeDic = new Dictionary<Type, Type>();
+            public Dictionary<Type, Type> parameterTypeDic { get { return paraTypeDic; } }
+
+            private int _parameterCount = 0;
+            public int parameterCount { get { return _parameterCount; } }
+
+            private MethodInfo _method = null;
+            public MethodInfo method
+            {
+                get
+                {
+                    return _method;
+                }
+                set
+                {
+                    _method = value;
+                    if (null == _method) return;
+                    ParameterInfo[] paras = _method.GetParameters();
+                    _parameterCount = paras.Length;
+                    foreach (ParameterInfo item in paras)
+                    {
+                        if (parameterTypeDic.ContainsKey(item.ParameterType)) continue;
+                        parameterTypeDic.Add(item.ParameterType, item.ParameterType);
+                    }
+                }
+            }
+        }
+
+        private Type[] GetParameterTypes(object obj)
+        {
+            Type[] paramaterTypes = null;
+            PropertyInfo pi = obj.GetType().GetPropertyInfo("DeclaredFields");
+            Regex rg3 = null;
+            if (null != pi)
+            {
+                var DeclaredFields = pi.GetValue(obj, null);
+                if (null != DeclaredFields)
+                {
+                    ICollection collection = DeclaredFields as ICollection;
+                    if (null != collection)
+                    {
+                        string fName = "";
+                        FieldInfo field = null;
+                        List<Type> typeList = new List<Type>();
+                        rg3 = new Regex(@"\<\>[a-z0-9_]+", RegexOptions.IgnoreCase);
+                        foreach (var item in collection)
+                        {
+                            if (null == (item as FieldInfo)) continue;
+                            field = item as FieldInfo;
+                            fName = field.Name;
+                            if (rg3.IsMatch(fName)) continue;
+
+                            typeList.Add(field.FieldType);
+                        }
+                        paramaterTypes = typeList.ToArray();
+                    }
+                }
+            }
+            return paramaterTypes;
         }
 
         private Type[] GenericTypes(string types)

@@ -1050,30 +1050,34 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 //泛型
                 s = type.Name;
-                if (isFullName)
+                if (isFullName && (null != type.FullName))
                 {
                     s = type.FullName;
                 }
+
                 Regex rg1 = new Regex(@"^(?<TypeName>[a-z0-9_\.]+)\`1", RegexOptions.IgnoreCase);
                 if (rg1.IsMatch(s))
                 {
                     s = rg1.Match(s).Groups["TypeName"].Value;
                 }
 
-                Type[] genericTypes = type.GetGenericArguments();
-                if (null != genericTypes)
+                if (isFullName)
                 {
-                    string gt = "";
-                    foreach (Type gtItem in genericTypes)
+                    Type[] genericTypes = type.GetGenericArguments();
+                    if (null != genericTypes)
                     {
-                        gt += ", " + gtItem.TypeToString(isFullName);
+                        string gt = "";
+                        foreach (Type gtItem in genericTypes)
+                        {
+                            gt += ", " + gtItem.TypeToString(isFullName);
+                        }
+                        if (!string.IsNullOrEmpty(gt))
+                        {
+                            gt = gt.Substring(2);
+                            s += "<" + gt + ">";
+                        }
                     }
-                    if (!string.IsNullOrEmpty(gt))
-                    {
-                        gt = gt.Substring(2);
-                        s += "<" + gt + ">";
-                    }
-                }
+                }                
             }
             else if (IsBaseType(type))
             {
