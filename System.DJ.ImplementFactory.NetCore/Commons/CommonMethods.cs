@@ -64,7 +64,8 @@ namespace System.DJ.ImplementFactory.Commons
                  **/
                 if (rg1.IsMatch(spName) && rg2.IsMatch(mName))
                 {
-                    Type[] paramaterTypes = GetParameterTypes(pt);
+                    Dictionary<string, Type> paraDic = new Dictionary<string, Type>();
+                    Type[] paramaterTypes = GetParameterTypes(pt, paraDic);
                     Regex rg3 = new Regex(@"^(?<ClsName>[a-z0-9_\.]+)\<(?<GType>[a-z0-9_\.\,\s]+)\>$", RegexOptions.IgnoreCase);
                     ClsName1 = rg1.Match(spName).Groups["ClsName"].Value;
                     Type[] genericTypes1 = null;
@@ -104,7 +105,7 @@ namespace System.DJ.ImplementFactory.Commons
                         MethodInfo interfaceMethod = pt.GetMethod(MethodName2,
                             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, paramaterTypes, null);
 
-                        if (null == interfaceMethod) interfaceMethod = GetMethodBy(pt, MethodName2, paramaterTypes);
+                        if (null == interfaceMethod) interfaceMethod = GetMethodBy(pt, MethodName2, paraDic);
                         if (null == interfaceMethod)
                         {
                             num++;
@@ -180,7 +181,7 @@ namespace System.DJ.ImplementFactory.Commons
             return methodBase;
         }
 
-        private MethodInfo GetMethodBy(Type objType, string methodName, Type[] parameterTypes)
+        private MethodInfo GetMethodBy(Type objType, string methodName, Dictionary<string, Type> parameterTypeDic)
         {
             MethodInfo method = null;
             if ((null == objType) || string.IsNullOrEmpty(methodName)) return method;
@@ -201,24 +202,22 @@ namespace System.DJ.ImplementFactory.Commons
 
             if (0 == list.Count) return method;
             if (1 == list.Count) return list[0].method;
-            if (null == parameterTypes) return method;
+            if (null == parameterTypeDic) return method;
 
+            Type paraType = null;
             MethodData mData = new MethodData();
-            int size = parameterTypes.Length;
-            foreach (Type ts in parameterTypes)
+            foreach (var ts in parameterTypeDic)
             {
                 foreach (MethodData item in list)
                 {
-                    if (item.parameterTypeDic.ContainsKey(ts))
+                    paraType = null;
+                    item.parameterTypeDic.TryGetValue(ts.Key, out paraType);
+                    if (null != paraType)
                     {
-                        item.matchCount++;
+                        if (paraType.Equals(ts.Value)) item.matchCount++;
                     }
 
-                    if (item.parameterCount <= size)
-                    {
-                        item.matchCount++;
-                    }
-
+                    if (0 >= mData.matchCount) continue;
                     if ((null == method) || (mData.matchCount < item.matchCount))
                     {
                         method = item.method;
@@ -233,8 +232,8 @@ namespace System.DJ.ImplementFactory.Commons
         class MethodData
         {
             public int matchCount { get; set; }
-            private Dictionary<Type, Type> paraTypeDic = new Dictionary<Type, Type>();
-            public Dictionary<Type, Type> parameterTypeDic { get { return paraTypeDic; } }
+            private Dictionary<string, Type> paraTypeDic = new Dictionary<string, Type>();
+            public Dictionary<string, Type> parameterTypeDic { get { return paraTypeDic; } }
 
             private int _parameterCount = 0;
             public int parameterCount { get { return _parameterCount; } }
@@ -254,15 +253,16 @@ namespace System.DJ.ImplementFactory.Commons
                     _parameterCount = paras.Length;
                     foreach (ParameterInfo item in paras)
                     {
-                        if (parameterTypeDic.ContainsKey(item.ParameterType)) continue;
-                        parameterTypeDic.Add(item.ParameterType, item.ParameterType);
+                        if (parameterTypeDic.ContainsKey(item.Name)) continue;
+                        parameterTypeDic.Add(item.Name, item.ParameterType);
                     }
                 }
             }
         }
 
-        private Type[] GetParameterTypes(object obj)
+        private Type[] GetParameterTypes(object obj, Dictionary<string, Type> paraDic)
         {
+            paraDic.Clear();
             Type[] paramaterTypes = null;
             PropertyInfo pi = obj.GetType().GetPropertyInfo("DeclaredFields");
             Regex rg3 = null;
@@ -284,7 +284,10 @@ namespace System.DJ.ImplementFactory.Commons
                             field = item as FieldInfo;
                             fName = field.Name;
                             if (rg3.IsMatch(fName)) continue;
-
+                            if (!paraDic.ContainsKey(fName))
+                            {
+                                paraDic.Add(fName, field.FieldType);
+                            }
                             typeList.Add(field.FieldType);
                         }
                         paramaterTypes = typeList.ToArray();

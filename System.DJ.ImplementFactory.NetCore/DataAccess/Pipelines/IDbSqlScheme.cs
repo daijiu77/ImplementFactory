@@ -21,6 +21,7 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         int Insert();
         int AppendInsert(Dictionary<string, object> keyValue);
         int Delete();
+        int Delete(bool deleteRelation);
         int RecordCount { get; }
         int PageCount { get; }
         DbSqlBody dbSqlBody { get; }

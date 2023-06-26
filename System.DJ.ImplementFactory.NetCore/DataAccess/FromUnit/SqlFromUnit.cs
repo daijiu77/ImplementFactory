@@ -39,6 +39,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
         public SqlFromUnit From<T>() where T : AbsDataModel
         {
             modelType = typeof(T);
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             return this;
         }
 
@@ -49,6 +50,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
                 throw new Exception(typeErr);
             }
             this.modelType = modelType;
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             return this;
         }
 
@@ -76,6 +78,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
         {
             this.alias = alias;
             modelType = typeof(T);
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             return this;
         }
 
@@ -87,6 +90,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             }
             this.modelType = modelType;
             this.alias = alias;
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             return this;
         }
 
@@ -119,6 +123,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             modelType = typeof(T);
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             InitConditionItem(modelType, alias, conditions);
             return this;
         }
@@ -132,6 +137,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             this.modelType = modelType;
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             InitConditionItem(modelType, alias, conditions);
             return this;
         }
@@ -173,6 +179,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             modelType = typeof(T);
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             if (null != funcCondition)
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
@@ -190,6 +197,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             this.alias = alias;
             this.conditions = conditions;
             this.modelType = modelType;
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             if (null != funcCondition)
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
@@ -227,6 +235,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
         public SqlFromUnit From<T>(Func<T, bool> funcCondition) where T : AbsDataModel
         {
             modelType = typeof(T);
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             if (null != funcCondition)
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
@@ -241,6 +250,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
                 throw new Exception(typeErr);
             }
             this.modelType = modelType;
+            this.dataModel = (AbsDataModel)Activator.CreateInstance(modelType);
             if (null != funcCondition)
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
