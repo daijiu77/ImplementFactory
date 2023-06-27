@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.Reflection;
 using System.Text;
 
@@ -18,7 +19,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public T ToObjectFrom<T>(object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public T ToObjectFrom<T>(object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
         {
             T tObj = default(T);
             if (srcObj.GetType().IsBaseType()) return tObj;
@@ -46,7 +47,8 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = null;
             srcType.ForeachProperty((pi, pt, fn) =>
             {
-                tgPropertyInfo = tgPiDic[fn.ToLower()];
+                //tgPropertyInfo = tgPiDic[fn.ToLower()];
+                tgPiDic.TryGetValue(fn.ToLower(), out tgPropertyInfo);
                 if (null == tgPropertyInfo) return true;
                 if (null != funcAssign)
                 {
@@ -77,7 +79,8 @@ namespace System.DJ.ImplementFactory.Commons
                         && (false == piType.IsAbstract)
                         && (false == piType.IsInterface))
                     {
-                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType }, new object[] { vObj, isTrySetVal, funcAssign, funcVal });
+                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType },
+                            new object[] { vObj, isTrySetVal, funcAssign, funcVal });
                     }
                 }
 
@@ -134,7 +137,7 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns></returns>
-        private T ToObjectData<T>(object srcM, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        private T ToObjectData<T>(object srcM, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
         {
             return ToObjectFrom<T>(srcM, isTrySetVal, funcAssign, funcVal);
         }
@@ -149,9 +152,16 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns></returns>
-        private List<T> ToListData<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
+        private List<T> ToListData<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
         {
-            return (List<T>)ToListFrom<T, TT>(srcList, isTrySetVal, funcAssign, funcVal);
+            return (List<T>)ToListFrom<T, TT>(srcList, isTrySetVal, funcAssign, (tg, src, fn, fv) =>
+            {
+                if (null != funcVal)
+                {
+                    fv = funcVal(tg, src, fn, fv);
+                }
+                return fv;
+            });
         }
         #endregion
 
@@ -181,7 +191,7 @@ namespace System.DJ.ImplementFactory.Commons
                     Type ttType = typeof(TT);
                     Type srcType = srcEle.GetType();
                     if ((ttType == srcType) || ttType.IsAssignableFrom(srcType)) tt = (TT)srcEle;
-                    return funcVal(targetEle, tt, fieldName, fieldValue);
+                    return funcVal((T)targetEle, tt, fieldName, fieldValue);
                 });
                 list.Add(t);
             }

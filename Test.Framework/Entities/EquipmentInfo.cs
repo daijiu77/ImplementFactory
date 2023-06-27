@@ -8,13 +8,18 @@ namespace Test.Framework.Entities
     public class EquipmentInfo: AbsDataModel
     {
         [IgnoreField(IgnoreField.IgnoreType.Insert|IgnoreField.IgnoreType.Update)]
-        public Guid id { get; set; }
-        public int height { get; set; }
-        public int width { get; set; }
-        public string equipmentName { get; set; }
-        public string code { get; set; }
+        public virtual Guid id { get; set; }
+        public virtual int height { get; set; }
+        public virtual int width { get; set; }
+        public virtual string equipmentName { get; set; }
+        public virtual string code { get; set; }
 
         [IgnoreField(IgnoreField.IgnoreType.Insert | IgnoreField.IgnoreType.Update)]
         public DateTime cdatetime { get; set; }
+
+        public virtual Guid PlanId { get; set; }
+
+        [Constraint(foreignKey: "PlanId", refrenceKey: "id")]
+        public virtual Plan PlanData { get; set; }
     }
 }

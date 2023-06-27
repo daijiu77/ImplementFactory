@@ -570,6 +570,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null == name) return routeAttr;
                 name = name.Trim();
                 if (string.IsNullOrEmpty(name)) return routeAttr;
+                name = name.Replace("\\", "/");
+                if (name.Substring(0, 1).Equals("/")) name = name.Substring(1);
                 s_routeAttrDic.TryGetValue(name.ToLower(), out routeAttr);
                 return routeAttr;
             }

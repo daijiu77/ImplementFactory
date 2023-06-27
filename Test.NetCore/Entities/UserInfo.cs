@@ -31,7 +31,7 @@ namespace Test.NetCore.Entities
         public virtual Guid parentId { get; set; }
 
         [Constraint(foreignKey: "id", refrenceKey: "parentId")]
-        public virtual List<UserInfo> children { get; set; }
+        public virtual IList<UserInfo> children { get; set; }
 
         [Condition("like", Condition.WhereIgrons.igroneEmptyNull)]
         public virtual string name { get; set; }
@@ -53,5 +53,8 @@ namespace Test.NetCore.Entities
         public virtual UserType userType { get; set; }
 
         public virtual DateTime cdatetime { get; set; }
+
+        [Constraint(foreignKey: "id", refrenceKey: "UserInfoId")]
+        public virtual IList<Plan> Plans { get; set; }
     }
 }

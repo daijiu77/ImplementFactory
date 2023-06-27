@@ -9,12 +9,12 @@ namespace Test.Framework.Entities
     public abstract class BaseModel : AbsDataModel
     {
         [FieldMapping("Id", typeof(Guid), 1, "newid()", true, true)]
-        public Guid Id { get; set; }
+        public virtual Guid Id { get; set; }
 
         [FieldMapping("IsEnabled", typeof(bool), 0, "1")]
-        public bool IsEnabled { get; set; }
+        public virtual bool IsEnabled { get; set; }
 
         [FieldMapping("CreateDate", typeof(DateTime), 0, "getdate()")]
-        public DateTime CreateDate { get; set; }
+        public virtual DateTime CreateDate { get; set; }
     }
 }

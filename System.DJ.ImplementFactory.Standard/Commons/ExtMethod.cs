@@ -408,10 +408,17 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public static T ToObjectFrom<T, TT>(this TT srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             DataModelMapping mapping = new DataModelMapping();
-            return mapping.ToObjectFrom(srcObj, false, funcAssign, funcVal);
+            return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, (tg, src, fn, fv) =>
+            {
+                if(null!= funcVal)
+                {
+                    fv = funcVal((T)tg, (TT)src, fn, fv);
+                }
+                return fv;
+            });
         }
 
         /// <summary>
@@ -423,10 +430,17 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public static T ToObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<T, TT, string, object, object> funcVal)
         {
             DataModelMapping mapping = new DataModelMapping();
-            return mapping.ToObjectFrom(srcObj, isTrySetVal, funcAssign, funcVal);
+            return mapping.ToObjectFrom<T>(srcObj, isTrySetVal, funcAssign, (tg, src, fn, fv) =>
+            {
+                if (null != funcVal)
+                {
+                    fv = funcVal((T)tg, (TT)src, fn, fv);
+                }
+                return fv;
+            });
         }
 
         /// <summary>
@@ -435,21 +449,21 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
         /// <returns>Returns an assigned data entity</returns>
+        public static T ToObjectFrom<T, TT>(this TT srcObj)
+        {
+            return srcObj.ToObjectFrom<T, TT>(false, null, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <returns>Returns the target object after the assignment</returns>
         public static T ToObjectFrom<T>(this object srcObj)
         {
-            return srcObj.ToObjectFrom<T>(null, null);
-        }
-
-        /// <summary>
-        /// Object property-relationship mapping assignments
-        /// </summary>
-        /// <typeparam name="T">The target data type</typeparam>
-        /// <param name="srcObj">Data source entity</param>
-        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
-        /// <returns>Returns an assigned data entity</returns>
-        public static T ToObjectFrom<T>(this object srcObj, bool isTrySetVal)
-        {
-            return srcObj.ToObjectFrom<T>(isTrySetVal, null, null);
+            DataModelMapping mapping = new DataModelMapping();
+            return mapping.ToObjectFrom<T>(srcObj, false, null, null);
         }
 
         /// <summary>
@@ -461,20 +475,8 @@ namespace System.DJ.ImplementFactory.Commons
         /// <returns>Returns the target object after the assignment</returns>
         public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign)
         {
-            return srcObj.ToObjectFrom<T>(funcAssign, null);
-        }
-
-        /// <summary>
-        /// Object property-relationship mapping assignments
-        /// </summary>
-        /// <typeparam name="T">The target data type</typeparam>
-        /// <param name="srcObj">Data source entity</param>
-        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
-        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
-        /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign)
-        {
-            return srcObj.ToObjectFrom<T>(isTrySetVal, funcAssign, null);
+            DataModelMapping mapping = new DataModelMapping();
+            return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, null);
         }
 
         /// <summary>
@@ -483,10 +485,88 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
-        /// <returns>Returns the target object after the assignment</returns>
+        /// <returns>Returns an assigned data entity</returns>
         public static T ToObjectFrom<T>(this object srcObj, Func<T, object, string, object, object> funcVal)
         {
-            return srcObj.ToObjectFrom<T>(null, funcVal);
+            DataModelMapping mapping = new DataModelMapping();
+            return mapping.ToObjectFrom<T>(srcObj, false, null, (tg, src, fn, fv) =>
+            {
+                if (null != funcVal)
+                {
+                    fv = funcVal((T)tg, src, fn, fv);
+                }
+                return fv;
+            });
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned data entity</returns>
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        {
+            DataModelMapping mapping = new DataModelMapping();
+            return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, (tg, src, fn, fv) =>
+            {
+                if (null != funcVal)
+                {
+                    fv = funcVal((T)tg, src, fn, fv);
+                }
+                return fv;
+            });
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <returns>Returns an assigned data entity</returns>
+        public static T ToObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal)
+        {
+            return srcObj.ToObjectFrom<T, TT>(isTrySetVal, null, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T, TT>(this TT srcObj, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            return srcObj.ToObjectFrom<T, TT>(funcAssign, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            return srcObj.ToObjectFrom<T, TT>(isTrySetVal, funcAssign, null);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns the target object after the assignment</returns>
+        public static T ToObjectFrom<T, TT>(this TT srcObj, Func<T, TT, string, object, object> funcVal)
+        {
+            return srcObj.ToObjectFrom<T, TT>(null, funcVal);
         }
 
         /// <summary>
@@ -497,9 +577,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns the target object after the assignment</returns>
-        public static T ToObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<T, object, string, object, object> funcVal)
+        public static T ToObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal, Func<T, TT, string, object, object> funcVal)
         {
-            return srcObj.ToObjectFrom<T>(isTrySetVal, null, funcVal);
+            return srcObj.ToObjectFrom<T, TT>(isTrySetVal, null, funcVal);
         }
 
         /// <summary>
@@ -508,9 +588,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The target data type</typeparam>
         /// <param name="srcObj">Data source entity</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj)
         {
-            T t = srcObj.ToObjectFrom<T>(null, null);
+            T t = srcObj.ToObjectFrom<T, TT>(null, null);
             return Task.FromResult(t);
         }
 
@@ -521,9 +601,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcObj">Data source entity</param>
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, bool isTrySetVal)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal)
         {
-            T t = srcObj.ToObjectFrom<T>(isTrySetVal, null, null);
+            T t = srcObj.ToObjectFrom<T, TT>(isTrySetVal, null, null);
             return Task.FromResult(t);
         }
 
@@ -534,9 +614,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcObj">Data source entity</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<T, object, string, object, object> funcVal)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj, Func<T, TT, string, object, object> funcVal)
         {
-            T t = srcObj.ToObjectFrom<T>(null, funcVal);
+            T t = srcObj.ToObjectFrom<T, TT>(null, funcVal);
             return Task.FromResult(t);
         }
 
@@ -548,9 +628,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<T, object, string, object, object> funcVal)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal, Func<T, TT, string, object, object> funcVal)
         {
-            T t = srcObj.ToObjectFrom<T>(isTrySetVal, null, funcVal);
+            T t = srcObj.ToObjectFrom<T, TT>(isTrySetVal, null, funcVal);
             return Task.FromResult(t);
         }
 
@@ -561,9 +641,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="srcObj">Data source entity</param>
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj, Func<PropertyInfo, string, bool> funcAssign)
         {
-            T t = srcObj.ToObjectFrom<T>(funcAssign, null);
+            T t = srcObj.ToObjectFrom<T, TT>(funcAssign, null);
             return Task.FromResult(t);
         }
 
@@ -575,9 +655,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <returns>Returns an assigned data entity of type task.</returns>
-        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign)
+        public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign)
         {
-            T t = srcObj.ToObjectFrom<T>(isTrySetVal, funcAssign, null);
+            T t = srcObj.ToObjectFrom<T, TT>(isTrySetVal, funcAssign, null);
             return Task.FromResult(t);
         }
 

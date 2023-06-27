@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -372,44 +373,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             return mbool;
         }
 
-        private IList<object> GetList(DataTable dt, Type modelType)
-        {
-            IList<object> list = new List<object>();
-            if (null == dt) return list;
-            if (0 == dt.Rows.Count) return list;
-            Dictionary<string, string> dic = new Dictionary<string, string>();
-            foreach (DataColumn item in dt.Columns)
-            {
-                dic.Add(item.ColumnName.ToLower(), item.ColumnName);
-            }
-
-            List<SqlFromUnit> sfList = GetSqlFromUnits();
-            object ele = null;
-            bool mbool = false;
-            CommonMethods commonMethods = new CommonMethods();
-            MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
-            foreach (DataRow dr in dt.Rows)
-            {
-                mbool = FuncResult(dr, sfList, dic);
-                if (!mbool) continue;
-                if (isUseConstraintLoad)
-                {
-                    ele = overrideModel.CreateDataModel(srcMethod.DeclaringType, srcMethod, modelType, this);
-                }
-                else
-                {
-                    ele = Activator.CreateInstance(modelType);
-                }
-                if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
-                if (null == ele) ele = Activator.CreateInstance(modelType);
-                ((AbsDataModel)ele).parentModel = this.parentModel;
-                DataRowToObj(dr, ele, dic);
-                list.Add(ele);
-            }
-
-            return list;
-        }
-
         private void ListData(Type modelType, Action<object> action)
         {
             string sql = GetSql();
@@ -450,7 +413,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         IList<T> IDbSqlScheme.ToList<T>()
         {
             Type modelType = typeof(T);
-            IList<T> dataList = new List<T>();
+            IList<T> dataList = new DOList<T>();
             ListData(modelType, ele =>
             {
                 dataList.Add((T)ele);
@@ -460,7 +423,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         IList<object> IDbSqlScheme.ToList(Type modelType)
         {
-            IList<object> dataList = new List<object>();
+            IList<object> dataList = new DOList<object>();
             ListData(modelType, ele =>
             {
                 dataList.Add(ele);
@@ -538,13 +501,108 @@ namespace System.DJ.ImplementFactory.DataAccess
             return num;
         }
 
-        int IDbSqlScheme.Delete()
+        public Dictionary<Type, Type> TypeDictionary { get; set; }
+
+        class ChildModelInfo
         {
+            public Type modelType { get; set; }
+            public string foreignKeyName { get; set; }
+            public string foreignKeyValue { get; set; }
+            public string referenceKeyName { get; set; }
+        }
+
+        private int deleteRelationData(IDbSqlScheme parentScheme, Type parentModelType)
+        {
+            int num = 0;
+            List<ChildModelInfo> childs = new List<ChildModelInfo>();
+            Commons.Attrs.Constraint constraint = null;
+            parentModelType.ForeachProperty((pi, pt, fn) =>
+            {
+                constraint = pi.GetCustomAttribute<Commons.Attrs.Constraint>(true);
+                if (null == constraint) return;
+                if (string.IsNullOrEmpty(constraint.RefrenceKey)
+                    || string.IsNullOrEmpty(constraint.ForeignKey)) return;
+                Type mType = null;
+                if (typeof(IEnumerable).IsAssignableFrom(pi.PropertyType)) //IEnumerable
+                {
+                    if (typeof(string) == pi.PropertyType) return;
+                    Type[] types = pi.PropertyType.GetGenericArguments();
+                    mType = types[0];
+                }
+                else
+                {
+                    mType = pi.PropertyType;
+                }
+
+                if (TypeDictionary.ContainsKey(mType)) return;
+                TypeDictionary.Add(mType, mType);
+
+                childs.Add(new ChildModelInfo()
+                {
+                    modelType = mType,
+                    foreignKeyName = constraint.RefrenceKey,
+                    referenceKeyName = constraint.ForeignKey
+                });
+            });
+
+            if (0 == childs.Count) return num;
+
+            IList<object> list = parentScheme.ToList(parentModelType);
+            if (null == list) return num;
+            string vObj = null;
+            foreach (var item_1 in list)
+            {
+                foreach (ChildModelInfo item_2 in childs)
+                {
+                    vObj = item_1.GetPropertyValue<string>(item_2.referenceKeyName);
+                    if (string.IsNullOrEmpty(vObj)) continue;
+                    item_2.foreignKeyValue = vObj;
+                    DbVisitor db = new DbVisitor();
+                    IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(item_2.modelType));
+                    scheme.dbSqlBody.Where(ConditionItem.Me.And(item_2.foreignKeyName, ConditionRelation.Equals, item_2.foreignKeyValue));
+                    ((DbSqlScheme)scheme).TypeDictionary = TypeDictionary;
+                    num += scheme.Delete(true);
+                    ((IDisposable)db).Dispose();
+                }
+            }
+            return num;
+        }
+
+        private int delete_data(bool deleteRelation, Type srcType)
+        {
+            if (deleteRelation)
+            {
+                if (null == srcType)
+                {
+                    deleteRelation = false;
+                }
+                else
+                {
+                    if (!typeof(IDbSqlScheme).IsAssignableFrom(srcType))
+                    {
+                        if (null != TypeDictionary) TypeDictionary.Clear();
+                    }
+                }                
+            }
             int num = 0;
             List<SqlDataItem> list = GetDelete();
             IDbHelper dbHelper = DbHelper;
+            Type mType = null;
             foreach (SqlDataItem item in list)
             {
+                if (deleteRelation)
+                {
+                    if (null == TypeDictionary)
+                    {
+                        TypeDictionary = new Dictionary<Type, Type>();
+                    }
+                    mType = item.model.GetType();
+                    if (!TypeDictionary.ContainsKey(mType))
+                    {
+                        TypeDictionary.Add(mType, mType);
+                    }
+                    num += deleteRelationData(this, item.model.GetType());
+                }
                 dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
                 {
                     num += n;
@@ -552,6 +610,26 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             ImplementAdapter.Destroy(dbHelper);
             return num;
+        }
+
+        int IDbSqlScheme.Delete(bool deleteRelation)
+        {
+            Type srcType = null;
+            if (deleteRelation) srcType = GetSrcType();
+            return delete_data(deleteRelation, srcType);
+        }
+
+        private Type GetSrcType()
+        {
+            StackTrace stack = new StackTrace();
+            StackFrame frame = stack.GetFrame(2);
+            MethodBase method = frame.GetMethod();
+            return method.DeclaringType;
+        }
+
+        int IDbSqlScheme.Delete()
+        {
+            return delete_data(false, null);
         }
 
         int IDbSqlScheme.AppendUpdate(Dictionary<string, object> keyValue)

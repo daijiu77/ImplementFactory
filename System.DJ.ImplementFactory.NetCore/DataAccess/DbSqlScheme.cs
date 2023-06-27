@@ -413,7 +413,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         IList<T> IDbSqlScheme.ToList<T>()
         {
             Type modelType = typeof(T);
-            IList<T> dataList = new List<T>();
+            IList<T> dataList = new DOList<T>();
             ListData(modelType, ele =>
             {
                 dataList.Add((T)ele);
@@ -423,7 +423,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         IList<object> IDbSqlScheme.ToList(Type modelType)
         {
-            IList<object> dataList = new List<object>();
+            IList<object> dataList = new DOList<object>();
             ListData(modelType, ele =>
             {
                 dataList.Add(ele);
@@ -503,37 +503,6 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         public Dictionary<Type, Type> TypeDictionary { get; set; }
 
-        int IDbSqlScheme.Delete(bool deleteRelation)
-        {
-            int num = 0;
-            List<SqlDataItem> list = GetDelete();
-            IDbHelper dbHelper = DbHelper;
-            Regex rg = new Regex(@"\swhere\s+.+", RegexOptions.IgnoreCase);
-            Type mType = null;
-            foreach (SqlDataItem item in list)
-            {
-                if (deleteRelation)
-                {
-                    if (null == TypeDictionary)
-                    {
-                        TypeDictionary = new Dictionary<Type, Type>();
-                    }
-                    mType = item.model.GetType();
-                    if(!TypeDictionary.ContainsKey(mType))
-                    {
-                        TypeDictionary.Add(mType, mType);
-                    }
-                    deleteRelationData(this, item.model.GetType());
-                }
-                dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
-                {
-                    num += n;
-                }, ref err);
-            }
-            ImplementAdapter.Destroy(dbHelper);
-            return num;
-        }
-
         class ChildModelInfo
         {
             public Type modelType { get; set; }
@@ -542,8 +511,9 @@ namespace System.DJ.ImplementFactory.DataAccess
             public string referenceKeyName { get; set; }
         }
 
-        private void deleteRelationData(IDbSqlScheme parentScheme, Type parentModelType)
+        private int deleteRelationData(IDbSqlScheme parentScheme, Type parentModelType)
         {
+            int num = 0;
             List<ChildModelInfo> childs = new List<ChildModelInfo>();
             Commons.Attrs.Constraint constraint = null;
             parentModelType.ForeachProperty((pi, pt, fn) =>
@@ -553,8 +523,9 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (string.IsNullOrEmpty(constraint.RefrenceKey)
                     || string.IsNullOrEmpty(constraint.ForeignKey)) return;
                 Type mType = null;
-                if (typeof(IList).IsAssignableFrom(pi.PropertyType))
+                if (typeof(IEnumerable).IsAssignableFrom(pi.PropertyType)) //IEnumerable
                 {
+                    if (typeof(string) == pi.PropertyType) return;
                     Type[] types = pi.PropertyType.GetGenericArguments();
                     mType = types[0];
                 }
@@ -574,10 +545,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                 });
             });
 
-            if (0 == childs.Count) return;
+            if (0 == childs.Count) return num;
 
             IList<object> list = parentScheme.ToList(parentModelType);
-            if (null != list) return;
+            if (null == list) return num;
             string vObj = null;
             foreach (var item_1 in list)
             {
@@ -587,18 +558,78 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if (string.IsNullOrEmpty(vObj)) continue;
                     item_2.foreignKeyValue = vObj;
                     DbVisitor db = new DbVisitor();
-                    IDbSqlScheme scheme=db.CreateSqlFrom(SqlFromUnit.Me.From(item_2.modelType));
+                    IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(item_2.modelType));
                     scheme.dbSqlBody.Where(ConditionItem.Me.And(item_2.foreignKeyName, ConditionRelation.Equals, item_2.foreignKeyValue));
                     ((DbSqlScheme)scheme).TypeDictionary = TypeDictionary;
-                    scheme.Delete(true);
+                    num += scheme.Delete(true);
                     ((IDisposable)db).Dispose();
                 }
             }
+            return num;
+        }
+
+        private int delete_data(bool deleteRelation, Type srcType)
+        {
+            if (deleteRelation)
+            {
+                if (null == srcType)
+                {
+                    deleteRelation = false;
+                }
+                else
+                {
+                    if (!typeof(IDbSqlScheme).IsAssignableFrom(srcType))
+                    {
+                        if (null != TypeDictionary) TypeDictionary.Clear();
+                    }
+                }                
+            }
+            int num = 0;
+            List<SqlDataItem> list = GetDelete();
+            IDbHelper dbHelper = DbHelper;
+            Type mType = null;
+            foreach (SqlDataItem item in list)
+            {
+                if (deleteRelation)
+                {
+                    if (null == TypeDictionary)
+                    {
+                        TypeDictionary = new Dictionary<Type, Type>();
+                    }
+                    mType = item.model.GetType();
+                    if (!TypeDictionary.ContainsKey(mType))
+                    {
+                        TypeDictionary.Add(mType, mType);
+                    }
+                    num += deleteRelationData(this, item.model.GetType());
+                }
+                dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
+                {
+                    num += n;
+                }, ref err);
+            }
+            ImplementAdapter.Destroy(dbHelper);
+            return num;
+        }
+
+        int IDbSqlScheme.Delete(bool deleteRelation)
+        {
+            Type srcType = null;
+            if (deleteRelation) srcType = GetSrcType();
+            return delete_data(deleteRelation, srcType);
+        }
+
+        private Type GetSrcType()
+        {
+            StackTrace stack = new StackTrace();
+            StackFrame frame = stack.GetFrame(2);
+            MethodBase method = frame.GetMethod();
+            return method.DeclaringType;
         }
 
         int IDbSqlScheme.Delete()
         {
-            return ((IDbSqlScheme)this).Delete(false);
+            return delete_data(false, null);
         }
 
         int IDbSqlScheme.AppendUpdate(Dictionary<string, object> keyValue)

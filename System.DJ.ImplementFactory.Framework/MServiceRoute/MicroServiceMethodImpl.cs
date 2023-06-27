@@ -44,6 +44,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             while (rg.IsMatch(txt) && (max > n))
             {
                 s = rg.Replace(s, "_");
+                s = s.Replace("__", "_");
+                if (s.Substring(0, 1).Equals("_")) s = s.Substring(1);
                 n++;
             }
             return s;
@@ -54,7 +56,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string interfaceName = interfaceType.TypeToString(true);
             string controllerName = interfaceType.Name;
             if (!string.IsNullOrEmpty(microServiceRoute.ControllerName)) controllerName = microServiceRoute.ControllerName;
-            string msKey = interfaceName + "-" + controllerName + "-" + microServiceRoute.RouteName;
+            controllerName = GetLegalText(controllerName);
+            string routeName = GetLegalText(microServiceRoute.RouteName);
+            string msKey = interfaceName + "-" + controllerName + "-" + routeName;
             Type msType = MSTypeDic(msKey, null);
             if (null != msType) return msType;
 
@@ -90,7 +94,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             elist.Add(new CKeyValue() { Key = typeof(MethodTypes).Namespace });
             elist.Add(new CKeyValue() { Key = typeof(ISingleInstance).Namespace });
 
-            string clssName = interfaceType.Name + "_" + controllerName + "_" + GetLegalText(microServiceRoute.RouteName);
+            string clssName = interfaceType.Name + "_" + controllerName + "_" + routeName;
             string clssPath = namespaceStr + "." + clssName;
             MethodInformation mInfo = new MethodInformation();
             mInfo.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);

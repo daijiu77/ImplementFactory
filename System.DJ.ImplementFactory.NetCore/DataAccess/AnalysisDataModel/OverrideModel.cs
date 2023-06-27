@@ -96,6 +96,13 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return typeof(AbsDataModel).IsAssignableFrom(modelType);
         }
 
+        public object CreateDataModel(Type dataModelType)
+        {
+            CommonMethods common = new CommonMethods();
+            MethodInfo method = (MethodInfo)common.GetSrcTypeMethod(typeof(OverrideModel));
+            return CreateDataModel(method.DeclaringType, method, dataModelType, null);
+        }
+
         public object CreateDataModel(Type srcType, MethodInfo methodInfo, Type dataModelType)
         {
             return CreateDataModel(srcType, methodInfo, dataModelType, null);
@@ -155,6 +162,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             string type_name = "";
             string field_name = "";
             const string isFristTag = "_IsFrist_{0}";
+            const string LazyDataOptVar = "_lazyDataOpt";
             string _is_frist_prop = "";
             string _is_frist_var = "";
             int dotIndex = 0;
@@ -194,11 +202,35 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = typeof(OrderbyItem).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(OverrideModel).Namespace });
 
+            bool isList = false;
+            string eleTypeName = "";
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
                 fnLower = fn.ToLower();
                 pro = "";
+                eleTypeName = "";
                 level = 2;
+                isList = false;
+                constraint = null;
+
+                att = pi.GetCustomAttribute(typeof(Constraint));
+                if (null != att)
+                {
+                    constraint = (Constraint)att;
+                }
+
+                if (typeof(IEnumerable).IsAssignableFrom(type))
+                {
+                    if (-1 != type.Name.ToLower().IndexOf("list"))
+                    {
+                        Type[] ts = type.GetGenericArguments();
+                        if (!ts[0].IsBaseType())
+                        {
+                            eleTypeName = ts[0].TypeToString(true);
+                            isList = true;
+                        }
+                    }
+                }
 
                 level++;
                 if (pi.CanRead)
@@ -214,6 +246,23 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
                     DJTools.append(ref pro, level, "set");
                     DJTools.append(ref pro, level, "{");
+                    
+                    if (isList)
+                    {
+                        DJTools.append(ref pro, level + 1, "if (null != value)");
+                        DJTools.append(ref pro, level + 1, "{");
+                        DJTools.append(ref pro, level + 2, "if (null != (value as System.DJ.ImplementFactory.DataAccess.DOList<{0}>))", eleTypeName);
+                        DJTools.append(ref pro, level + 2, "{");
+                        DJTools.append(ref pro, level + 3, "((System.DJ.ImplementFactory.DataAccess.DOList<{0}>)value).ParentModel = this;", eleTypeName);
+                        DJTools.append(ref pro, level + 2, "}");
+                        DJTools.append(ref pro, level + 1, "}");
+                    }
+
+                    typeName = type.TypeToString(true);
+                    //SetValue(object currentModel, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
+                    DJTools.append(ref pro, level + 1, "{0}.SetValue(this, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
+                    DJTools.append(ref pro, level + 1, "");
+
                     DJTools.append(ref pro, level + 1, "base.{0} = value;", fn);
                     DJTools.append(ref pro, level, "}");
                 }
@@ -221,15 +270,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
                 s = "";
                 if (pi.CanRead)
-                {
-                    constraint = null;
-                    GetBody = "";
-                    att = pi.GetCustomAttribute(typeof(Constraint));
-                    if (null != att)
-                    {
-                        constraint = (Constraint)att;
-                    }
-
+                {                    
+                    GetBody = "";                    
                     _is_frist_prop = "";
                     _is_frist_var = "";
                     if (null != constraint)
@@ -462,7 +504,9 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     {
                         DJTools.append(ref s, level, "{0}", _is_frist_prop);
                     }
-                    DJTools.append(ref s, level, "public {0} {1} {2}", tag, type.TypeToString(true), fn);
+
+                    typeName = type.TypeToString(true);
+                    DJTools.append(ref s, level, "public {0} {1} {2}", tag, typeName, fn);
                     DJTools.append(ref s, level, "{");
                     DJTools.append(ref s, 0, pro);
                     DJTools.append(ref s, level, "}");
@@ -473,7 +517,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     DJTools.append(ref codeBody, 0, s);
                 }
             });
-            
+
             if (!string.IsNullOrEmpty(codeBody))
             {
                 level = 0;
@@ -489,6 +533,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 string dmType = dataModelType.TypeToString(true);
                 DJTools.append(ref code, level, "public class {0} : {1}, {2}", newClassName, dmType, typeof(IEntityCopy).TypeToString(true));
                 DJTools.append(ref code, level, "{");
+                DJTools.append(ref code, level + 1, "private LazyDataOpt {0} = new LazyDataOpt();", LazyDataOptVar);
                 DJTools.append(ref code, level + 1, "public Type {0} { get { return typeof({1}); } }", CopyParentModel, dmType);
                 DJTools.append(ref code, level + 1, "public int {0} { get; set; }", MultiTablesExec.RecordQuantityFN);
                 DJTools.append(ref code, level + 1, "");

@@ -121,13 +121,13 @@ namespace Test.NetCore
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            //testObj.test_user();
-            string un = testObj.VisitService("aa");
+            testObj.test_user();
+            //string un = testObj.VisitService("aa");
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 
-            testObj = new TestObj();
-            un = testObj.VisitService("bb");
+            //testObj = new TestObj();
+            //un = testObj.VisitService("bb");
 
             TableInfoDetail details = UpdateTableDesign.GetTableInfoDetail();
             foreach (TableDetail item in details)
@@ -482,6 +482,10 @@ namespace Test.NetCore
                     s = "";
                 }
                 DbVisitor db = new DbVisitor();
+                IDbSqlScheme scheme2 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
+                scheme2.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Equals, "ff1"));
+                scheme2.Delete(true);
+
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 scheme1.dbSqlBody.Where(ConditionItem.Me.And("Age", ConditionRelation.Equals, 21));
@@ -492,7 +496,7 @@ namespace Test.NetCore
                     .Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
                 scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
-                List<UserInfo> children = users[1].children;
+                IList<UserInfo> children = users[1].children;
                 int ncount = scheme.Count();
                 int recordCount = scheme.RecordCount;
                 int pageCount = scheme.PageCount;

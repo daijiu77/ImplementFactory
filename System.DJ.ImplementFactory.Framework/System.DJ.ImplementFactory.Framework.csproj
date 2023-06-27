@@ -129,6 +129,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\LazyDataOpt.cs" />
+    <Compile Include="DataAccess\DOList.cs" />
     <Compile Include="Commons\CommonMethods.cs" />
     <Compile Include="Commons\GlobalEvents.cs" />
     <Compile Include="Commons\EventMessage.cs" />

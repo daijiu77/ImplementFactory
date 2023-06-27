@@ -851,8 +851,16 @@ namespace System.DJ.ImplementFactory.DataAccess
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
             foreach (SqlFromUnit item in fromUnits)
             {
+                if (IgnoreField.IgnoreType.none == dataOptType)
+                {
+                    if (null == item.dataModel && null != item.modelType)
+                    {
+                        item.dataModel = (AbsDataModel)Activator.CreateInstance(item.modelType);
+                    }
+                }
                 if (null == item.dataModel) continue;
                 if (null != (item.dataModel as DbSqlBody)) continue;
+
                 wherePart = "";
                 if (null != item.conditions)
                 {
