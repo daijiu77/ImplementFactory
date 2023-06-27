@@ -264,15 +264,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     }
                     else
                     {
-                        DJTools.append(ref pro, level + 1, "{0} constraint = new {0}();", typeName);
-                        DJTools.append(ref pro, level + 1, "constraint.ForeignKey = \"{0}\";", constraint.ForeignKey);
-                        DJTools.append(ref pro, level + 1, "constraint.RefrenceKey = \"{0}\";", constraint.RefrenceKey);
+                        DJTools.append(ref pro, level + 1, "{0} constraint = new {0}(\"{1}\", \"{2}\");", typeName, constraint.ForeignKey, constraint.RefrenceKey);
                         if (null != constraint.Foreign_refrenceKeys)
                         {
                             if (0 < constraint.Foreign_refrenceKeys.Length)
                             {
-                                s = string.Join(',', constraint.Foreign_refrenceKeys);
-                                s = s.Replace(",", "\" , \"");
+                                s = string.Join("\", \"", constraint.Foreign_refrenceKeys);
                                 s = "\"" + s + "\"";
                                 DJTools.append(ref pro, level + 1, "constraint.Foreign_refrenceKeys = new string[] { {0} };", s);
                             }
@@ -584,7 +581,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
                 catch (Exception ex)
                 {
-
+                    AutoCall.Instance.e(ex.ToString());
                     //throw;
                 }
 
@@ -603,7 +600,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return dtModel;
         }
 
-        public static T[] MergeToArrayFromList<T>(ICollection arr, IList<T> list)
+        public static T[] MergeToArrayFromList<T>(IEnumerable arr, IList<T> list)
         {
             List<T> results = new List<T>();
             if (null != arr)
@@ -624,7 +621,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return results.ToArray();
         }
 
-        public static IList<T> MergeToListFromIList<T>(ICollection arr, IList<T> list)
+        public static IList<T> MergeToListFromIList<T>(IEnumerable arr, IList<T> list)
         {
             IList<T> results = new List<T>();
             if (null != arr)

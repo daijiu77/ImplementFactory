@@ -182,20 +182,128 @@ namespace System.DJ.ImplementFactory.Commons
             if (null == srcList) return list;
             if (0 == srcList.Count()) return list;
             T t = default(T);
-            foreach (TT item in srcList)
+            foreach (object item in srcList)
             {
                 t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, (targetEle, srcEle, fieldName, fieldValue) =>
                 {
-                    if (null == funcVal) return fieldValue;
-                    TT tt = default(TT);
-                    Type ttType = typeof(TT);
-                    Type srcType = srcEle.GetType();
-                    if ((ttType == srcType) || ttType.IsAssignableFrom(srcType)) tt = (TT)srcEle;
-                    return funcVal((T)targetEle, tt, fieldName, fieldValue);
+                    return Call_back1<T, TT>(targetEle, srcEle, fieldName, fieldValue, funcVal, null, null);                    
                 });
                 list.Add(t);
             }
             return list;
+        }
+
+        public IList<T> ToListWhithChildModel<T, TT>(IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
+        {
+            if (false == typeof(IList).IsAssignableFrom(srcList.GetType())) return null;
+            IList<T> list = new List<T>();
+            if (null == srcList) return list;
+            if (0 == srcList.Count()) return list;
+            T t = default(T);
+            foreach (object item in srcList)
+            {
+                t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, (targetEle, srcEle, fieldName, fieldValue) =>
+                {
+                    return Call_back1<T, TT>(targetEle, srcEle, fieldName, fieldValue, null, null, funcVal);
+                });
+                list.Add(t);
+            }
+            return list;
+        }
+
+        public object Call_back1<T, TT>(object targetEle, object srcEle, string fieldName, object fieldValue,
+            Func<T, TT, string, object, object> callback1,
+            Func<T, object, string, object, object> callback2,
+            Func<object, object, string, object, object> callback3)
+        {
+            TT tt = default(TT);
+            Type ttType = typeof(TT);
+            Type srcType = srcEle.GetType();
+            if ((ttType == srcType) || ttType.IsAssignableFrom(srcType)) tt = (TT)srcEle;
+
+            T t = default(T);
+            Type tType = typeof(T);
+            Type tgType = targetEle.GetType();
+            if ((tType == tgType) || tType.IsAssignableFrom(tgType)) t = (T)targetEle;
+
+            if (null != callback1)
+            {
+                return callback1(t, tt, fieldName, fieldValue);
+            }
+            else if(null != callback2)
+            {
+                return callback2(t, srcEle, fieldName, fieldValue);
+            }
+            else if(null != callback3)
+            {
+                return callback3(targetEle, srcEle, fieldName, fieldValue);
+            }
+            return fieldValue;
+        }
+
+        public object Call_back2<T, TT>(T targetEle, object srcEle, string fieldName, object fieldValue,
+            Func<T, TT, string, object, object> callback1,
+            Func<T, object, string, object, object> callback2,
+            Func<object, object, string, object, object> callback3)
+        {
+            TT tt = default(TT);
+            Type ttType = typeof(TT);
+            Type srcType = srcEle.GetType();
+            if ((ttType == srcType) || ttType.IsAssignableFrom(srcType)) tt = (TT)srcEle;
+
+            if (null != callback1)
+            {
+                return callback1(targetEle, tt, fieldName, fieldValue);
+            }
+            else if (null != callback2)
+            {
+                return callback2(targetEle, srcEle, fieldName, fieldValue);
+            }
+            else if (null != callback3)
+            {
+                return callback3(targetEle, srcEle, fieldName, fieldValue);
+            }
+            return fieldValue;
+        }
+
+        public object Call_back3<T, TT>(T targetEle, TT srcEle, string fieldName, object fieldValue,
+            Func<T, TT, string, object, object> callback1,
+            Func<T, object, string, object, object> callback2,
+            Func<object, object, string, object, object> callback3)
+        {            
+            if (null != callback1)
+            {
+                return callback1(targetEle, srcEle, fieldName, fieldValue);
+            }
+            else if (null != callback2)
+            {
+                return callback2(targetEle, srcEle, fieldName, fieldValue);
+            }
+            else if (null != callback3)
+            {
+                return callback3(targetEle, srcEle, fieldName, fieldValue);
+            }
+            return fieldValue;
+        }
+
+        public object Call_back4<T>(object targetEle, object srcEle, string fieldName, object fieldValue,
+            Func<T, object, string, object, object> callback1,
+            Func<object, object, string, object, object> callback2)
+        {            
+            T t = default(T);
+            Type tType = typeof(T);
+            Type tgType = targetEle.GetType();
+            if ((tType == tgType) || tType.IsAssignableFrom(tgType)) t = (T)targetEle;
+
+            if (null != callback1)
+            {
+                return callback1(t, srcEle, fieldName, fieldValue);
+            }
+            else if (null != callback2)
+            {
+                return callback2(targetEle, srcEle, fieldName, fieldValue);
+            }
+            return fieldValue;
         }
     }
 }

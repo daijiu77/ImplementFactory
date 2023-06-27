@@ -413,11 +413,7 @@ namespace System.DJ.ImplementFactory.Commons
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, (tg, src, fn, fv) =>
             {
-                if(null!= funcVal)
-                {
-                    fv = funcVal((T)tg, (TT)src, fn, fv);
-                }
-                return fv;
+                return mapping.Call_back1<T, TT>(tg, src, fn, fv, funcVal, null, null);                
             });
         }
 
@@ -435,11 +431,7 @@ namespace System.DJ.ImplementFactory.Commons
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToObjectFrom<T>(srcObj, isTrySetVal, funcAssign, (tg, src, fn, fv) =>
             {
-                if (null != funcVal)
-                {
-                    fv = funcVal((T)tg, (TT)src, fn, fv);
-                }
-                return fv;
+                return mapping.Call_back1<T, TT>(tg, src, fn, fv, funcVal, null, null);
             });
         }
 
@@ -512,11 +504,7 @@ namespace System.DJ.ImplementFactory.Commons
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, (tg, src, fn, fv) =>
             {
-                if (null != funcVal)
-                {
-                    fv = funcVal((T)tg, src, fn, fv);
-                }
-                return fv;
+                return mapping.Call_back4<T>(tg, src, fn, fv, funcVal, null);                
             });
         }
 
@@ -703,6 +691,35 @@ namespace System.DJ.ImplementFactory.Commons
         public static IList<T> ToListFrom<T, TT>(this IEnumerable srcList, Func<T, TT, string, object, object> funcVal)
         {
             return srcList.ToListFrom<T, TT>(null, funcVal);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListWhithChildModel<T, TT>(this IEnumerable srcList, Func<object, object, string, object, object> funcVal)
+        {
+            DataModelMapping dataModelMapping = new DataModelMapping();
+            return dataModelMapping.ToListWhithChildModel<T, TT>(srcList, false, null, funcVal);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListWhithChildModel<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<object, object, string, object, object> funcVal)
+        {
+            DataModelMapping dataModelMapping = new DataModelMapping();
+            return dataModelMapping.ToListWhithChildModel<T, TT>(srcList, isTrySetVal, null, funcVal);
         }
 
         /// <summary>

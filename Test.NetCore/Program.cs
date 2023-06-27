@@ -500,6 +500,11 @@ namespace Test.NetCore
                 scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 IList<UserInfo> users = scheme.ToList<UserInfo>();
                 IList<UserInfo> children = users[1].children;
+
+                IList<UserInfo> userInfos1=users.ToListFrom<UserInfo, UserInfo>((tg, src, fn, fv) =>
+                {
+                    return fv;
+                });
                 int ncount = scheme.Count();
                 int recordCount = scheme.RecordCount;
                 int pageCount = scheme.PageCount;

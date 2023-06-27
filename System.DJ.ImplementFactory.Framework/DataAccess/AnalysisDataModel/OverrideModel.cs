@@ -202,15 +202,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = typeof(OrderbyItem).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(OverrideModel).Namespace });
 
-            bool isList = false;
-            string eleTypeName = "";
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
                 fnLower = fn.ToLower();
                 pro = "";
-                eleTypeName = "";
                 level = 2;
-                isList = false;
                 constraint = null;
 
                 att = pi.GetCustomAttribute(typeof(Constraint));
@@ -219,6 +215,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     constraint = (Constraint)att;
                 }
 
+                Type GType = null;
                 if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
                     if (-1 != type.Name.ToLower().IndexOf("list"))
@@ -226,8 +223,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         Type[] ts = type.GetGenericArguments();
                         if (!ts[0].IsBaseType())
                         {
-                            eleTypeName = ts[0].TypeToString(true);
-                            isList = true;
+                            GType = ts[0];
                         }
                     }
                 }
@@ -246,21 +242,42 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
                     DJTools.append(ref pro, level, "set");
                     DJTools.append(ref pro, level, "{");
-                    
-                    if (isList)
+
+                    if (null != GType)
                     {
+                        Type typeList = typeof(DOList<>);
+                        typeList = typeList.MakeGenericType(GType);
+                        typeName = typeList.TypeToString(true);
                         DJTools.append(ref pro, level + 1, "if (null != value)");
                         DJTools.append(ref pro, level + 1, "{");
-                        DJTools.append(ref pro, level + 2, "if (null != (value as System.DJ.ImplementFactory.DataAccess.DOList<{0}>))", eleTypeName);
+                        DJTools.append(ref pro, level + 2, "if (null != (value as {0}))", typeName);
                         DJTools.append(ref pro, level + 2, "{");
-                        DJTools.append(ref pro, level + 3, "((System.DJ.ImplementFactory.DataAccess.DOList<{0}>)value).ParentModel = this;", eleTypeName);
+                        DJTools.append(ref pro, level + 3, "(({0})value).ParentModel = this;", typeName);
                         DJTools.append(ref pro, level + 2, "}");
                         DJTools.append(ref pro, level + 1, "}");
                     }
 
+                    typeName = typeof(Commons.Attrs.Constraint).TypeToString(true);
+                    if (null == constraint)
+                    {
+                        DJTools.append(ref pro, level + 1, "{0} constraint = null;", typeName);
+                    }
+                    else
+                    {
+                        DJTools.append(ref pro, level + 1, "{0} constraint = new {0}(\"{1}\", \"{2}\");", typeName, constraint.ForeignKey, constraint.RefrenceKey);
+                        if (null != constraint.Foreign_refrenceKeys)
+                        {
+                            if (0 < constraint.Foreign_refrenceKeys.Length)
+                            {
+                                s = string.Join("\", \"", constraint.Foreign_refrenceKeys);
+                                s = "\"" + s + "\"";
+                                DJTools.append(ref pro, level + 1, "constraint.Foreign_refrenceKeys = new string[] { {0} };", s);
+                            }
+                        }
+                    }
                     typeName = type.TypeToString(true);
-                    //SetValue(object currentModel, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
-                    DJTools.append(ref pro, level + 1, "{0}.SetValue(this, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
+                    //SetValue(object currentModel, Constraint constraint, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
+                    DJTools.append(ref pro, level + 1, "{0}.SetValue(this, constraint, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
                     DJTools.append(ref pro, level + 1, "");
 
                     DJTools.append(ref pro, level + 1, "base.{0} = value;", fn);
@@ -270,8 +287,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
                 s = "";
                 if (pi.CanRead)
-                {                    
-                    GetBody = "";                    
+                {
+                    GetBody = "";
                     _is_frist_prop = "";
                     _is_frist_var = "";
                     if (null != constraint)
@@ -564,7 +581,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
                 catch (Exception ex)
                 {
-
+                    AutoCall.Instance.e(ex.ToString());
                     //throw;
                 }
 
@@ -583,7 +600,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return dtModel;
         }
 
-        public static T[] MergeToArrayFromList<T>(ICollection arr, IList<T> list)
+        public static T[] MergeToArrayFromList<T>(IEnumerable arr, IList<T> list)
         {
             List<T> results = new List<T>();
             if (null != arr)
@@ -604,7 +621,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             return results.ToArray();
         }
 
-        public static IList<T> MergeToListFromIList<T>(ICollection arr, IList<T> list)
+        public static IList<T> MergeToListFromIList<T>(IEnumerable arr, IList<T> list)
         {
             IList<T> results = new List<T>();
             if (null != arr)
