@@ -475,6 +475,9 @@ namespace Test.NetCore
 
             public void test_user()
             {
+                Type typeList = typeof(DOList<>);
+                typeList = typeList.MakeGenericType(typeof(UserInfo));
+                string ty = typeList.TypeToString(true);
                 string s = "select * from (select top 1 * from UserInfo where name like '%abc%') tb order by age";
                 Regex rg1 = new Regex(@"\sorder\s+by\s+((((?!\()(?!\))(?!\sfrom\s)(?!\swhere\s)(?!\sand\s)(?!\sor\s)(?!\slike\s)).)+)$", RegexOptions.IgnoreCase);
                 if (rg1.IsMatch(s))
