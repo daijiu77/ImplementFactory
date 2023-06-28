@@ -343,15 +343,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 catch (Exception ex)
                 {
-                    try
-                    {
-                        ele.SetPropertyValue(pi.Name, _vObj);
-                    }
-                    catch (Exception)
-                    {
-
-                        //throw;
-                    }
+                    ele.SetMethodValue(fieldName, _vObj, _vObj);                    
                     //throw;
                 }
             });

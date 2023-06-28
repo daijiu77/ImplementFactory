@@ -471,6 +471,12 @@ namespace System.DJ.ImplementFactory.Commons
             return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, null);
         }
 
+        public static T ToObjectFrom<T>(this object srcObj, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            DataModelMapping mapping = new DataModelMapping();
+            return mapping.ToObjectFrom<T>(srcObj, isTrySetVal, funcAssign, null);
+        }
+
         /// <summary>
         /// Object property-relationship mapping assignments
         /// </summary>
@@ -499,12 +505,12 @@ namespace System.DJ.ImplementFactory.Commons
         /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned data entity</returns>
-        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<T, object, string, object, object> funcVal)
+        public static T ToObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
         {
             DataModelMapping mapping = new DataModelMapping();
             return mapping.ToObjectFrom<T>(srcObj, false, funcAssign, (tg, src, fn, fv) =>
             {
-                return mapping.Call_back4<T>(tg, src, fn, fv, funcVal, null);                
+                return mapping.Call_back4<T>(tg, src, fn, fv, null, funcVal);                
             });
         }
 
@@ -579,6 +585,44 @@ namespace System.DJ.ImplementFactory.Commons
         public static Task<T> ToTaskObjectFrom<T, TT>(this TT srcObj)
         {
             T t = srcObj.ToObjectFrom<T, TT>(null, null);
+            return Task.FromResult(t);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj)
+        {
+            T t = srcObj.ToObjectFrom<T>(null, null);
+            return Task.FromResult(t);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<PropertyInfo, string, bool> funcAssign)
+        {
+            T t = srcObj.ToObjectFrom<T>(funcAssign, null);
+            return Task.FromResult(t);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The target data type</typeparam>
+        /// <param name="srcObj">Data source entity</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned data entity of type task.</returns>
+        public static Task<T> ToTaskObjectFrom<T>(this object srcObj, Func<object, object, string, object, object> funcVal)
+        {
+            T t = srcObj.ToObjectFrom<T>(null, funcVal);
             return Task.FromResult(t);
         }
 
@@ -713,10 +757,41 @@ namespace System.DJ.ImplementFactory.Commons
         /// <typeparam name="T">The element type of the target data collection</typeparam>
         /// <typeparam name="TT">The element type of the data source collection</typeparam>
         /// <param name="srcList">Data source collection object</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListWhithChildModel<T, TT>(this IEnumerable srcList, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
+        {
+            DataModelMapping dataModelMapping = new DataModelMapping();
+            return dataModelMapping.ToListWhithChildModel<T, TT>(srcList, false, funcAssign, funcVal);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
         /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
         /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
         /// <returns>Returns an assigned IList element collection object</returns>
         public static IList<T> ToListWhithChildModel<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<object, object, string, object, object> funcVal)
+        {
+            DataModelMapping dataModelMapping = new DataModelMapping();
+            return dataModelMapping.ToListWhithChildModel<T, TT>(srcList, isTrySetVal, null, funcVal);
+        }
+
+        /// <summary>
+        /// Object property-relationship mapping assignments
+        /// </summary>
+        /// <typeparam name="T">The element type of the target data collection</typeparam>
+        /// <typeparam name="TT">The element type of the data source collection</typeparam>
+        /// <param name="srcList">Data source collection object</param>
+        /// <param name="isTrySetVal">Try to execute set-method to set value of property.</param>
+        /// <param name="funcAssign">When false is returned, no value is assigned to the current property</param>
+        /// <param name="funcVal">Returns a value and assigns a value to the current property</param>
+        /// <returns>Returns an assigned IList element collection object</returns>
+        public static IList<T> ToListWhithChildModel<T, TT>(this IEnumerable srcList, bool isTrySetVal, Func<PropertyInfo, string, bool> funcAssign, Func<object, object, string, object, object> funcVal)
         {
             DataModelMapping dataModelMapping = new DataModelMapping();
             return dataModelMapping.ToListWhithChildModel<T, TT>(srcList, isTrySetVal, null, funcVal);
