@@ -10,10 +10,10 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
     {
         int Count();
         DataTable ToDataTable();
-        IList<T> ToList<T>() where T : AbsDataModel;
+        IList<T> ToList<T>();
         IList<object> ToList(Type modelType);
 
-        T DefaultFirst<T>() where T : AbsDataModel;
+        T DefaultFirst<T>();
         object DefaultFirst(Type modelType);
         AbsDataModel parentModel { get; set; }
         int Update();

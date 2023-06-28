@@ -343,7 +343,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 catch (Exception ex)
                 {
-                    ele.SetMethodValue(fieldName, _vObj, _vObj);                    
+                    ele.SetMethodValue(fieldName, _vObj, _vObj);
                     //throw;
                 }
             });
@@ -493,31 +493,59 @@ namespace System.DJ.ImplementFactory.DataAccess
             return num;
         }
 
-        public Dictionary<Type, Type> TypeDictionary { get; set; }
-
         class ChildModelInfo
         {
+            private List<ChildModelInfo> childModelInfos = new List<ChildModelInfo>();
             public Type modelType { get; set; }
             public string foreignKeyName { get; set; }
             public string foreignKeyValue { get; set; }
             public string referenceKeyName { get; set; }
+
+            public List<ChildModelInfo> Items { get { return childModelInfos; } }
+
+            public void SetForeign_refrenceKeys(ChildModelInfo childModelInfo)
+            {
+                childModelInfos.Add(childModelInfo);
+            }
+        }
+
+        private Dictionary<string, PropertyInfo> GetPrimaryKey(Type modelType)
+        {
+            Dictionary<string, PropertyInfo> keyDic = new Dictionary<string, PropertyInfo>();
+            if (null == modelType) return keyDic;
+            Commons.Attrs.FieldMapping mapping = null;
+            string fName = "";
+            modelType.ForeachProperty((pi, pt, fn) =>
+            {
+                mapping = pi.GetCustomAttribute<Commons.Attrs.FieldMapping>();
+                if (null == mapping) return;
+                if (!mapping.IsPrimaryKey) return;
+                fName = fn.ToLower();
+                if (keyDic.ContainsKey(fName)) return;
+                keyDic.Add(fName, pi);
+            });
+            return keyDic;
         }
 
         private int deleteRelationData(IDbSqlScheme parentScheme, Type parentModelType)
         {
             int num = 0;
+            Dictionary<string, PropertyInfo> keyDic = GetPrimaryKey(parentModelType);
+            if (0 == keyDic.Count) return num;
             List<ChildModelInfo> childs = new List<ChildModelInfo>();
             Commons.Attrs.Constraint constraint = null;
+            bool mbool = true;
             parentModelType.ForeachProperty((pi, pt, fn) =>
             {
                 constraint = pi.GetCustomAttribute<Commons.Attrs.Constraint>(true);
                 if (null == constraint) return;
                 if (string.IsNullOrEmpty(constraint.RefrenceKey)
                     || string.IsNullOrEmpty(constraint.ForeignKey)) return;
+                if (typeof(string) == pi.PropertyType) return;
+
                 Type mType = null;
                 if (typeof(IEnumerable).IsAssignableFrom(pi.PropertyType)) //IEnumerable
-                {
-                    if (typeof(string) == pi.PropertyType) return;
+                {                    
                     Type[] types = pi.PropertyType.GetGenericArguments();
                     mType = types[0];
                 }
@@ -526,8 +554,25 @@ namespace System.DJ.ImplementFactory.DataAccess
                     mType = pi.PropertyType;
                 }
 
-                if (TypeDictionary.ContainsKey(mType)) return;
-                TypeDictionary.Add(mType, mType);
+                if (!keyDic.ContainsKey(constraint.ForeignKey.ToLower())) return;
+
+                if (null != constraint.Foreign_refrenceKeys)
+                {
+                    mbool = true;
+                    foreach (var item in constraint.Foreign_refrenceKeys)
+                    {
+                        if (mbool)
+                        {
+                            mbool = false;
+                            if (!keyDic.ContainsKey(item.ToLower())) break;
+                        }
+                        else
+                        {
+                            mbool = true;
+                        }
+                    }
+                    if (false == mbool) return;
+                }
 
                 childs.Add(new ChildModelInfo()
                 {
@@ -535,6 +580,27 @@ namespace System.DJ.ImplementFactory.DataAccess
                     foreignKeyName = constraint.RefrenceKey,
                     referenceKeyName = constraint.ForeignKey
                 });
+
+                if (null != constraint.Foreign_refrenceKeys)
+                {
+                    ChildModelInfo childModelInfo = null;
+                    mbool = true;
+                    foreach (var item in constraint.Foreign_refrenceKeys)
+                    {
+                        if (mbool)
+                        {
+                            childModelInfo = new ChildModelInfo();
+                            childModelInfo.referenceKeyName = item;
+                            mbool = false;
+                        }
+                        else
+                        {
+                            childModelInfo.foreignKeyName = item;
+                            childs.Add(childModelInfo);
+                            mbool = true;
+                        }
+                    }
+                }
             });
 
             if (0 == childs.Count) return num;
@@ -542,17 +608,36 @@ namespace System.DJ.ImplementFactory.DataAccess
             IList<object> list = parentScheme.ToList(parentModelType);
             if (null == list) return num;
             string vObj = null;
+            List<ConditionItem> conditions = new List<ConditionItem>();
             foreach (var item_1 in list)
             {
                 foreach (ChildModelInfo item_2 in childs)
                 {
                     vObj = item_1.GetPropertyValue<string>(item_2.referenceKeyName);
                     if (string.IsNullOrEmpty(vObj)) continue;
+                    conditions.Clear();
                     item_2.foreignKeyValue = vObj;
+
+                    if (0 < item_2.Items.Count)
+                    {
+                        mbool = true;
+                        string vObj2 = null;
+                        foreach (ChildModelInfo cm in item_2.Items)
+                        {
+                            vObj2 = item_1.GetPropertyValue<string>(cm.referenceKeyName);
+                            if (string.IsNullOrEmpty(vObj2))
+                            {
+                                mbool = false;
+                                break;
+                            }
+                            conditions.Add(ConditionItem.Me.And(cm.foreignKeyName, ConditionRelation.Equals, vObj2));
+                        }
+                        if (false == mbool) continue;
+                    }
+                    conditions.Add(ConditionItem.Me.And(item_2.foreignKeyName, ConditionRelation.Equals, item_2.foreignKeyValue));
                     DbVisitor db = new DbVisitor();
                     IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From(item_2.modelType));
-                    scheme.dbSqlBody.Where(ConditionItem.Me.And(item_2.foreignKeyName, ConditionRelation.Equals, item_2.foreignKeyValue));
-                    ((DbSqlScheme)scheme).TypeDictionary = TypeDictionary;
+                    scheme.dbSqlBody.Where(conditions.ToArray());
                     num += scheme.Delete(true);
                     ((IDisposable)db).Dispose();
                 }
@@ -560,39 +645,15 @@ namespace System.DJ.ImplementFactory.DataAccess
             return num;
         }
 
-        private int delete_data(bool deleteRelation, Type srcType)
-        {
-            if (deleteRelation)
-            {
-                if (null == srcType)
-                {
-                    deleteRelation = false;
-                }
-                else
-                {
-                    if (!typeof(IDbSqlScheme).IsAssignableFrom(srcType))
-                    {
-                        if (null != TypeDictionary) TypeDictionary.Clear();
-                    }
-                }                
-            }
+        private int delete_data(bool deleteRelation)
+        {            
             int num = 0;
             List<SqlDataItem> list = GetDelete();
             IDbHelper dbHelper = DbHelper;
-            Type mType = null;
             foreach (SqlDataItem item in list)
             {
                 if (deleteRelation)
-                {
-                    if (null == TypeDictionary)
-                    {
-                        TypeDictionary = new Dictionary<Type, Type>();
-                    }
-                    mType = item.model.GetType();
-                    if (!TypeDictionary.ContainsKey(mType))
-                    {
-                        TypeDictionary.Add(mType, mType);
-                    }
+                {                    
                     num += deleteRelationData(this, item.model.GetType());
                 }
                 dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
@@ -606,22 +667,12 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         int IDbSqlScheme.Delete(bool deleteRelation)
         {
-            Type srcType = null;
-            if (deleteRelation) srcType = GetSrcType();
-            return delete_data(deleteRelation, srcType);
-        }
-
-        private Type GetSrcType()
-        {
-            StackTrace stack = new StackTrace();
-            StackFrame frame = stack.GetFrame(2);
-            MethodBase method = frame.GetMethod();
-            return method.DeclaringType;
+            return delete_data(deleteRelation);
         }
 
         int IDbSqlScheme.Delete()
         {
-            return delete_data(false, null);
+            return delete_data(false);
         }
 
         int IDbSqlScheme.AppendUpdate(Dictionary<string, object> keyValue)
