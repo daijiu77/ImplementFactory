@@ -337,6 +337,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 if (pi.PropertyType.IsBaseType()) _vObj = _vObj.ConvertTo(pi.PropertyType);
                 if (null == _vObj) return;
+                if (null != (ele as IEntityCopy))
+                {
+                    ((IEntityCopy)ele).AssignmentNo = true;
+                }
                 try
                 {
                     pi.SetValue(ele, _vObj);
@@ -509,7 +513,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
-        private Dictionary<string, PropertyInfo> GetPrimaryKey(Type modelType)
+        public Dictionary<string, PropertyInfo> GetPrimaryKey(Type modelType)
         {
             Dictionary<string, PropertyInfo> keyDic = new Dictionary<string, PropertyInfo>();
             if (null == modelType) return keyDic;
@@ -545,15 +549,25 @@ namespace System.DJ.ImplementFactory.DataAccess
 
                 Type mType = null;
                 if (typeof(IEnumerable).IsAssignableFrom(pi.PropertyType)) //IEnumerable
-                {                    
-                    Type[] types = pi.PropertyType.GetGenericArguments();
-                    mType = types[0];
+                {
+                    if (pi.PropertyType.IsList())
+                    {
+                        Type[] types = pi.PropertyType.GetGenericArguments();
+                        mType = types[0];
+                    }
+                    else if (pi.PropertyType.IsArray)
+                    {
+                        string tpName = pi.PropertyType.TypeToString(true);
+                        tpName = tpName.Replace("[]", "");
+                        mType = DJTools.GetTypeByFullName(tpName);
+                    }
                 }
                 else
                 {
                     mType = pi.PropertyType;
                 }
 
+                if (null == mType) return;
                 if (!keyDic.ContainsKey(constraint.ForeignKey.ToLower())) return;
 
                 if (null != constraint.Foreign_refrenceKeys)
@@ -646,14 +660,14 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private int delete_data(bool deleteRelation)
-        {            
+        {
             int num = 0;
             List<SqlDataItem> list = GetDelete();
             IDbHelper dbHelper = DbHelper;
             foreach (SqlDataItem item in list)
             {
                 if (deleteRelation)
-                {                    
+                {
                     num += deleteRelationData(this, item.model.GetType());
                 }
                 dbHelper.delete(autoCall, item.sql, (List<DbParameter>)item.parameters, false, n =>
@@ -667,6 +681,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         int IDbSqlScheme.Delete(bool deleteRelation)
         {
+            IsDeleteRelation = deleteRelation;
             return delete_data(deleteRelation);
         }
 

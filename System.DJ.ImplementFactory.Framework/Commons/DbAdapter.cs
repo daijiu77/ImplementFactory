@@ -256,7 +256,8 @@ namespace System.DJ.ImplementFactory.Commons
                         cmd.Dispose();
                         if (null != conn)
                         {
-                            if (disposableAndClose) conn.Close();
+                            //if (disposableAndClose) conn.Close();
+                            conn.Close();
                             conn.Dispose();
                         }
 

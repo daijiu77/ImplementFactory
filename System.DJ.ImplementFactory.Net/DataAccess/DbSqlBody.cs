@@ -715,7 +715,14 @@ namespace System.DJ.ImplementFactory.DataAccess
                  }
                  return _ws;
              };
-            tbName = funcTbName(dataModel.GetType());
+            if (null != (dataModel as IEntityCopy))
+            {
+                tbName = funcTbName(((IEntityCopy)dataModel).CopyParentModelType);
+            }
+            else
+            {
+                tbName = funcTbName(dataModel.GetType());
+            }
             fromUnitAction(dataModel, tbName, wherePart);
             if (null == propertyAction) return;
             Constraint constraint = null;
@@ -1172,5 +1179,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
             return sql;
         }
+
+        public bool IsDeleteRelation { get; set; }
     }
 }

@@ -15,7 +15,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
     public class OverrideModel
     {
         public const string Copy = "Copy";
-        public const string CopyParentModel = "CopyParentModel";
+        public const string CopyParentModel = "CopyParentModelType";
+        public const string DeleteRelation = "_IsDeleteRelation";
+        public const string _IEntityCopy = "IEntityCopy";
+        public const string _AssignmentNo = "AssignmentNo";
 
         private const string WhereIgnoreFieldLazy = "WhereIgnoreFieldLazy";
 
@@ -218,7 +221,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 Type GType = null;
                 if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
-                    if (-1 != type.Name.ToLower().IndexOf("list"))
+                    if (type.IsList()) //-1 != type.Name.ToLower().IndexOf("list")
                     {
                         Type[] ts = type.GetGenericArguments();
                         if (!ts[0].IsBaseType())
@@ -253,6 +256,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         DJTools.append(ref pro, level + 2, "if (null != (value as {0}))", typeName);
                         DJTools.append(ref pro, level + 2, "{");
                         DJTools.append(ref pro, level + 3, "(({0})value).ParentModel = this;", typeName);
+                        DJTools.append(ref pro, level + 3, "(({0})value).Name = \"{1}\";", typeName, fn);
                         DJTools.append(ref pro, level + 2, "}");
                         DJTools.append(ref pro, level + 1, "}");
                     }
@@ -276,8 +280,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         }
                     }
                     typeName = type.TypeToString(true);
+                    DJTools.append(ref pro, level + 1, "if (false == (({0})this).{1})", _IEntityCopy, _AssignmentNo);
+                    DJTools.append(ref pro, level + 1, "{");
                     //SetValue(object currentModel, Constraint constraint, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
-                    DJTools.append(ref pro, level + 1, "{0}.SetValue(this, constraint, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
+                    DJTools.append(ref pro, level + 2, "{0}.SetValue(this, constraint, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
+                    DJTools.append(ref pro, level + 1, "}");
+                    DJTools.append(ref pro, level + 1, "(({0})this).{1} = false;", _IEntityCopy, _AssignmentNo);
                     DJTools.append(ref pro, level + 1, "");
 
                     DJTools.append(ref pro, level + 1, "base.{0} = value;", fn);
@@ -551,8 +559,18 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 DJTools.append(ref code, level, "public class {0} : {1}, {2}", newClassName, dmType, typeof(IEntityCopy).TypeToString(true));
                 DJTools.append(ref code, level, "{");
                 DJTools.append(ref code, level + 1, "private LazyDataOpt {0} = new LazyDataOpt();", LazyDataOptVar);
-                DJTools.append(ref code, level + 1, "public Type {0} { get { return typeof({1}); } }", CopyParentModel, dmType);
+                DJTools.append(ref code, level + 1, "");
                 DJTools.append(ref code, level + 1, "public int {0} { get; set; }", MultiTablesExec.RecordQuantityFN);
+
+                string isDel_relation = "false";
+                if (null != dbSqlBody)
+                {
+                    isDel_relation = dbSqlBody.IsDeleteRelation.ToString().ToLower();
+                }
+                DJTools.append(ref code, level + 1, "public bool {0} { get { return {1}; }}", DeleteRelation, isDel_relation);                
+                DJTools.append(ref code, level + 1, "");
+                DJTools.append(ref code, level + 1, "bool {0}.{1} { get; set; }", _IEntityCopy, _AssignmentNo);
+                DJTools.append(ref code, level + 1, "Type {0}.{1} { get { return typeof({2}); } }", _IEntityCopy, CopyParentModel, dmType);
                 DJTools.append(ref code, level + 1, "");
                 DJTools.append(ref code, 0, codeBody);
                 DJTools.append(ref code, level, "}");

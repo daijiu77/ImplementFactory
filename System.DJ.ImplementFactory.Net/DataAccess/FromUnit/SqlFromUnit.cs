@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,6 +21,12 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 
         public SqlFromUnit From<T>(T dataModel) where T : AbsDataModel
         {
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+                return this;
+            }
             this.dataModel = dataModel;
             modelType = typeof(T);
             return this;
@@ -31,6 +38,14 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 throw new Exception(objErr);
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+                return this;
+            }
+
             this.dataModel = (AbsDataModel)dataModel;
             modelType = dataModel.GetType();
             return this;
@@ -54,6 +69,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 
         public SqlFromUnit From<T>(T dataModel, string alias) where T : AbsDataModel
         {
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+                return this;
+            }
+
             this.dataModel = dataModel;
             this.alias = alias;
             modelType = typeof(T);
@@ -66,6 +88,14 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 throw new Exception(objErr);
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+                return this;
+            }
+
             this.dataModel = (AbsDataModel)dataModel;
             modelType = dataModel.GetType();
             this.alias = alias;
@@ -92,6 +122,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
 
         public SqlFromUnit From<T>(T dataModel, string alias, params ConditionItem[] conditions) where T : AbsDataModel
         {
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+                return this;
+            }
+
             this.dataModel = dataModel;
             this.alias = alias;
             this.conditions = conditions;
@@ -106,10 +143,18 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 throw new Exception(objErr);
             }
+
             this.dataModel = (AbsDataModel)dataModel;
             this.alias = alias;
             this.conditions = conditions;
             modelType = dataModel.GetType();
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+            }
+
             InitConditionItem(modelType, alias, conditions);
             return this;
         }
@@ -137,7 +182,7 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
         }
 
         public SqlFromUnit From<T>(T dataModel, string alias, Func<T, bool> funcCondition, params ConditionItem[] conditions) where T : AbsDataModel
-        {
+        {            
             this.dataModel = dataModel;
             this.alias = alias;
             this.conditions = conditions;
@@ -146,6 +191,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+            }
+
             InitConditionItem(modelType, alias, conditions);
             return this;
         }
@@ -164,6 +216,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+            }
+
             InitConditionItem(modelType, alias, conditions);
             return this;
         }
@@ -206,6 +265,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition((T)dm); };
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+            }
+
             return this;
         }
 
@@ -221,6 +287,13 @@ namespace System.DJ.ImplementFactory.DataAccess.FromUnit
             {
                 this.funcCondition = dm => { return funcCondition(dm); };
             }
+
+            if (null != (dataModel as IEntityCopy))
+            {
+                this.dataModel = (AbsDataModel)dataModel;
+                modelType = ((IEntityCopy)dataModel).CopyParentModelType;
+            }
+
             return this;
         }
 

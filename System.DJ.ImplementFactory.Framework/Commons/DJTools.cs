@@ -1077,7 +1077,7 @@ namespace System.DJ.ImplementFactory.Commons
                             s += "<" + gt + ">";
                         }
                     }
-                }                
+                }
             }
             else if (IsBaseType(type))
             {
@@ -1232,16 +1232,20 @@ namespace System.DJ.ImplementFactory.Commons
                     entity.GetType().ForeachProperty((propertyInfo, type, fn) =>
                     {
                         if (_entityPropertyDic.ContainsKey(fn.ToLower())) return;
+                        if (-1 != fn.IndexOf("."))
+                        {
+                            fn = fn.Substring(fn.LastIndexOf(".") + 1);
+                        }
                         _entityPropertyDic.Add(fn.ToLower(), propertyInfo);
                     });
                 }
             }
         }
 
-        public static T GetPropertyValue<T>(this object entity, string propertyName)
+        public static object GetPropertyValue(this object entity, Type dataType, string propertyName)
         {
             initPropertyDic(entity);
-            T v = default(T);
+            object v = getDefaultByType(dataType);
             PropertyInfo pi = null;
             string fn1 = propertyName.ToLower();
             _entityPropertyDic.TryGetValue(fn1, out pi);
@@ -1266,7 +1270,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                 object _vObj = _pi.GetValue(vObj, null);
                 entity.SetPropertyValue(propertyName, _vObj);
-                return (T)_vObj;
+                return _vObj;
             }
 
 
@@ -1274,14 +1278,14 @@ namespace System.DJ.ImplementFactory.Commons
             if (IsBaseType(pi.PropertyType))
             {
                 bool mbool = false;
-                object o = ConvertTo(_obj, typeof(T), ref mbool);
-                if (mbool) v = (T)o;
+                object o = ConvertTo(_obj, dataType, ref mbool);
+                if (mbool) v = o;
             }
             else
             {
                 try
                 {
-                    v = (T)_obj;
+                    v = _obj;
                 }
                 catch (Exception ex)
                 {
@@ -1290,6 +1294,12 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
             return v;
+        }
+
+        public static T GetPropertyValue<T>(this object entity, string propertyName)
+        {
+            Type dataType = typeof(T);
+            return (T)entity.GetPropertyValue(dataType, propertyName);
         }
 
         public static PropertyInfo GetPropertyInfo(this object entity, string propertyName)
@@ -1489,6 +1499,15 @@ namespace System.DJ.ImplementFactory.Commons
         public static bool IsDebug(Type type)
         {
             return _IsDebug(type);
+        }
+
+        public static bool IsList(this Type type)
+        {
+            if (null == type) return false;
+            string tpName = type.FullName;
+            if (string.IsNullOrEmpty(tpName)) return false;
+            Regex rg = new Regex(@"\.Generic\.((List)|(IList))\`1\[", RegexOptions.IgnoreCase);
+            return rg.IsMatch(tpName);
         }
 
         /// <summary>

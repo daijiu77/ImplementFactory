@@ -487,7 +487,7 @@ namespace Test.NetCore
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme scheme2 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 scheme2.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Equals, "ff1"));
-                scheme2.Delete(true);
+                //int num = scheme2.Delete(true); //当为 true 时，删除与之关联的表数据
 
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
@@ -498,7 +498,15 @@ namespace Test.NetCore
                     ConditionItem.Me.AndUnit("Age", ConditionRelation.NotIn, scheme1.dbSqlBody))
                     .Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
                 scheme.dbSqlBody.WhereIgnore("IsEnabled");
-                IList<UserInfo> users = scheme.ToList<UserInfo>();
+                List<UserInfo> users = (List<UserInfo>)scheme.ToList<UserInfo>();
+                users[0].address = "test-123"; //向数据库更新 address 属性值
+
+                UserInfo userInfo1 = new UserInfo();
+                userInfo1.id = Guid.NewGuid();
+                userInfo1.cdatetime = DateTime.Now;
+                userInfo1.name = "dj-123";
+                userInfo1.address = "SZ-GDong";
+                users.AddData(userInfo1); //向数据库新增一条数据
                 IList<UserInfo> children = users[1].children;
 
                 IList<UserInfo> userInfos1=users.ToListFrom<UserInfo, UserInfo>((tg, src, fn, fv) =>
