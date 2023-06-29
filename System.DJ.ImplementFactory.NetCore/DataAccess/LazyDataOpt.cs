@@ -123,6 +123,7 @@ namespace System.DJ.ImplementFactory.DataAccess
         private Dictionary<string, object> getRelationData(object currentModel, string propertyName)
         {
             Dictionary<string, object> kvDic = new Dictionary<string, object>();
+            if (null == currentModel) return kvDic;
             if (string.IsNullOrEmpty(propertyName)) return kvDic;
             string field = propertyName.ToLower();
             currentModel.GetType().ForeachProperty((pi, pt, fn) =>
