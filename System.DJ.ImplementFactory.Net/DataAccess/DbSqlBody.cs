@@ -142,6 +142,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                         });
                     });
                 }
+                else
+                {
+                    fields.Add(new FieldItem()
+                    {
+                        Name = "*"
+                    });
+                }
 
                 return this;
             }
