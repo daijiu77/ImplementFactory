@@ -107,10 +107,10 @@ namespace System.DJ.ImplementFactory.DataAccess
         }
 
         private Dictionary<Type, FieldItemList<FieldItem>> selectFieldDic = new Dictionary<Type, FieldItemList<FieldItem>>();
-        public DbSqlBody Select<T>(params FieldItem[] selectFields) where T : AbsDataModel
+        public DbSqlBody Select<T>(params FieldItem[] selectFields)
         {
-            if (null == selectFields) return this;
-            if (0 == selectFields.Length) return this;
+            if (null == selectFields) selectFields = new FieldItem[] { };
+
             Type mType = typeof(T);
             FieldItemList<FieldItem> fields = null;
             selectFieldDic.TryGetValue(mType, out fields);
@@ -120,11 +120,40 @@ namespace System.DJ.ImplementFactory.DataAccess
                 selectFieldDic.Add(mType, fields);
             }
 
+            Type cmType = null;
+            foreach (var item in fromUnits)
+            {
+                if (mType.Equals(item.modelType))
+                {
+                    cmType = item.modelType;
+                    break;
+                }
+            }
+
+            if (0 == selectFields.Length)
+            {
+                if (null == cmType)
+                {
+                    mType.ForeachProperty((pi, pt, fn) =>
+                    {
+                        fields.Add(new FieldItem()
+                        {
+                            Name = fn
+                        });
+                    });
+                }
+
+                return this;
+            }
+
             string fName = "";
             foreach (FieldItem item in selectFields)
             {
                 if (null == item) continue;
+                if (null == item.Name) continue;
                 fName = item.Name.Trim();
+                if (string.IsNullOrEmpty(fName)) continue;
+                item.Name = fName;
                 fields.Add(item);
             }
             return this;
