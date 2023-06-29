@@ -496,15 +496,42 @@ namespace System.DJ.ImplementFactory.DataAccess
                         || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
                         return true;
                     });
-                    if (0 == s.IndexOf(startStr))
+
+                    initWhereAlias(alias, ref s);
+                    if (!string.IsNullOrEmpty(startStr))
                     {
-                        s = s.Substring(startStr.Length);
+                        if (0 == s.IndexOf(startStr))
+                        {
+                            s = s.Substring(startStr.Length).Trim();
+                        }
                     }
                 }
 
-                if (!string.IsNullOrEmpty(s)) sw += s;
+                if (!string.IsNullOrEmpty(s)) sw += " " + s;
             }
             return sw;
+        }
+
+        private void initWhereAlias(string alias, ref string whereStr)
+        {
+            if (string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(whereStr)) return;
+            whereStr = whereStr.Trim();
+            Regex rg = new Regex(@"((^((and)|(or)))|(\s((and)|(or))))\s+(?<FieldName>[a-z0-9_]+)[\s\=\<\>\!]", RegexOptions.IgnoreCase);
+            if (!rg.IsMatch(whereStr)) return;
+            MatchCollection mc = rg.Matches(whereStr);
+            string FieldName = "";
+            string fn = "";
+            string s = "";
+            alias = alias.Trim();
+            if (!alias.Substring(alias.Length - 1).Equals(".")) alias += ".";
+            foreach (Match item in mc)
+            {
+                s = item.Groups[0].Value;
+                FieldName = item.Groups["FieldName"].Value;
+                fn = alias + sqlAnalysis.GetLegalName(FieldName);
+                s = s.Replace(FieldName, fn);
+                whereStr = whereStr.Replace(item.Groups[0].Value, s);
+            }
         }
 
         private string GetFromPart(ref string wherePart, Dictionary<string, object> fieldDic)

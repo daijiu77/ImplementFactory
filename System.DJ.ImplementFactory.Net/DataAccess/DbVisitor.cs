@@ -20,17 +20,22 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (null != sqlFromUnits)
             {
                 string alias = "";
+                char[] arr = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
+                int n = 0;
                 foreach (var item in sqlFromUnits)
                 {
                     dbSqlStructure.fromUnits.Add(item);
-                    if (!string.IsNullOrEmpty(item.alias))
+                    if (string.IsNullOrEmpty(item.alias))
                     {
-                        alias = item.alias.Trim();
-                        if (!string.IsNullOrEmpty(alias))
-                        {
-                            aliasDic[alias.ToLower()] = alias;
-                        }
+                        item.alias = arr[n].ToString() + n;
                     }
+
+                    alias = item.alias.Trim();
+                    if (!string.IsNullOrEmpty(alias))
+                    {
+                        dbSqlStructure.aliasDic[alias.ToLower()] = alias;
+                    }
+                    n++;
                 }
             }
             return dbSqlStructure;
