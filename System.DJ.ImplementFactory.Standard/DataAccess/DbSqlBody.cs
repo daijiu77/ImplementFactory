@@ -1180,6 +1180,52 @@ namespace System.DJ.ImplementFactory.DataAccess
             return sql;
         }
 
+        protected void initOrderby(Action<OrderbyList<OrderbyItem>> action)
+        {
+            if (0 < orderbyItems.Count) return;
+            if (db_dialect.sqlserver != DbAdapter.dbDialect) return;
+            string keyName = "";
+            string id = "";
+            string dateName = "";
+            string tbAlias = fromUnits[0].alias;
+            if (null == tbAlias) tbAlias = "";
+            tbAlias = tbAlias.Trim();
+            if (!string.IsNullOrEmpty(tbAlias)) tbAlias += ".";
+            FieldMapping fm = null;
+            fromUnits[0].modelType.ForeachProperty((pi, pt, fn) =>
+            {
+                if (fn.ToLower().Equals("id")) id = fn;
+                if (typeof(DateTime) == pt) dateName = fn;
+                fm = pi.GetCustomAttribute<FieldMapping>();
+                if (null == fm) return;
+                if (fm.IsPrimaryKey)
+                {
+                    keyName = fn;
+                }
+            });
+
+            if (!string.IsNullOrEmpty(keyName))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + keyName, OrderByRule.Asc));
+                if (null != action) action(orderbyItems);
+            }
+            else if (!string.IsNullOrEmpty(dateName))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + dateName, OrderByRule.Asc));
+                if (null != action) action(orderbyItems);
+            }
+            else if (!string.IsNullOrEmpty(id))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + id, OrderByRule.Asc));
+                if (null != action) action(orderbyItems);
+            }
+        }
+
+        protected void initOrderby()
+        {
+            initOrderby((orderbyItems) => { });
+        }
+
         protected string PageSizeSignOfSql { get; set; }
         protected string StartQuantitySignOfSql { get; set; }
 
@@ -1232,7 +1278,13 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (0 < pageSize)
             {
                 if (1 > pageNumber) throw new Exception("The starting value of the parameter PageNumber is 1, " +
-                    "which must be greater than or equal to 1, that is: 1<=PageNumber.");
+                    "which must be greater than or equal to 1, that is: 1<=PageNumber.");                
+                initOrderby(orderbyItems =>
+                {
+                    orderbyPart = GetOrderbyPart();
+                    orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
+                    orderbyPart = orderbyPart.Trim();
+                });
                 sql = sqlAnalysis.GetPageChange(selectPart, fromPart, wherePart, groupPart, orderbyPart, pageSize, pageNumber);
                 PageSizeSignOfSql = sqlAnalysis.PageSizeSignOfSql;
                 StartQuantitySignOfSql = sqlAnalysis.StartQuantitySignOfSql;
