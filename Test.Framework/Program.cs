@@ -489,6 +489,18 @@ namespace Test.Framework
                 scheme2.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Equals, "ff1"));
                 //int num = scheme2.Delete(true); //当为 true 时，删除与之关联的表数据
 
+                List<UserInfo> _userInfos = (List<UserInfo>)scheme2.ToList<UserInfo>();
+                List<Plan> plans = _userInfos[0].Plans as List<Plan>;
+                plans[0].PName = "TTTT-FFF";
+                Plan plan = new Plan();
+                plan.PName = "plan-123";
+                plan.Detail = "Detail-123";
+                plan.StartDate = DateTime.Now;
+                plan.EndDate = DateTime.Now;
+                plan.Id = Guid.NewGuid();
+                plans.AddData(plan); //添加与 UserInfo 关联的 Plan 数据
+                
+
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 scheme1.dbSqlBody.Where(ConditionItem.Me.And("Age", ConditionRelation.Equals, 21));
@@ -509,7 +521,7 @@ namespace Test.Framework
                 users.AddData(userInfo1); //向数据库新增一条数据
                 IList<UserInfo> children = users[1].children;
 
-                IList<UserInfo> userInfos1=users.ToListFrom<UserInfo, UserInfo>((tg, src, fn, fv) =>
+                IList<UserInfo> userInfos1 = users.ToListFrom<UserInfo, UserInfo>((tg, src, fn, fv) =>
                 {
                     return fv;
                 });

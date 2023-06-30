@@ -618,7 +618,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                 }
 
-                if(mbool)
+                if (mbool)
                 {
                     /*Left join/Right join/Inner join*/
                     fromPart += " " + s.Trim();
@@ -798,7 +798,20 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (null == propertyAction) return;
             Constraint constraint = null;
             Attribute attrIF = null;
-            dataModel.ForeachProperty((pi, type, fn, fv) =>
+            bool isCopy = false;
+            if (null != (dataModel as IEntityCopy))
+            {
+                isCopy = true;
+            }
+
+            dataModel.ForeachProperty((pi, pt, fn) =>
+            {
+                if (isCopy)
+                {
+                    return pt.IsBaseType();
+                }
+                return true;
+            }, (pi, type, fn, fv) =>
             {
                 if (null == fv) return;
                 object v2 = fv;
@@ -1121,7 +1134,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                     fields = fields.Substring(2);
                     vals = vals.Substring(2);
                     sql = sql.ExtFormat(fields, vals);
-                    dataItem.sql = sqlAnalysis.GetPrimaryKeyValueScheme(sql, pks);
+                    //dataItem.sql = sqlAnalysis.GetPrimaryKeyValueScheme(sql, pks);
+                    dataItem.sql = sql;
                     list.Add(dataItem);
                 }
             });

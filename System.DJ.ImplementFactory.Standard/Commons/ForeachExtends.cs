@@ -1,11 +1,12 @@
 ﻿using System.DJ.ImplementFactory.Commons.Attrs;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace System.DJ.ImplementFactory.Commons
 {
     public class ForeachExtends
     {
-        public void ForeachProperty(object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)
+        public void ForeachProperty(object obj, bool isAll, Func<PropertyInfo, Type, string, bool> funcPr, Func<PropertyInfo, Type, string, object, bool> func)
         {
             if (null == obj) return;
             Type type = obj.GetType();
@@ -20,6 +21,11 @@ namespace System.DJ.ImplementFactory.Commons
                 if (!isAll)
                 {
                     if (item.DeclaringType != type) continue;
+                }
+
+                if (null != funcPr)
+                {
+                    if (!funcPr(item, item.PropertyType, item.Name)) continue;
                 }
                 v = item.GetValue(obj);
 
@@ -37,10 +43,40 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public void ForeachProperty(object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)
+        {
+            ForeachProperty(obj, isAll, null, func);
+        }
+
         public void ForeachProperty(object obj, Func<PropertyInfo, Type, string, object, bool> func)
         {
             bool isAll = true;
-            ForeachProperty(obj, isAll, func);
+            ForeachProperty(obj, isAll, null, func);
+        }
+
+        public void ForeachProperty(object obj, Func<PropertyInfo, Type, string, bool> funcPr, Func<PropertyInfo, Type, string, object, bool> func)
+        {
+            bool isAll = true;
+            ForeachProperty(obj, isAll, funcPr, func);
+        }
+
+        public void ForeachProperty(object obj, Func<PropertyInfo, Type, string, bool> funcPr, Action<PropertyInfo, Type, string, object> action)
+        {
+            bool isAll = true;
+            ForeachProperty(obj, isAll, funcPr, (pi, fieldType, fName, fValue) =>
+            {
+                action(pi, fieldType, fName, fValue);
+                return true;
+            });
+        }
+
+        public void ForeachProperty(object obj, bool isAll, Func<PropertyInfo, Type, string, bool> funcPr, Action<PropertyInfo, Type, string, object> action)
+        {
+            ForeachProperty(obj, isAll, funcPr, (pi, fieldType, fName, fValue) =>
+            {
+                action(pi, fieldType, fName, fValue);
+                return true;
+            });
         }
 
         public void ForeachProperty(object obj, Action<PropertyInfo, Type, string, object> action)

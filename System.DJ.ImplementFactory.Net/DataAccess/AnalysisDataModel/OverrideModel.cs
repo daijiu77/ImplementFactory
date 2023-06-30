@@ -205,6 +205,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = typeof(OrderbyItem).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(OverrideModel).Namespace });
 
+            string doListTypeName = "";
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
                 fnLower = fn.ToLower();
@@ -218,7 +219,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     constraint = (Constraint)att;
                 }
 
-                Type GType = null;
+                doListTypeName = "";
                 if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
                     if (type.IsList()) //-1 != type.Name.ToLower().IndexOf("list")
@@ -226,7 +227,9 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         Type[] ts = type.GetGenericArguments();
                         if (!ts[0].IsBaseType())
                         {
-                            GType = ts[0];
+                            Type typeList = typeof(DOList<>);
+                            typeList = typeList.MakeGenericType(ts[0]);
+                            doListTypeName = typeList.TypeToString(true);
                         }
                     }
                 }
@@ -246,17 +249,14 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     DJTools.append(ref pro, level, "set");
                     DJTools.append(ref pro, level, "{");
 
-                    if (null != GType)
+                    if (!string.IsNullOrEmpty(doListTypeName))
                     {
-                        Type typeList = typeof(DOList<>);
-                        typeList = typeList.MakeGenericType(GType);
-                        typeName = typeList.TypeToString(true);
                         DJTools.append(ref pro, level + 1, "if (null != value)");
                         DJTools.append(ref pro, level + 1, "{");
-                        DJTools.append(ref pro, level + 2, "if (null != (value as {0}))", typeName);
+                        DJTools.append(ref pro, level + 2, "if (null != (value as {0}))", doListTypeName);
                         DJTools.append(ref pro, level + 2, "{");
-                        DJTools.append(ref pro, level + 3, "(({0})value).ParentModel = this;", typeName);
-                        DJTools.append(ref pro, level + 3, "(({0})value).Name = \"{1}\";", typeName, fn);
+                        DJTools.append(ref pro, level + 3, "(({0})value).ParentModel = this;", doListTypeName);
+                        DJTools.append(ref pro, level + 3, "(({0})value).Name = \"{1}\";", doListTypeName, fn);
                         DJTools.append(ref pro, level + 2, "}");
                         DJTools.append(ref pro, level + 1, "}");
                     }
@@ -314,7 +314,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 typeName = typeName.Replace("[]", "");
                                 uskv.Add(new CKeyValue() { Key = type.Namespace });
                             }
-                            else
+                            else if (type.IsList())
                             {
                                 types = type.GetGenericArguments();
                                 if (0 < types.Length)
@@ -332,8 +332,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             uskv.Add(new CKeyValue() { Key = type.Namespace });
                         }
 
-                        pt = DJTools.GetTypeByFullName(typeName);
-                        if (!IsInheritAbsDataModel(pt)) typeName = "";
+                        if (!string.IsNullOrEmpty(typeName))
+                        {
+                            pt = DJTools.GetTypeByFullName(typeName);
+                            if (!IsInheritAbsDataModel(pt)) typeName = "";
+                        }
 
                         if (!string.IsNullOrEmpty(typeName))
                         {
@@ -366,7 +369,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             DJTools.append(ref GetBody, level, "DbVisitor db = new DbVisitor();");
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
-                            s = DJTools.ExtFormat("ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))", constraint.RefrenceKey, constraint.ForeignKey, pt.TypeToString(true));
+                            string srcName = GetSrcPropertyName(dataModelType, constraint.ForeignKey);
+                            s = DJTools.ExtFormat("ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))", constraint.RefrenceKey, srcName, pt.TypeToString(true));
                             if (null != constraint.Foreign_refrenceKeys)
                             {
                                 int x = 0;
@@ -377,7 +381,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                         pt = GetPropertyType(dataModelType, k);
                                         if (null == pt) break;
                                         s += ", ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))";
-                                        s = s.Replace("{1}", k);
+                                        srcName = GetSrcPropertyName(dataModelType, k);
+                                        s = s.Replace("{1}", srcName);
                                         s = s.Replace("{2}", pt.TypeToString(true));
                                         x = 1;
                                     }
@@ -488,7 +493,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 string srcTp = type.TypeToString(true);
                                 DJTools.append(ref GetBody, level, "if (null == base.{0})", fn);
                                 DJTools.append(ref GetBody, level, "{");
-                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})scheme.ToList<{2}>();", fn, srcTp, typeName);
+                                DJTools.append(ref GetBody, level + 1, "IList<{0}> results = scheme.ToList<{0}>();", typeName, srcTp);
+                                if (!string.IsNullOrEmpty(doListTypeName))
+                                {
+                                    DJTools.append(ref GetBody, level, "OverrideModel.SetDOListProperty<{0}>(this, \"{1}\", results);", typeName, fn);
+                                }
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})results;", fn, srcTp);
                                 DJTools.append(ref GetBody, level, "}");
                                 DJTools.append(ref GetBody, level, "else");
                                 DJTools.append(ref GetBody, level, "{");
@@ -567,7 +577,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 {
                     isDel_relation = dbSqlBody.IsDeleteRelation.ToString().ToLower();
                 }
-                DJTools.append(ref code, level + 1, "public bool {0} { get { return {1}; }}", DeleteRelation, isDel_relation);                
+                DJTools.append(ref code, level + 1, "public bool {0} { get { return {1}; }}", DeleteRelation, isDel_relation);
                 DJTools.append(ref code, level + 1, "");
                 DJTools.append(ref code, level + 1, "bool {0}.{1} { get; set; }", _IEntityCopy, _AssignmentNo);
                 DJTools.append(ref code, level + 1, "Type {0}.{1} { get { return typeof({2}); } }", _IEntityCopy, CopyParentModel, dmType);
@@ -658,6 +668,28 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                 }
             }
             return results;
+        }
+
+        public static void SetDOListProperty<T>(object currentModel, string propertyName, IList<T> list)
+        {
+            if (null == (list as DOList<T>)) return;
+            ((DOList<T>)list).ParentModel = currentModel;
+            ((DOList<T>)list).Name = propertyName;
+        }
+
+        private string GetSrcPropertyName(Type modelType, string propertyName)
+        {
+            if (null == modelType) return propertyName;
+            string srcName = propertyName;
+            string pnLower = propertyName.ToLower();
+            modelType.ForeachProperty((pi, pt, fn) =>
+            {
+                if (fn.ToLower().Equals(pnLower))
+                {
+                    srcName = fn;
+                }
+            });
+            return srcName;
         }
 
         class ImplAdapter : ImplementAdapter

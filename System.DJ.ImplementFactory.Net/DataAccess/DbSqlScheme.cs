@@ -405,6 +405,42 @@ namespace System.DJ.ImplementFactory.DataAccess
             Page_Count(dataPage, recordCount1);
             ((IDisposable)dbHelper).Dispose();
         }
+        private void initOrderby()
+        {
+            if (0 < orderbyItems.Count) return;
+            string keyName = "";
+            string id = "";
+            string dateName = "";
+            string tbAlias = fromUnits[0].alias;
+            if (null == tbAlias) tbAlias = "";
+            tbAlias = tbAlias.Trim();
+            if (!string.IsNullOrEmpty(tbAlias)) tbAlias += ".";
+            FieldMapping fm = null;
+            fromUnits[0].modelType.ForeachProperty((pi, pt, fn) =>
+            {
+                if (fn.ToLower().Equals("id")) id = fn;
+                if (typeof(DateTime) == pt) dateName = fn;
+                fm = pi.GetCustomAttribute<FieldMapping>();
+                if (null == fm) return;
+                if (fm.IsPrimaryKey)
+                {
+                    keyName = fn;
+                }
+            });
+
+            if (!string.IsNullOrEmpty(keyName))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + keyName, OrderByRule.Asc));
+            }
+            else if (!string.IsNullOrEmpty(dateName))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + dateName, OrderByRule.Asc));
+            }
+            else if (!string.IsNullOrEmpty(id))
+            {
+                orderbyItems.Add(OrderbyItem.Me.Set(tbAlias + id, OrderByRule.Asc));
+            }
+        }
 
         IList<T> IDbSqlScheme.ToList<T>()
         {
@@ -430,6 +466,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         T IDbSqlScheme.DefaultFirst<T>()
         {
             Skip(1, 1);
+            initOrderby();
+
             IList<T> list = ((IDbSqlScheme)this).ToList<T>();
             if (null != list)
             {
@@ -441,6 +479,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         object IDbSqlScheme.DefaultFirst(Type modelType)
         {
             Skip(1, 1);
+            initOrderby();
+
             IList<object> list1 = ((IDbSqlScheme)this).ToList(modelType);
             if (null != list1)
             {

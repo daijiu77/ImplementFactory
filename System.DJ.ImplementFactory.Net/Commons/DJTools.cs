@@ -273,6 +273,26 @@ namespace System.DJ.ImplementFactory.Commons
             return mbool;
         }
 
+        public static void ForeachProperty(this object obj, bool isAll, Func<PropertyInfo, Type, string, bool> funcPr, Func<PropertyInfo, Type, string, object, bool> func)
+        {
+            forechExtends.ForeachProperty(obj, isAll, funcPr, func);
+        }
+
+        public static void ForeachProperty(this object obj, Func<PropertyInfo, Type, string, bool> funcPr, Func<PropertyInfo, Type, string, object, bool> func)
+        {
+            forechExtends.ForeachProperty(obj, funcPr, func);
+        }
+
+        public static void ForeachProperty(this object obj, bool isAll, Func<PropertyInfo, Type, string, bool> funcPr, Action<PropertyInfo, Type, string, object> action)
+        {
+            forechExtends.ForeachProperty(obj, isAll, funcPr, action);
+        }
+
+        public static void ForeachProperty(this object obj, Func<PropertyInfo, Type, string, bool> funcPr, Action<PropertyInfo, Type, string, object> action)
+        {
+            forechExtends.ForeachProperty(obj, funcPr, action);
+        }
+
         public static void ForeachProperty(this object obj, bool isAll, Func<PropertyInfo, Type, string, object, bool> func)
         {
             forechExtends.ForeachProperty(obj, isAll, func);
