@@ -541,7 +541,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             string s1 = "";
             string ConditionBody = "";
             bool mbool = false;
-            bool isFirst = true;
             bool isSqlBody = false;
             Regex rg = new Regex(@"^\s+((or)|(and))\s+(?<ConditionBody>.+)", RegexOptions.IgnoreCase);
             Attribute att = null;
@@ -549,6 +548,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             foreach (SqlFromUnit item in fromUnits)
             {
                 isSqlBody = false;
+                mbool = false;
                 if (null != item.dataModel)
                 {
                     isSqlBody = null != (item.dataModel as DbSqlBody);
@@ -576,12 +576,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                         s = sqlAnalysis.GetTableName(item.modelType.Name);
                     }
 
-                    mbool = false;
-                    if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)) && false == isFirst)
+                    //if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)) && false == isFirst)
+                    if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)))
                     {
                         mbool = true;
                     }
-                    isFirst = false;
 
                     if (mbool)
                     {
@@ -618,7 +617,16 @@ namespace System.DJ.ImplementFactory.DataAccess
                         s = sqlAnalysis.GetTableAilas(s, item.alias);
                     }
                 }
-                fromPart += ", " + s;
+
+                if(mbool)
+                {
+                    /*Left join/Right join/Inner join*/
+                    fromPart += " " + s.Trim();
+                }
+                else
+                {
+                    fromPart += ", " + s;
+                }
             }
             if (!string.IsNullOrEmpty(fromPart)) fromPart = fromPart.Substring(2);
             return fromPart;

@@ -369,8 +369,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 
         protected string GetJoin(string flag, string tableName, string alias, string wherePart)
         {
-            string sql = flag + " " + ((ISqlAnalysis)this).GetTableName(tableName);
-            sql = ((ISqlAnalysis)this).GetTableAilas(sql, alias);
+            string sql = flag + " " + ((ISqlAnalysis)this).GetTableAilas(tableName, alias);
             if (!string.IsNullOrEmpty(wherePart))
             {
                 wherePart = GetWhere(wherePart, true);
