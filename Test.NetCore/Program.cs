@@ -485,8 +485,10 @@ namespace Test.NetCore
                     s = "";
                 }
                 DbVisitor db = new DbVisitor();
-                IDbSqlScheme scheme2 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
-                scheme2.dbSqlBody.Where(ConditionItem.Me.And("name", ConditionRelation.Equals, "ff1"));
+                IDbSqlScheme scheme2 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>("ui"),
+                    LeftJoin.Me.From<Plan>("p",
+                    ConditionItem.Me.And("p.UserInfoId", ConditionRelation.Equals, "ui.Id")));
+                scheme2.dbSqlBody.Where(ConditionItem.Me.And("ui.name", ConditionRelation.Equals, "ff1"));
                 //int num = scheme2.Delete(true); //当为 true 时，删除与之关联的表数据
 
                 List<UserInfo> _userInfos = (List<UserInfo>)scheme2.ToList<UserInfo>();
