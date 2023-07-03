@@ -1,16 +1,46 @@
 ﻿using System.Collections.Generic;
+using System.DJ.ImplementFactory.DataAccess;
 
 namespace System.DJ.ImplementFactory.Entities
 {
     public class FieldItem
     {
-        public string Name { get; set; }
+        public static FieldItem Me
+        {
+            get
+            {
+                return new FieldItem();
+            }
+        }
+
+        public static FieldItem Instance
+        {
+            get
+            {
+                return new FieldItem();
+            }
+        }
+
+        public void Set(string fieldName, string fieldAlias)
+        {
+            NameOrSelectFrom = fieldName;
+            Alias = fieldAlias;
+        }
+
+        public void Set(DbSqlBody dbSqlBody, string alias)
+        {
+            NameOrSelectFrom = dbSqlBody;
+            Alias = alias;
+        }
+
+        public object NameOrSelectFrom { get; set; }
         public string Alias { get; set; }
     }
 
     public class FieldItemList<T> : List<T> where T : FieldItem
     {
         private Dictionary<string, FieldItem> dic = new Dictionary<string, FieldItem>();
+        private Dictionary<DbSqlBody, FieldItem> bodyDic = new Dictionary<DbSqlBody, FieldItem>();
 
         public FieldItem this[string fieldName]
         {
@@ -41,16 +71,23 @@ namespace System.DJ.ImplementFactory.Entities
         public new void Add(FieldItem item)
         {
             if (null == item) return;
-            if (string.IsNullOrEmpty(item.Name)) return;
+            if (null == item.NameOrSelectFrom) return;
 
-            string key = item.Name.Trim();
-            if (string.IsNullOrEmpty(key)) return;
+            if (null == (item.NameOrSelectFrom as DbSqlBody))
+            {
+                string key = item.NameOrSelectFrom.ToString().Trim();
+                if (string.IsNullOrEmpty(key)) return;
 
-            string kLower = key.ToLower();
-            if (dic.ContainsKey(kLower)) return;
+                string kLower = key.ToLower();
+                if (dic.ContainsKey(kLower)) return;
 
-            base.Add((T)item);
-            dic[kLower] = item;
+                base.Add((T)item);
+                dic[kLower] = item;
+            }
+            else
+            {
+                bodyDic.Add(((DbSqlBody)item.NameOrSelectFrom), item);
+            }
         }
 
         public new int Count

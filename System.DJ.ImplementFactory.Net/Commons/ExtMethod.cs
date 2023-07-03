@@ -219,7 +219,15 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         jsonData.data = item.Value;
                     }
+                    else if (-1 != item.Name.ToLower().IndexOf("datas"))
+                    {
+                        jsonData.data = item.Value;
+                    }
                     else if (-1 != item.Name.ToLower().IndexOf("list"))
+                    {
+                        jsonData.list = item.Value;
+                    }
+                    else if (-1 != item.Name.ToLower().IndexOf("lists"))
                     {
                         jsonData.list = item.Value;
                     }

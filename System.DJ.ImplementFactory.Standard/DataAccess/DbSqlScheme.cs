@@ -314,7 +314,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         }
                         _vObj = list;
                     }
-                    else if (typeof(IList).IsAssignableFrom(pi.PropertyType))
+                    else if (pi.PropertyType.IsList())
                     {
                         Type[] types = pi.PropertyType.GetGenericArguments();
                         if (1 != types.Length) return;
@@ -405,7 +405,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             Page_Count(dataPage, recordCount1);
             ((IDisposable)dbHelper).Dispose();
         }
-        
+
         IList<T> IDbSqlScheme.ToList<T>()
         {
             Type modelType = typeof(T);

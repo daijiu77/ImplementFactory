@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
@@ -138,7 +137,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     {
                         fields.Add(new FieldItem()
                         {
-                            Name = fn
+                            NameOrSelectFrom = fn
                         });
                     });
                 }
@@ -146,24 +145,47 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     fields.Add(new FieldItem()
                     {
-                        Name = "*"
+                        NameOrSelectFrom = "*"
                     });
                 }
 
                 return this;
             }
 
+            SetSelect(selectFields, fields);
+            return this;
+        }
+
+        public DbSqlBody Select(params FieldItem[] selectFields)
+        {
+            if (null == selectFields) return this;
+            FieldItemList<FieldItem> fields = null;
+            Type modeType = fromUnits[0].modelType;
+            selectFieldDic.TryGetValue(modeType, out fields);
+            if(null == fields)
+            {
+                fields = new FieldItemList<FieldItem>();
+                selectFieldDic[modeType] = fields;
+            }
+            SetSelect(selectFields, fields);
+            return this;
+        }
+
+        private void SetSelect(FieldItem[] selectFields, FieldItemList<FieldItem> fields)
+        {
             string fName = "";
             foreach (FieldItem item in selectFields)
             {
                 if (null == item) continue;
-                if (null == item.Name) continue;
-                fName = item.Name.Trim();
-                if (string.IsNullOrEmpty(fName)) continue;
-                item.Name = fName;
+                if (null == item.NameOrSelectFrom) continue;
+                if (null == (item.NameOrSelectFrom as DbSqlBody))
+                {
+                    fName = item.NameOrSelectFrom.ToString().Trim();
+                    if (string.IsNullOrEmpty(fName)) continue;
+                    item.NameOrSelectFrom = fName;
+                }
                 fields.Add(item);
             }
-            return this;
         }
 
         public DbSqlBody Group(string field)
@@ -352,6 +374,7 @@ namespace System.DJ.ImplementFactory.DataAccess
 
                 string tbAlias = "";
                 string fAlias = "";
+                string fName = "";
                 foreach (KeyValuePair<Type, FieldItemList<FieldItem>> item in selectFieldDic)
                 {
                     tbAlias = "";
@@ -361,7 +384,24 @@ namespace System.DJ.ImplementFactory.DataAccess
                     {
                         fAlias = "";
                         if (!string.IsNullOrEmpty(fItem.Alias)) fAlias = " " + fItem.Alias;
-                        selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fItem.Name, fAlias);
+                        if (null != (fItem.NameOrSelectFrom as DbSqlBody))
+                        {
+                            fName = ((DbSqlBody)fItem.NameOrSelectFrom).GetSql();
+                            if (!string.IsNullOrEmpty(fName))
+                            {
+                                tbAlias = "";
+                                fName = "(" + fName + ")";
+                            }
+                        }
+                        else
+                        {
+                            fName = fItem.NameOrSelectFrom.ToString();
+                        }
+
+                        if (!string.IsNullOrEmpty(fName))
+                        {
+                            selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fName, fAlias);
+                        }
                     }
                 }
             }
@@ -580,10 +620,6 @@ namespace System.DJ.ImplementFactory.DataAccess
                     if ((null != (item as LeftJoin) || null != (item as RightJoin) || null != (item as InnerJoin)))
                     {
                         mbool = true;
-                    }
-
-                    if (mbool)
-                    {
                         ConditionBody = "";
                         if (null != item.conditions)
                         {
@@ -628,7 +664,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                     fromPart += ", " + s;
                 }
             }
-            if (!string.IsNullOrEmpty(fromPart)) fromPart = fromPart.Substring(2);
+
+            rg = new Regex(@"^\,\s", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(fromPart))
+            {
+                fromPart = fromPart.Substring(1);
+            }
+            fromPart = fromPart.Trim();
             return fromPart;
         }
 
@@ -1278,7 +1320,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (0 < pageSize)
             {
                 if (1 > pageNumber) throw new Exception("The starting value of the parameter PageNumber is 1, " +
-                    "which must be greater than or equal to 1, that is: 1<=PageNumber.");                
+                    "which must be greater than or equal to 1, that is: 1<=PageNumber.");
                 initOrderby(orderbyItems =>
                 {
                     orderbyPart = GetOrderbyPart();
