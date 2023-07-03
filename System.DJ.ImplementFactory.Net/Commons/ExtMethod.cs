@@ -223,6 +223,14 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         jsonData.data = item.Value;
                     }
+                    else if (-1 != item.Name.ToLower().IndexOf("result"))
+                    {
+                        jsonData.data = item.Value;
+                    }
+                    else if (-1 != item.Name.ToLower().IndexOf("results"))
+                    {
+                        jsonData.data = item.Value;
+                    }
                     else if (-1 != item.Name.ToLower().IndexOf("list"))
                     {
                         jsonData.list = item.Value;
@@ -236,6 +244,10 @@ namespace System.DJ.ImplementFactory.Commons
                         jsonData.arr = item.Value;
                     }
                     else if (-1 != item.Name.ToLower().IndexOf("dts"))
+                    {
+                        jsonData.dts = item.Value;
+                    }
+                    else
                     {
                         jsonData.dts = item.Value;
                     }
