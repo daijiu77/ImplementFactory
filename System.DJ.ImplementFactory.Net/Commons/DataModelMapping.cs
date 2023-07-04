@@ -86,6 +86,60 @@ namespace System.DJ.ImplementFactory.Commons
 
                 try
                 {
+                    if (pt.IsList())
+                    {
+                        object tgVal = tgPropertyInfo.GetValue(tObj, null);
+                        if (null != tgVal)
+                        {
+                            IEnumerable ienum = (IEnumerable)vObj;
+                            IList list = (IList)tgVal;
+                            foreach (var item in ienum)
+                            {
+                                list.Add(item);
+                            }
+                            return true;
+                        }
+                    }
+                    else if (pt.IsArray)
+                    {
+                        object tgVal = tgPropertyInfo.GetValue(tObj, null);
+                        if (null != tgVal)
+                        {
+                            string tpStr = pt.TypeToString(true);
+                            tpStr = tpStr.Replace("[]", "");
+                            Type eleTp = DJTools.GetClassTypeByPath(tpStr);
+                            if (null != eleTp)
+                            {
+                                object list = ExtCollection.createListByType(eleTp);
+                                IEnumerable ienum = (IEnumerable)tgVal;
+                                foreach (var item in ienum)
+                                {
+                                    ExtCollection.listAdd(list, item);
+                                }
+
+                                ienum = (IEnumerable)vObj;
+                                foreach (var item in ienum)
+                                {
+                                    ExtCollection.listAdd(list, item);
+                                }
+
+                                MethodInfo mInfo = this.GetType().GetMethod("ToArray", BindingFlags.Instance | BindingFlags.NonPublic);
+                                if (null != mInfo)
+                                {
+                                    mInfo = mInfo.MakeGenericMethod(eleTp);
+                                    try
+                                    {
+                                        vObj = mInfo.Invoke(this, new object[] { mInfo });
+                                    }
+                                    catch (Exception)
+                                    {
+
+                                        //throw;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     tgPropertyInfo.SetValue(tObj, vObj);
                 }
                 catch (Exception)
@@ -128,6 +182,19 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         #region 'Reflection calling' is prohibited for deletion
+
+        private T[] ToArray<T>(IList list)
+        {
+            T[] arr = new T[list.Count];
+            int n = 0;
+            foreach (var item in list)
+            {
+                arr[n] = (T)item;
+                n++;
+            }
+            return arr;
+        }
+
         /// <summary>
         /// 'Reflection calling' is prohibited for deletion
         /// </summary>
@@ -186,7 +253,7 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 t = ToObjectFrom<T>(item, isTrySetVal, funcAssign, (targetEle, srcEle, fieldName, fieldValue) =>
                 {
-                    return Call_back1<T, TT>(targetEle, srcEle, fieldName, fieldValue, funcVal, null, null);                    
+                    return Call_back1<T, TT>(targetEle, srcEle, fieldName, fieldValue, funcVal, null, null);
                 });
                 list.Add(t);
             }
@@ -230,11 +297,11 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 return callback1(t, tt, fieldName, fieldValue);
             }
-            else if(null != callback2)
+            else if (null != callback2)
             {
                 return callback2(t, srcEle, fieldName, fieldValue);
             }
-            else if(null != callback3)
+            else if (null != callback3)
             {
                 return callback3(targetEle, srcEle, fieldName, fieldValue);
             }
@@ -270,7 +337,7 @@ namespace System.DJ.ImplementFactory.Commons
             Func<T, TT, string, object, object> callback1,
             Func<T, object, string, object, object> callback2,
             Func<object, object, string, object, object> callback3)
-        {            
+        {
             if (null != callback1)
             {
                 return callback1(targetEle, srcEle, fieldName, fieldValue);
@@ -289,7 +356,7 @@ namespace System.DJ.ImplementFactory.Commons
         public object Call_back4<T>(object targetEle, object srcEle, string fieldName, object fieldValue,
             Func<T, object, string, object, object> callback1,
             Func<object, object, string, object, object> callback2)
-        {            
+        {
             T t = default(T);
             Type tType = typeof(T);
             Type tgType = targetEle.GetType();
