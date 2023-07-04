@@ -123,20 +123,7 @@ namespace System.DJ.ImplementFactory.Commons
                                     ExtCollection.listAdd(list, item);
                                 }
 
-                                MethodInfo mInfo = this.GetType().GetMethod("ToArray", BindingFlags.Instance | BindingFlags.NonPublic);
-                                if (null != mInfo)
-                                {
-                                    mInfo = mInfo.MakeGenericMethod(eleTp);
-                                    try
-                                    {
-                                        vObj = mInfo.Invoke(this, new object[] { mInfo });
-                                    }
-                                    catch (Exception)
-                                    {
-
-                                        //throw;
-                                    }
-                                }
+                                vObj = ExtCollection.listToArray(list);                                
                             }
                         }
                     }
@@ -182,19 +169,6 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         #region 'Reflection calling' is prohibited for deletion
-
-        private T[] ToArray<T>(IList list)
-        {
-            T[] arr = new T[list.Count];
-            int n = 0;
-            foreach (var item in list)
-            {
-                arr[n] = (T)item;
-                n++;
-            }
-            return arr;
-        }
-
         /// <summary>
         /// 'Reflection calling' is prohibited for deletion
         /// </summary>
