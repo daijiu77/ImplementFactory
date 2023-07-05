@@ -13,6 +13,8 @@ namespace Test.NetCore.Entities
         public virtual DateTime StartDate { get; set; }
         public virtual DateTime EndDate { get; set; }
 
+        public virtual int num { get; set; }
+
         public virtual Plan plan { get; set; }
         public virtual List<Plan> plans { get; set; }
 
