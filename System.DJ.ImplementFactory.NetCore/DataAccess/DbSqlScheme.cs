@@ -381,8 +381,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             bool mbool = false;
             bool isDataModel = typeof(AbsDataModel).IsAssignableFrom(modelType);
             CommonMethods commonMethods = new CommonMethods();
-            MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
-            Type srcType = srcMethod.DeclaringType;
+            MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;            
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             dbHelper.query(autoCall, sql, delegate (DataRow dr, Dictionary<string, string> dic)
             {
