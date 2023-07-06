@@ -1152,6 +1152,21 @@ namespace System.DJ.ImplementFactory.Commons
                 type = item.GetType(typeName);
                 if (null != type) break;
             }
+
+            if (null == type)
+            {
+                string root_path = Path.Combine(RootPath, TempImplCode.dirName);
+                root_path = Path.Combine(root_path, TempImplCode.libName);
+                assemblies = GetAssemblyCollection(RootPath);
+                if(Directory.Exists(root_path))
+                {
+                    foreach (Assembly item in assemblies)
+                    {
+                        type = item.GetType(typeName);
+                        if (null != type) break;
+                    }
+                }                
+            }
             return type;
         }
 

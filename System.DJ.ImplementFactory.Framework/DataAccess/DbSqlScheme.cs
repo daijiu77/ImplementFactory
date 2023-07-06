@@ -379,6 +379,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             int recordCount1 = 0;
             object ele = null;
             bool mbool = false;
+            bool isDataModel = typeof(AbsDataModel).IsAssignableFrom(modelType);
             CommonMethods commonMethods = new CommonMethods();
             MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
             Type srcType = srcMethod.DeclaringType;
@@ -387,7 +388,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 mbool = FuncResult(dr, sfList, dic);
                 if (!mbool) return null;
-                if (isUseConstraintLoad)
+                if (isUseConstraintLoad && isDataModel)
                 {
                     ele = overrideModel.CreateDataModel(srcMethod.DeclaringType, srcMethod, modelType, this);
                 }
@@ -397,7 +398,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 if (!string.IsNullOrEmpty(overrideModel.error)) err = overrideModel.error;
                 if (null == ele) ele = Activator.CreateInstance(modelType);
-                ((AbsDataModel)ele).parentModel = this.parentModel;
+                if (isDataModel) ((AbsDataModel)ele).parentModel = this.parentModel;
                 DataRowToObj(dr, ele, dic);
                 action(ele);
                 return ele;

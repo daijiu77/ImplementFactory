@@ -493,6 +493,7 @@ namespace Test.Framework
 
                 List<UserInfo> _userInfos = (List<UserInfo>)scheme2.ToList<UserInfo>();
                 List<Plan> plans = _userInfos[0].Plans as List<Plan>;
+                plans[0].num++;
                 plans[0].PName = "TTTT-FFF";
                 Plan plan = new Plan();
                 plan.PName = "plan-123";
