@@ -382,7 +382,6 @@ namespace System.DJ.ImplementFactory.DataAccess
             bool isDataModel = typeof(AbsDataModel).IsAssignableFrom(modelType);
             CommonMethods commonMethods = new CommonMethods();
             MethodInfo srcMethod = commonMethods.GetSrcTypeMethod(typeof(DbSqlScheme), typeof(IDbSqlScheme)) as MethodInfo;
-            Type srcType = srcMethod.DeclaringType;
             List<SqlFromUnit> sfList = GetSqlFromUnits();
             dbHelper.query(autoCall, sql, delegate (DataRow dr, Dictionary<string, string> dic)
             {
@@ -430,7 +429,11 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         T IDbSqlScheme.DefaultFirst<T>()
         {
-            Skip(1, 1);
+            if (0 >= pageSize || 0 >= pageNumber)
+            {
+                Skip(1, 1);
+            }
+
             initOrderby();
 
             IList<T> list = ((IDbSqlScheme)this).ToList<T>();
@@ -443,7 +446,11 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         object IDbSqlScheme.DefaultFirst(Type modelType)
         {
-            Skip(1, 1);
+            if (0 >= pageSize || 0 >= pageNumber)
+            {
+                Skip(1, 1);
+            }
+
             initOrderby();
 
             IList<object> list1 = ((IDbSqlScheme)this).ToList(modelType);
