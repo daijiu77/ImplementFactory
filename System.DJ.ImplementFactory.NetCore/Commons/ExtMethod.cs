@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
@@ -348,7 +349,41 @@ namespace System.DJ.ImplementFactory.Commons
                         {
                             if (!dic.ContainsKey(p.Name.ToLower())) continue;
                             ppi = dic[p.Name.ToLower()];
-                            v = DJTools.ConvertTo(p.Value.ToString(), ppi.PropertyType);
+                            v = ExecGenericMethod(_defaultValue, ppi.PropertyType, null);
+                            if (p.Value.Type == JTokenType.Object)
+                            {
+                                if (ppi.PropertyType.IsClass
+                                    && (false == ppi.PropertyType.IsInterface)
+                                    && (false == ppi.PropertyType.IsAbstract))
+                                {
+                                    v = ExecGenericMethod(_JsonToEntity, ppi.PropertyType, p.Value.ToString());
+                                }
+                            }
+                            else if (p.Value.Type == JTokenType.Array)
+                            {
+                                Type eleTp = null;
+                                if (ppi.PropertyType.IsArray)
+                                {
+                                    eleTp = ppi.PropertyType.GetTypeForArrayElement();
+                                }
+                                else if (ppi.PropertyType.IsList())
+                                {
+                                    eleTp = ppi.PropertyType.GetGenericArguments()[0];
+                                }
+
+                                if (null != eleTp)
+                                {
+                                    JObject jobj = new JObject();
+                                    jobj.Add("data", p.Value);
+                                    string txt = JsonConvert.SerializeObject(jobj);
+                                    v = ExecGenericMethod(_JsonToList, eleTp, txt);
+                                }
+                            }
+                            else if(p.Value.Type != JTokenType.Null)
+                            {
+                                v = DJTools.ConvertTo(p.Value.ToString(), ppi.PropertyType);
+                            }
+
                             if (null != v) vObj.GetType().GetProperty(ppi.Name).SetValue(vObj, v);
                         }
 
@@ -395,8 +430,6 @@ namespace System.DJ.ImplementFactory.Commons
             foreach (JProperty item in ps)
             {
                 if (item.Value.Type == JTokenType.None
-                    || item.Value.Type == JTokenType.Object
-                    || item.Value.Type == JTokenType.Array
                     || item.Value.Type == JTokenType.Constructor
                     || item.Value.Type == JTokenType.Property
                     || item.Value.Type == JTokenType.Comment
@@ -405,12 +438,91 @@ namespace System.DJ.ImplementFactory.Commons
                     || item.Value.Type == JTokenType.Raw) continue;
                 if (!dic.ContainsKey(item.Name.ToLower())) continue;
                 pi = dic[item.Name.ToLower()];
-                v = DJTools.ConvertTo(item.Value.ToString(), pi.PropertyType);
+                v = ExecGenericMethod(_defaultValue, pi.PropertyType, null);
+                if (item.Value.Type == JTokenType.Array)
+                {
+                    Type tp = null;
+                    if (pi.PropertyType.IsList())
+                    {
+                        tp = pi.PropertyType.GetGenericArguments()[0];
+                    }
+                    else if (pi.PropertyType.IsArray)
+                    {
+                        tp = pi.PropertyType.GetElementType();
+                    }
+
+                    if (null != tp)
+                    {
+                        JObject jobj = new JObject();
+                        jobj.Add("data", item.Value);
+                        string txt = JsonConvert.SerializeObject(jobj);
+                        v = ExecGenericMethod(_JsonToList, tp, txt);
+                    }
+                }
+                else if (item.Value.Type == JTokenType.Object)
+                {
+                    v = ExecGenericMethod(_JsonToEntity, pi.PropertyType, item.Value.ToString());
+                }
+                else if (item.Value.Type != JTokenType.Null)
+                {
+                    v = DJTools.ConvertTo(item.Value.ToString(), pi.PropertyType);
+                }
+
                 if (null == v) continue;
                 vObj.SetPropertyValue(pi.Name, v);
             }
 
             return vObj;
+        }
+
+        private static object ExecGenericMethod(string methodName, Type tp, string json)
+        {
+            object v = null;
+            ExtJsonToObject ext = new ExtJsonToObject();
+            MethodInfo mi = ext.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
+            if (null != mi)
+            {
+                mi = mi.MakeGenericMethod(tp);
+                try
+                {
+                    if (null != json)
+                    {
+                        v = mi.Invoke(ext, new object[] { json });
+                    }
+                    else
+                    {
+                        v = mi.Invoke(ext, null);
+                    }
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+            return v;
+        }
+
+        private const string _JsonToEntity = "json_entity";
+        private const string _JsonToList = "json_list";
+        private const string _defaultValue = "default_value";
+
+        private class ExtJsonToObject
+        {
+            public T json_entity<T>(string json)
+            {
+                return json.JsonToEntity<T>();
+            }
+
+            public IEnumerable json_list<T>(string json)
+            {
+                return json.JsonToList<T>();
+            }
+
+            public object default_value<T>()
+            {
+                return default(T);
+            }
         }
 
         public static int Count(this IEnumerable srcList)
@@ -1048,7 +1160,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             IList<T> list = srcList.ToListFrom<T, TT>(isTrySetVal, funcAssign, (tg, src, fn, fv) =>
             {
-                if(null != funcVal) return funcVal(tg, src, fn, fv);
+                if (null != funcVal) return funcVal(tg, src, fn, fv);
                 return fv;
             });
             return Task.FromResult(list);
@@ -1213,7 +1325,7 @@ namespace System.DJ.ImplementFactory.Commons
             int num = 0;
             if (null == list) return num;
             if (null == (list as DOList<T>))
-            {                
+            {
                 list.Add(data);
                 return num;
             }

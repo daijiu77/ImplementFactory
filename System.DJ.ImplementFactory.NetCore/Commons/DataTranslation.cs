@@ -426,9 +426,7 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         if (tp.IsArray)
                         {
-                            ft = tp.TypeToString(true);
-                            ft = ft.Replace("[]", "");
-                            type1 = Type.GetType(ft);
+                            type1 = tp.GetTypeForArrayElement();
                             if (null != type1)
                             {
                                 isArr = DJTools.IsBaseType(type1);

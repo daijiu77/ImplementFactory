@@ -181,9 +181,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 if (pi.PropertyType.IsArray)
                 {
-                    string s = pi.PropertyType.TypeToString(true);
-                    s = s.Replace("[]", "");
-                    type = DJTools.GetClassTypeByPath(s);
+                    type = pi.PropertyType.GetTypeForArrayElement();
                     if (null == type) return;
                     IList<object> results = func(type);
                     if (null == results) return;
@@ -297,9 +295,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     string s = "";
                     if (pi.PropertyType.IsArray)
                     {
-                        s = pi.PropertyType.TypeToString(true);
-                        s = s.Replace("[]", "");
-                        type = Type.GetType(s);
+                        type = pi.PropertyType.GetTypeForArrayElement();
                         if (null == type) return;
                         if (!type.IsBaseType()) return;
                         int n = 0;
@@ -554,9 +550,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     else if (pi.PropertyType.IsArray)
                     {
-                        string tpName = pi.PropertyType.TypeToString(true);
-                        tpName = tpName.Replace("[]", "");
-                        mType = DJTools.GetTypeByFullName(tpName);
+                        mType = pi.PropertyType.GetTypeForArrayElement();
                     }
                 }
                 else

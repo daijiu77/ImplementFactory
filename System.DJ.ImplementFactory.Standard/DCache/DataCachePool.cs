@@ -116,7 +116,7 @@ namespace System.DJ.ImplementFactory.DCache
             }
 
             if (null == waitUpdate) return;
-            
+
             PersistenceCache persistence = new PersistenceCache();
             object val = null;
             foreach (var item in waitUpdate.dataItems)
@@ -227,7 +227,6 @@ namespace System.DJ.ImplementFactory.DCache
         {
             EList<CKeyValue> list = new EList<CKeyValue>();
             ParameterInfo[] args = methodInfo.GetParameters();
-            string eleTypeName = null;
             Type eleType = null;
             foreach (ParameterInfo item in args)
             {
@@ -235,8 +234,7 @@ namespace System.DJ.ImplementFactory.DCache
                 if (typeof(IEnumerable).IsAssignableFrom(item.ParameterType) && typeof(string) != item.ParameterType)
                 {
                     if (!item.ParameterType.IsArray) continue;
-                    eleTypeName = item.ParameterType.FullName.Replace("[]", "");
-                    eleType = Type.GetType(eleTypeName);
+                    eleType = item.ParameterType.GetTypeForArrayElement();                    
                     if (null == eleType) continue;
                     if (!eleType.IsBaseType()) continue;
                 }

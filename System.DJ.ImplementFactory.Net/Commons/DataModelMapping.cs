@@ -105,9 +105,8 @@ namespace System.DJ.ImplementFactory.Commons
                         object tgVal = tgPropertyInfo.GetValue(tObj, null);
                         if (null != tgVal)
                         {
-                            string tpStr = pt.TypeToString(true);
-                            tpStr = tpStr.Replace("[]", "");
-                            Type eleTp = DJTools.GetClassTypeByPath(tpStr);
+                            Type eleTp = pt.GetTypeForArrayElement();
+                            
                             if (null != eleTp)
                             {
                                 object list = ExtCollection.createListByType(eleTp);
@@ -123,7 +122,7 @@ namespace System.DJ.ImplementFactory.Commons
                                     ExtCollection.listAdd(list, item);
                                 }
 
-                                vObj = ExtCollection.listToArray(list);                                
+                                vObj = ExtCollection.listToArray(list);
                             }
                         }
                     }

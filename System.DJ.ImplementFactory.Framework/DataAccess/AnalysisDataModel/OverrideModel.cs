@@ -310,8 +310,8 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             if (type.IsArray)
                             {
                                 propType = PropType.isArray;
-                                typeName = type.TypeToString(true);
-                                typeName = typeName.Replace("[]", "");
+                                Type eleType = type.GetTypeForArrayElement();
+                                typeName = eleType.TypeToString(true);
                                 uskv.Add(new CKeyValue() { Key = type.Namespace });
                             }
                             else if (type.IsList())

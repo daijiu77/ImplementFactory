@@ -369,9 +369,7 @@ namespace System.DJ.ImplementFactory.Commons
                     Type eleType = null;
                     if (fieldType.IsArray)
                     {
-                        string s = fieldType.TypeToString(true);
-                        s = s.Replace("[]", "");
-                        eleType = Type.GetType(s);
+                        eleType = fieldType.GetTypeForArrayElement();
                         if (null == eleType) return true;
                         collection = ExtCollection.createArrayByType(eleType, arr.Length);
                     }
@@ -1225,6 +1223,18 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null != type) break;
             }
             return type;
+        }
+
+        public static Type GetTypeForArrayElement(this Type arrayType)
+        {
+            Type eleType=arrayType.GetElementType();
+            if (null == eleType)
+            {
+                string tpStr = arrayType.TypeToString(true);
+                tpStr = tpStr.Replace("[]", "");
+                eleType = DJTools.GetClassTypeByPath(tpStr);
+            }
+            return eleType;
         }
 
         public static DataEntity<DataElement> GetDynamicEntityBy(this DataRow dataRow)

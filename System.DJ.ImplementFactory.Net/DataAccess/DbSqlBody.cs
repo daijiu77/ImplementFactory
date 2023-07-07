@@ -875,9 +875,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                     }
                     else if (type.IsArray)
                     {
-                        string s = type.TypeToString(true);
-                        s = s.Replace("[]", "");
-                        eleType = Type.GetType(s);
+                        eleType = type.GetTypeForArrayElement();
                         if (null != eleType)
                         {
                             if (!eleType.IsBaseType()) eleType = null;

@@ -58,9 +58,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else if (type.IsArray)
                 {
-                    string ts = type.TypeToString(true);
-                    ts = ts.Replace("[]", "");
-                    tp = Type.GetType(ts);
+                    tp = type.GetTypeForArrayElement();
                 }
                 else if (typeof(IList).IsAssignableFrom(type))
                 {

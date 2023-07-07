@@ -54,9 +54,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else if (propertyType.IsArray)
                 {
-                    string tpName = propertyType.TypeToString(true);
-                    tpName = tpName.Replace("[]", "");
-                    eleType = DJTools.GetTypeByFullName(tpName);
+                    eleType = propertyType.GetTypeForArrayElement();
                 }
 
                 if (null == eleType) return;
