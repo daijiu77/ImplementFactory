@@ -200,6 +200,23 @@ namespace System.DJ.ImplementFactory.Commons
             public JToken dts { get; set; }
         }
 
+        /// <summary>
+        /// 是合法的 JToken 类型
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private static bool IsLegalType(JProperty item)
+        {
+            if (item.Value.Type == JTokenType.None
+                    || item.Value.Type == JTokenType.Constructor
+                    || item.Value.Type == JTokenType.Property
+                    || item.Value.Type == JTokenType.Comment
+                    || item.Value.Type == JTokenType.Null
+                    || item.Value.Type == JTokenType.Undefined
+                    || item.Value.Type == JTokenType.Raw) return false;
+            return true;
+        }
+
         public static IEnumerable JsonToList<T>(this string json)
         {
             IEnumerable list = new List<T>();
@@ -347,6 +364,7 @@ namespace System.DJ.ImplementFactory.Commons
                         ps = jo.Properties();
                         foreach (JProperty p in ps)
                         {
+                            if (false == IsLegalType(p)) continue;
                             if (!dic.ContainsKey(p.Name.ToLower())) continue;
                             ppi = dic[p.Name.ToLower()];
                             v = ExecGenericMethod(_defaultValue, ppi.PropertyType, null);
@@ -379,7 +397,7 @@ namespace System.DJ.ImplementFactory.Commons
                                     v = ExecGenericMethod(_JsonToList, eleTp, txt);
                                 }
                             }
-                            else if(p.Value.Type != JTokenType.Null)
+                            else
                             {
                                 v = DJTools.ConvertTo(p.Value.ToString(), ppi.PropertyType);
                             }
@@ -429,13 +447,7 @@ namespace System.DJ.ImplementFactory.Commons
             IEnumerable<JProperty> ps = jo.Properties();
             foreach (JProperty item in ps)
             {
-                if (item.Value.Type == JTokenType.None
-                    || item.Value.Type == JTokenType.Constructor
-                    || item.Value.Type == JTokenType.Property
-                    || item.Value.Type == JTokenType.Comment
-                    || item.Value.Type == JTokenType.Null
-                    || item.Value.Type == JTokenType.Undefined
-                    || item.Value.Type == JTokenType.Raw) continue;
+                if (false == IsLegalType(item)) continue;
                 if (!dic.ContainsKey(item.Name.ToLower())) continue;
                 pi = dic[item.Name.ToLower()];
                 v = ExecGenericMethod(_defaultValue, pi.PropertyType, null);
