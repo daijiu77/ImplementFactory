@@ -239,13 +239,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 data = "new { " + data + " }";
 
-                s = "";
-                mInfo.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
-
+                s = "";                
                 RouteAttr routeAttr = MicroServiceRoute.GetRouteAttributeByName(microServiceRoute.RouteName);
                 if (null != routeAttr) contractKey = routeAttr.ContractKey;
                 if ((typeof(void) != eMethod.ReturnType) && (false == string.IsNullOrEmpty(contractKey)))
                 {
+                    mInfo.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
                     if (string.IsNullOrEmpty(actionName)) { actionName = miItem.Name; }
                     mInfo.append(ref s, LeftSpaceLevel.four, "MethodTypes methodTypes = MethodTypes.Post;");
                     if (null != requestMapping)
@@ -307,6 +306,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         mInfo.append(ref s, LeftSpaceLevel.four, "{0} vObj = responseResult.JsonToEntity<{0}>();", returnType);
                         mInfo.append(ref s, LeftSpaceLevel.four, "return vObj;");
                     }
+                }
+                else if(typeof(void) != eMethod.ReturnType)
+                {
+                    returnType = eMethod.ReturnType.TypeToString(true);
+                    mInfo.append(ref s, LeftSpaceLevel.four, "return default(typeof({0}));", returnType);
                 }
 
                 if (eMethod.IsTaskReturn)
