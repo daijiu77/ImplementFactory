@@ -310,7 +310,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 else if(typeof(void) != eMethod.ReturnType)
                 {
                     returnType = eMethod.ReturnType.TypeToString(true);
-                    mInfo.append(ref s, LeftSpaceLevel.four, "return default(typeof({0}));", returnType);
+                    mInfo.append(ref s, LeftSpaceLevel.four, "return default({0});", returnType);
                 }
 
                 if (eMethod.IsTaskReturn)
