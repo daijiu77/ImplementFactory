@@ -189,5 +189,9 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
+        public static string GetSrcInterfaceInstancePropName
+        {
+            get { return DynamicCodeTempImpl.InterfaceInstanceType; }
+        }
     }
 }

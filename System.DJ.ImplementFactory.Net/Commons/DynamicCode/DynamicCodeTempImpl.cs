@@ -23,7 +23,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 {
     class DynamicCodeTempImpl
     {
-        public const string InterfaceInstanceType = "Get_InterfaceInstanceType__";
+        public const string InterfaceInstanceType = "Get_SrcInterfaceInstance__";
 
         static Random random = new Random();
         string dirName = "";
