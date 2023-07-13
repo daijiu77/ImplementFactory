@@ -162,7 +162,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             FieldItemList<FieldItem> fields = null;
             Type modeType = fromUnits[0].modelType;
             selectFieldDic.TryGetValue(modeType, out fields);
-            if(null == fields)
+            if (null == fields)
             {
                 fields = new FieldItemList<FieldItem>();
                 selectFieldDic[modeType] = fields;
@@ -326,6 +326,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string selectPart = "";
             string s = "";
             Attribute att = null;
+            Regex rg = new Regex(@"[^a-z0-9_\s\.]", RegexOptions.IgnoreCase);
             foreach (KeyValuePair<string, object> item in dicSelect)
             {
                 if (null == item.Value) continue;
@@ -357,6 +358,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (dicSlt.ContainsKey(item.Key))
                 {
                     selectPart += ", " + s;
+                }
+                else if (rg.IsMatch(s))
+                {
+                    selectPart += ", {0} {1}".ExtFormat(s, item.Key);
                 }
                 else
                 {
@@ -400,7 +405,11 @@ namespace System.DJ.ImplementFactory.DataAccess
 
                         if (!string.IsNullOrEmpty(fName))
                         {
-                            if (-1 == fName.IndexOf("."))
+                            if (rg.IsMatch(fName))
+                            {
+                                selectPart += ", {0}{1}".ExtFormat(fName, fAlias);
+                            }
+                            else if (-1 == fName.IndexOf("."))
                             {
                                 selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fName, fAlias);
                             }
