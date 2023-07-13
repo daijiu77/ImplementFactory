@@ -400,7 +400,14 @@ namespace System.DJ.ImplementFactory.DataAccess
 
                         if (!string.IsNullOrEmpty(fName))
                         {
-                            selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fName, fAlias);
+                            if (-1 == fName.IndexOf("."))
+                            {
+                                selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fName, fAlias);
+                            }
+                            else
+                            {
+                                selectPart += ", {0}{1}".ExtFormat(fName, fAlias);
+                            }
                         }
                     }
                 }
