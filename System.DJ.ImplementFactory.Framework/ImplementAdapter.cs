@@ -299,6 +299,12 @@ namespace System.DJ.ImplementFactory
                         updateTableDesign.AddTable(typeof(DataCacheTable));
                         updateTableDesign.TableScheme();
                     });
+
+                    Task.Run(() =>
+                    {
+                        MakeInsertSql makeInsertSql = new MakeInsertSql();
+                        makeInsertSql.Execute();
+                    });                    
                 }
 
                 new PersistenceCache();

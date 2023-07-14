@@ -10,12 +10,13 @@ using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
     public class UpdateTableDesign
     {
-        private List<Type> absDataModels = new List<Type>();
+        private static List<Type> absDataModels = new List<Type>();
         private static TableInfoDetail tableFieldInfos = new TableInfoDetail();
 
         private IDbTableScheme dbTableScheme;
@@ -24,6 +25,8 @@ namespace System.DJ.ImplementFactory.DataAccess
         public UpdateTableDesign(IDbTableScheme dbTableScheme)
         {
             this.dbTableScheme = dbTableScheme;
+
+            if (0 < absDataModels.Count) return;
 
             List<Assembly> assemblies = DJTools.GetAssemblyCollection(DJTools.RootPath, new string[] { "System.DJ.ImplementFactory" });
             Type[] types = null;
@@ -98,6 +101,17 @@ namespace System.DJ.ImplementFactory.DataAccess
             if (absDataModels.Contains(tableType)) return this;
             absDataModels.Add(tableType);
             return this;
+        }
+
+        public static void ForEach(Action<Type> action)
+        {
+            if (null == action) return;
+            if (null == ImplementAdapter.taskUpdateTableDesign) return;
+            ImplementAdapter.taskUpdateTableDesign.Wait();
+            foreach (var item in absDataModels)
+            {
+                action(item);
+            }
         }
 
         public UpdateTableDesign AddTable<T>() where T : AbsDataModel

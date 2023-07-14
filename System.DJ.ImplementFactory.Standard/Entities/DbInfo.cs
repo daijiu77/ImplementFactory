@@ -92,6 +92,12 @@
         /// </summary>
         public bool IsPrintSqlToLog { get; set; }
 
+        private string _MakeInsertSqlMaxRecordSize = "把数据生成 insert-sql 时，规定的最大数据量，默认为 1000";
+        public int MakeInsertSqlMaxRecordSize { get; set; } = 1000;
+
+        private string _MakeInsertSqlLocalPath = "把数据生成 insert-sql 并保存到指定目录下";
+        public string MakeInsertSqlLocalPath { get; set; }
+
         /// <summary>
         /// 分表存储及查询
         /// </summary>

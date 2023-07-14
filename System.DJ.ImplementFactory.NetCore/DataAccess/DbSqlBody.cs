@@ -321,6 +321,18 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        protected bool whereIgnoreAll = false;
+        public DbSqlBody WhereIgnoreAll()
+        {
+            whereIgnoreAll = true;
+            return this;
+        }
+
+        public bool GetWhereIgnoreAll()
+        {
+            return whereIgnoreAll;
+        }
+
         private string GetSelectPart()
         {
             string selectPart = "";
@@ -543,15 +555,19 @@ namespace System.DJ.ImplementFactory.DataAccess
                             //throw;
                         }
                     }
-                    s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+
+                    if (!whereIgnoreAll)
                     {
-                        fn = alias + propertyInfoExt.Name;
-                        if (fieldDic.ContainsKey(fn)
-                        || fieldDic.ContainsKey(propertyInfoExt.Name)
-                        || fieldDic.ContainsKey(fn.ToLower())
-                        || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
-                        return true;
-                    });
+                        s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+                        {
+                            fn = alias + propertyInfoExt.Name;
+                            if (fieldDic.ContainsKey(fn)
+                            || fieldDic.ContainsKey(propertyInfoExt.Name)
+                            || fieldDic.ContainsKey(fn.ToLower())
+                            || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
+                            return true;
+                        });
+                    }                    
 
                     initWhereAlias(alias, ref s);
                     if (!string.IsNullOrEmpty(startStr))

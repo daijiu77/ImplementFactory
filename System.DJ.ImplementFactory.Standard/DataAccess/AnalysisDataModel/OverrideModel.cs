@@ -132,6 +132,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             Dictionary<string, OrderbyList<OrderbyItem>> lazyOrderbyDic = null;
             OrderbyList<OrderbyItem> orderbyItemList = null;
             List<string> whereIgnoreList = null;
+            bool whereIgnoreAll = false;
             if (null != dbSqlBody)
             {
                 if (0 < dbSqlBody.LazyIgonreDictionary.Count) ignoreFieldsDic = dbSqlBody.LazyIgonreDictionary;
@@ -139,6 +140,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
                 if (0 < dbSqlBody.LazyOrderbyDictionary.Count) lazyOrderbyDic = dbSqlBody.LazyOrderbyDictionary;
                 if (0 < dbSqlBody.OrderbyItemList.Count) orderbyItemList = dbSqlBody.OrderbyItemList;
+                whereIgnoreAll = dbSqlBody.GetWhereIgnoreAll();
             }
 
             Type type1 = DJTools.GetDynamicType(typeName);
@@ -401,6 +403,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                 {
                                     DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnore({0});", whereIgnoreStr);
                                 }
+                            }
+
+                            if (whereIgnoreAll)
+                            {
+                                DJTools.append(ref GetBody, level, "scheme.dbSqlBody.WhereIgnoreAll();");
                             }
 
                             if (null != ignoreFieldsDic)

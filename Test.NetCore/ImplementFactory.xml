@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configurations>
 	<database>
-		<ConnectionString>Data Source=(local);Initial Catalog=DbTest;User Id=sa;Password=admin;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
+		<ConnectionString>Data Source=(local);Initial Catalog=TestDb;User Id=sa;Password=admin;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
     <DatabaseType description="数据库类型:sqlserver,oracle,mysql">sqlserver</DatabaseType>
     <SqlProviderRelativePathOfDll description="动态 sql 提供者所在的dll文件程序集的相对路径,注：该提供者必须继承 System.DJ.ImplementFactory.Pipelines.ISqlExpressionProvider 接口">
     </SqlProviderRelativePathOfDll>
@@ -12,6 +12,7 @@
     <IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">true</IsShowCode>
     <IsPrintSQLToTrace description="输出sql语句到Visual Studio输出台">true</IsPrintSQLToTrace>
     <IsPrintSqlToLog description="输出sql语句到日志">false</IsPrintSqlToLog>
+    <MakeInsertSqlLocalPath>C:\Users\QHTZ-PC\source\repos</MakeInsertSqlLocalPath>
     <splitTable>
       <Rule description="$符号代替表名,#符号表示日期时间,{8}#表示仅年月日,#{6}表示仅时分秒">$_SP_#{6}</Rule>
       <RecordQuantity description="单表最大记录数量">10000000</RecordQuantity>

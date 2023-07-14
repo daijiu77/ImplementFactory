@@ -162,7 +162,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             FieldItemList<FieldItem> fields = null;
             Type modeType = fromUnits[0].modelType;
             selectFieldDic.TryGetValue(modeType, out fields);
-            if(null == fields)
+            if (null == fields)
             {
                 fields = new FieldItemList<FieldItem>();
                 selectFieldDic[modeType] = fields;
@@ -321,11 +321,24 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        protected bool whereIgnoreAll = false;
+        public DbSqlBody WhereIgnoreAll()
+        {
+            whereIgnoreAll = true;
+            return this;
+        }
+
+        public bool GetWhereIgnoreAll()
+        {
+            return whereIgnoreAll;
+        }
+
         private string GetSelectPart()
         {
             string selectPart = "";
             string s = "";
             Attribute att = null;
+            Regex rg = new Regex(@"[^a-z0-9_\s\.]", RegexOptions.IgnoreCase);
             foreach (KeyValuePair<string, object> item in dicSelect)
             {
                 if (null == item.Value) continue;
@@ -357,6 +370,10 @@ namespace System.DJ.ImplementFactory.DataAccess
                 if (dicSlt.ContainsKey(item.Key))
                 {
                     selectPart += ", " + s;
+                }
+                else if (rg.IsMatch(s))
+                {
+                    selectPart += ", {0} {1}".ExtFormat(s, item.Key);
                 }
                 else
                 {
@@ -400,7 +417,11 @@ namespace System.DJ.ImplementFactory.DataAccess
 
                         if (!string.IsNullOrEmpty(fName))
                         {
-                            if (-1 == fName.IndexOf("."))
+                            if (rg.IsMatch(fName))
+                            {
+                                selectPart += ", {0}{1}".ExtFormat(fName, fAlias);
+                            }
+                            else if (-1 == fName.IndexOf("."))
                             {
                                 selectPart += ", {0}{1}{2}".ExtFormat(tbAlias, fName, fAlias);
                             }
@@ -534,15 +555,19 @@ namespace System.DJ.ImplementFactory.DataAccess
                             //throw;
                         }
                     }
-                    s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+
+                    if (!whereIgnoreAll)
                     {
-                        fn = alias + propertyInfoExt.Name;
-                        if (fieldDic.ContainsKey(fn)
-                        || fieldDic.ContainsKey(propertyInfoExt.Name)
-                        || fieldDic.ContainsKey(fn.ToLower())
-                        || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
-                        return true;
-                    });
+                        s = dataMode.GetWhere(startStr, true, (propertyInfoExt, condition) =>
+                        {
+                            fn = alias + propertyInfoExt.Name;
+                            if (fieldDic.ContainsKey(fn)
+                            || fieldDic.ContainsKey(propertyInfoExt.Name)
+                            || fieldDic.ContainsKey(fn.ToLower())
+                            || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
+                            return true;
+                        });
+                    }                    
 
                     initWhereAlias(alias, ref s);
                     if (!string.IsNullOrEmpty(startStr))
