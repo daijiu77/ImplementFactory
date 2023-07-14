@@ -338,7 +338,7 @@ namespace System.DJ.ImplementFactory.DataAccess
             string selectPart = "";
             string s = "";
             Attribute att = null;
-            Regex rg = new Regex(@"[^a-z0-9_\s\.]", RegexOptions.IgnoreCase);
+            Regex rg = new Regex(@"[^a-z0-9_\s\.\*]", RegexOptions.IgnoreCase);
             foreach (KeyValuePair<string, object> item in dicSelect)
             {
                 if (null == item.Value) continue;
@@ -436,7 +436,12 @@ namespace System.DJ.ImplementFactory.DataAccess
 
             if (!string.IsNullOrEmpty(selectPart)) selectPart = selectPart.Substring(1);
             selectPart = selectPart.Trim();
-            if (string.IsNullOrEmpty(selectPart)) selectPart = "*";
+            if (string.IsNullOrEmpty(selectPart))
+            {
+                string alias = fromUnits[0].alias;
+                if (!string.IsNullOrEmpty(alias)) alias += ".";
+                selectPart = alias + "*";
+            }
             return selectPart;
         }
 
@@ -567,7 +572,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                             || fieldDic.ContainsKey(propertyInfoExt.Name.ToLower())) return false;
                             return true;
                         });
-                    }                    
+                    }
 
                     initWhereAlias(alias, ref s);
                     if (!string.IsNullOrEmpty(startStr))
