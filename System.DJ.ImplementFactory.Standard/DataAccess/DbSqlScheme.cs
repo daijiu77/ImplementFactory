@@ -1,12 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
@@ -15,7 +12,6 @@ using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {

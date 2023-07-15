@@ -1354,6 +1354,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             int num = 0;
             if (null == list) return num;
+            if (0 == list.Count) return num;
             if (null == (list as DOList<T>))
             {
                 list.Remove(data);
@@ -1363,15 +1364,46 @@ namespace System.DJ.ImplementFactory.Commons
             return num;
         }
 
+        public static int RemoveData<T>(this IList<T> list, Func<T, bool> func)
+        {
+            int num = 0;
+            if (null == list) return num;
+            if (0 == list.Count) return num;
+            foreach (var item in list)
+            {
+                if (func(item))
+                {
+                    num = list.RemoveData<T>(item);
+                }
+            }
+            return num;
+        }
+
         public static int DeleteData<T>(this IList<T> list, T data)
         {
             return RemoveData<T>(list, data);
+        }
+
+        public static int DeleteData<T>(this IList<T> list, Func<T, bool> func)
+        {
+            int num = 0;
+            if (null == list) return num;
+            if (0 == list.Count) return num;
+            foreach (var item in list)
+            {
+                if (func(item))
+                {
+                    num = list.RemoveData<T>(item);
+                }
+            }
+            return num;
         }
 
         public static int RemoveDataAt<T>(this IList<T> list, int index)
         {
             int num = 0;
             if (null == list) return num;
+            if (0 == list.Count) return num;
             if (null == (list as DOList<T>))
             {
                 list.RemoveAt(index);
@@ -1385,6 +1417,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             int num = 0;
             if (null == list) return num;
+            if (0 == list.Count) return num;
             if (null == (list as DOList<T>))
             {
                 list.Clear();
