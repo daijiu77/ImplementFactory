@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Pipelines;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -21,7 +21,47 @@ namespace System.DJ.ImplementFactory.Commons
                 if (isJson)
                 {
                     mvType = "application/json";
-                    string json = JsonConvert.SerializeObject(data);
+                    string json = "";
+                    if (typeof(IDictionary).IsAssignableFrom(data.GetType()))
+                    {
+                        IDictionary dic = (IDictionary)data;
+                        ICollection keys = dic.Keys;
+                        string vs = "";
+                        Regex reg = new Regex(@"(^true$)|(^false$)|(^null$)|(^[0-9]$)|(^\-[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^\-[1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]+$)|(^\-[0-9]\.[0-9]+$)|(^[1-9][0-9]+\.[0-9]+$)|(^\-[1-9][0-9]+\.[0-9]+$)", RegexOptions.IgnoreCase);
+                        foreach (var item in keys)
+                        {
+                            if (null == item) continue;
+                            if (!dic.Contains(item)) continue;
+                            if (null == dic[item])
+                            {
+                                vs = "null";
+                            }
+                            else
+                            {
+                                vs = dic[item].ToString();
+                            }
+
+                            if (reg.IsMatch(vs))
+                            {
+                                vs = vs.ToLower();
+                            }
+                            else
+                            {
+                                vs = "\"" + vs + "\"";
+                            }
+                            json += ", \"{0}\": {1}".ExtFormat(item.ToString(), vs);
+                        }
+
+                        if (!string.IsNullOrEmpty(json))
+                        {
+                            json = json.Substring(1).Trim();
+                            json = "{" + json + "}";
+                        }
+                    }
+                    else
+                    {
+                        json = JsonConvert.SerializeObject(data);
+                    }
                     dts = Encoding.Default.GetBytes(json);
                 }
                 else if (null != data as byte[])
