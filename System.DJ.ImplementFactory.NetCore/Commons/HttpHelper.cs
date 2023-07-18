@@ -27,7 +27,7 @@ namespace System.DJ.ImplementFactory.Commons
                         IDictionary dic = (IDictionary)data;
                         ICollection keys = dic.Keys;
                         string vs = "";
-                        Regex reg = new Regex(@"(^true$)|(^false$)|(^null$)|(^[0-9]$)|(^\-[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^\-[1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]+$)|(^\-[0-9]\.[0-9]+$)|(^[1-9][0-9]+\.[0-9]+$)|(^\-[1-9][0-9]+\.[0-9]+$)", RegexOptions.IgnoreCase);
+                        Regex reg = new Regex(@"(^true$)|(^false$)|(^null$)|(^[0-9]$)|(^\-[0-9]$)|(^[1-9][0-9]*[0-9]$)|(^\-[1-9][0-9]*[0-9]$)|(^[0-9]\.[0-9]*[0-9]$)|(^\-[0-9]\.[0-9]*[0-9]$)|(^[1-9][0-9]+\.[0-9]*[0-9]$)|(^\-[1-9][0-9]+\.[0-9]*[0-9]$)", RegexOptions.IgnoreCase);
                         foreach (var item in keys)
                         {
                             if (null == item) continue;
