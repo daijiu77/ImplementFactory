@@ -73,14 +73,14 @@ namespace System.DJ.ImplementFactory.Commons.Exts
         {
             if (null == arrObj) return;
             if (!arrObj.GetType().IsArray) return;
-            string srcTp = arrObj.GetType().TypeToString(true);
+            Type srcTp = arrObj.GetType().GetTypeForArrayElement();
             if (null != arrElement)
             {
-                string eleTp = arrElement.GetType().TypeToString(true);
+                Type eleTp = arrElement.GetType();
                 if (!srcTp.Equals(eleTp)) return;
             }
 
-            Type type = DJTools.GetClassTypeByPath(srcTp);
+            Type type = srcTp;
             if (null == type) return;
 
             CreateCollection cc = new CreateCollection();
@@ -102,7 +102,7 @@ namespace System.DJ.ImplementFactory.Commons.Exts
         {
             if (null == list) return null;
             Type tp = list.GetType();
-            if ((false == typeof(IList).IsAssignableFrom(tp)) && (typeof(IList) != tp)) return null;
+            if (!tp.IsList()) return null;
             Type eleType = tp.GetGenericArguments()[0];
 
             CreateCollection cc = new CreateCollection();

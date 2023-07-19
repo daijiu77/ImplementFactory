@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.DataAccess;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -118,36 +118,6 @@ namespace System.DJ.ImplementFactory.Commons
             return fv;
         }
 
-        static object createArray(Type type, int length)
-        {
-            object arr = null;
-            if (false == type.IsArray) return arr;
-
-            try
-            {
-                arr = type.InvokeMember("Set", BindingFlags.CreateInstance, null, arr, new object[] { length });
-            }
-            catch { }
-
-            return arr;
-        }
-
-        static void arrayAdd(object arrObj, object arrElement, int eleIndex)
-        {
-            if (null == arrObj) return;
-
-            Type type = arrObj.GetType();
-            if (false == type.IsArray) return;
-
-            Array array = (Array)arrObj;
-
-            try
-            {
-                array.SetValue(arrElement, eleIndex);
-            }
-            catch { }
-        }
-
         public static string ToJsonUnit(this object entity)
         {
             string sign = ", ";
@@ -218,6 +188,11 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         public static IEnumerable JsonToList<T>(this string json)
+        {
+            return json.JsonToList<T>(false);
+        }
+
+        public static IEnumerable JsonToList<T>(this string json, bool isArray)
         {
             IEnumerable list = new List<T>();
             if (string.IsNullOrEmpty(json)) return list;
@@ -291,12 +266,11 @@ namespace System.DJ.ImplementFactory.Commons
 
             if (null == arr) return list;
 
-            bool isArray = typeof(T).IsArray;
             if (isArray)
             {
                 JArray ja = arr.ToObject<JArray>();
                 int ncount = ja.Count;
-                list = (IEnumerable)createArray(typeof(T), ncount);
+                list = (IEnumerable)ExtCollection.createArrayByType(typeof(T), ncount);
             }
 
             object v = null;
@@ -329,7 +303,7 @@ namespace System.DJ.ImplementFactory.Commons
                     vObj = DJTools.ConvertTo(v.ToString(), typeof(T));
                     if (isArray)
                     {
-                        arrayAdd(list, vObj, index);
+                        ExtCollection.arrayAdd(list, vObj, index);
                         index++;
                     }
                     else
@@ -341,15 +315,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     try
                     {
-                        if (isArray)
-                        {
-                            Type t = typeof(T).GetElementType();
-                            vObj = Activator.CreateInstance(t);
-                        }
-                        else
-                        {
-                            vObj = Activator.CreateInstance(typeof(T));
-                        }
+                        vObj = Activator.CreateInstance(typeof(T));
 
                         if (0 == dic.Count)
                         {
@@ -380,8 +346,10 @@ namespace System.DJ.ImplementFactory.Commons
                             else if (p.Value.Type == JTokenType.Array)
                             {
                                 Type eleTp = null;
+                                bool _isArray = false;
                                 if (ppi.PropertyType.IsArray)
                                 {
+                                    _isArray = true;
                                     eleTp = ppi.PropertyType.GetTypeForArrayElement();
                                 }
                                 else if (ppi.PropertyType.IsList())
@@ -394,7 +362,7 @@ namespace System.DJ.ImplementFactory.Commons
                                     JObject jobj = new JObject();
                                     jobj.Add("data", p.Value);
                                     string txt = JsonConvert.SerializeObject(jobj);
-                                    v = ExecGenericMethod(_JsonToList, eleTp, txt);
+                                    v = ExecGenericCollectionMethod(eleTp, txt, _isArray);
                                 }
                             }
                             else
@@ -407,7 +375,7 @@ namespace System.DJ.ImplementFactory.Commons
 
                         if (isArray)
                         {
-                            arrayAdd(list, vObj, index);
+                            ExtCollection.arrayAdd(list, vObj, index);
                             index++;
                         }
                         else
@@ -454,13 +422,15 @@ namespace System.DJ.ImplementFactory.Commons
                 if (item.Value.Type == JTokenType.Array)
                 {
                     Type tp = null;
+                    bool isArray = false;
                     if (pi.PropertyType.IsList())
                     {
                         tp = pi.PropertyType.GetGenericArguments()[0];
                     }
                     else if (pi.PropertyType.IsArray)
                     {
-                        tp = pi.PropertyType.GetElementType();
+                        isArray = true;
+                        tp = pi.PropertyType.GetTypeForArrayElement();
                     }
 
                     if (null != tp)
@@ -468,7 +438,7 @@ namespace System.DJ.ImplementFactory.Commons
                         JObject jobj = new JObject();
                         jobj.Add("data", item.Value);
                         string txt = JsonConvert.SerializeObject(jobj);
-                        v = ExecGenericMethod(_JsonToList, tp, txt);
+                        v = ExecGenericCollectionMethod(tp, txt, isArray);
                     }
                 }
                 else if (item.Value.Type == JTokenType.Object)
@@ -487,7 +457,53 @@ namespace System.DJ.ImplementFactory.Commons
             return vObj;
         }
 
-        public static object ExecGenericMethod(string methodName, Type tp, string json)
+        public static T[] JsonToArray<T>(this string json)
+        {
+            return (T[])JsonToList<T>(json, true);
+        }
+
+        public static object JsonToList(this string json, Type type, bool isArray)
+        {
+            Type eleType = type;
+            if (type.IsList())
+            {
+                eleType = type.GetGenericArguments()[0];
+            }
+            return ExecGenericCollectionMethod(eleType, json, isArray);
+        }
+
+        public static object JsonToList(this string json, Type type)
+        {
+            return JsonToList(json, type, false);
+        }
+
+        public static object JsonToEntity(this string json, Type type)
+        {
+            return ExecGenericMethod(_JsonToEntity, type, json);
+        }
+
+        private static object ExecGenericCollectionMethod(Type tp, string json, bool isArray)
+        {
+            object v = null;
+            ExtJsonToObject ext = new ExtJsonToObject();
+            MethodInfo mi = ext.GetType().GetMethod(_JsonToList, BindingFlags.Instance | BindingFlags.Public);
+            if (null != mi)
+            {
+                mi = mi.MakeGenericMethod(tp);
+                try
+                {
+                    v = mi.Invoke(ext, new object[] { json, isArray });
+                }
+                catch (Exception)
+                {
+
+                    //throw;
+                }
+            }
+            return v;
+        }
+
+        private static object ExecGenericMethod(string methodName, Type tp, string json)
         {
             object v = null;
             ExtJsonToObject ext = new ExtJsonToObject();
@@ -515,9 +531,9 @@ namespace System.DJ.ImplementFactory.Commons
             return v;
         }
 
-        public const string _JsonToEntity = "json_entity";
-        public const string _JsonToList = "json_list";
-        public const string _defaultValue = "default_value";
+        private const string _JsonToEntity = "json_entity";
+        private const string _JsonToList = "json_list";
+        private const string _defaultValue = "default_value";
 
         private class ExtJsonToObject
         {
@@ -526,9 +542,9 @@ namespace System.DJ.ImplementFactory.Commons
                 return json.JsonToEntity<T>();
             }
 
-            public IEnumerable json_list<T>(string json)
+            public IEnumerable json_list<T>(string json, bool isArray)
             {
-                return json.JsonToList<T>();
+                return json.JsonToList<T>(isArray);
             }
 
             public object default_value<T>()

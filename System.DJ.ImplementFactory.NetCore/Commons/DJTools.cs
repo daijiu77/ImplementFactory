@@ -1156,14 +1156,14 @@ namespace System.DJ.ImplementFactory.Commons
                 string root_path = Path.Combine(RootPath, TempImplCode.dirName);
                 root_path = Path.Combine(root_path, TempImplCode.libName);
                 assemblies = GetAssemblyCollection(RootPath);
-                if(Directory.Exists(root_path))
+                if (Directory.Exists(root_path))
                 {
                     foreach (Assembly item in assemblies)
                     {
                         type = item.GetType(typeName);
                         if (null != type) break;
                     }
-                }                
+                }
             }
             return type;
         }
@@ -1227,7 +1227,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static Type GetTypeForArrayElement(this Type arrayType)
         {
-            Type eleType=arrayType.GetElementType();
+            Type eleType = arrayType.GetElementType();
             if (null == eleType)
             {
                 string tpStr = arrayType.TypeToString(true);
@@ -1549,6 +1549,7 @@ namespace System.DJ.ImplementFactory.Commons
         public static bool IsList(this Type type)
         {
             if (null == type) return false;
+            if (typeof(IList).IsAssignableFrom(type) || (typeof(IList) == type)) return true;
             string tpName = type.FullName;
             if (string.IsNullOrEmpty(tpName)) return false;
             Regex rg = new Regex(@"\.Generic\.((List)|(IList))\`1\[", RegexOptions.IgnoreCase);

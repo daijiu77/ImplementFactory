@@ -1,10 +1,7 @@
-﻿using Org.BouncyCastle.Crypto;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
-using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
@@ -252,16 +249,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 contractKey = routeAttr.ContractKey;
                 if (typeof(void) != eMethod.ReturnType)
                 {
-                    returnType = eMethod.ReturnType.TypeToString(true);                    
+                    returnType = eMethod.ReturnType.TypeToString(true);
                     mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
+                    //string routeName, string url, string controllerName, string actionName, string contractKey, object data
+                    //         {0}             {1}             {2}                   {3}                {4}               {5}
                     mInfo.append(ref s, LeftSpaceLevel.four, "return msi.MSVisitor<{0}>(\"{1}\", \"{2}\", \"{3}\", \"{4}\", \"{5}\", {6});",
                         returnType, microServiceRoute.RouteName, routeAttr.Uri, controllerName, actionName, contractKey, data);
                 }
                 else
                 {
                     mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
-                    mInfo.append(ref s, LeftSpaceLevel.four, "return msi.ExecMSVisitor(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", {5});",
-                        microServiceRoute.RouteName, "", controllerName, actionName, "", data);
+                    //string routeName, string url, string controllerName, string actionName, string contractKey, object data
+                    //         {0}             {1}             {2}                   {3}                {4}               {5}
+                    mInfo.append(ref s, LeftSpaceLevel.four, "msi.ExecMSVisitor(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", {5});",
+                        microServiceRoute.RouteName, routeAttr.Uri, controllerName, actionName, contractKey, data);
                 }
 
                 if (eMethod.IsTaskReturn)
@@ -360,33 +361,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
             else if (type.IsList())
             {
-                Type[] tps = typeof(T).GetGenericArguments();
-                return (T)ExtMethod.ExecGenericMethod(ExtMethod._JsonToList, tps[0], result);
+                return (T)result.JsonToList(type);
             }
             else if (type.IsArray)
             {
-                Type tp = typeof(T).GetElementType();
-                IEnumerable collect = (IEnumerable)ExtMethod.ExecGenericMethod(ExtMethod._JsonToList, tp, result);
-                int size = collect.Count();
-                int num = 0;
-                object arr = ExtCollection.createArrayByType(tp, size);
-                foreach (var item in collect)
-                {
-                    ExtCollection.arrayAdd(arr, item, num);
-                    num++;
-                }
-                return (T)arr;
+                return (T)result.JsonToList(type, true);
             }
             else if (type.IsClass)
             {
-                return (T)ExtMethod.ExecGenericMethod(ExtMethod._JsonToEntity, typeof(T), result);
+                return (T)result.JsonToEntity(type);
             }
             return default(T);
         }
 
         public void ExecMSVisitor(string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
-            //
+            MSDataVisitor dataVisitor = new MSDataVisitor();
+            dataVisitor.GetResult(routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
         }
     }
 }
