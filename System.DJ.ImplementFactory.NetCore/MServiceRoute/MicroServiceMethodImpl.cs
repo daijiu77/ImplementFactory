@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.Pipelines;
@@ -196,6 +197,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     requestMapping = (RequestMapping)attr;
                     actionName = requestMapping.Name;
                 }
+                if (string.IsNullOrEmpty(actionName)) actionName = miItem.Name;
+
                 ParameterInfo[] pis = miItem.GetParameters();
                 foreach (ParameterInfo p in pis)
                 {
@@ -236,81 +239,29 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (!string.IsNullOrEmpty(data))
                 {
                     data = data.Substring(sign.Length);
+                    data = "new { " + data + " }";
                 }
-                data = "new { " + data + " }";
+                else
+                {
+                    data = "null";
+                }
 
-                s = "";                
+                s = "";
                 RouteAttr routeAttr = MicroServiceRoute.GetRouteAttributeByName(microServiceRoute.RouteName);
-                if (null != routeAttr) contractKey = routeAttr.ContractKey;
-                if ((typeof(void) != eMethod.ReturnType) && (false == string.IsNullOrEmpty(contractKey)))
+                if (null == routeAttr) routeAttr = new RouteAttr();
+                contractKey = routeAttr.ContractKey;
+                if (typeof(void) != eMethod.ReturnType)
                 {
-                    mInfo.append(ref s, LeftSpaceLevel.four, "string responseResult = \"\";");
-                    if (string.IsNullOrEmpty(actionName)) { actionName = miItem.Name; }
-                    mInfo.append(ref s, LeftSpaceLevel.four, "MethodTypes methodTypes = MethodTypes.Post;");
-                    if (null != requestMapping)
-                    {
-                        if (MethodTypes.Get == requestMapping.MethodType)
-                        {
-                            mInfo.append(ref s, LeftSpaceLevel.four, "methodTypes = MethodTypes.Get;");
-                        }
-                    }
-
-                    mInfo.append(ref s, LeftSpaceLevel.four, "RouteAttr routeAttr = MicroServiceRoute.GetRouteAttributeByName(\"{0}\");", microServiceRoute.RouteName);
-                    mInfo.append(ref s, LeftSpaceLevel.four, "MSDataVisitor dataVisitor = new MSDataVisitor();");
-                    mInfo.append(ref s, LeftSpaceLevel.four, "responseResult = dataVisitor.GetResult(\"{0}\", routeAttr.Uri, \"{1}\", \"{2}\", routeAttr.ContractKey, methodTypes, {3});",
-                        microServiceRoute.RouteName, controllerName, actionName, data);
-                    mInfo.append(ref s, LeftSpaceLevel.four, "");
-                    mInfo.append(ref s, LeftSpaceLevel.four, "if(null == responseResult) responseResult = \"\";");
-                    mInfo.append(ref s, LeftSpaceLevel.one, "");
-                    returnType = eMethod.ReturnType.TypeToString(true);
-                    if (typeof(Guid) == eMethod.ReturnType)
-                    {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Guid guid = Guid.Empty;");
-                        mInfo.append(ref s, LeftSpaceLevel.four, "Guid.TryParse(responseResult, out guid);");
-                        mInfo.append(ref s, LeftSpaceLevel.four, "return guid;");
-                    }
-                    else if (typeof(DateTime) == eMethod.ReturnType)
-                    {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "System.DateTime dateTime = System.DateTime.Now;");
-                        mInfo.append(ref s, LeftSpaceLevel.four, "System.DateTime.TryParse(responseResult, out dateTime);");
-                        mInfo.append(ref s, LeftSpaceLevel.four, "return dateTime;");
-                    }
-                    else if (DJTools.IsBaseType(eMethod.ReturnType))
-                    {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "if(typeof(string) == typeof({0})) return ({0})DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
-                        mInfo.append(ref s, LeftSpaceLevel.four, "if(string.IsNullOrEmpty(responseResult)) return default({0});", returnType);
-                        mInfo.append(ref s, LeftSpaceLevel.four, "Object _vObj = DJTools.ConvertTo(responseResult, typeof({0}));", returnType);
-                        mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})_vObj;", returnType);
-                    }
-                    else if (null != eMethod.ReturnType.GetInterface("System.Collections.IEnumerable"))
-                    {
-                        string dtType = returnType;
-                        if (typeof(IList).IsAssignableFrom(eMethod.ReturnType))
-                        {
-                            Type tp = eMethod.ReturnType.GetGenericArguments()[0];
-                            dtType = tp.TypeToString(true);
-                        }
-                        else if (eMethod.ReturnType.IsArray)
-                        {
-                            dtType = eMethod.ReturnType.TypeToString(true);
-                        }
-                        mInfo.append(ref s, LeftSpaceLevel.four, "System.Collections.IEnumerable list = responseResult.JsonToList<{0}>();", dtType);
-                        mInfo.append(ref s, LeftSpaceLevel.four, "return ({0})list;", returnType);
-                    }
-                    else if ((typeof(void) != eMethod.ReturnType)
-                        && eMethod.ReturnType.IsClass
-                        && (false == eMethod.ReturnType.IsInterface)
-                        && (false == eMethod.ReturnType.IsAbstract)
-                        && (false == eMethod.ReturnType.IsBaseType()))
-                    {
-                        mInfo.append(ref s, LeftSpaceLevel.four, "{0} vObj = responseResult.JsonToEntity<{0}>();", returnType);
-                        mInfo.append(ref s, LeftSpaceLevel.four, "return vObj;");
-                    }
+                    returnType = eMethod.ReturnType.TypeToString(true);                    
+                    mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
+                    mInfo.append(ref s, LeftSpaceLevel.four, "return msi.MSVisitor<{0}>(\"{1}\", \"{2}\", \"{3}\", \"{4}\", \"{5}\", {6});",
+                        returnType, microServiceRoute.RouteName, routeAttr.Uri, controllerName, actionName, contractKey, data);
                 }
-                else if(typeof(void) != eMethod.ReturnType)
+                else
                 {
-                    returnType = eMethod.ReturnType.TypeToString(true);
-                    mInfo.append(ref s, LeftSpaceLevel.four, "return default({0});", returnType);
+                    mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
+                    mInfo.append(ref s, LeftSpaceLevel.four, "return msi.ExecMSVisitor(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", {5});",
+                        microServiceRoute.RouteName, "", controllerName, actionName, "", data);
                 }
 
                 if (eMethod.IsTaskReturn)
@@ -383,5 +334,59 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             //throw new NotImplementedException();
         }
 
+        public T MSVisitor<T>(string routeName, string url, string controllerName, string actionName, string contractKey, object data)
+        {
+            MSDataVisitor dataVisitor = new MSDataVisitor();
+            string result = dataVisitor.GetResult(routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            if (string.IsNullOrEmpty(result)) return default(T);
+            Type type = typeof(T);
+            if (type == typeof(Guid))
+            {
+                Guid guid = Guid.Empty;
+                Guid.TryParse(result, out guid);
+                object vObj = guid;
+                return (T)vObj;
+            }
+            else if (type == typeof(DateTime))
+            {
+                DateTime dt = DateTime.Now;
+                DateTime.TryParse(result, out dt);
+                object vObj = dt;
+                return (T)vObj;
+            }
+            else if (type.IsBaseType())
+            {
+                return DJTools.ConvertTo<T>(result);
+            }
+            else if (type.IsList())
+            {
+                Type[] tps = typeof(T).GetGenericArguments();
+                return (T)ExtMethod.ExecGenericMethod(ExtMethod._JsonToList, tps[0], result);
+            }
+            else if (type.IsArray)
+            {
+                Type tp = typeof(T).GetElementType();
+                IEnumerable collect = (IEnumerable)ExtMethod.ExecGenericMethod(ExtMethod._JsonToList, tp, result);
+                int size = collect.Count();
+                int num = 0;
+                object arr = ExtCollection.createArrayByType(tp, size);
+                foreach (var item in collect)
+                {
+                    ExtCollection.arrayAdd(arr, item, num);
+                    num++;
+                }
+                return (T)arr;
+            }
+            else if (type.IsClass)
+            {
+                return (T)ExtMethod.ExecGenericMethod(ExtMethod._JsonToEntity, typeof(T), result);
+            }
+            return default(T);
+        }
+
+        public void ExecMSVisitor(string routeName, string url, string controllerName, string actionName, string contractKey, object data)
+        {
+            //
+        }
     }
 }

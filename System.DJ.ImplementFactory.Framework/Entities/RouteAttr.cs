@@ -5,10 +5,10 @@ namespace System.DJ.ImplementFactory.Entities
     public class RouteAttr
     {
         public string Name { get; set; }
-        public string Uri { get; set; }
+        public string Uri { get; set; } = "";
         public string RegisterAddr { get; set; }
         public string TestAddr { get; set; }
-        public string ContractKey { get; set; }
+        public string ContractKey { get; set; } = "";
 
         private MethodTypes _method = MethodTypes.Get;
         public MethodTypes RegisterActionType

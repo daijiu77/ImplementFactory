@@ -12,6 +12,20 @@ namespace System.DJ.ImplementFactory.Pipelines
         string[] UrlCollection(string routeName);
 
         /// <summary>
+        /// Dynamically set contract key
+        /// </summary>
+        /// <param name="routeName"></param>
+        /// <returns></returns>
+        string GetContractKey(string routeName);
+
+        /// <summary>
+        /// Dynamically set methodType: post\get
+        /// </summary>
+        /// <param name="routeName"></param>
+        /// <returns></returns>
+        MethodTypes GetMethodTypes(string routeName);
+
+        /// <summary>
         /// Sets the Headers for the HttpClient access operation
         /// </summary>
         /// <param name="routeName">Target service name</param>
@@ -29,6 +43,13 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <param name="actionName">The name of the routing action method</param>
         /// <returns>Returns the 'parameters' parameter collection</returns>
         Dictionary<string, string> HttpParameters(string routeName, string controllerName, string actionName);
+
+        /// <summary>
+        /// Set data.
+        /// </summary>
+        /// <param name="routeName"></param>
+        /// <returns></returns>
+        object GetSendData(string routeName);
 
         /// <summary>
         /// Receive information about exceptions that occurred during access

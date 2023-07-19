@@ -25,6 +25,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             HttpVisitingException(routeName, url, exceptionMessage);
         }
 
+        string IMSAllot.GetContractKey(string routeName)
+        {
+            return GetContractKey(routeName);
+        }
+
+        MethodTypes IMSAllot.GetMethodTypes(string routeName)
+        {
+            return GetMethodTypes(routeName);
+        }
+
+        object IMSAllot.GetSendData(string routeName)
+        {
+            return GetSendData(routeName);
+        }
+
         /// <summary>
         /// Sets the Headers for the HttpClient access operation
         /// </summary>
@@ -68,6 +83,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public virtual void HttpVisitingException(string routeName, string url, string exceptionMessage)
         {
             //
+        }
+
+        public virtual string GetContractKey(string routeName)
+        {
+            return null;
+        }
+
+        public virtual MethodTypes GetMethodTypes(string routeName)
+        {
+            return MethodTypes.None;
+        }
+
+        public virtual object GetSendData(string routeName)
+        {
+            return null;
         }
     }
 }

@@ -6,6 +6,7 @@ namespace System.DJ.ImplementFactory.Pipelines
 {
     public enum MethodTypes
     {
+        None,
         Get,
         Post
     }

@@ -487,7 +487,7 @@ namespace System.DJ.ImplementFactory.Commons
             return vObj;
         }
 
-        private static object ExecGenericMethod(string methodName, Type tp, string json)
+        public static object ExecGenericMethod(string methodName, Type tp, string json)
         {
             object v = null;
             ExtJsonToObject ext = new ExtJsonToObject();
@@ -515,9 +515,9 @@ namespace System.DJ.ImplementFactory.Commons
             return v;
         }
 
-        private const string _JsonToEntity = "json_entity";
-        private const string _JsonToList = "json_list";
-        private const string _defaultValue = "default_value";
+        public const string _JsonToEntity = "json_entity";
+        public const string _JsonToList = "json_list";
+        public const string _defaultValue = "default_value";
 
         private class ExtJsonToObject
         {

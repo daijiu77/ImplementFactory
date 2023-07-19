@@ -187,10 +187,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             string result = null;
             if (null == httpHelper) return result;
-            string actionName = InitActionName(action, data);
+            object data1 = data;
+            if (null != mSAllot)
+            {
+                object dt = mSAllot.GetSendData(routeName);
+                if (null != dt) data1 = dt;
+            }
+
+            string actionName = InitActionName(action, data1);
             controller = InitUri(controller);
             actionName = InitUri(actionName);
-
+            
             string[] arr = null;
             if (null != mSAllot)
             {
@@ -228,11 +235,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
                     arr = list.ToArray();
                 }
-                else
+                else if(!string.IsNullOrEmpty(uri))
                 {
                     arr = new string[] { uri };
                 }
             }
+
+            if (null == arr) return null;
 
             Dictionary<string, string> headers = null;
             string paras = "";
@@ -265,6 +274,19 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             }
 
             if (null == headers) headers = new Dictionary<string, string>();
+
+            MethodTypes methodTypes1 = methodTypes;
+            if (null != mSAllot)
+            {
+                string contract_key = mSAllot.GetContractKey(routeName);
+                if (!string.IsNullOrEmpty(contract_key)) contractKey = contract_key;
+
+                MethodTypes mts = mSAllot.GetMethodTypes(routeName);
+                if (MethodTypes.None != mts)
+                {
+                    methodTypes1 = mts;
+                }
+            }
             headers[MServiceConst.contractKey] = contractKey;
 
             string key = routeName + "-" + controller + "-" + action;
@@ -288,7 +310,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             url = InitUri(arr[index]);
             http1 = "{0}/{1}/{2}".ExtFormat(url, controller, actionName);
             httpAddr = http1 + paras;
-            httpHelper.SendData(httpAddr, headers, data, true, methodTypes, (resultData, err) =>
+            httpHelper.SendData(httpAddr, headers, data, true, methodTypes1, (resultData, err) =>
             {
                 if (string.IsNullOrEmpty(err))
                 {
