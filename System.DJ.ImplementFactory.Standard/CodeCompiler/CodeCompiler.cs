@@ -140,6 +140,10 @@ namespace System.DJ.Standard.CodeCompiler
                         }
 
                     }
+                    else
+                    {
+                        asse = Assembly.Load(dts);
+                    }
                 }
             }
 

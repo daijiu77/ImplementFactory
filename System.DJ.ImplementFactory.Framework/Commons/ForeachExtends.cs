@@ -10,6 +10,8 @@ namespace System.DJ.ImplementFactory.Commons
         {
             if (null == obj) return;
             Type type = obj.GetType();
+            if (type.IsBaseType()) return;
+            if (!type.IsClass) return;
             PropertyInfo[] piArr = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             object v = null;
             bool mbool = false;
@@ -27,10 +29,10 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     if (!funcPr(item, item.PropertyType, item.Name)) continue;
                 }
-                v = item.GetValue(obj);
-
+                
                 try
                 {
+                    v = item.GetValue(obj);
                     mbool = func(item, item.PropertyType, item.Name, v);
                     if (false == mbool) break;
                 }

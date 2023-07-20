@@ -12,7 +12,7 @@ namespace System.DJ.ImplementFactory.Commons
 {
     class JsonToEntity
     {
-        private Dictionary<string, Type> dicType = new Dictionary<string, Type>();
+        private static Dictionary<string, Type> dicType = new Dictionary<string, Type>();
         private Dictionary<string, string> kvUsing = new Dictionary<string, string>();
         private Dictionary<string, string> kvClassName = new Dictionary<string, string>();
         private List<string> codes = new List<string>();
@@ -20,7 +20,6 @@ namespace System.DJ.ImplementFactory.Commons
 
         public object GetObject(string json)
         {
-            dicType.Clear();
             kvUsing.Clear();
             codes.Clear();
             kvClassName.Clear();
@@ -46,35 +45,44 @@ namespace System.DJ.ImplementFactory.Commons
             clsName = clsName.ToLower();
             JObject jobj = JObject.Parse(json);
             JToken jt = jobj.ToObject<JToken>();
-            JsonToClassDesign(clsName, "cs", jt);
-
+            Type clsType = null;
             object vObj = null;
-            if (0 < codes.Count)
-            {
-                foreach (var item in codes)
-                {
-                    DJTools.append(ref txt, "");
-                    DJTools.append(ref txt, item);
-                }
-                string err = "";
-                ImplementAdapter.codeCompiler.SavePathOfDll = "";
-                Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, txt, ref err);
-                if (null != assembly)
-                {
-                    Type[] types = assembly.GetTypes();                    
-                    foreach (var item in types)
-                    {
-                        dicType.Add(item.Name.ToLower(), item);
-                    }
 
-                    if (dicType.ContainsKey(clsName))
+            MatchProperties(jt, ref clsType);
+            if(null == clsType)
+            {
+                JsonToClassDesign(clsName, "cs", jt);
+                if (0 < codes.Count)
+                {
+                    foreach (var item in codes)
                     {
-                        Type type = dicType[clsName];
-                        vObj = Activator.CreateInstance(type);
-                        SetObjVal(vObj, jt);
+                        DJTools.append(ref txt, "");
+                        DJTools.append(ref txt, item);
                     }
-                }                
-            }            
+                    string err = "";
+                    ImplementAdapter.codeCompiler.SavePathOfDll = "";
+                    Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, txt, ref err);
+                    if (null != assembly)
+                    {
+                        Type[] types = assembly.GetTypes();
+                        foreach (var item in types)
+                        {
+                            dicType.Add(item.Name.ToLower(), item);
+                        }
+
+                        if (dicType.ContainsKey(clsName))
+                        {
+                            clsType = dicType[clsName];
+                        }
+                    }
+                }
+            }
+
+            if (null != clsType)
+            {
+                vObj = Activator.CreateInstance(clsType);
+                SetObjVal(vObj, jt);
+            }
 
             return vObj;
         }
@@ -109,6 +117,7 @@ namespace System.DJ.ImplementFactory.Commons
             IEnumerable<JProperty> properties = jobj.Properties();
             JToken ele = null;
             JToken ele1 = null;
+            Type clsType = null;
             foreach (JProperty item in properties)
             {
                 ele = item.Value;
@@ -137,12 +146,24 @@ namespace System.DJ.ImplementFactory.Commons
                     eleType = GetEleTypeOfArray(item.Name, ele, ref eleTypeName, ref ele1);
                     DJTools.append(ref txt, level, "");
 
+                    proName = item.Name;
                     if (eleTypeName.Equals("object"))
                     {
-                        proName = item.Name.Substring(0, 1).ToLower() + item.Name.Substring(1);
-                        JsonToClassDesign(item.Name, extendName, ele1);
+                        clsType = null;
+                        MatchProperties(ele1, ref clsType);
+                        if (null == clsType)
+                        {                            
+                            JsonToClassDesign(item.Name, extendName, ele1);
+                        }
+                        else
+                        {
+                            eleType = clsType.FullName;
+                            proName = clsType.Name;
+                        }
                     }
-                    DJTools.append(ref txt, level, "public List<{0}> {1} { get; set; }", eleType, item.Name);
+
+                    proName = proName.Substring(0, 1).ToLower() + proName.Substring(1);
+                    DJTools.append(ref txt, level, "public List<{0}> {1} { get; set; }", eleType, proName);
                 }
                 else if (JTokenType.Date == ele.Type || JTokenType.TimeSpan == ele.Type)
                 {
@@ -156,11 +177,23 @@ namespace System.DJ.ImplementFactory.Commons
                 }
                 else if (JTokenType.Object == ele.Type)
                 {
-                    JsonToClassDesign(item.Name, extendName, ele);
-                    eleTypeName = item.Name.Substring(0, 1).ToUpper() + item.Name.Substring(1);
-                    proName = item.Name.Substring(0, 1).ToLower() + item.Name.Substring(1);
+                    clsType = null;
+                    MatchProperties(ele, ref clsType);
+                    if (null == clsType)
+                    {
+                        JsonToClassDesign(item.Name, extendName, ele);
+                        eleType = item.Name.Substring(0, 1).ToUpper() + item.Name.Substring(1);
+                        proName = item.Name.Substring(0, 1).ToLower() + item.Name.Substring(1);
+                    }
+                    else
+                    {
+                        eleType = clsType.FullName;
+                        proName = clsType.Name;
+                    }
+
+                    proName = proName.Substring(0, 1).ToLower() + proName.Substring(1);
                     DJTools.append(ref txt, level, "");
-                    DJTools.append(ref txt, level, "public {0} {1} { get; set; }", eleTypeName, proName);
+                    DJTools.append(ref txt, level, "public {0} {1} { get; set; }", eleType, proName);
                 }
             }
 
@@ -172,13 +205,50 @@ namespace System.DJ.ImplementFactory.Commons
             codes.Add(txt);
         }
 
+        private void MatchProperties(JToken val, ref Type clsType)
+        {
+            clsType = null;
+            if (null == val) return;
+            JObject jobj = val.ToObject<JObject>();
+            IEnumerable<JProperty> properties = jobj.Properties();
+            int size = properties.Count();
+            bool mbool = false;
+            PropertyInfo[] piArr = null;
+            Dictionary<string, string> dic = new Dictionary<string, string>();
+            foreach (var itemDic in dicType)
+            {
+                piArr = itemDic.Value.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                if (piArr.Length != size) continue;
+                dic.Clear();
+                foreach (var prop in piArr)
+                {
+                    dic[prop.Name.ToLower()] = prop.Name;
+                }
+                mbool = true;
+                foreach (JProperty prop in properties)
+                {
+                    if (!dic.ContainsKey(prop.Name.ToLower()))
+                    {
+                        mbool = false;
+                        break;
+                    }
+                }
+
+                if (mbool)
+                {
+                    clsType = itemDic.Value;
+                    break;
+                }
+            }
+        }
+
         private void SetObjVal(object vObj, JToken val)
         {
             JObject jo = val.ToObject<JObject>();
             IEnumerable<JProperty> properties1 = jo.Properties();
             PropertyInfo pi = null;
             Type type = null;
-            Type vType = null;
+            Type vType = null;           
             object v1 = null;
             foreach (var item in properties1)
             {
@@ -217,7 +287,12 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     vType = null;
                     if (dicType.ContainsKey(item.Name.ToLower())) vType = dicType[item.Name.ToLower()];
-                    if (null == vType) continue;
+                    if (null == vType)
+                    {
+                        pi = vObj.GetPropertyInfo(item.Name);
+                        if (null == pi) continue;
+                        vType = pi.PropertyType;
+                    }
                     v1 = Activator.CreateInstance(vType);
                     SetObjVal(v1, item.Value);
                     vObj.SetPropertyValue(item.Name, v1);
