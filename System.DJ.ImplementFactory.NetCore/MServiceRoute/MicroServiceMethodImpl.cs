@@ -116,12 +116,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             code = code.Replace("{#structorMethod}", structorMethod);
 
             mInfo.append(ref propertyList, "");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three, "private event WillExecute _OnWillExecute;");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three, "event WillExecute IExtMSDataVisitor.OnWillExecute");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three, "{");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three + 1, "add { _OnWillExecute += value; }");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three + 1, "remove { _OnWillExecute -= value; }");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three, "}");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "WillExecute IExtMSDataVisitor.willExecute { get; set; }");            
             mInfo.append(ref propertyList, "");
             mInfo.append(ref propertyList, LeftSpaceLevel.three, "IMSAllot IExtMSDataVisitor.mSAllot { get; set; }");
             mInfo.append(ref propertyList, "");

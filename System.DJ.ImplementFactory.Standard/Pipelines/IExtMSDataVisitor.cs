@@ -7,7 +7,7 @@ namespace System.DJ.ImplementFactory.Pipelines
     public delegate object WillExecute(params object[] args);
     public interface IExtMSDataVisitor
     {
-        event WillExecute OnWillExecute;
+        WillExecute willExecute { get; set; }
 
         IMSAllot mSAllot { get; set; }
     }
