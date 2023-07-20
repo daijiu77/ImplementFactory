@@ -97,7 +97,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             MethodInformation mInfo = new MethodInformation();
             mInfo.append(ref code, LeftSpaceLevel.one, "namespace {0}", namespaceStr);
             mInfo.append(ref code, "{");
-            mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}, ISingleInstance", clssName, DJTools.GetClassName(interfaceType, true));
+            mInfo.append(ref code, LeftSpaceLevel.two, "public class {0}: ImplementAdapter, {1}, IExtMSDataVisitor, ISingleInstance", clssName, DJTools.GetClassName(interfaceType, true));
             mInfo.append(ref code, LeftSpaceLevel.two, "{");
             mInfo.append(ref code, "");
 
@@ -115,6 +115,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             mInfo.append(ref structorMethod, LeftSpaceLevel.three, "}");
             code = code.Replace("{#structorMethod}", structorMethod);
 
+            mInfo.append(ref propertyList, "");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "private event WillExecute _OnWillExecute;");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "event WillExecute IExtMSDataVisitor.OnWillExecute");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "{");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three + 1, "add { _OnWillExecute += value; }");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three + 1, "remove { _OnWillExecute -= value; }");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "}");
+            mInfo.append(ref propertyList, "");
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "IMSAllot IExtMSDataVisitor.mSAllot { get; set; }");
             mInfo.append(ref propertyList, "");
             mInfo.append(ref propertyList, LeftSpaceLevel.three, "object ISingleInstance.Instance { get; set; }");
             mInfo.append(ref propertyList, "");
@@ -251,17 +260,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 {
                     returnType = eMethod.ReturnType.TypeToString(true);
                     mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
-                    //string routeName, string url, string controllerName, string actionName, string contractKey, object data
-                    //         {0}             {1}             {2}                   {3}                {4}               {5}
-                    mInfo.append(ref s, LeftSpaceLevel.four, "return msi.MSVisitor<{0}>(\"{1}\", \"{2}\", \"{3}\", \"{4}\", \"{5}\", {6});",
+                    //object thisMe, string routeName, string url, string controllerName, string actionName, string contractKey, object data
+                    //                        {0}             {1}             {2}                   {3}                {4}               {5}
+                    mInfo.append(ref s, LeftSpaceLevel.four, "return msi.MSVisitor<{0}>(this, \"{1}\", \"{2}\", \"{3}\", \"{4}\", \"{5}\", {6});",
                         returnType, microServiceRoute.RouteName, routeAttr.Uri, controllerName, actionName, contractKey, data);
                 }
                 else
                 {
                     mInfo.append(ref s, LeftSpaceLevel.four, "MicroServiceMethodImpl msi = new MicroServiceMethodImpl();");
-                    //string routeName, string url, string controllerName, string actionName, string contractKey, object data
-                    //         {0}             {1}             {2}                   {3}                {4}               {5}
-                    mInfo.append(ref s, LeftSpaceLevel.four, "msi.ExecMSVisitor(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", {5});",
+                    //object thisMe, string routeName, string url, string controllerName, string actionName, string contractKey, object data
+                    //                        {0}             {1}             {2}                   {3}                {4}               {5}
+                    mInfo.append(ref s, LeftSpaceLevel.four, "msi.ExecMSVisitor(this, \"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\", {5});",
                         microServiceRoute.RouteName, routeAttr.Uri, controllerName, actionName, contractKey, data);
                 }
 
@@ -335,10 +344,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             //throw new NotImplementedException();
         }
 
-        public T MSVisitor<T>(string routeName, string url, string controllerName, string actionName, string contractKey, object data)
+        public T MSVisitor<T>(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            string result = dataVisitor.GetResult(routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            string result = dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
             if (string.IsNullOrEmpty(result)) return default(T);
             Type type = typeof(T);
             if (type == typeof(Guid))
@@ -374,10 +383,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return default(T);
         }
 
-        public void ExecMSVisitor(string routeName, string url, string controllerName, string actionName, string contractKey, object data)
+        public void ExecMSVisitor(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            dataVisitor.GetResult(routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
         }
     }
 }

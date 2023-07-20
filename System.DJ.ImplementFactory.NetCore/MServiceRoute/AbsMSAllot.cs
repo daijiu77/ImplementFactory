@@ -5,39 +5,39 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public abstract class AbsMSAllot : IMSAllot
     {
-        Dictionary<string, string> IMSAllot.HttpHeaders(string routeName, string controllerName, string actionName)
+        Dictionary<string, string> IMSAllot.HttpHeaders(string routeName, string controllerName, string actionName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return HttpHeaders(routeName, controllerName, actionName);
+            return HttpHeaders(routeName, controllerName, actionName, arg, extMSDataVisitor);
         }
 
-        Dictionary<string, string> IMSAllot.HttpParameters(string routeName, string controllerName, string actionName)
+        Dictionary<string, string> IMSAllot.HttpParameters(string routeName, string controllerName, string actionName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return HttpParameters(routeName, controllerName, actionName);
+            return HttpParameters(routeName, controllerName, actionName, arg, extMSDataVisitor);
         }
 
-        string[] IMSAllot.UrlCollection(string routeName)
+        string[] IMSAllot.UrlCollection(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return UrlCollection(routeName);
+            return UrlCollection(routeName, arg, extMSDataVisitor);
         }
 
-        void IMSAllot.HttpVisitingException(string routeName, string url, string exceptionMessage)
+        void IMSAllot.HttpVisitingException(string routeName, string url, string exceptionMessage, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            HttpVisitingException(routeName, url, exceptionMessage);
+            HttpVisitingException(routeName, url, exceptionMessage, arg, extMSDataVisitor);
         }
 
-        string IMSAllot.GetContractKey(string routeName)
+        string IMSAllot.GetContractKey(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return GetContractKey(routeName);
+            return GetContractKey(routeName, arg, extMSDataVisitor);
         }
 
-        MethodTypes IMSAllot.GetMethodTypes(string routeName)
+        MethodTypes IMSAllot.GetMethodTypes(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return GetMethodTypes(routeName);
+            return GetMethodTypes(routeName, arg, extMSDataVisitor);
         }
 
-        object IMSAllot.GetSendData(string routeName)
+        object IMSAllot.GetSendData(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
-            return GetSendData(routeName);
+            return GetSendData(routeName, arg, extMSDataVisitor);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// <param name="controllerName">Controller name</param>
         /// <param name="actionName">The name of the routing action method</param>
         /// <returns>Returns the 'headers' parameter collection</returns>
-        public virtual Dictionary<string, string> HttpHeaders(string routeName, string controllerName, string actionName)
+        public virtual Dictionary<string, string> HttpHeaders(string routeName, string controllerName, string actionName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
         }
@@ -59,7 +59,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// <param name="controllerName">Controller name</param>
         /// <param name="actionName">The name of the routing action method</param>
         /// <returns>Returns the 'parameters' parameter collection</returns>
-        public virtual Dictionary<string, string> HttpParameters(string routeName, string controllerName, string actionName)
+        public virtual Dictionary<string, string> HttpParameters(string routeName, string controllerName, string actionName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
         }
@@ -69,7 +69,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// </summary>
         /// <param name="routeName">Target service name</param>
         /// <returns></returns>
-        public virtual string[] UrlCollection(string routeName)
+        public virtual string[] UrlCollection(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
         }
@@ -80,22 +80,22 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         /// <param name="routeName">Target service name</param>
         /// <param name="url">Http address</param>
         /// <param name="exceptionMessage">Exception message</param>
-        public virtual void HttpVisitingException(string routeName, string url, string exceptionMessage)
+        public virtual void HttpVisitingException(string routeName, string url, string exceptionMessage, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             //
         }
 
-        public virtual string GetContractKey(string routeName)
+        public virtual string GetContractKey(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
         }
 
-        public virtual MethodTypes GetMethodTypes(string routeName)
+        public virtual MethodTypes GetMethodTypes(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return MethodTypes.None;
         }
 
-        public virtual object GetSendData(string routeName)
+        public virtual object GetSendData(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
         }

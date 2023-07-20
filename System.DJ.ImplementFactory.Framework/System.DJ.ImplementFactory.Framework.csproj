@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Pipelines\IExtMSDataVisitor.cs" />
     <Compile Include="DataAccess\MakeInsertSql.cs" />
     <Compile Include="DataAccess\LazyDataOpt.cs" />
     <Compile Include="DataAccess\DOList.cs" />
