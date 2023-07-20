@@ -38,11 +38,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static Guid s_id = Guid.NewGuid();
 
         /// <summary>
-        /// key: serviceName_lower, value: RouteAttr
+        /// key: routeName_lower, value: RouteAttr
         /// </summary>
         private static Dictionary<string, RouteAttr> s_routeAttrDic = new Dictionary<string, RouteAttr>();
         /// <summary>
-        /// key: serviceName_lower, value: node
+        /// key: routeName_lower, value: node
         /// </summary>
         private static Dictionary<string, XmlElement> s_eleDic = new Dictionary<string, XmlElement>();
 

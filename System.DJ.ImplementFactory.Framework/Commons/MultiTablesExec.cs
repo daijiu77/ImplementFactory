@@ -20,6 +20,9 @@ namespace System.DJ.ImplementFactory.Commons
         /// key: tableName_lower, value: List[string]
         /// </summary>
         private static Dictionary<string, object> tbDic = new Dictionary<string, object>();
+        /// <summary>
+        /// key: tableName_lower, value: tableName
+        /// </summary>
         private static Dictionary<string, string> _tableDic = new Dictionary<string, string>();
         private Dictionary<string, ThreadOpt> threadDic = new Dictionary<string, ThreadOpt>();
         private AutoCall autoCall = new AutoCall();
@@ -104,6 +107,9 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             initDictionary(rule, sql);
         }
 
+        /// <summary>
+        /// key: tableName_lower, value: tableName
+        /// </summary>
         public static Dictionary<string, string> Tables
         {
             get

@@ -184,6 +184,8 @@ namespace System.DJ.ImplementFactory.DataAccess
                 dbHelper.update(autoCall, sql, null, false, null, ref err);
             }
             ImplementAdapter.Destroy(dbHelper);
+
+            reloadTableInfo(tableDic);
         }
 
         public static TableInfoDetail GetTableInfoDetail()
@@ -235,6 +237,24 @@ namespace System.DJ.ImplementFactory.DataAccess
             ImplementAdapter.Destroy(dbHelper);
         }
 
-
+        private void reloadTableInfo(Dictionary<string, string> tableDic)
+        {
+            if (null == tableDic) return;
+            List<FieldInformation> list = null;
+            string tableName = "";
+            string fn1 = "";
+            foreach (var ele in tableDic)
+            {
+                if (null != tableFieldInfos[ele.Key]) continue;
+                tableName = ele.Value;
+                list = dbTableScheme.GetFields(tableName);
+                if (null == list) continue;                
+                foreach (var item in list)
+                {
+                    fn1 = item.Name.ToLower();
+                    tableFieldInfos.Add(tableName, item.Name, item.ValueType, item.Length, item.IsNull, item.IsPrimaryKey);
+                }
+            }
+        }
     }
 }
