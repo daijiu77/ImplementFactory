@@ -83,6 +83,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             Response.ContentType = "application/json";
             return Content(resultStr);
         }
+
+        [HttpPost, Route("Test")]
+        public ActionResult Test()
+        {
+            string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
+            object data = new { Message = "Successfully", Code = this.HttpContext.Response.StatusCode, IP = ip };
+            Response.ContentType = "application/json";
+            return Content("");
+        }
     }
 }
 /*

@@ -17,6 +17,7 @@
 
         public DataSyncItem SetDataSyncsName(string dataSyncsName)
         {
+            if (!string.IsNullOrEmpty(this.DataSyncsName)) return this;
             this.DataSyncsName = dataSyncsName;
             return this;
         }

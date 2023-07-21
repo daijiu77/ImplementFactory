@@ -232,7 +232,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             return dic;
         }
 
-        protected string GetIP(HttpContext context)
+        public static string GetIP(HttpContext context)
         {
             // ip
             string ip = "";
