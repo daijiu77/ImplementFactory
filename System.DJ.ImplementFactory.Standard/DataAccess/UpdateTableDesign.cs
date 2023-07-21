@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
-using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -19,12 +13,22 @@ namespace System.DJ.ImplementFactory.DataAccess
         private static List<Type> absDataModels = new List<Type>();
         private static TableInfoDetail tableFieldInfos = new TableInfoDetail();
 
-        private IDbTableScheme dbTableScheme;
+        private static IDbTableScheme dbTableScheme;
         private AutoCall autoCall = new AutoCall();
+
+        private UpdateTableDesign() { }
+
+        public static UpdateTableDesign Instance
+        {
+            get
+            {
+                return new UpdateTableDesign();
+            }
+        }
 
         public UpdateTableDesign(IDbTableScheme dbTableScheme)
         {
-            this.dbTableScheme = dbTableScheme;
+            UpdateTableDesign.dbTableScheme = dbTableScheme;
 
             if (0 < absDataModels.Count) return;
 
@@ -188,11 +192,22 @@ namespace System.DJ.ImplementFactory.DataAccess
             reloadTableInfo(tableDic);
         }
 
-        public static TableInfoDetail GetTableInfoDetail()
+        public static TableInfoDetail GetTableInfoDetail(bool bestNew)
         {
             if (null == ImplementAdapter.taskUpdateTableDesign) throw new Exception("Set the UpdateTableDesign node in the configuration file 'ImplementFactory.xml' to true");
             ImplementAdapter.taskUpdateTableDesign.Wait();
+            if (bestNew)
+            {
+                tableFieldInfos.Clear();
+                Dictionary<string, string> tableDic = MultiTablesExec.GetLastTables();
+                UpdateTableDesign.Instance.reloadTableInfo(tableDic);
+            }
             return tableFieldInfos;
+        }
+
+        public static TableInfoDetail GetTableInfoDetail()
+        {
+            return GetTableInfoDetail(false);
         }
 
         private void AddField(string tableName, Type type)

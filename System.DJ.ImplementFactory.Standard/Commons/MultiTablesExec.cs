@@ -1,5 +1,4 @@
-﻿using MySqlX.XDevAPI.Relational;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -8,7 +7,6 @@ using System.DJ.ImplementFactory.Commons.Exts;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -66,6 +64,52 @@ namespace System.DJ.ImplementFactory.Commons
             MultiTablesExec.dbInfo = dbInfo;
             MultiTablesExec.dbHelper = dbHelper;
 
+            getTableInfo(dbInfo);
+        }
+
+        public static MultiTablesExec Instance
+        {
+            get
+            {
+                return new MultiTablesExec();
+            }
+        }
+
+        /// <summary>
+        /// key: tableName_lower, value: tableName
+        /// </summary>
+        public static Dictionary<string, string> Tables
+        {
+            get
+            {
+                if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+                return _tableDic;
+            }
+        }
+
+        public static Dictionary<string, string> GetLastTables()
+        {
+            if (null != ImplementAdapter.taskMultiTablesExec)
+            {
+                ImplementAdapter.taskMultiTablesExec.Wait();
+            }
+            MultiTablesExec.Instance.getTableInfo(MultiTablesExec.dbInfo);
+            return _tableDic;
+        }
+
+        public static void SetTable(string tableName)
+        {
+            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+            string tb = tableName.ToLower();
+            if (!_tableDic.ContainsKey(tb))
+            {
+                _tableDic.Add(tb, tableName);
+            }
+            set_tbDic(tableName, tableName);
+        }
+
+        private void getTableInfo(DbInfo dbInfo)
+        {
             string rule = getRule(dbInfo);
             string sql = "";
             string dbName = GetCurrentDbName();
@@ -105,29 +149,6 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             }
 
             initDictionary(rule, sql);
-        }
-
-        /// <summary>
-        /// key: tableName_lower, value: tableName
-        /// </summary>
-        public static Dictionary<string, string> Tables
-        {
-            get
-            {
-                if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
-                return _tableDic;
-            }
-        }
-
-        public static void SetTable(string tableName)
-        {
-            if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
-            string tb = tableName.ToLower();
-            if (!_tableDic.ContainsKey(tb))
-            {
-                _tableDic.Add(tb, tableName);
-            }
-            set_tbDic(tableName, tableName);
         }
 
         private void initBasicExecForSQL(DbAdapter dbAdapter, IDbHelper dbHelper)
@@ -234,6 +255,7 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
             string tbName = "";
             string tn = "";
             string srcTableName = "";
+            _tableDic.Clear();
             foreach (DataRow item in dt.Rows)
             {
                 tbName = item["TABLE_NAME"].ToString();

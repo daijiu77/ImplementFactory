@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Entities;
-using System.Text;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
@@ -34,6 +32,11 @@ namespace System.DJ.ImplementFactory.DataAccess
         IEnumerator IEnumerable.GetEnumerator()
         {
             return enumerableItem;
+        }
+
+        public void Clear()
+        {
+            enumerableItem.Clear();
         }
 
         public class IEnumerableItem : IEnumerator<TableDetail>, IEnumerator
