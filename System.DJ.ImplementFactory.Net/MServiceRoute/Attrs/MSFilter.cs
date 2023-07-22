@@ -91,7 +91,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             lock (mSFilter)
             {
                 MSFilter.tokenKeyName = tokenKeyName;
-                string ip = mSFilter.GetIP(context);
+                string ip = MSFilter.GetIP(context);
                 SetToken(ip, tokenKeyName, token, liveCycle_Second);
             }
         }

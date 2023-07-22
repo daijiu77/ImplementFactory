@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
+using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using System.DJ.ImplementFactory.Pipelines;
 using System.DJ.ImplementFactory.Pipelines.Pojo;
 using System.IO;
@@ -116,7 +118,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             code = code.Replace("{#structorMethod}", structorMethod);
 
             mInfo.append(ref propertyList, "");
-            mInfo.append(ref propertyList, LeftSpaceLevel.three, "WillExecute IExtMSDataVisitor.willExecute { get; set; }");            
+            mInfo.append(ref propertyList, LeftSpaceLevel.three, "WillExecute IExtMSDataVisitor.willExecute { get; set; }");
             mInfo.append(ref propertyList, "");
             mInfo.append(ref propertyList, LeftSpaceLevel.three, "IMSAllot IExtMSDataVisitor.mSAllot { get; set; }");
             mInfo.append(ref propertyList, "");
@@ -341,6 +343,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         public T MSVisitor<T>(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
+            GetUrlInfo(routeName, ref url, ref contractKey);
             MSDataVisitor dataVisitor = new MSDataVisitor();
             string result = dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
             if (string.IsNullOrEmpty(result)) return default(T);
@@ -380,8 +383,130 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         public void ExecMSVisitor(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
+            GetUrlInfo(routeName, ref url, ref contractKey);
             MSDataVisitor dataVisitor = new MSDataVisitor();
             dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+        }
+
+        private static string httpStr = "";
+        private static string areaName = "";
+        private void GetUrlInfo(string serviceName, ref string url, ref string contractKey)
+        {
+            Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)(\/(?<AreaName>[^\/]+))?", RegexOptions.IgnoreCase);
+            if (string.IsNullOrEmpty(httpStr))
+            {
+                if (!string.IsNullOrEmpty(url))
+                {
+                    if (rg.IsMatch(url))
+                    {
+                        Match m1 = rg.Match(url);
+                        httpStr = m1.Groups["HttpHeader"].Value;
+                        areaName = m1.Groups["AreaName"].Value;
+                        if (!string.IsNullOrEmpty(areaName)) areaName = "/" + areaName;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(serviceName)) return;
+            if ((false == string.IsNullOrEmpty(url)) && (false == string.IsNullOrEmpty(contractKey))) return;
+
+            string[] ucArr = SvrUrlContractKey(serviceName, null, null);
+            if (null != ucArr)
+            {
+                url = ucArr[0];
+                contractKey = ucArr[1];
+                return;
+            }
+
+            if (null == MicroServiceRoute.ServiceManager) return;
+            if (string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.Uri)
+                || string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.ServiceManagerAddr)
+                || string.IsNullOrEmpty(MicroServiceRoute.ServiceManager.ContractKey)) return;
+
+            if (!rg.IsMatch(MicroServiceRoute.ServiceManager.Uri)) return;
+
+            string msUrl = MicroServiceRoute.ServiceManager.Uri;
+            if (rg.IsMatch(msUrl))
+            {
+                Match m = rg.Match(msUrl);
+                string HttpHeader = m.Groups["HttpHeader"].Value;
+                string HttpBody = m.Groups["HttpBody"].Value;
+                msUrl = "{0}://{1}/".ExtFormat(HttpHeader, HttpBody);
+            }
+            msUrl += "DataSync/GetUrlInfoByServiceName?serviceName=" + serviceName;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add(MServiceConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
+
+            SvrAPI svrAPI = null;
+            IHttpHelper httpHelper = new HttpHelper();
+            httpHelper.SendData(msUrl, headers, new { serviceName }, true, (resultObj, err) =>
+            {
+                if (null == resultObj) return;
+                string dataStr = resultObj.ToString();
+                JToken jt = JToken.Parse(dataStr);
+                JObject jo = jt.ToObject<JObject>();
+                IEnumerable<JProperty> jProperties = jo.Properties();
+                foreach (JProperty property in jProperties)
+                {
+                    string name = property.Name.ToLower();
+                    if (name.Equals("data"))
+                    {
+                        dataStr = property.Value.ToString();
+                        break;
+                    }
+                    else if (name.Equals("datas"))
+                    {
+                        dataStr = property.Value.ToString();
+                        break;
+                    }
+                    else if (name.Equals("result"))
+                    {
+                        dataStr = property.Value.ToString();
+                        break;
+                    }
+                    else if (name.Equals("results"))
+                    {
+                        dataStr = property.Value.ToString();
+                        break;
+                    }
+                }
+                svrAPI = ExtMethod.JsonToEntity<SvrAPI>(dataStr);
+            });
+
+            if (null == svrAPI) return;
+
+            if (string.IsNullOrEmpty(httpStr))
+            {
+                url = "http://{0}:{1}{2}".ExtFormat(svrAPI.IP, svrAPI.Port, areaName);
+            }
+            else
+            {
+                url = "{0}://{1}:{2}{3}".ExtFormat(httpStr, svrAPI.IP, svrAPI.Port, areaName);
+            }
+            contractKey = svrAPI.ContractKey;
+            SvrUrlContractKey(serviceName, url, contractKey);
+        }
+
+        private static Dictionary<string, string[]> ucDic = new Dictionary<string, string[]>();
+        private static object SvrUrlContractKeyLock = new object();
+        private string[] SvrUrlContractKey(string serviceName, string url, string contractKey)
+        {
+            lock (SvrUrlContractKeyLock)
+            {
+                string[] ucArr = null;
+                if (string.IsNullOrEmpty(serviceName)) return ucArr;
+                string key = serviceName.ToLower();
+                if ((false == string.IsNullOrEmpty(url)) && (false == string.IsNullOrEmpty(contractKey)))
+                {
+                    if (!ucDic.ContainsKey(key))
+                    {
+                        ucDic.Add(key, new string[] { url, contractKey });
+                    }
+                }
+                ucDic.TryGetValue(key, out ucArr);
+                return ucArr;
+            }
         }
     }
 }

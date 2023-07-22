@@ -270,7 +270,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (url.Substring(url.Length - 1).Equals("/")) url = url.Substring(0, url.Length - 1);
 
                 url += "/";
-                Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)\/.+\/$", RegexOptions.IgnoreCase);
+                Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)", RegexOptions.IgnoreCase);
                 if (rg.IsMatch(url))
                 {
                     Match m = rg.Match(url);

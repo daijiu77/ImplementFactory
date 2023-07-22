@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
-        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/[^\/]+");
+        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/[^\/]+", RegexOptions.IgnoreCase);
         private static int maxNum = 50;
         private static int maxNumber = 50;
         private const int sleepNum = 1000 * 3;

@@ -86,8 +86,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         }
 
         [MSUnlimited]
-        [HttpPost, Route("Test")]
-        public ActionResult Test()
+        [HttpPost, Route("SysTest")]
+        public ActionResult SysTest()
         {
             string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
             object data = new { Message = "Successfully", Code = this.HttpContext.Response.StatusCode, IP = ip };
