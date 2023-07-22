@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
+using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using System.Text;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
@@ -84,13 +85,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             return Content(resultStr);
         }
 
+        [MSUnlimited]
         [HttpPost, Route("Test")]
         public ActionResult Test()
         {
             string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
             object data = new { Message = "Successfully", Code = this.HttpContext.Response.StatusCode, IP = ip };
+            string json = JsonConvert.SerializeObject(data);
             Response.ContentType = "application/json";
-            return Content("");
+            return Content(json);
+        }
+
+        [HttpPost, Route("GetUrlInfoByServiceName")]
+        public ActionResult GetUrlInfoByServiceName(string serviceName)
+        {
+            string json = "";
+            SvrAPISchema svrAPISchema = new SvrAPISchema();
+            SvrAPI svrApi = svrAPISchema.GetServiceAPIByServiceName(serviceName);
+            if (null != svrApi)
+            {
+                json = JsonConvert.SerializeObject(svrApi);
+            }
+            return Content(json);
         }
     }
 }
