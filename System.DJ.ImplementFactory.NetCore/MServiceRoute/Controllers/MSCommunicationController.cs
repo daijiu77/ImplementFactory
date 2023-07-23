@@ -6,13 +6,15 @@ using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 {
-    [Route("DataSync")]
+    [Route("MSCommunication")]
     [ApiController]
-    public class DataSyncController : ControllerBase
+    public class MSCommunicationController : ControllerBase
     {
         [HttpPost, Route("Receiver")]
         public ActionResult Receiver(object data)
@@ -90,9 +92,51 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         public ActionResult SysTest()
         {
             string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
-            object data = new { Message = "Successfully", Code = this.HttpContext.Response.StatusCode, IP = ip };
+            MSIPInfo data = new MSIPInfo()
+            {
+                Message = "Successfully",
+                Code = HttpContext.Response.StatusCode,
+                IP = ip
+            };
             string json = JsonConvert.SerializeObject(data);
             Response.ContentType = "application/json";
+            return Content(json);
+        }
+
+        [HttpPost, Route("GetCurrentSvrIP")]
+        public ActionResult GetCurrentSvrIP(string url, string contractKey)
+        {
+            Response.ContentType = "application/json";
+
+            string json = "";
+            string msUrl = url;
+            Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)(\/(?<AreaName>[^\/]+))?", RegexOptions.IgnoreCase);
+            if (!rg.IsMatch(msUrl)) return Content(json);
+            Match m = rg.Match(msUrl);
+            string HttpHeader = m.Groups["HttpHeader"].Value;
+            string HttpBody = m.Groups["HttpBody"].Value;
+            msUrl = "{0}://{1}/{2}/{3}".ExtFormat(HttpHeader, HttpBody, MSConst.MSCommunication, MSConst.SysTest);
+
+            Dictionary<string, string> headDic = new Dictionary<string, string>();
+            headDic.Add(MSConst.contractKey, contractKey);
+
+            string ip = "";
+            IHttpHelper httpHelper = new HttpHelper();
+            httpHelper.SendData(msUrl, headDic, null, true, (resultData, err) =>
+            {
+                if (!string.IsNullOrEmpty(err)) return;
+                if (null == resultData) return;
+                string dataStr = ExtMethod.GetCollectionData(resultData.ToString());
+                if (string.IsNullOrEmpty(dataStr)) return;
+                MSIPInfo mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(dataStr);
+                if (null == mSIPInfo) return;                
+                ip = mSIPInfo.IP;
+            });
+            MSIPInfo data = new MSIPInfo()
+            {
+                IP = ip
+            };
+            json = JsonConvert.SerializeObject(data);
             return Content(json);
         }
 
@@ -104,7 +148,58 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             SvrAPI svrApi = svrAPISchema.GetServiceAPIByServiceName(serviceName);
             if (null != svrApi)
             {
-                json = JsonConvert.SerializeObject(svrApi);
+                if (0 < svrApi.Items.Count)
+                {
+                    int index = svrApi.index;
+                    SvrAPIOption option = svrApi.Items[index];
+                    index++;
+                    svrApi.index = index % svrApi.Items.Count;
+                    string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
+                    string httpProtocal = "http";
+                    if (0 < option.SvrUris.Count)
+                    {
+                        if (!string.IsNullOrEmpty(option.SvrUris[0].Uri))
+                        {
+                            Regex rg = new Regex(@"^(?<HttpPro>((http)|(https)))\:", RegexOptions.IgnoreCase);
+                            if (rg.IsMatch(option.SvrUris[0].Uri))
+                            {
+                                httpProtocal = rg.Match(option.SvrUris[0].Uri).Groups["HttpPro"].Value;
+                            }
+                        }
+                    }
+                    string url = "{0}://{1}:{2}/{3}/{4}";
+                    url = url.ExtFormat(
+                        httpProtocal,
+                        option.IP,
+                        option.Port,
+                        MSConst.MSCommunication,
+                        MSConst.GetCurrentSvrIP);
+
+                    string paraUrl = "{0}://{1}:{2}".ExtFormat(httpProtocal, ip, option.Port);
+                    string paraContractKey = option.ContractKey;
+                    object data = new { url = paraUrl, contractKey = paraContractKey };
+
+                    Dictionary<string, string> heads = new Dictionary<string, string>();
+                    heads.Add(MSConst.contractKey, option.ContractKey);
+
+                    IHttpHelper httpHelper = new HttpHelper();
+                    MSIPInfo mSIPInfo = null;
+                    httpHelper.SendData(url, heads, data, true, (resultData, err) =>
+                    {
+                        if (!string.IsNullOrEmpty(err)) return;
+                        if (null == resultData) return;
+                        mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(resultData.ToString());
+                    });
+
+                    if (null != mSIPInfo)
+                    {
+                        SvrAPIOption option1 = new SvrAPIOption();
+                        option1.IP = mSIPInfo.IP;
+                        option1.Port = option.Port;
+                        option1.ContractKey = option.ContractKey;
+                        json = JsonConvert.SerializeObject(option1);
+                    }
+                }
             }
             return Content(json);
         }

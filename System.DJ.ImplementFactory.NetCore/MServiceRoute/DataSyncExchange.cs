@@ -278,10 +278,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     string HttpBody = m.Groups["HttpBody"].Value;
                     url = "{0}://{1}/".ExtFormat(HttpHeader, HttpBody);
                 }
-                url += "DataSync/Receiver";
+                url += "MSCommunication/Receiver";
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add(MServiceConst.contractKey, routeAttr.ContractKey);
+                headers.Add(MSConst.contractKey, routeAttr.ContractKey);
 
                 httpHelper.SendData(url, headers, message, true, (resultObj, err) =>
                 {

@@ -432,59 +432,44 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 string HttpHeader = m.Groups["HttpHeader"].Value;
                 string HttpBody = m.Groups["HttpBody"].Value;
                 msUrl = "{0}://{1}/".ExtFormat(HttpHeader, HttpBody);
+
+                if (string.IsNullOrEmpty(httpStr)) httpStr = HttpHeader;
+                if (string.IsNullOrEmpty(areaName))
+                {
+                    areaName = m.Groups["AreaName"].Value;
+                    if (!string.IsNullOrEmpty(areaName)) areaName = "/" + areaName;
+                }
             }
-            msUrl += "DataSync/GetUrlInfoByServiceName?serviceName=" + serviceName;
+            msUrl = msUrl.Trim();
+            if (!msUrl.Substring(msUrl.Length - 1).Equals("/"))
+            {
+                msUrl += "/";
+            }
+            msUrl += "{0}/{1}?serviceName={2}".ExtFormat(MSConst.MSCommunication, MSConst.GetUrlInfoByServiceName, serviceName);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(MServiceConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
+            headers.Add(MSConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
 
-            SvrAPI svrAPI = null;
+            SvrAPIOption option = null;
             IHttpHelper httpHelper = new HttpHelper();
             httpHelper.SendData(msUrl, headers, new { serviceName }, true, (resultObj, err) =>
             {
                 if (null == resultObj) return;
-                string dataStr = resultObj.ToString();
-                JToken jt = JToken.Parse(dataStr);
-                JObject jo = jt.ToObject<JObject>();
-                IEnumerable<JProperty> jProperties = jo.Properties();
-                foreach (JProperty property in jProperties)
-                {
-                    string name = property.Name.ToLower();
-                    if (name.Equals("data"))
-                    {
-                        dataStr = property.Value.ToString();
-                        break;
-                    }
-                    else if (name.Equals("datas"))
-                    {
-                        dataStr = property.Value.ToString();
-                        break;
-                    }
-                    else if (name.Equals("result"))
-                    {
-                        dataStr = property.Value.ToString();
-                        break;
-                    }
-                    else if (name.Equals("results"))
-                    {
-                        dataStr = property.Value.ToString();
-                        break;
-                    }
-                }
-                svrAPI = ExtMethod.JsonToEntity<SvrAPI>(dataStr);
+                string dataStr = ExtMethod.GetCollectionData(resultObj.ToString());
+                option = ExtMethod.JsonToEntity<SvrAPIOption>(dataStr);
             });
 
-            if (null == svrAPI) return;
+            if (null == option) return;
 
             if (string.IsNullOrEmpty(httpStr))
             {
-                url = "http://{0}:{1}{2}".ExtFormat(svrAPI.IP, svrAPI.Port, areaName);
+                url = "http://{0}:{1}{2}".ExtFormat(option.IP, option.Port, areaName);
             }
             else
             {
-                url = "{0}://{1}:{2}{3}".ExtFormat(httpStr, svrAPI.IP, svrAPI.Port, areaName);
+                url = "{0}://{1}:{2}{3}".ExtFormat(httpStr, option.IP, option.Port, areaName);
             }
-            contractKey = svrAPI.ContractKey;
+            contractKey = option.ContractKey;
             SvrUrlContractKey(serviceName, url, contractKey);
         }
 
