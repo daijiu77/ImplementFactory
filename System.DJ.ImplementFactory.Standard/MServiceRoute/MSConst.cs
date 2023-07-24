@@ -12,5 +12,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public const string DataSyncsName = "DataSyncsName";
         public const string DataType = "DataType";
         public const string Data = "Data";
+        public const string MSCommunication = "MSCommunication";
+        public const string SysTest = "SysTest";
+        public const string GetUrlInfoByServiceName = "GetUrlInfoByServiceName";
+        public const string GetCurrentSvrIP = "GetCurrentSvrIP";
+
+        public const string startName = "StartTime";
+        public const string endName = "EndTime";
+        public const string contractKey = "ContractKey";
+        public const string svrMngcontractKey = "SvrMng" + contractKey;
     }
 }

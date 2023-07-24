@@ -92,7 +92,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlDoc doc = new XmlDoc();
             XmlNode ipNodes = doc.Load(filePath1);
             if (null == ipNodes) return contractValue;
-            XmlAttribute att = ipNodes.Attributes[MServiceConst.contractKey];
+            XmlAttribute att = ipNodes.Attributes[MSConst.contractKey];
             if (null == att) return contractValue;
             contractValue = att.Value.Trim();
             return contractValue;
@@ -129,15 +129,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlNode ipNodes = doc.RootNode(rootNode, null);
             XmlElement ele = null;
 
-            XmlAttribute att = ipNodes.Attributes[MServiceConst.startName];
-            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            XmlAttribute att = ipNodes.Attributes[MSConst.startName];
+            if (null == att) throw new Exception("The XmlAttribute(" + MSConst.startName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             DateTime startTime = DateTime.Now;
             DateTime.TryParse(att.Value.Trim(), out startTime);
 
-            att = ipNodes.Attributes[MServiceConst.endName];
-            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            att = ipNodes.Attributes[MSConst.endName];
+            if (null == att) throw new Exception("The XmlAttribute(" + MSConst.endName + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             DateTime endTime = DateTime.Now;
@@ -147,8 +147,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             if (dt < startTime || dt > endTime) throw new Exception("Invalid validity period start or end time.");
             //if (dt < startTime || dt > endTime) return mbool;
 
-            att = ipNodes.Attributes[MServiceConst.contractKey];
-            if (null == att) throw new Exception("The XmlAttribute(" + MServiceConst.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
+            att = ipNodes.Attributes[MSConst.contractKey];
+            if (null == att) throw new Exception("The XmlAttribute(" + MSConst.contractKey + ") is missing in XmlNode 'IPAddresses' of file '" + SvrIPAddressFile + "'.");
             //if (null == att) return mbool;
 
             string key = att.Value.Trim();
@@ -199,9 +199,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             doc.Load(filePath);
 
             XmlNode ipNodes = doc.RootNode(rootNode);
-            string startNameL = MServiceConst.startName.ToLower();
-            string endNameL = MServiceConst.endName.ToLower();
-            string contractKeyL = MServiceConst.contractKey.ToLower();
+            string startNameL = MSConst.startName.ToLower();
+            string endNameL = MSConst.endName.ToLower();
+            string contractKeyL = MSConst.contractKey.ToLower();
             Dictionary<string, XmlAttribute> dic = new Dictionary<string, XmlAttribute>();
             XmlAttributeCollection atc = ipNodes.Attributes;
             foreach (XmlAttribute item in atc)
@@ -223,21 +223,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             XmlAttribute attr = null;
             if (!dic.ContainsKey(startNameL))
             {
-                attr = doc.CreateAttribute(MServiceConst.startName);
+                attr = doc.CreateAttribute(MSConst.startName);
                 ipNodes.Attributes.Append(attr);
                 dic[startNameL] = attr;
             }
 
             if (!dic.ContainsKey(endNameL))
             {
-                attr = doc.CreateAttribute(MServiceConst.endName);
+                attr = doc.CreateAttribute(MSConst.endName);
                 ipNodes.Attributes.Append(attr);
                 dic[endNameL] = attr;
             }
 
             if (!dic.ContainsKey(contractKeyL))
             {
-                attr = doc.CreateAttribute(MServiceConst.contractKey);
+                attr = doc.CreateAttribute(MSConst.contractKey);
                 ipNodes.Attributes.Append(attr);
                 dic[contractKeyL] = attr;
             }

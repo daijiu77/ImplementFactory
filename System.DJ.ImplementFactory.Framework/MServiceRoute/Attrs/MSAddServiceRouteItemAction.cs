@@ -18,7 +18,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string TestAddrMapping = "testAddr";
         private string RegisterAddrMapping = "registerAddr";
         private string RegisterActionTypeMapping = "registerActionType";
-        private string ContractKeyMapping = MServiceConst.contractKey;
+        private string ContractKeyMapping = MSConst.contractKey;
         #endregion
         /// <summary>
         /// In the MicroServiceRoute.xml file, add a new subkey under the Routes node, specify that the method parameters need to include: ServiceRouteName(RouteName), Uri, RegisterAddr(addr), RegisterActionType(actionType)

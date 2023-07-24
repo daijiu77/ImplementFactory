@@ -283,7 +283,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             if (!mbool)
             {
                 string err = "Illegal access";
-                List<string> list = new List<string>() { MServiceConst.contractKey };
+                List<string> list = new List<string>() { MSConst.contractKey };
                 Dictionary<string, object> ckDic = GetKVListFromHeader(context.HttpContext, list, false);
                 if (0 == ckDic.Count)
                 {

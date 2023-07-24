@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -129,6 +129,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MServiceRoute\Controllers\MSCommunicationController.cs" />
+    <Compile Include="MServiceRoute\ServiceManager\SvrAPIOption.cs" />
+    <Compile Include="Entities\MSIPInfo.cs" />
     <Compile Include="Pipelines\IExtMSDataVisitor.cs" />
     <Compile Include="DataAccess\MakeInsertSql.cs" />
     <Compile Include="DataAccess\LazyDataOpt.cs" />
@@ -141,7 +144,6 @@
     <Compile Include="MServiceRoute\Attrs\RouteNameAttribute.cs" />
     <Compile Include="Pipelines\IMSDataSyncBase.cs" />
     <Compile Include="MServiceRoute\DataSyncConfigList.cs" />
-    <Compile Include="MServiceRoute\Controllers\DataSyncController.cs" />
     <Compile Include="MServiceRoute\MSConst.cs" />
     <Compile Include="MServiceRoute\DataSyncExchange.cs" />
     <Compile Include="Pipelines\IMSDataSyncOutput.cs" />
@@ -161,7 +163,6 @@
     <Compile Include="Entities\RouteAttr.cs" />
     <Compile Include="Entities\MServiceManager.cs" />
     <Compile Include="MServiceRoute\ServiceManager\ParameterItem.cs" />
-    <Compile Include="MServiceRoute\MServiceConst.cs" />
     <Compile Include="MServiceRoute\AbsMSAllot.cs" />
     <Compile Include="Commons\Attrs\DbConfigAction.cs" />
     <Compile Include="Commons\ForeachExtends.cs" />

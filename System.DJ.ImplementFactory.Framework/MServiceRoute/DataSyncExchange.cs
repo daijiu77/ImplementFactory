@@ -270,7 +270,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (url.Substring(url.Length - 1).Equals("/")) url = url.Substring(0, url.Length - 1);
 
                 url += "/";
-                Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)\/.+\/$", RegexOptions.IgnoreCase);
+                Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)", RegexOptions.IgnoreCase);
                 if (rg.IsMatch(url))
                 {
                     Match m = rg.Match(url);
@@ -278,10 +278,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     string HttpBody = m.Groups["HttpBody"].Value;
                     url = "{0}://{1}/".ExtFormat(HttpHeader, HttpBody);
                 }
-                url += "DataSync/Receiver";
+                url += "MSCommunication/Receiver";
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add(MServiceConst.contractKey, routeAttr.ContractKey);
+                headers.Add(MSConst.contractKey, routeAttr.ContractKey);
 
                 httpHelper.SendData(url, headers, message, true, (resultObj, err) =>
                 {

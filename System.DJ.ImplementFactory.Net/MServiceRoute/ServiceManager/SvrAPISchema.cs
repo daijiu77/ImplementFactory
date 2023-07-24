@@ -1,8 +1,10 @@
 ﻿using Google.Protobuf.WellKnownTypes;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.Exts;
 using System.IO;
 using System.Xml;
 
@@ -12,7 +14,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     {
         private const string _svrApiFileName = "SvrApiList.xml";
         private const string _rootNodeName = "ServiceApiCollection";
-        private const string _serviceName = "ServiceName";        
+        private const string _serviceName = "ServiceName";
         private const string _port = "Port";
         private const string _ip = "IP";
 
@@ -67,23 +69,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             XmlAttribute attr = svrApiNode.Attributes[_serviceName];
             if (null == attr) return;
             string serviceName = attr.Value.Trim();
-
-            string contractKeyName = MServiceConst.contractKey;
+            string serviceNameLower = serviceName.ToLower();
 
             string contractKey = "";
-            attr = svrApiNode.Attributes[contractKeyName];
-            if (null != attr) contractKey = attr.Value.Trim();
-            if (string.IsNullOrEmpty(contractKey)) contractKey = XmlDoc.GetChildTextByNodeName(svrApiNode, contractKeyName);
-
             string ip = "";
-            attr = svrApiNode.Attributes[_ip];
-            if (null != attr) ip = attr.Value.Trim();
-            if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(svrApiNode, _ip);
-
             string port = "";
-            attr = svrApiNode.Attributes[_port];
-            if (null != attr) port = attr.Value.Trim();
-            if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(svrApiNode, _port);
 
             SvrAPI svrAPI = null;
             SvrUri svrUri = null;
@@ -91,60 +81,90 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             string paraName = "";
             string paraType = "";
 
-            svrAPI = new SvrAPI();
-            s_svrApiDic[serviceName.ToLower()] = svrAPI;
-            s_ServiceNames.Add(serviceName);
+            s_svrApiDic.TryGetValue(serviceNameLower, out svrAPI);
+            if (null == svrAPI)
+            {
+                svrAPI = new SvrAPI();
+                svrAPI.ServiceName = serviceName;
+                s_svrApiDic[serviceName.ToLower()] = svrAPI;
+                s_ServiceNames.Add(serviceName);
+            }
 
-            svrAPI.ServiceName = serviceName;
-            svrAPI.ContractKey = contractKey;
-            svrAPI.IP = ip;
-            svrAPI.Port = port;
-            
+            svrAPI.Items.Clear();
+
+            SvrAPIOption svrAPIOption = null;
             svrApiNode.ForeachChildNode(item =>
             {
-                attr = item.Attributes["Name"];
-                if (null == attr) attr = item.Attributes["name"];
-                if (null != attr) featureName = attr.Value.Trim();
-                if (string.IsNullOrEmpty(featureName)) featureName = XmlDoc.GetChildTextByNodeName(item, "name");
-                if (string.IsNullOrEmpty(featureName)) return true;
-                svrUri = new SvrUri();
-                svrUri.Name = featureName;
+                attr = svrApiNode.Attributes[_ip];
+                if (null != attr) ip = attr.Value.Trim();
+                if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(item, _ip);
+                if (string.IsNullOrEmpty(ip)) return true;
+
+                attr = svrApiNode.Attributes[_port];
+                if (null != attr) port = attr.Value.Trim();
+                if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(item, _port);
+                if (string.IsNullOrEmpty(port)) return true;
+
+                attr = svrApiNode.Attributes[MSConst.contractKey];
+                if (null != attr) contractKey = attr.Value.Trim();
+                if (string.IsNullOrEmpty(contractKey)) ip = XmlDoc.GetChildTextByNodeName(item, MSConst.contractKey);
+                if (string.IsNullOrEmpty(contractKey)) return true;
+
+                svrAPIOption = new SvrAPIOption();
+                svrAPI.Items.Add(svrAPIOption);
+                svrAPIOption.IP = ip;
+                svrAPIOption.Port = port;
+                svrAPIOption.ContractKey = contractKey;
+
                 item.ForeachChildNode(itemChild =>
                 {
-                    if (itemChild.Name.ToLower().Equals("parameters"))
+                    attr = itemChild.Attributes["Name"];
+                    if (null == attr) attr = itemChild.Attributes["name"];
+                    if (null != attr) featureName = attr.Value.Trim();
+                    if (string.IsNullOrEmpty(featureName)) featureName = XmlDoc.GetChildTextByNodeName(itemChild, "name");
+                    if (string.IsNullOrEmpty(featureName)) return true;
+
+                    svrUri = new SvrUri();
+                    svrUri.Name = featureName;
+
+                    itemChild.ForeachChildNode(child =>
                     {
-                        itemChild.ForeachChildNode(paraItem =>
+                        if (child.Name.ToLower().Equals("parameters"))
                         {
-                            attr = paraItem.Attributes["Name"];
-                            if (null == attr) attr = paraItem.Attributes["name"];
-                            if (null != attr) paraName = attr.Value.Trim();
-                            if (string.IsNullOrEmpty(paraName)) paraName = XmlDoc.GetChildTextByNodeName(paraItem, "name");
-                            if (string.IsNullOrEmpty(paraName)) return true;
-
-                            attr = paraItem.Attributes["Type"];
-                            if (null == attr) attr = paraItem.Attributes["type"];
-                            if (null != attr) paraType = attr.Value.Trim();
-                            if (string.IsNullOrEmpty(paraType)) paraType = XmlDoc.GetChildTextByNodeName(paraItem, "type");
-                            if (string.IsNullOrEmpty(paraType)) return true;
-
-                            svrUri.ParameterItems.Add(new ParameterItem()
+                            child.ForeachChildNode(paraItem =>
                             {
-                                ParameterName = paraName,
-                                ParameterType = paraType,
-                            });
-                            return true;
-                        });
-                    }
-                    else
-                    {
-                        svrUri.SetPropertyValue(itemChild.Name, itemChild.InnerText.Trim());
-                    }
-                });
+                                attr = paraItem.Attributes["Name"];
+                                if (null == attr) attr = paraItem.Attributes["name"];
+                                if (null != attr) paraName = attr.Value.Trim();
+                                if (string.IsNullOrEmpty(paraName)) paraName = XmlDoc.GetChildTextByNodeName(paraItem, "name");
+                                if (string.IsNullOrEmpty(paraName)) return true;
 
-                if ((false == string.IsNullOrEmpty(svrUri.Name)) && (false == string.IsNullOrEmpty(svrUri.Uri)))
-                {
-                    svrAPI.SvrUris.Add(svrUri);
-                }
+                                attr = paraItem.Attributes["Type"];
+                                if (null == attr) attr = paraItem.Attributes["type"];
+                                if (null != attr) paraType = attr.Value.Trim();
+                                if (string.IsNullOrEmpty(paraType)) paraType = XmlDoc.GetChildTextByNodeName(paraItem, "type");
+                                if (string.IsNullOrEmpty(paraType)) return true;
+
+                                svrUri.ParameterItems.Add(new ParameterItem()
+                                {
+                                    ParameterName = paraName,
+                                    ParameterType = paraType,
+                                });
+                                return true;
+                            });
+                        }
+                        else
+                        {
+                            svrUri.SetPropertyValue(child.Name, child.InnerText.Trim());
+                        }
+                    });
+
+                    if ((false == string.IsNullOrEmpty(svrUri.Name)) && (false == string.IsNullOrEmpty(svrUri.Uri)))
+                    {
+                        svrAPIOption.SvrUris.Add(svrUri);
+                    }
+                    return true;
+                });
                 return true;
             });
         }
@@ -187,7 +207,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             lock (_svrAPISchameLock)
             {
                 return s_ServiceNames.ToArray();
-            }            
+            }
         }
 
         /// <summary>
@@ -208,6 +228,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
         private void AddToFile(string ip, object data)
         {
             if (null == data) return;
+            Type tp = data.GetType();
+            if ((typeof(JObject) == tp) || (typeof(JToken) == tp))
+            {
+                string json = data.ToString();
+                JsonToEntity jte = new JsonToEntity();
+                data = jte.GetObject(json);
+            }
             if (data.GetType().IsBaseType()) return;
 
             object items = null;
@@ -227,7 +254,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             if (null == collection) return;
 
             string serviceName = data.GetPropertyValue<string>(_serviceName);
-            string svrContractKey = data.GetPropertyValue<string>(MServiceConst.svrMngcontractKey);
+            string svrContractKey = data.GetPropertyValue<string>(MSConst.svrMngcontractKey);
             string port = data.GetPropertyValue<string>(_port);
             if (null == serviceName) return;
             if (null == svrContractKey) svrContractKey = "";
@@ -253,33 +280,66 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 return true;
             });
 
-            if (null != svrNode)
+            if (null == svrNode)
             {
-                rootNode.RemoveChild(svrNode);
-                s_svrApiDic.Remove(serviceNameLower);
-                s_ServiceNames.Remove(serviceName);
+                svrNode = doc.CreateElement("ServiceApi");
+                svrNode.SetAttribute(_serviceName, serviceName);
+                rootNode.AppendChild(svrNode);
             }
 
-            string contractKeyName = MServiceConst.contractKey;
-
-            svrNode = doc.CreateElement("ServiceApi");
-            svrNode.SetAttribute(_serviceName, serviceName);
-            svrNode.SetAttribute(contractKeyName, svrContractKey);
-            svrNode.SetAttribute(_ip, ip);
-            svrNode.SetAttribute(_port, port);
-            rootNode.AppendChild(svrNode);
-
             XmlElement xmlItem = null;
+            string ipLower = _ip.ToLower();
+            string portLower = _port.ToLower();
+            svrNode.ForeachChildNode(eleItem =>
+            {
+                XmlAttributeCollection ats = eleItem.Attributes;
+                string ip1 = "";
+                string port1 = "";
+                string anLower = "";
+                foreach (XmlAttribute att in ats)
+                {
+                    anLower = att.Name.ToLower();
+                    if (anLower.Equals(ipLower))
+                    {
+                        ip1 = att.Value.Trim();
+                    }
+                    else if (anLower.Equals(portLower))
+                    {
+                        port1 = att.Value.Trim();
+                    }
+                }
+
+                if (ip1.Equals(ip) && port1.Equals(port))
+                {
+                    xmlItem = eleItem;
+                    return false;
+                }
+                return true;
+            });
+
+            if (null != xmlItem)
+            {
+                svrNode.RemoveChild(xmlItem);
+            }
+
+            xmlItem = doc.CreateElement("Item");
+            xmlItem.SetAttribute(_ip, ip);
+            xmlItem.SetAttribute(_port, port);
+            xmlItem.SetAttribute(MSConst.contractKey, svrContractKey);
+            svrNode.AppendChild(xmlItem);
+                        
             XmlElement ele = null;
             XmlElement paraItem = null;
+            XmlElement funNode = null;
             string fnLower = "";
             string paraName = "";
             string paraType = "";
             foreach (object item1 in collection)
             {
                 if (null == item1) continue;
-                xmlItem = doc.CreateElement("Item");
-                svrNode.AppendChild(xmlItem);
+
+                funNode = doc.CreateElement("Function");
+                funNode.AppendChild(xmlItem);
 
                 item1.ForeachProperty((pi, pt, fn, fv) =>
                 {
@@ -287,12 +347,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                     fnLower = fn.ToLower();
                     if (fnLower.Equals("name"))
                     {
-                        xmlItem.SetAttribute(fn, fv.ToString());
+                        funNode.SetAttribute(fn, fv.ToString());
                     }
                     else if (fnLower.Equals("parameters"))
                     {
                         ele = doc.CreateElement(fn);
-                        xmlItem.AppendChild(ele);
+                        funNode.AppendChild(ele);
                         if (fv.GetType() == typeof(string)) return;
                         IEnumerable paras = fv as IEnumerable;
                         if (null == paras) return;
@@ -315,7 +375,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                     {
                         ele = doc.CreateElement(fn);
                         ele.InnerText = fv.ToString();
-                        xmlItem.AppendChild(ele);
+                        funNode.AppendChild(ele);
                     }
                 });
             }

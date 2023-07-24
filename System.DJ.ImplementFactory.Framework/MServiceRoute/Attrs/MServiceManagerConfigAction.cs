@@ -18,7 +18,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private string TestAddrMapping = "testAddr";
         private string RegisterAddrMapping = "registerAddr";
         private string RegisterActionTypeMapping = "registerActionType";
-        private string ContractKeyMapping = MServiceConst.contractKey;
+        private string ContractKeyMapping = MSConst.contractKey;
         #endregion
 
         /// <summary>

@@ -200,69 +200,7 @@ namespace System.DJ.ImplementFactory.Commons
             if (false == s.Substring(0, 1).Equals("{") || false == s.Substring(s.Length - 1).Equals("}")) return list;
 
             JToken arr = null;
-            JsonData jsonData = new JsonData();
-            JObject jo = JObject.Parse(json);
-            IEnumerable<JProperty> ps = jo.Properties();
-            foreach (JProperty item in ps)
-            {
-                if (item.Value.Type == JTokenType.Array)
-                {
-                    arr = item.Value;
-                    if (-1 != item.Name.ToLower().IndexOf("data"))
-                    {
-                        jsonData.data = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("datas"))
-                    {
-                        jsonData.data = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("result"))
-                    {
-                        jsonData.data = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("results"))
-                    {
-                        jsonData.data = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("list"))
-                    {
-                        jsonData.list = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("lists"))
-                    {
-                        jsonData.list = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("arr"))
-                    {
-                        jsonData.arr = item.Value;
-                    }
-                    else if (-1 != item.Name.ToLower().IndexOf("dts"))
-                    {
-                        jsonData.dts = item.Value;
-                    }
-                    else
-                    {
-                        jsonData.dts = item.Value;
-                    }
-                }
-            }
-
-            if (null != jsonData.data)
-            {
-                arr = jsonData.data;
-            }
-            else if (null != jsonData.list)
-            {
-                arr = jsonData.list;
-            }
-            else if (null != jsonData.arr)
-            {
-                arr = jsonData.arr;
-            }
-            else if (null != jsonData.dts)
-            {
-                arr = jsonData.dts;
-            }
+            GetCollectionData(json, jtoken => JTokenType.Array == jtoken.Type, ref arr);
 
             if (null == arr) return list;
 
@@ -277,7 +215,8 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = null;
             PropertyInfo ppi = null;
             int index = 0;
-            jo = null;
+            IEnumerable<JProperty> ps = null;
+            JObject jo = null;
             bool isBaseType = DJTools.IsBaseType(typeof(T));
             Dictionary<string, PropertyInfo> dic = new Dictionary<string, PropertyInfo>();
             foreach (JToken item in arr)
@@ -551,6 +490,119 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 return default(T);
             }
+        }
+
+        public static string GetCollectionData(string resultData, Func<JToken, bool> func, ref JToken jToken)
+        {
+            jToken = null;
+            string dataStr = resultData;
+            if (string.IsNullOrEmpty(dataStr)) return dataStr;
+
+            JToken jt = null;
+            JObject jo = JObject.Parse(dataStr);
+            IEnumerable<JProperty> jProperties = jo.Properties();
+            foreach (JProperty property in jProperties)
+            {
+                if (null != func)
+                {
+                    if (!func(property.Value)) continue;
+                }
+
+                string name = property.Name.ToLower();
+                if (name.Equals("data"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("datas"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("result"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("results"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("list"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("lists"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("arr"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("array"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("dts"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("dt"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("datatable"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("datatables"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("table"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+                else if (name.Equals("tables"))
+                {
+                    jt = property.Value;
+                    break;
+                }
+            }
+
+            if (null != jt)
+            {
+                dataStr = jt.ToString();
+                jToken = jt;
+            }
+
+            if (null == jToken)
+            {
+                jToken = JToken.Parse(dataStr);
+            }
+            return dataStr;
+        }
+
+        public static string GetCollectionData(string resultData, Func<JToken, bool> func)
+        {
+            return GetCollectionData(resultData, func);
+        }
+
+        public static string GetCollectionData(string resultData)
+        {
+            JToken jToken = null;
+            return GetCollectionData(resultData, (jt) => { return true; }, ref jToken);
         }
 
         public static int Count(this IEnumerable srcList)

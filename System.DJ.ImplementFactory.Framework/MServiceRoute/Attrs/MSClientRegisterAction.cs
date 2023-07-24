@@ -10,7 +10,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
     /// </summary>
     public class MSClientRegisterAction : AbsSysAttributer
     {
-        private string _contractKey = MServiceConst.contractKey.ToLower();
+        private string _contractKey = MSConst.contractKey.ToLower();
         /// <summary>
         /// Identify the client registration method, which must have a 'ContractKey' parameter of character type.
         /// </summary>
@@ -54,7 +54,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 key = GetVal(dic);
             }
 
-            if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MServiceConst.contractKey + "' is not empty.");
+            if (string.IsNullOrEmpty(key)) throw new Exception("The parameter '" + MSConst.contractKey + "' is not empty.");
             string ip = GetIP(context.HttpContext);
             bool mbool = _mSService.SaveIPAddr(ip, key);
             string msg = "{0} enroll {1}.".ExtFormat(ip, (mbool ? "successfully" : "failly"));

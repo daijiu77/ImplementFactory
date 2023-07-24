@@ -293,7 +293,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     methodTypes1 = mts;
                 }
             }
-            headers[MServiceConst.contractKey] = contractKey;
+            headers[MSConst.contractKey] = contractKey;
 
             string key = routeName + "-" + controller + "-" + action;
             int index = 0;

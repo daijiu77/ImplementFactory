@@ -1053,6 +1053,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             }
         }
 
+        private bool IsLegalData(Type dataType, object fv)
+        {
+            if (null == fv) return false;
+
+            if (typeof(DateTime) == dataType)
+            {
+                DateTime dt1 = DateTime.MinValue;
+                DateTime.TryParse(fv.ToString(), out dt1);
+                if ((DateTime.MinValue == dt1) || (DateTime.MaxValue == dt1)) return false;
+            }
+            return true;
+        }
+
         private Dictionary<string, object> keyValInsert = new Dictionary<string, object>();
         protected void SetAppendInsert(Dictionary<string, object> keyValue)
         {
@@ -1077,8 +1090,13 @@ namespace System.DJ.ImplementFactory.DataAccess
             string sets = "";
             string where = "";
 
-            Action<string, object> kvAction = (_fn, _fv) =>
+            Action<string, object, PropertyInfo> kvAction = (_fn, _fv, _pi) =>
             {
+                if (null != _fv)
+                {
+                    if (!IsLegalData(_pi.PropertyType, _fv)) return;
+                }
+
                 if (dic.ContainsKey(_fn.ToLower()))
                 {
                     para = dic[_fn.ToLower()];
@@ -1110,12 +1128,14 @@ namespace System.DJ.ImplementFactory.DataAccess
                 {
                     if (!string.IsNullOrEmpty(fm.DefualtValue)) return;
                 }
-                kvAction(fn, fv);
+                kvAction(fn, fv, pi);
             }, () =>
             {
+                PropertyInfo ppi = null;
                 foreach (var item in keyValUpdate)
                 {
-                    kvAction(item.Key, item.Value);
+                    ppi = dataItem.model.GetPropertyInfo(item.Key);
+                    kvAction(item.Key, item.Value, ppi);
                 }
                 keyValUpdate.Clear();
 
@@ -1149,6 +1169,8 @@ namespace System.DJ.ImplementFactory.DataAccess
 
             Action<string, object, PropertyInfo> kvAction = (_fn, _fv, _pi) =>
             {
+                if (!IsLegalData(_pi.PropertyType, _fv)) return;
+
                 if (dic.ContainsKey(_fn.ToLower()))
                 {
                     para = dic[_fn.ToLower()];

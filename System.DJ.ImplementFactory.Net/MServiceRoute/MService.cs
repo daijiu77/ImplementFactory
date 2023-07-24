@@ -15,7 +15,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 {
     public class MService
     {
-        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/[^\/]+");
+        public static Regex httpRg = new Regex(@"^((http)|(https))\:\/\/[^\/]+", RegexOptions.IgnoreCase);
         private static int maxNum = 50;
         private static int maxNumber = 50;
         private const int sleepNum = 1000 * 3;
@@ -133,7 +133,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
 
                 heads.Clear();
-                heads[MServiceConst.contractKey] = contractValue;
+                heads[MSConst.contractKey] = contractValue;
                 methodTypes = RegisterActionType;
                 foreach (string item in uris)
                 {
@@ -196,7 +196,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 num = 0;
                 int.TryParse(arr[1], out num);
                 heads.Clear();
-                heads[MServiceConst.contractKey] = arr[2];
+                heads[MSConst.contractKey] = arr[2];
                 methodTypes = (MethodTypes)num;
                 httpHelper.SendData(url, heads, null, true, methodTypes, (resultObj, msg) =>
                 {
@@ -425,7 +425,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string port = null == MicroServiceRoute.Port ? "" : MicroServiceRoute.Port;
             string svrContractKey = MSServiceImpl.GetContractValue();
             jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"{2}\": \"{3}\", \"Data\": [{4}], \"CrateTime\": \"{5}\"}"
-                .ExtFormat(MicroServiceRoute.ServiceName, port, MServiceConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                .ExtFormat(MicroServiceRoute.ServiceName, port, MSConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             string svrUrl = MicroServiceRoute.ServiceManager.Uri;
             string s1 = svrUrl.Substring(svrUrl.Length - 1);
@@ -444,7 +444,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             svrUrl += "/" + ServiceManagerAddr;
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(MServiceConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
+            headers.Add(MSConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
 
             IHttpHelper httpHelper = new HttpHelper();
             MethodTypes methodTypes1 = MicroServiceRoute.ServiceManager.ServiceManagerActionType;
