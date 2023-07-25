@@ -65,5 +65,12 @@ namespace Test.NetCoreApi.Controllers
         {
             return new { routeName = routeName };
         }
+
+        [MSApiReceiverAction(dataMapping: "data")]
+        [HttpPost, Route("ReceiveManage")]
+        public object ReceiveManage(object data)
+        {
+            return new { data = "Hello world!" };
+        }
     }
 }

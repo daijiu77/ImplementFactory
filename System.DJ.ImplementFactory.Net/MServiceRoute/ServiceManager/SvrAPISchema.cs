@@ -1,11 +1,9 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
-using System.DJ.ImplementFactory.Commons.Exts;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
@@ -31,36 +29,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
         {
             s_svrApiPath = Path.Combine(DJTools.RootPath, _svrApiFileName);
             loadSvrApi();
-        }
-
-        private static string GetJsonValueByType(string paraType)
-        {
-            string jsonValue = "";
-            if (null == paraType) return jsonValue;
-            paraType = paraType.Trim();
-            if (string.IsNullOrEmpty(paraType)) return jsonValue;
-            paraType = paraType.ToLower();
-            if (-1 != paraType.IndexOf("guid"))
-            {
-                jsonValue = "\"" + Guid.NewGuid().ToString() + "\"";
-            }
-            else if (-1 != paraType.IndexOf("time"))
-            {
-                jsonValue = "\"" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"";
-            }
-            else if (-1 != paraType.IndexOf("string"))
-            {
-                jsonValue = "\"string\"";
-            }
-            else if (-1 != paraType.IndexOf("bool"))
-            {
-                jsonValue = "false";
-            }
-            else if (-1 != paraType.IndexOf("int"))
-            {
-                jsonValue = "0";
-            }
-            return jsonValue;
         }
 
         private static void SetSvrApiDic(XmlNode svrApiNode)
@@ -95,17 +63,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             SvrAPIOption svrAPIOption = null;
             svrApiNode.ForeachChildNode(item =>
             {
-                attr = svrApiNode.Attributes[_ip];
+                attr = item.Attributes[_ip];
                 if (null != attr) ip = attr.Value.Trim();
                 if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(item, _ip);
                 if (string.IsNullOrEmpty(ip)) return true;
 
-                attr = svrApiNode.Attributes[_port];
+                attr = item.Attributes[_port];
                 if (null != attr) port = attr.Value.Trim();
                 if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(item, _port);
                 if (string.IsNullOrEmpty(port)) return true;
 
-                attr = svrApiNode.Attributes[MSConst.contractKey];
+                attr = item.Attributes[MSConst.contractKey];
                 if (null != attr) contractKey = attr.Value.Trim();
                 if (string.IsNullOrEmpty(contractKey)) ip = XmlDoc.GetChildTextByNodeName(item, MSConst.contractKey);
                 if (string.IsNullOrEmpty(contractKey)) return true;
@@ -235,6 +203,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 JsonToEntity jte = new JsonToEntity();
                 data = jte.GetObject(json);
             }
+            string sdt = data.ToString();
+            Regex rg1 = new Regex(@"^ValueKind\s*\=\s*Object\s*\:", RegexOptions.IgnoreCase);
+            Regex rg2 = new Regex(@"^\{((\r\n)|.)+\}$", RegexOptions.IgnoreCase);
+            if (rg1.IsMatch(sdt))
+            {
+                sdt = rg1.Replace(sdt, "").Trim();
+                if ((false == sdt.Substring(0, 1).Equals("\"")) || (false == sdt.Substring(sdt.Length - 1).Equals("\""))) return;
+                sdt = sdt.Substring(1);
+                sdt = sdt.Substring(0, sdt.Length - 1);
+                JsonToEntity jte = new JsonToEntity();
+                data = jte.GetObject(sdt);
+            }
+            else if(rg2.IsMatch(sdt))
+            {
+                JsonToEntity jte = new JsonToEntity();
+                data = jte.GetObject(sdt);
+            }
             if (data.GetType().IsBaseType()) return;
 
             object items = null;
@@ -327,7 +312,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             xmlItem.SetAttribute(_port, port);
             xmlItem.SetAttribute(MSConst.contractKey, svrContractKey);
             svrNode.AppendChild(xmlItem);
-                        
+
             XmlElement ele = null;
             XmlElement paraItem = null;
             XmlElement funNode = null;
@@ -339,7 +324,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 if (null == item1) continue;
 
                 funNode = doc.CreateElement("Function");
-                funNode.AppendChild(xmlItem);
+                xmlItem.AppendChild(funNode);
 
                 item1.ForeachProperty((pi, pt, fn, fv) =>
                 {

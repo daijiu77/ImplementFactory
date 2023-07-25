@@ -37,7 +37,26 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
 		<target rootPath="" type="framework">System.DJ.ImplementFactory.Framework\Commons</target>
-		<exclude>DJTools.cs,DbConfigAction.cs,DbAdapter.cs</exclude>
+		<exclude>DJTools.cs,DbConfigAction.cs,DbAdapter.cs,ESession.cs</exclude>
+	</copy>
+	<copy ext="cs">
+		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
+		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
+		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons\ESession.cs</source>
+		<target rootPath="">System.DJ.ImplementFactory.Framework\Commons</target>
+		<exclude></exclude>
+		<replaces>
+			<item>
+				<source>using Microsoft.AspNetCore.Http;</source>
+				<target>using System.Web;</target>
+				<extendNames>cs</extendNames>
+			</item>
+			<item>
+				<source>HttpContext httpContext</source>
+				<target>HttpContextBase httpContext</target>
+				<extendNames>cs</extendNames>
+			</item>
+		</replaces>
 	</copy>
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->
@@ -619,7 +638,7 @@
 		<!--InnerText 也可以是一个绝对路径,当为绝对路径时,rootPath 属性无效-->
 		<source rootPath="">System.DJ.ImplementFactory.NetCore\Commons</source>
 		<target rootPath="" type="Standard">System.DJ.ImplementFactory.Standard\Commons</target>
-		<exclude>DbConfigAction.cs</exclude>
+		<exclude>DbConfigAction.cs,ESession.cs</exclude>
 	</copy>
 	<copy ext="cs">
 		<!--当 rootPath 属性为空时,将采用 CopyFile.exe 所在的根路径做为 rootPath 的默认值-->

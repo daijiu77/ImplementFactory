@@ -453,7 +453,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             int timeNum = 0;
             while (timeNum < maxNum)
             {
-                httpHelper.SendData(svrUrl, headers, jsonData, false, methodTypes1, (vObj, err) =>
+                httpHelper.SendData(svrUrl, headers, jsonData, true, methodTypes1, (vObj, err) =>
                 {
                     success = string.IsNullOrEmpty(err);
                     if (success)

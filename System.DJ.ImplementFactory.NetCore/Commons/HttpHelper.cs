@@ -58,9 +58,13 @@ namespace System.DJ.ImplementFactory.Commons
                             json = "{" + json + "}";
                         }
                     }
-                    else
+                    else if (data.GetType().IsClass && (typeof(string) != data.GetType()))
                     {
                         json = JsonConvert.SerializeObject(data);
+                    }
+                    else
+                    {
+                        json = data.ToString();
                     }
                     dts = Encoding.Default.GetBytes(json);
                 }

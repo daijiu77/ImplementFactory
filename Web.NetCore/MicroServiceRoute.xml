@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<MicroServiceRoutes ServiceName="MemberService">
+<MicroServiceRoutes ServiceName="MemberService" Port="5080">
   <ServiceManager>
     <ServiceManagerAddr>/Home/ReceiveManage</ServiceManagerAddr>
     <ServiceManagerActionType>Post</ServiceManagerActionType>
     <Name>ServiceManager</Name>
-    <!--<Uri>http://127.0.0.1:5000/api</Uri>-->
+    <Uri>http://localhost:5000/api</Uri>
     <RegisterAddr>/Home/RegisterIP</RegisterAddr>
     <ContractKey>abc2233</ContractKey>
     <RegisterActionType>Post</RegisterActionType>

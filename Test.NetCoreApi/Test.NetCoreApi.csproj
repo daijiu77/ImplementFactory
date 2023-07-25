@@ -19,7 +19,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="MicroServiceRoute.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="SvrIPAddr.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

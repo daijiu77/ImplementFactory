@@ -1,5 +1,49 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<MicroServiceRoute ServiceName="MemberService" Uri="http://127.0.0.1/api" ServiceManagerAddr="/Home/ReceiveManage" ServiceManagerActionType="post"
-                   RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc2233">
-	<Route Name="route1" Uri="http://127.0.0.1:80/api" RegisterAddr="/Home/RegisterIP" RegisterActionType="post" ContractKey="abc123" />
-</MicroServiceRoute>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MicroServiceRoutes ServiceName="OrderService" Port="5000">
+  <ServiceManager>
+    <ServiceManagerAddr>/Home/ReceiveManage</ServiceManagerAddr>
+    <ServiceManagerActionType>Post</ServiceManagerActionType>
+    <Name>ServiceManager</Name>
+    <Uri>http://127.0.0.1:5000/api</Uri>
+    <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+    <TestAddr>/Home/Test</TestAddr>
+    <ContractKey>abc2233</ContractKey>
+    <RegisterActionType>Post</RegisterActionType>
+  </ServiceManager>
+  <DataSyncs>
+    <Route>
+      <GroupName>UserInfoSync</GroupName>
+      <Name>MemberService</Name>
+      <Uri>http://127.0.0.1:5000</Uri>
+      <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+      <TestAddr>/Home/Test</TestAddr>
+      <ContractKey>abc</ContractKey>
+      <RegisterActionType>Post</RegisterActionType>
+    </Route>
+  </DataSyncs>
+  <Routes>
+    <Route RegisterActionType="post">
+      <Name>ServiceRoute1</Name>
+      <Uri>http://127.0.0.1:8080,http://127.0.0.1:8081</Uri>
+      <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+      <TestAddr>/Home/Test</TestAddr>
+      <ContractKey>abc</ContractKey>
+    </Route>
+  </Routes>
+  <Groups Name="BaseInfoRoutes">
+    <Route RegisterActionType="post">
+      <Name>MemberService</Name>
+      <Uri>http://127.0.0.1:5000</Uri>
+      <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+      <TestAddr>/Home/Test</TestAddr>
+      <ContractKey>abc</ContractKey>
+    </Route>
+    <Route RegisterActionType="post">
+      <Name>OrderService</Name>
+      <Uri>http://127.0.0.1:5001</Uri>
+      <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+      <TestAddr>/Home/Test</TestAddr>
+      <ContractKey>abc</ContractKey>
+    </Route>
+  </Groups>
+</MicroServiceRoutes>
