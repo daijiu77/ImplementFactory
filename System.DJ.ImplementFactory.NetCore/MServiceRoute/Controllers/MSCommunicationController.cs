@@ -12,8 +12,8 @@ using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 {
-    [Route("MSCommunication")]
     [ApiController]
+    [Route("MSCommunication")]
     public class MSCommunicationController : ControllerBase
     {
         [HttpPost, Route("Receiver")]
@@ -150,10 +150,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             {
                 if (0 < svrApi.Items.Count)
                 {
-                    int index = svrApi.index;
-                    SvrAPIOption option = svrApi.Items[index];
-                    index++;
-                    svrApi.index = index % svrApi.Items.Count;
+                    SvrAPIOption option = svrApi.GetSvrAPIOption();                
                     string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
                     string httpProtocal = "http";
                     if (0 < option.SvrUris.Count)
