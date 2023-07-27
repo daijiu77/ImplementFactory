@@ -1,7 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;

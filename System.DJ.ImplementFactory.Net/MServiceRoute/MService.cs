@@ -78,6 +78,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             });
         }
 
+        private static void ForeachRouteAttr(List<RouteAttr> routeAttrs, MSRouteAttribute routeAttribute)
+        {
+            if (null == routeAttrs) return;
+            foreach (var item in routeAttrs)
+            {
+                routeAttribute(item.Name, item.Uri, item.RegisterAddr, item.TestAddr, item.ContractKey, item.RegisterActionType);
+            }
+        }
+
         private static void exec_register()
         {
             IHttpHelper httpHelper = new HttpHelper();
@@ -93,7 +102,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string printMsg = "The current service has been successfully registered to the address: {0}.";
             Regex rg = new Regex(@"[^a-z0-9_\:\/\.]", RegexOptions.IgnoreCase);
             Dictionary<string, string> heads = new Dictionary<string, string>();
+            List<RouteAttr> routeAttrs = new List<RouteAttr>();
             MicroServiceRoute.Foreach(delegate (string MSRouteName, string Uri, string RegisterAddr, string TestAddr, string contractValue, MethodTypes RegisterActionType)
+            {
+                routeAttrs.Add(new RouteAttr()
+                {
+                    Name = MSRouteName,
+                    Uri = Uri,
+                    RegisterAddr = RegisterAddr,
+                    TestAddr = TestAddr,
+                    ContractKey = contractValue,
+                    RegisterActionType = RegisterActionType
+                });
+            });
+
+            ForeachRouteAttr(routeAttrs, delegate(string MSRouteName, string Uri, string RegisterAddr, string TestAddr, string contractValue, MethodTypes RegisterActionType)
             {
                 s = Uri.Trim();
                 if (string.IsNullOrEmpty(s)) return;
@@ -182,6 +205,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     });
                 }
             });
+            routeAttrs.Clear();
 
             int n = 0;
             int num = 0;

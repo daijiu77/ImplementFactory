@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
-using System.DJ.ImplementFactory.Pipelines;
-using System.Drawing.Printing;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
 {

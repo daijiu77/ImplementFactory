@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
-using System.DJ.ImplementFactory.Pipelines;
 
 namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 {
