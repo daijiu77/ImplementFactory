@@ -89,11 +89,11 @@ namespace Test.NetCore
 
         class TestAbc
         {
-            private IMSUserInfo _mSUserInfo;
+            private MSVisitor.IUserInfo _mSUserInfo;
             private ICalculate _calculate;
             public TestAbc() { }
-            public TestAbc(IMSUserInfo mSUserInfo) { _mSUserInfo = mSUserInfo; }
-            public TestAbc(IMSUserInfo mSUserInfo, ICalculate calculate)
+            public TestAbc(MSVisitor.IUserInfo mSUserInfo) { _mSUserInfo = mSUserInfo; }
+            public TestAbc(MSVisitor.IUserInfo mSUserInfo, ICalculate calculate)
             {
                 _mSUserInfo = mSUserInfo;
                 _calculate = calculate;
@@ -121,8 +121,8 @@ namespace Test.NetCore
             //QueryData();
             TestObj testObj = new TestObj();
             //testObj.test_ToObjectFrom();
-            testObj.test_user();
-            //string un = testObj.VisitService("aa");
+            //testObj.test_user();
+            string un = testObj.VisitService("aa");
             //bool mbool = testObj.Compare();
             //TestDataTableByteArray();
 
@@ -332,13 +332,16 @@ namespace Test.NetCore
             private ICalculate calculate;
 
             [MyAutoCall]
-            private IMSUserInfo userInfo2;
+            private MSVisitor.IUserInfo userInfo2;
 
             [MyAutoCall]
-            private IUserInfo userInfo3;
+            private DataInterface.IUserInfo userInfo3;
 
             [MyAutoCall]
             private IEquipmentInfoMapper equipmentInfoMapper;
+
+            [MyAutoCall]
+            private IHomeController homeController;
 
             public TestObj()
             {
@@ -438,6 +441,8 @@ namespace Test.NetCore
 
             public string VisitService(string msg)
             {
+                object vs = homeController.Test();
+
                 string un = userInfo2.UserName("LiShi: " + msg).Result;
                 Console.WriteLine("MicroService Visitor: " + un);
 

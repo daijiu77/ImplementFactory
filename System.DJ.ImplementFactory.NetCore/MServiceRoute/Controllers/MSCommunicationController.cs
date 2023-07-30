@@ -9,6 +9,8 @@ using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 {
@@ -16,6 +18,84 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
     [Route("MSCommunication")]
     public class MSCommunicationController : ControllerBase
     {
+        public const string keySplit = "@";
+
+        private static Dictionary<string, TempContractKey> idDic = new Dictionary<string, TempContractKey>();
+        private static List<string> idList = new List<string>();
+
+        static MSCommunicationController()
+        {
+            Task.Run(() =>
+            {
+                const int sleepNum = 2000;
+                int size = 0;
+                int num = 0;
+                TempContractKey tempContractKey = null;
+                DateTime dt = DateTime.Now;
+                string key = "";
+                while (true)
+                {
+                    size = idDic.Count;
+                    num = 0;
+                    dt = DateTime.Now;
+                    while (num < size)
+                    {
+                        key = GetKey(num);
+                        tempContractKey = TCK(key, false);
+                        if (tempContractKey.endTime >= dt)
+                        {
+                            TCK(key, true);
+                            num = 0;
+                            size = idDic.Count;
+                        }
+                        else
+                        {
+                            num++;
+                        }
+                    }
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
+        private static string GetKey(int index)
+        {
+            lock (idDic)
+            {
+                if (index >= idList.Count) return "";
+                return idList[index];
+            }
+        }
+
+        private static TempContractKey TCK(string contractKey, bool delete)
+        {
+            lock (idDic)
+            {
+                TempContractKey tempContractKey = null;
+                string keyLower = contractKey.ToLower();
+                if (delete)
+                {
+                    idDic.TryGetValue(keyLower, out tempContractKey);
+                    idDic.Remove(keyLower);
+                    idList.Remove(keyLower);
+                }
+                else if (idDic.ContainsKey(keyLower))
+                {
+                    tempContractKey = idDic[keyLower];
+                }
+                else
+                {
+                    idDic.Add(keyLower, new TempContractKey()
+                    {
+                        contractKey = contractKey,
+                        endTime = DateTime.Now.AddMinutes(1),
+                    });
+                    idList.Add(keyLower);
+                }
+                return tempContractKey;
+            }
+        }
+
         [HttpPost, Route("Receiver")]
         public ActionResult Receiver(object data)
         {
@@ -129,7 +209,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                 string dataStr = ExtMethod.GetCollectionData(resultData.ToString());
                 if (string.IsNullOrEmpty(dataStr)) return;
                 MSIPInfo mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(dataStr);
-                if (null == mSIPInfo) return;                
+                if (null == mSIPInfo) return;
                 ip = mSIPInfo.IP;
             });
             MSIPInfo data = new MSIPInfo()
@@ -150,7 +230,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             {
                 if (0 < svrApi.Items.Count)
                 {
-                    SvrAPIOption option = svrApi.GetSvrAPIOption();                
+                    SvrAPIOption option = svrApi.GetSvrAPIOption();
                     string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
                     string httpProtocal = "http";
                     if (0 < option.SvrUris.Count)
@@ -176,8 +256,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                     string paraContractKey = option.ContractKey;
                     object data = new { url = paraUrl, contractKey = paraContractKey };
 
+                    string key = Guid.NewGuid().ToString();
+                    TCK(key, false);
+                    key = MSCommunicationController.keySplit + key;
+
                     Dictionary<string, string> heads = new Dictionary<string, string>();
-                    heads.Add(MSConst.contractKey, option.ContractKey);
+                    heads.Add(MSConst.contractKey, option.ContractKey + key);
 
                     IHttpHelper httpHelper = new HttpHelper();
                     MSIPInfo mSIPInfo = null;
@@ -190,15 +274,36 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 
                     if (null != mSIPInfo)
                     {
+                        key = Guid.NewGuid().ToString();
+                        TCK(key, false);
+                        key = MSCommunicationController.keySplit + key;
                         SvrAPIOption option1 = new SvrAPIOption();
                         option1.IP = mSIPInfo.IP;
                         option1.Port = option.Port;
-                        option1.ContractKey = option.ContractKey;
+                        option1.ContractKey = option.ContractKey + key;
                         json = JsonConvert.SerializeObject(option1);
                     }
                 }
             }
             return Content(json);
+        }
+
+        [HttpPost, Route("AuthenticateKey")]
+        public ActionResult AuthenticateKey(string key)
+        {
+            TempContractKey temp = TCK(key, true);
+            string result = "false";
+            if (null != temp)
+            {
+                result = "true";
+            }
+            return Content(result);
+        }
+
+        class TempContractKey
+        {
+            public string contractKey { get; set; }
+            public DateTime endTime { get; set; }
         }
     }
 }

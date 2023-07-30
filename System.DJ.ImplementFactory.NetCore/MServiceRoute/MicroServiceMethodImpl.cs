@@ -374,7 +374,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 return (T)result.JsonToList(type, true);
             }
-            else if (type.IsClass)
+            else if (type.Equals(typeof(object)))
+            {
+                return (T)DataTranslation.JsonToObject(result);
+            }
+            else if (type.IsClass && (typeof(string) != type))
             {
                 return (T)result.JsonToEntity(type);
             }

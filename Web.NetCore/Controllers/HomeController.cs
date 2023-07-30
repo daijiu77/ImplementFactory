@@ -1,18 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
-using System.Reflection;
 using Web.NetCore.Models;
 
 namespace Web.NetCore.Controllers
 {
-    [Route("Home")]
+    [Route("api/Home")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

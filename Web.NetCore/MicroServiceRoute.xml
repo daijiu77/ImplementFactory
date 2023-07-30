@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<MicroServiceRoutes ServiceName="MemberService" Port="5080">
+<MicroServiceRoutes ServiceName="WebSiteService" Port="5080">
   <ServiceManager>
     <ServiceManagerAddr>/Home/ReceiveManage</ServiceManagerAddr>
     <ServiceManagerActionType>Post</ServiceManagerActionType>
     <Name>ServiceManager</Name>
-    <Uri>http://localhost:5000/api</Uri>
+    <Uri>http://127.0.0.1:5000/api</Uri>
     <RegisterAddr>/Home/RegisterIP</RegisterAddr>
+    <TestAddr>/MSCommunication/SysTest</TestAddr>
     <ContractKey>abc2233</ContractKey>
     <RegisterActionType>Post</RegisterActionType>
   </ServiceManager>
