@@ -449,14 +449,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 msUrl += "/";
             }
-            msUrl += "{0}/{1}?serviceName={2}".ExtFormat(MSConst.MSCommunication, MSConst.GetUrlInfoByServiceName, serviceName);
+            msUrl += "{0}/{1}?serviceName={2}&port={3}".ExtFormat(MSConst.MSCommunication,
+                MSConst.GetUrlInfoByServiceName,
+                serviceName,
+                MicroServiceRoute.Port);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add(MSConst.contractKey, MicroServiceRoute.ServiceManager.ContractKey);
 
+            Dictionary<string, object> data = new Dictionary<string, object>();
+            data.Add(MSConst.GetUrlInfoByServiceName_serviceName, serviceName);
+            data.Add(MSConst.GetUrlInfoByServiceName_port, MicroServiceRoute.Port);
+
             SvrAPIOption option = null;
             IHttpHelper httpHelper = new HttpHelper();
-            httpHelper.SendData(msUrl, headers, new { serviceName }, true, (resultObj, err) =>
+            httpHelper.SendData(msUrl, headers, data, true, (resultObj, err) =>
             {
                 if (null == resultObj) return;
                 string dataStr = ExtMethod.GetCollectionData(resultObj.ToString());

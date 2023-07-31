@@ -18,8 +18,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
     [Route("MSCommunication")]
     public class MSCommunicationController : ControllerBase
     {
-        public const string keySplit = "@";
-
         private static Dictionary<string, TempContractKey> idDic = new Dictionary<string, TempContractKey>();
         private static List<string> idList = new List<string>();
 
@@ -37,12 +35,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                 {
                     size = idDic.Count;
                     num = 0;
-                    dt = DateTime.Now;
                     while (num < size)
                     {
                         key = GetKey(num);
                         tempContractKey = TCK(key, false);
-                        if (tempContractKey.endTime >= dt)
+                        dt = DateTime.Now;
+                        if (tempContractKey.endTime <= dt)
                         {
                             TCK(key, true);
                             num = 0;
@@ -85,10 +83,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                 }
                 else
                 {
+                    DateTime dt = DateTime.Now.AddMinutes(2);
                     idDic.Add(keyLower, new TempContractKey()
                     {
                         contractKey = contractKey,
-                        endTime = DateTime.Now.AddMinutes(1),
+                        endTime = dt,
                     });
                     idList.Add(keyLower);
                 }
@@ -221,7 +220,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         }
 
         [HttpPost, Route("GetUrlInfoByServiceName")]
-        public ActionResult GetUrlInfoByServiceName(string serviceName)
+        public ActionResult GetUrlInfoByServiceName(string serviceName, string port)
         {
             string json = "";
             SvrAPISchema svrAPISchema = new SvrAPISchema();
@@ -252,13 +251,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                         MSConst.MSCommunication,
                         MSConst.GetCurrentSvrIP);
 
-                    string paraUrl = "{0}://{1}:{2}".ExtFormat(httpProtocal, ip, option.Port);
+                    string paraUrl = "{0}://{1}:{2}".ExtFormat(httpProtocal, ip, port);
                     string paraContractKey = option.ContractKey;
                     object data = new { url = paraUrl, contractKey = paraContractKey };
 
                     string key = Guid.NewGuid().ToString();
                     TCK(key, false);
-                    key = MSCommunicationController.keySplit + key;
+                    key = MSConst.keySplit + key;
 
                     Dictionary<string, string> heads = new Dictionary<string, string>();
                     heads.Add(MSConst.contractKey, option.ContractKey + key);
@@ -276,7 +275,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                     {
                         key = Guid.NewGuid().ToString();
                         TCK(key, false);
-                        key = MSCommunicationController.keySplit + key;
+                        key = MSConst.keySplit + key;
                         SvrAPIOption option1 = new SvrAPIOption();
                         option1.IP = mSIPInfo.IP;
                         option1.Port = option.Port;

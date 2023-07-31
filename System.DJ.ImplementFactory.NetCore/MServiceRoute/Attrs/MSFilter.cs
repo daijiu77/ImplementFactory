@@ -224,15 +224,17 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 svrUrl = rg.Replace(svrUrl, "");
             }
 
-            svrUrl += "/MSCommunication/AuthenticateKey?key={0}".ExtFormat(key);
+            svrUrl += "/{0}/{1}?key={2}".ExtFormat(MSConst.MSCommunication, MSConst.AuthenticateKey, key);
             Dictionary<string, string> heads = new Dictionary<string, string>();
             heads.Add(MSConst.contractKey, sm.ContractKey);
 
+            object data = new { key = key };
+
             IHttpHelper httpHelper = new HttpHelper();
-            httpHelper.SendData(svrUrl, heads, null, true, (resultData, err) =>
+            httpHelper.SendData(svrUrl, heads, data, true, (resultData, err) =>
             {
-                if(string.IsNullOrEmpty(err)) return;
-                if(null== resultData) return;
+                if (!string.IsNullOrEmpty(err)) return;
+                if (null == resultData) return;
                 bool.TryParse(resultData.ToString().ToLower(), out mbool);
             });
             return mbool;
@@ -344,10 +346,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 string[] keys = ckDic.Keys.ToArray();
                 string contractVal1 = ckDic[keys[0]].ToString();
                 string svrKey = "";
-                if (-1 != contractVal1.IndexOf(MSCommunicationController.keySplit))
+                if (-1 != contractVal1.IndexOf(MSConst.keySplit))
                 {
-                    int n = contractVal1.LastIndexOf(MSCommunicationController.keySplit);
-                    svrKey = contractVal1.Substring(n + MSCommunicationController.keySplit.Length);
+                    int n = contractVal1.LastIndexOf(MSConst.keySplit);
+                    svrKey = contractVal1.Substring(n + MSConst.keySplit.Length);
                     mbool = AuthenticateKey(svrKey);
                     if (mbool)
                     {

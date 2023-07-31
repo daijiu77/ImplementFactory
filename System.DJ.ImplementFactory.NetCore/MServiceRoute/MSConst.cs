@@ -15,7 +15,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public const string MSCommunication = "MSCommunication";
         public const string SysTest = "SysTest";
         public const string GetUrlInfoByServiceName = "GetUrlInfoByServiceName";
+        public const string GetUrlInfoByServiceName_serviceName = "serviceName";
+        public const string GetUrlInfoByServiceName_port = "port";
         public const string GetCurrentSvrIP = "GetCurrentSvrIP";
+        public const string AuthenticateKey = "AuthenticateKey";
+        public const string keySplit = "@";
 
         public const string startName = "StartTime";
         public const string endName = "EndTime";
