@@ -33,6 +33,7 @@
 /Test.Standard/bin/
 /Test.NetCoreApi/bin/
 /Web.NetCore/bin/
+/Web.NetCoreApiSvr/bin/
 
 # Compiled obj files
 /System.DJ.ImplementFactory.Framework/obj/
@@ -50,6 +51,7 @@
 /Test.NetCoreApi/obj/
 /Web.Framework/obj/
 /Web.NetCore/obj/
+/Web.NetCoreApiSvr/obj/
 
 # Precompiled Headers
 *.gch
