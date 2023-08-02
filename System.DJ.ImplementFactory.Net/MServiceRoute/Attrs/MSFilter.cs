@@ -5,6 +5,9 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Entities;
+using System.DJ.ImplementFactory.MServiceRoute.Controllers;
+using System.DJ.ImplementFactory.Pipelines;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -202,6 +205,41 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
+        private bool AuthenticateKey(string key)
+        {
+            bool mbool = false;
+            if (string.IsNullOrEmpty(key)) return mbool;
+            MServiceManager sm = MicroServiceRoute.ServiceManager;
+            string svrUrl = sm.Uri;
+            svrUrl = svrUrl.Replace("\\", "/");
+            string s1 = svrUrl.Substring(svrUrl.Length - 1);
+            if (s1.Equals("\\") || s1.Equals("/"))
+            {
+                svrUrl = svrUrl.Substring(0, svrUrl.Length - 1);
+            }
+
+            Regex rg = new Regex(@"\/(?<areaName>[a-z0-9_\-]+)$", RegexOptions.IgnoreCase);
+            if (rg.IsMatch(svrUrl))
+            {
+                svrUrl = rg.Replace(svrUrl, "");
+            }
+
+            svrUrl += "/{0}/{1}?key={2}".ExtFormat(MSConst.MSCommunication, MSConst.AuthenticateKey, key);
+            Dictionary<string, string> heads = new Dictionary<string, string>();
+            heads.Add(MSConst.contractKey, sm.ContractKey);
+
+            object data = new { key = key };
+
+            IHttpHelper httpHelper = new HttpHelper();
+            httpHelper.SendData(svrUrl, heads, data, true, (resultData, err) =>
+            {
+                if (!string.IsNullOrEmpty(err)) return;
+                if (null == resultData) return;
+                bool.TryParse(resultData.ToString().ToLower(), out mbool);
+            });
+            return mbool;
+        }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             string clientIP = GetIP(context.HttpContext);
@@ -307,6 +345,21 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
 
                 string[] keys = ckDic.Keys.ToArray();
                 string contractVal1 = ckDic[keys[0]].ToString();
+                string svrKey = "";
+                if (-1 != contractVal1.IndexOf(MSConst.keySplit))
+                {
+                    int n = contractVal1.LastIndexOf(MSConst.keySplit);
+                    svrKey = contractVal1.Substring(n + MSConst.keySplit.Length);
+                    mbool = AuthenticateKey(svrKey);
+                    if (mbool)
+                    {
+                        contractVal1 = contractVal1.Substring(0, n);
+                    }
+                    else
+                    {
+                        svrKey = "";
+                    }
+                }
                 string contractVal2 = MSServiceImpl.GetContractValue();
                 if (!contractVal1.Equals(contractVal2))
                 {
@@ -314,10 +367,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 }
 
                 PrintIpToLogs("IP: " + clientIP);
-                attr = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
-                if ((false == IsExistIP(clientIP)) && (null == attr))
+                if (string.IsNullOrEmpty(svrKey))
                 {
-                    throw new Exception(err);
+                    attr = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
+                    if ((false == IsExistIP(clientIP)) && (null == attr))
+                    {
+                        throw new Exception(err);
+                    }
                 }
             }
 

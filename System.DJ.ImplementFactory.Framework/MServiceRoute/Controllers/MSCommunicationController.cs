@@ -9,6 +9,8 @@ using System.DJ.ImplementFactory.MServiceRoute.ServiceManager;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 {
@@ -16,6 +18,83 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
     [Route("MSCommunication")]
     public class MSCommunicationController : Controller
     {
+        private static Dictionary<string, TempContractKey> idDic = new Dictionary<string, TempContractKey>();
+        private static List<string> idList = new List<string>();
+
+        static MSCommunicationController()
+        {
+            Task.Run(() =>
+            {
+                const int sleepNum = 2000;
+                int size = 0;
+                int num = 0;
+                TempContractKey tempContractKey = null;
+                DateTime dt = DateTime.Now;
+                string key = "";
+                while (true)
+                {
+                    size = idDic.Count;
+                    num = 0;
+                    while (num < size)
+                    {
+                        key = GetKey(num);
+                        tempContractKey = TCK(key, false);
+                        dt = DateTime.Now;
+                        if (tempContractKey.endTime <= dt)
+                        {
+                            TCK(key, true);
+                            num = 0;
+                            size = idDic.Count;
+                        }
+                        else
+                        {
+                            num++;
+                        }
+                    }
+                    Thread.Sleep(sleepNum);
+                }
+            });
+        }
+
+        private static string GetKey(int index)
+        {
+            lock (idDic)
+            {
+                if (index >= idList.Count) return "";
+                return idList[index];
+            }
+        }
+
+        private static TempContractKey TCK(string contractKey, bool delete)
+        {
+            lock (idDic)
+            {
+                TempContractKey tempContractKey = null;
+                string keyLower = contractKey.ToLower();
+                if (delete)
+                {
+                    idDic.TryGetValue(keyLower, out tempContractKey);
+                    idDic.Remove(keyLower);
+                    idList.Remove(keyLower);
+                }
+                else if (idDic.ContainsKey(keyLower))
+                {
+                    tempContractKey = idDic[keyLower];
+                }
+                else
+                {
+                    DateTime dt = DateTime.Now.AddMinutes(2);
+                    idDic.Add(keyLower, new TempContractKey()
+                    {
+                        contractKey = contractKey,
+                        endTime = dt,
+                    });
+                    idList.Add(keyLower);
+                }
+                return tempContractKey;
+            }
+        }
+
         [HttpPost, Route("Receiver")]
         public ActionResult Receiver(object data)
         {
@@ -129,7 +208,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                 string dataStr = ExtMethod.GetCollectionData(resultData.ToString());
                 if (string.IsNullOrEmpty(dataStr)) return;
                 MSIPInfo mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(dataStr);
-                if (null == mSIPInfo) return;                
+                if (null == mSIPInfo) return;
                 ip = mSIPInfo.IP;
             });
             MSIPInfo data = new MSIPInfo()
@@ -141,64 +220,82 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         }
 
         [HttpPost, Route("GetUrlInfoByServiceName")]
-        public ActionResult GetUrlInfoByServiceName(string serviceName)
+        public ActionResult GetUrlInfoByServiceName(string serviceName, string callerPort)
         {
-            string json = "";
             SvrAPISchema svrAPISchema = new SvrAPISchema();
             SvrAPI svrApi = svrAPISchema.GetServiceAPIByServiceName(serviceName);
-            if (null != svrApi)
-            {
-                if (0 < svrApi.Items.Count)
+            if (null == svrApi) return GetSvrAPIOptionResult();
+            if (0 == svrApi.Items.Count) return GetSvrAPIOptionResult();
+
+            SvrAPIOption option = svrApi.GetSvrAPIOption();
+            string callerIP = AbsActionFilterAttribute.GetIP(this.HttpContext);
+
+            if (option.IP.Equals(MSConst.Localhost) && (false == callerIP.Equals(MSConst.Localhost)))
+            {                
+                string url_src = "{0}://{1}:{2}/{3}/{4}";
+                string url = "";
+                IHttpHelper httpHelper = new HttpHelper();
+                url = url_src.ExtFormat(
+                option.HttpType,
+                callerIP,
+                callerPort,
+                MSConst.MSCommunication,
+                MSConst.SysTest);
+                string ip = "";
+                httpHelper.SendData(url, null, null, true, (res, err) =>
                 {
-                    SvrAPIOption option = svrApi.GetSvrAPIOption();                
-                    string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
-                    string httpProtocal = "http";
-                    if (0 < option.SvrUris.Count)
-                    {
-                        if (!string.IsNullOrEmpty(option.SvrUris[0].Uri))
-                        {
-                            Regex rg = new Regex(@"^(?<HttpPro>((http)|(https)))\:", RegexOptions.IgnoreCase);
-                            if (rg.IsMatch(option.SvrUris[0].Uri))
-                            {
-                                httpProtocal = rg.Match(option.SvrUris[0].Uri).Groups["HttpPro"].Value;
-                            }
-                        }
-                    }
-                    string url = "{0}://{1}:{2}/{3}/{4}";
-                    url = url.ExtFormat(
-                        httpProtocal,
-                        option.IP,
-                        option.Port,
-                        MSConst.MSCommunication,
-                        MSConst.GetCurrentSvrIP);
-
-                    string paraUrl = "{0}://{1}:{2}".ExtFormat(httpProtocal, ip, option.Port);
-                    string paraContractKey = option.ContractKey;
-                    object data = new { url = paraUrl, contractKey = paraContractKey };
-
-                    Dictionary<string, string> heads = new Dictionary<string, string>();
-                    heads.Add(MSConst.contractKey, option.ContractKey);
-
-                    IHttpHelper httpHelper = new HttpHelper();
-                    MSIPInfo mSIPInfo = null;
-                    httpHelper.SendData(url, heads, data, true, (resultData, err) =>
-                    {
-                        if (!string.IsNullOrEmpty(err)) return;
-                        if (null == resultData) return;
-                        mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(resultData.ToString());
-                    });
-
-                    if (null != mSIPInfo)
-                    {
-                        SvrAPIOption option1 = new SvrAPIOption();
-                        option1.IP = mSIPInfo.IP;
-                        option1.Port = option.Port;
-                        option1.ContractKey = option.ContractKey;
-                        json = JsonConvert.SerializeObject(option1);
-                    }
-                }
+                    if (!string.IsNullOrEmpty(err)) return;
+                    if (null == res) return;
+                    MSIPInfo mSIPInfo1 = res.ToString().JsonToEntity<MSIPInfo>();
+                    if (null == mSIPInfo1) return;
+                    ip = mSIPInfo1.IP;
+                });
+                return GetSvrAPIOptionResult(ip, option.Port, option.ContractKey);
             }
+            else
+            {
+                return GetSvrAPIOptionResult(option.IP, option.Port, option.ContractKey);
+            }
+        }
+
+        [HttpPost, Route("AuthenticateKey")]
+        public ActionResult AuthenticateKey(string key)
+        {
+            TempContractKey temp = TCK(key, true);
+            string result = "false";
+            if (null != temp)
+            {
+                result = "true";
+            }
+            return Content(result);
+        }
+
+        private ActionResult GetSvrAPIOptionResult(string ip, string port, string contractKey)
+        {
+            string json = GetSvrAPIOption(ip, port, contractKey);
             return Content(json);
+        }
+
+        private ActionResult GetSvrAPIOptionResult()
+        {
+            string json = GetSvrAPIOption(null, null, null);
+            return Content(json);
+        }
+
+        private string GetSvrAPIOption(string ip, string port, string contractKey)
+        {
+            SvrAPIOption option1 = new SvrAPIOption();
+            option1.IP = ip;
+            option1.Port = port;
+            option1.ContractKey = contractKey;
+            string json = JsonConvert.SerializeObject(option1);
+            return json;
+        }
+
+        class TempContractKey
+        {
+            public string contractKey { get; set; }
+            public DateTime endTime { get; set; }
         }
     }
 }

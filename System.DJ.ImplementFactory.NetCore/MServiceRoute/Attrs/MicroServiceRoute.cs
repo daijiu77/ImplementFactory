@@ -27,8 +27,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private const string _Routes = "Routes";
         private const string _Route = "Route";
         private const string _Groups = "Groups";
-        private const string _ServiceName = "ServiceName";
-        private const string _Port = "Port";
+        public const string _ServiceName = "ServiceName";
+        public const string _HttpType = "HttpType";
+        public const string _Port = "Port";
         private const string _DataSync = "DataSyncs";
 
         private static string s_config_path = "";
@@ -63,6 +64,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         public static MServiceManager ServiceManager = null;
         public static string ServiceName { get; private set; } = "";
         public static string Port { get; private set; } = "";
+
+        public static string HttpType { get; set; } = "http";
 
         public static Guid ID
         {
@@ -214,6 +217,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (null != atr) MicroServiceRoute.ServiceName = atr.Value.Trim();
                 if (string.IsNullOrEmpty(MicroServiceRoute.ServiceName)) MicroServiceRoute.ServiceName = XmlDoc.GetChildTextByNodeName(s_rootElement, _ServiceName);
 
+                atr = s_rootElement.Attributes[_HttpType];
+                if (null != atr) MicroServiceRoute.HttpType = atr.Value.Trim();
+                if (string.IsNullOrEmpty(MicroServiceRoute.HttpType)) MicroServiceRoute.Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _HttpType);
+
                 atr = s_rootElement.Attributes[_Port];
                 if (null != atr) MicroServiceRoute.Port = atr.Value.Trim();
                 if (string.IsNullOrEmpty(MicroServiceRoute.Port)) MicroServiceRoute.Port = XmlDoc.GetChildTextByNodeName(s_rootElement, _Port);
@@ -306,6 +313,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 ContractKey = "abc2233"
             };
             XMLroot.SetAttribute(_ServiceName, "MemberService");
+            XMLroot.SetAttribute(_HttpType, "http");
             XMLroot.SetAttribute(_Port, "5000");
 
             XmlElement serviceManagerNodes = doc.CreateElement(_ServiceManager);

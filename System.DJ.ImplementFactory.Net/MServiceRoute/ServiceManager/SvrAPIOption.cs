@@ -6,7 +6,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     public class SvrAPIOption
     {
         public string ContractKey { get; set; }
-
+        public string HttpType { get; set; } = "http";
         public string IP { get; set; }
         public string Port { get; set; }
 

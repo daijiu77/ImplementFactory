@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -12,14 +13,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
     {
         private const string _svrApiFileName = "SvrApiList.xml";
         private const string _rootNodeName = "ServiceApiCollection";
-        private const string _serviceName = "ServiceName";
-        private const string _port = "Port";
+        //private const string _serviceName = "ServiceName";
+        //private const string _port = "Port";
         private const string _ip = "IP";
+        private const string _ip_port_split = ":";
 
         /// <summary>
         /// key: ServiceName_Lower, value: ServiceApiCollection
         /// </summary>
         private static Dictionary<string, SvrAPI> s_svrApiDic = new Dictionary<string, SvrAPI>();
+
+        /// <summary>
+        /// key: ip:port, value: ServiceApiCollection
+        /// </summary>
+        private static Dictionary<string, SvrAPIOption> ip_port_Dic = new Dictionary<string, SvrAPIOption>();
         private static List<string> s_ServiceNames = new List<string>();
         private static object _svrAPISchameLock = new object();
 
@@ -34,13 +41,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
         private static void SetSvrApiDic(XmlNode svrApiNode)
         {
             if (!svrApiNode.HasChildNodes) return;
-            XmlAttribute attr = svrApiNode.Attributes[_serviceName];
+            XmlAttribute attr = svrApiNode.Attributes[MicroServiceRoute._ServiceName];
             if (null == attr) return;
             string serviceName = attr.Value.Trim();
             string serviceNameLower = serviceName.ToLower();
 
             string contractKey = "";
             string ip = "";
+            string httpType = "";
             string port = "";
 
             SvrAPI svrAPI = null;
@@ -68,10 +76,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 if (string.IsNullOrEmpty(ip)) ip = XmlDoc.GetChildTextByNodeName(item, _ip);
                 if (string.IsNullOrEmpty(ip)) return true;
 
-                attr = item.Attributes[_port];
+                attr = item.Attributes[MicroServiceRoute._Port];
                 if (null != attr) port = attr.Value.Trim();
-                if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(item, _port);
+                if (string.IsNullOrEmpty(port)) port = XmlDoc.GetChildTextByNodeName(item, MicroServiceRoute._Port);
                 if (string.IsNullOrEmpty(port)) return true;
+
+                attr = item.Attributes[MicroServiceRoute._HttpType];
+                if (null != attr) httpType = attr.Value.Trim();
+                if (string.IsNullOrEmpty(httpType)) httpType = XmlDoc.GetChildTextByNodeName(item, MicroServiceRoute._HttpType);
+                if (string.IsNullOrEmpty(httpType)) httpType = "http";
 
                 attr = item.Attributes[MSConst.contractKey];
                 if (null != attr) contractKey = attr.Value.Trim();
@@ -80,9 +93,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
 
                 svrAPIOption = new SvrAPIOption();
                 svrAPI.Items.Add(svrAPIOption);
+                svrAPIOption.HttpType = httpType;
                 svrAPIOption.IP = ip;
                 svrAPIOption.Port = port;
                 svrAPIOption.ContractKey = contractKey;
+
+                string ip_port = ip + _ip_port_split + port;
+                ip_port_Dic[ip_port] = svrAPIOption;
 
                 item.ForeachChildNode(itemChild =>
                 {
@@ -193,6 +210,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             }
         }
 
+        /// <summary>
+        /// Get the API by ip and port.
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public SvrAPIOption GetSvrAPIOptionByIP_Port(string ip, string port)
+        {
+            lock (_svrAPISchameLock)
+            {
+                string ip_port = ip + _ip_port_split + port;
+                SvrAPIOption svrAPIOption = null;
+                ip_port_Dic.TryGetValue(ip_port, out svrAPIOption);
+                return svrAPIOption;
+            }
+        }
+
         private void AddToFile(string ip, object data)
         {
             if (null == data) return;
@@ -215,7 +249,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
                 JsonToEntity jte = new JsonToEntity();
                 data = jte.GetObject(sdt);
             }
-            else if(rg2.IsMatch(sdt))
+            else if (rg2.IsMatch(sdt))
             {
                 JsonToEntity jte = new JsonToEntity();
                 data = jte.GetObject(sdt);
@@ -238,9 +272,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             IEnumerable collection = items as IEnumerable;
             if (null == collection) return;
 
-            string serviceName = data.GetPropertyValue<string>(_serviceName);
+            string serviceName = data.GetPropertyValue<string>(MicroServiceRoute._ServiceName);
             string svrContractKey = data.GetPropertyValue<string>(MSConst.svrMngcontractKey);
-            string port = data.GetPropertyValue<string>(_port);
+            string port = data.GetPropertyValue<string>(MicroServiceRoute._Port);
+            string httpType = data.GetPropertyValue<string>(MicroServiceRoute._HttpType);
             if (null == serviceName) return;
             if (null == svrContractKey) svrContractKey = "";
             serviceName = serviceName.Trim();
@@ -255,7 +290,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             string serviceNameLower = serviceName.ToLower();
             rootNode.ForeachChildNode(node =>
             {
-                attr = node.Attributes[_serviceName];
+                attr = node.Attributes[MicroServiceRoute._ServiceName];
                 if (null == attr) return true;
                 if (serviceNameLower.Equals(attr.Value.Trim().ToLower()))
                 {
@@ -268,13 +303,13 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
             if (null == svrNode)
             {
                 svrNode = doc.CreateElement("ServiceApi");
-                svrNode.SetAttribute(_serviceName, serviceName);
+                svrNode.SetAttribute(MicroServiceRoute._ServiceName, serviceName);
                 rootNode.AppendChild(svrNode);
             }
 
             XmlElement xmlItem = null;
             string ipLower = _ip.ToLower();
-            string portLower = _port.ToLower();
+            string portLower = MicroServiceRoute._Port.ToLower();
             svrNode.ForeachChildNode(eleItem =>
             {
                 XmlAttributeCollection ats = eleItem.Attributes;
@@ -309,7 +344,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.ServiceManager
 
             xmlItem = doc.CreateElement("Item");
             xmlItem.SetAttribute(_ip, ip);
-            xmlItem.SetAttribute(_port, port);
+            xmlItem.SetAttribute(MicroServiceRoute._HttpType, httpType);
+            xmlItem.SetAttribute(MicroServiceRoute._Port, port);
             xmlItem.SetAttribute(MSConst.contractKey, svrContractKey);
             svrNode.AppendChild(xmlItem);
 

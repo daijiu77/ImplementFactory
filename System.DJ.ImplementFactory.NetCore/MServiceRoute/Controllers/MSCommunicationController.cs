@@ -220,71 +220,42 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
         }
 
         [HttpPost, Route("GetUrlInfoByServiceName")]
-        public ActionResult GetUrlInfoByServiceName(string serviceName, string port)
+        public ActionResult GetUrlInfoByServiceName(string serviceName, string callerPort)
         {
-            string json = "";
             SvrAPISchema svrAPISchema = new SvrAPISchema();
             SvrAPI svrApi = svrAPISchema.GetServiceAPIByServiceName(serviceName);
-            if (null != svrApi)
-            {
-                if (0 < svrApi.Items.Count)
+            if (null == svrApi) return GetSvrAPIOptionResult();
+            if (0 == svrApi.Items.Count) return GetSvrAPIOptionResult();
+
+            SvrAPIOption option = svrApi.GetSvrAPIOption();
+            string callerIP = AbsActionFilterAttribute.GetIP(this.HttpContext);
+
+            if (option.IP.Equals(MSConst.Localhost) && (false == callerIP.Equals(MSConst.Localhost)))
+            {                
+                string url_src = "{0}://{1}:{2}/{3}/{4}";
+                string url = "";
+                IHttpHelper httpHelper = new HttpHelper();
+                url = url_src.ExtFormat(
+                option.HttpType,
+                callerIP,
+                callerPort,
+                MSConst.MSCommunication,
+                MSConst.SysTest);
+                string ip = "";
+                httpHelper.SendData(url, null, null, true, (res, err) =>
                 {
-                    SvrAPIOption option = svrApi.GetSvrAPIOption();
-                    string ip = AbsActionFilterAttribute.GetIP(this.HttpContext);
-                    string httpProtocal = "http";
-                    if (0 < option.SvrUris.Count)
-                    {
-                        if (!string.IsNullOrEmpty(option.SvrUris[0].Uri))
-                        {
-                            Regex rg = new Regex(@"^(?<HttpPro>((http)|(https)))\:", RegexOptions.IgnoreCase);
-                            if (rg.IsMatch(option.SvrUris[0].Uri))
-                            {
-                                httpProtocal = rg.Match(option.SvrUris[0].Uri).Groups["HttpPro"].Value;
-                            }
-                        }
-                    }
-                    string url = "{0}://{1}:{2}/{3}/{4}";
-                    url = url.ExtFormat(
-                        httpProtocal,
-                        option.IP,
-                        option.Port,
-                        MSConst.MSCommunication,
-                        MSConst.GetCurrentSvrIP);
-
-                    string paraUrl = "{0}://{1}:{2}".ExtFormat(httpProtocal, ip, port);
-                    string paraContractKey = option.ContractKey;
-                    object data = new { url = paraUrl, contractKey = paraContractKey };
-
-                    string key = Guid.NewGuid().ToString();
-                    TCK(key, false);
-                    key = MSConst.keySplit + key;
-
-                    Dictionary<string, string> heads = new Dictionary<string, string>();
-                    heads.Add(MSConst.contractKey, option.ContractKey + key);
-
-                    IHttpHelper httpHelper = new HttpHelper();
-                    MSIPInfo mSIPInfo = null;
-                    httpHelper.SendData(url, heads, data, true, (resultData, err) =>
-                    {
-                        if (!string.IsNullOrEmpty(err)) return;
-                        if (null == resultData) return;
-                        mSIPInfo = ExtMethod.JsonToEntity<MSIPInfo>(resultData.ToString());
-                    });
-
-                    if (null != mSIPInfo)
-                    {
-                        key = Guid.NewGuid().ToString();
-                        TCK(key, false);
-                        key = MSConst.keySplit + key;
-                        SvrAPIOption option1 = new SvrAPIOption();
-                        option1.IP = mSIPInfo.IP;
-                        option1.Port = option.Port;
-                        option1.ContractKey = option.ContractKey + key;
-                        json = JsonConvert.SerializeObject(option1);
-                    }
-                }
+                    if (!string.IsNullOrEmpty(err)) return;
+                    if (null == res) return;
+                    MSIPInfo mSIPInfo1 = res.ToString().JsonToEntity<MSIPInfo>();
+                    if (null == mSIPInfo1) return;
+                    ip = mSIPInfo1.IP;
+                });
+                return GetSvrAPIOptionResult(ip, option.Port, option.ContractKey);
             }
-            return Content(json);
+            else
+            {
+                return GetSvrAPIOptionResult(option.IP, option.Port, option.ContractKey);
+            }
         }
 
         [HttpPost, Route("AuthenticateKey")]
@@ -297,6 +268,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                 result = "true";
             }
             return Content(result);
+        }
+
+        private ActionResult GetSvrAPIOptionResult(string ip, string port, string contractKey)
+        {
+            string json = GetSvrAPIOption(ip, port, contractKey);
+            return Content(json);
+        }
+
+        private ActionResult GetSvrAPIOptionResult()
+        {
+            string json = GetSvrAPIOption(null, null, null);
+            return Content(json);
+        }
+
+        private string GetSvrAPIOption(string ip, string port, string contractKey)
+        {
+            SvrAPIOption option1 = new SvrAPIOption();
+            option1.IP = ip;
+            option1.Port = port;
+            option1.ContractKey = contractKey;
+            string json = JsonConvert.SerializeObject(option1);
+            return json;
         }
 
         class TempContractKey

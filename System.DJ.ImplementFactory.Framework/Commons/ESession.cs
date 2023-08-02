@@ -184,13 +184,6 @@ namespace System.DJ.ImplementFactory.Commons
             }
         }
 
-        private static bool IsIP(string ip)
-        {
-            if (string.IsNullOrEmpty(ip)) return false;
-            Regex rg = new Regex(@"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.([0-9]{1,3})$", RegexOptions.IgnoreCase);
-            return rg.IsMatch(ip);
-        }
-
         private static Type GetSrcType()
         {
             StackTrace trace = new StackTrace();

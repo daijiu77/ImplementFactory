@@ -51,12 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MSVisitor\IUserInfo.cs" />
+    <Compile Include="MSVisitor\IHomeController.cs" />
     <Compile Include="ServiceRegisterMessageImpl.cs" />
     <Compile Include="IDepart.cs" />
     <Compile Include="DepartImpl.cs" />
     <Compile Include="MyCache.cs" />
     <Compile Include="DataInterface\IBaseData.cs" />
-    <Compile Include="MSVisitor\IMSUserInfo.cs" />
     <Compile Include="IDb_Helper.cs" />
     <Compile Include="DbHelperImpl.cs" />
     <Compile Include="Entities\Plan.cs" />

@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 using Test.Framework.DataInterface;
 using Test.Framework.Entities;
 using Test.Framework.InterfaceTest;
+using Test.Framework.MSVisitor;
 
 namespace Test.Framework
 {
     public class CalculateImpl : ICalculate
     {
         [MyAutoCall]
-        private IApiUserInfo apiUserInfo;
+        private MSVisitor.IUserInfo apiUserInfo;
 
         [MyAutoCall]
-        IUserInfo userInfo;
+        DataInterface.IUserInfo userInfo;
 
         private MyCache _myCache = null;
         private IDepart _depart = null;

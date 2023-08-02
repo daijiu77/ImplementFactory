@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace System.DJ.ImplementFactory.MServiceRoute
+﻿namespace System.DJ.ImplementFactory.MServiceRoute
 {
     internal class MSConst
     {
@@ -16,10 +12,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public const string SysTest = "SysTest";
         public const string GetUrlInfoByServiceName = "GetUrlInfoByServiceName";
         public const string GetUrlInfoByServiceName_serviceName = "serviceName";
-        public const string GetUrlInfoByServiceName_port = "port";
+        public const string GetUrlInfoByServiceName_callerPort = "callerPort";
         public const string GetCurrentSvrIP = "GetCurrentSvrIP";
         public const string AuthenticateKey = "AuthenticateKey";
         public const string keySplit = "@";
+        public const string Localhost = "127.0.0.1";
 
         public const string startName = "StartTime";
         public const string endName = "EndTime";

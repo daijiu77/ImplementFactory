@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <configurations>
   <SystemBaseInfo>
-		<ConnectionString>Data Source=(local);Initial Catalog=DbTest;User Id=sa;Password=admin;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
+    <ConnectionString description="数据库连接字符串">Data Source=(local);Initial Catalog=DatabaseName;User Id=sa;Password=sa;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
     <DatabaseType description="数据库类型:sqlserver,oracle,mysql">sqlserver</DatabaseType>
     <SqlProviderRelativePathOfDll description="动态 sql 提供者所在的dll文件程序集的相对路径,注：该提供者必须继承 System.DJ.ImplementFactory.Pipelines.ISqlExpressionProvider 接口">
     </SqlProviderRelativePathOfDll>
@@ -30,24 +30,27 @@
     <IsPrintFilterIPToLogs description="把网关拦截的 IP 输出到 Logs 文件夹">false</IsPrintFilterIPToLogs>
     <TryTimeServiceRegister description="服务注册尝试次数，默认50次，当值为0(零)时执行无限次数尝试">50</TryTimeServiceRegister>
     <HttpTimeout_Second description="Http请求等待时长, 默认30秒">120</HttpTimeout_Second>
-	</SystemBaseInfo>
-	<LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">
-		<upperLimit description="可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit">severe</upperLimit>
-		<lowerLimit description="可以是数字或英文名称, 为数字时 lowerLimit 应大于 upperLimit">debug</lowerLimit>
-	</LogsRange>
-	<SysConfig>
-		<Recomplie description="是否启用重新编译机制, false(不启用), true(启用), 默认为 false">true</Recomplie>
-		<IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">true</IsShowCode>
-	</SysConfig>
-
-	<MatchRules description="可以不需要配置匹配规则，由组件自动适配, 但配置后可提高组件加载速度">
-		<item>
-			<DllRelativePathOfImpl description="[可选] - 实例类所在dll文件的相对路径,如果为空,表示实例类和exe文件属同一dll文件"></DllRelativePathOfImpl>
-			<ImplementNameSpace description="[可选] - 指定实现interface类的实例所在的namespace"></ImplementNameSpace>
-			<MatchImplExpression description="[*必选*] - 匹配实现 interface 类的实例名称,可以是一个完整的类名称, 但不包含namespace.也可以是一个正则表达式"></MatchImplExpression>
-			<InterFaceName description="[*必选*] - 接口名称, 可以是一个 namespace.interfaceClassName 完整的接口名称, 也可是interfaceClassName"></InterFaceName>
-			<IgnoreCase description="[可选] - 匹配 MatchImplExpression 时是否忽略大小写, 默认true[忽略大小写], false[区分大小写]"></IgnoreCase>
-			<IsShowCode description="[可选] - 是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]"></IsShowCode>
-		</item>
-	</MatchRules>
+  </SystemBaseInfo>
+  <LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">
+    <upperLimit description="可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit">severe</upperLimit>
+    <lowerLimit description="可以是数字或英文名称, 为数字时 lowerLimit 应大于 upperLimit">debug</lowerLimit>
+  </LogsRange>
+  <SysConfig>
+    <Recomplie description="是否启用重新编译机制, false(不启用), true(启用), 默认为 false">false</Recomplie>
+    <IsShowCode description="显示所有参与编译的代码, false(不显示), true(显示)">false</IsShowCode>
+  </SysConfig>
+  <MatchRules description="可以不需要配置匹配规则，由组件自动适配, 但配置后可提高组件加载速度">
+    <item>
+      <DllRelativePathOfImpl description="[可选] - 实例类所在dll文件的相对路径,如果为空,表示实例类和exe文件属同一dll文件">
+      </DllRelativePathOfImpl>
+      <ImplementNameSpace description="[可选] - 指定实现interface类的实例所在的namespace">
+      </ImplementNameSpace>
+      <MatchImplExpression description="[*必选*] - 匹配实现 interface 类的实例名称,可以是一个完整的类名称, 但不包含namespace。也可以是一个正则表达式">
+      </MatchImplExpression>
+      <InterFaceName description="[*必选*] - 接口名称, 可以是一个 namespace.interfaceClassName 完整的接口名称, 也可是interfaceClassName">
+      </InterFaceName>
+      <IgnoreCase description="[可选] - 匹配 MatchImplExpression 时是否忽略大小写, 默认true[忽略大小写], false[区分大小写]">true</IgnoreCase>
+      <IsShowCode description="是否显示临时dll组件对应的代码, 默认false[不显示], true[显示]">false</IsShowCode>
+    </item>
+  </MatchRules>
 </configurations>

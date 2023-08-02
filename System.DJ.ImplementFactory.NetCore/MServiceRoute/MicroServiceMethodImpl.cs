@@ -459,7 +459,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             Dictionary<string, object> data = new Dictionary<string, object>();
             data.Add(MSConst.GetUrlInfoByServiceName_serviceName, serviceName);
-            data.Add(MSConst.GetUrlInfoByServiceName_port, MicroServiceRoute.Port);
+            data.Add(MSConst.GetUrlInfoByServiceName_callerPort, MicroServiceRoute.Port);
 
             SvrAPIOption option = null;
             IHttpHelper httpHelper = new HttpHelper();

@@ -448,8 +448,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             string port = null == MicroServiceRoute.Port ? "" : MicroServiceRoute.Port;
             string svrContractKey = MSServiceImpl.GetContractValue();
-            jsonData = "{\"ServiceName\": \"{0}\", \"Port\": \"{1}\", \"{2}\": \"{3}\", \"Data\": [{4}], \"CrateTime\": \"{5}\"}"
-                .ExtFormat(MicroServiceRoute.ServiceName, port, MSConst.svrMngcontractKey, svrContractKey, jsonData, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            jsonData = "{\"{0}\": \"{1}\", \"{2}\": \"{3}\", \"{4}\": \"{5}\", \"{6}\": \"{7}\", \"Data\": [{8}], \"CrateTime\": \"{9}\"}"
+                .ExtFormat(
+                MicroServiceRoute._ServiceName, MicroServiceRoute.ServiceName,
+                MicroServiceRoute._HttpType, MicroServiceRoute.HttpType,
+                MicroServiceRoute._Port, port, 
+                MSConst.svrMngcontractKey, svrContractKey, 
+                jsonData, 
+                DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             string svrUrl = MicroServiceRoute.ServiceManager.Uri;
             string s1 = svrUrl.Substring(svrUrl.Length - 1);

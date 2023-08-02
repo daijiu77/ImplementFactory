@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using Test.NetCore.MSVisitor;
 
 namespace Web.NetCoreApiSvr.Controllers
@@ -14,6 +15,12 @@ namespace Web.NetCoreApiSvr.Controllers
         public HomeController()
         {
             ImplementAdapter.Register(this);
+        }
+
+        [HttpPost, MSClientRegisterAction, Route("RegisterIP")]
+        public object RegisterIP(string contractKey)
+        {
+            return new { message = "" };
         }
 
         [HttpGet, Route("Test")]
