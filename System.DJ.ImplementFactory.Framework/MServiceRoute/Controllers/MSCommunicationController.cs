@@ -250,11 +250,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                     if (null == mSIPInfo1) return;
                     ip = mSIPInfo1.IP;
                 });
-                return GetSvrAPIOptionResult(ip, option.Port, option.ContractKey);
+                return GetSvrAPIOptionResult(option.HttpType, ip, option.Port, option.ContractKey);
             }
             else
             {
-                return GetSvrAPIOptionResult(option.IP, option.Port, option.ContractKey);
+                return GetSvrAPIOptionResult(option.HttpType, option.IP, option.Port, option.ContractKey);
             }
         }
 
@@ -270,21 +270,22 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             return Content(result);
         }
 
-        private ActionResult GetSvrAPIOptionResult(string ip, string port, string contractKey)
+        private ActionResult GetSvrAPIOptionResult(string httpType, string ip, string port, string contractKey)
         {
-            string json = GetSvrAPIOption(ip, port, contractKey);
+            string json = GetSvrAPIOption(httpType, ip, port, contractKey);
             return Content(json);
         }
 
         private ActionResult GetSvrAPIOptionResult()
         {
-            string json = GetSvrAPIOption(null, null, null);
+            string json = GetSvrAPIOption(null,null, null, null);
             return Content(json);
         }
 
-        private string GetSvrAPIOption(string ip, string port, string contractKey)
+        private string GetSvrAPIOption(string httpType, string ip, string port, string contractKey)
         {
             SvrAPIOption option1 = new SvrAPIOption();
+            option1.HttpType = httpType;
             option1.IP = ip;
             option1.Port = port;
             option1.ContractKey = contractKey;

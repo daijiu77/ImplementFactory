@@ -468,9 +468,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (null == resultObj) return;
                 string dataStr = ExtMethod.GetCollectionData(resultObj.ToString());
                 option = ExtMethod.JsonToEntity<SvrAPIOption>(dataStr);
+                if (null == option) return;
+                if (string.IsNullOrEmpty(option.IP)) option = null;
             });
 
             if (null == option) return;
+            if (false == string.IsNullOrEmpty(option.HttpType)) httpStr = option.HttpType;
 
             if (string.IsNullOrEmpty(httpStr))
             {
