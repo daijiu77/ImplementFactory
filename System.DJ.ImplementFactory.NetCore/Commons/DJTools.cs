@@ -573,16 +573,19 @@ namespace System.DJ.ImplementFactory.Commons
             return GetParamertClassNameByDbTag1(dbType, ref AssemblyName);
         }
 
-        public static string ExtFormat(this string formatStr, params string[] arr)
+        public static string ExtFormat(this string formatStr, params object[] arr)
         {
             string s1 = formatStr;
             if (null == arr) return s1;
             if (0 == arr.Length) return s1;
 
             int n = 0;
-            foreach (string item in arr)
+            string s2 = "";
+            foreach (object item in arr)
             {
-                s1 = s1.Replace("{" + n + "}", item);
+                s2 = "";
+                if (null != item) s2 = item.ToString();
+                s1 = s1.Replace("{" + n + "}", s2);
                 n++;
             }
             return s1;

@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.MServiceRoute.Attrs;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +12,7 @@ namespace System.DJ.ImplementFactory.Commons
     public class ESession
     {
         private static Dictionary<string, SrcIPData> kvDic = new Dictionary<string, SrcIPData>();
+        private static AutoCall autoCall = new AutoCall();
         private const int defMinute = 3;
 
         static ESession()
@@ -40,7 +41,7 @@ namespace System.DJ.ImplementFactory.Commons
                 foreach (var item in kvDic)
                 {
                     types.Clear();
-                    item.Value.Foreach(ipData =>
+                    item.Value.Foreach((typeName, ipData) =>
                     {
                         keys.Clear();
                         ipData.Foreach(gd =>
@@ -48,6 +49,7 @@ namespace System.DJ.ImplementFactory.Commons
                             if (dt >= gd.end)
                             {
                                 keys.Add(gd.key);
+                                printLog(gd, "Remove TypeName: {0}, EndTime: {1}".ExtFormat(typeName, gd.end.ToTimeString()));
                             }
                         });
 
@@ -144,6 +146,7 @@ namespace System.DJ.ImplementFactory.Commons
                     .SetSrcType(srcType);
 
                 srcIPData.Add(srcType, gd);
+                printLog(gd, "Add StartTime: {0}".ExtFormat(dt.ToTimeString()));
             }
         }
 
@@ -169,10 +172,23 @@ namespace System.DJ.ImplementFactory.Commons
                 string client_ip = AbsActionFilterAttribute.GetIP(httpContext);
                 SrcIPData srcIPData = null;
                 kvDic.TryGetValue(client_ip, out srcIPData);
-                if (null == srcIPData) return gd;
+                if (null == srcIPData)
+                {
+                    NotExist(client_ip);
+                    return gd;
+                }
                 IPData iPData = srcIPData[dataFromClass];
-                if (null == iPData) return gd;
+                if (null == iPData)
+                {
+                    NotExist(dataFromClass.FullName);
+                    return gd;
+                }
                 gd = iPData[key];
+
+                if (null == gd)
+                {
+                    NotExist(key);
+                }
 
                 iPData.Remove(key);
                 srcIPData.Remove(dataFromClass);
@@ -181,6 +197,40 @@ namespace System.DJ.ImplementFactory.Commons
                     kvDic.Remove(client_ip);
                 }
                 return gd;
+            }
+        }
+
+        private static void NotExist(string flag)
+        {
+            lock (_ESessionLock)
+            {
+                if ((false == ImplementAdapter.dbInfo1.IsPrintSQLToTrace)
+                    && (false == ImplementAdapter.dbInfo1.IsPrintSqlToLog)) return;
+                string txt = "Count: {0}".ExtFormat(kvDic.Count);
+                string s = "";
+                string val = "";
+                foreach (var item in kvDic)
+                {
+                    if (null == item.Value) continue;
+                    item.Value.Foreach((typeName, ipdata) =>
+                    {
+                        if (null == ipdata) return;
+                        ipdata.Foreach(gd =>
+                        {
+                            if (null == gd) return;
+                            val = "";
+                            if (null != gd.data)
+                            {
+                                if (gd.GetType().IsBaseType()) val = gd.data.ToString();
+                            }
+                            s = "type: {0}, IP: {1}, Key: {2}, Value: {3}".ExtFormat(typeName, gd.ip, gd.key, val);
+                            DJTools.append(ref txt, s);
+                        });
+                    });
+                }
+                string printTag = "++++++++++++++++++ ESession get data failly by {0} ++++++++++++++++++++++";
+                printTag = printTag.ExtFormat(flag);
+                DbAdapter.printSql(autoCall, txt, printTag);
             }
         }
 
@@ -211,6 +261,26 @@ namespace System.DJ.ImplementFactory.Commons
             }
 
             return srcType;
+        }
+
+        private static void printLog(GData gd, string tag)
+        {
+            lock (_ESessionLock)
+            {
+                if ((false == ImplementAdapter.dbInfo1.IsPrintSQLToTrace)
+                    && (false == ImplementAdapter.dbInfo1.IsPrintSqlToLog)) return;
+                string printTag = "++++++++++++++++++ ESession {0} {1} ++++++++++++++++++++++";
+                printTag = printTag.ExtFormat(tag, DateTime.Now.ToTimeString());
+                string val = "";
+                if (null != gd.data)
+                {
+                    if (gd.GetType().IsBaseType()) val = gd.data.ToString();
+                }
+                string txt = "IP: {0}, Key: {1}, Value: {2}".ExtFormat(gd.ip, gd.key, val);
+                DJTools.append(ref txt, "StartTime: {0}", gd.start.ToTimeString());
+                DJTools.append(ref txt, "  EndTime: {0}", gd.end.ToTimeString());
+                DbAdapter.printSql(autoCall, txt, printTag);
+            }
         }
 
         class IPData
@@ -314,6 +384,14 @@ namespace System.DJ.ImplementFactory.Commons
                 foreach (var item in dic)
                 {
                     callback(item.Value);
+                }
+            }
+
+            public void Foreach(Action<string, IPData> callback)
+            {
+                foreach (var item in dic)
+                {
+                    callback(item.Key, item.Value);
                 }
             }
 

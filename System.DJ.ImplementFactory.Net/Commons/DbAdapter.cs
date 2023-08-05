@@ -169,14 +169,14 @@ namespace System.DJ.ImplementFactory.Commons
         }
 
         private static object _DbAdapter = new object();
-        public static void printSql(AutoCall autoCall, string sql)
+        public static void printSql(AutoCall autoCall, string sql, string printTag)
         {
             lock (_DbAdapter)
             {
                 if (IsPrintSQLToTrace)
                 {
                     Trace.WriteLine(sql);
-                    Trace.WriteLine("++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++");
+                    Trace.WriteLine(printTag);
                 }
 
                 if (IsPrintSqlToLog)
@@ -184,6 +184,15 @@ namespace System.DJ.ImplementFactory.Commons
                     if (null == autoCall) autoCall = new AutoCall();
                     autoCall.e(sql, ErrorLevels.debug);
                 }
+            }
+        }
+
+        public static void printSql(AutoCall autoCall, string sql)
+        {
+            lock(_DbAdapter)
+            {
+                string printTag = "++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++";
+                printSql(autoCall, sql, printTag);
             }
         }
 

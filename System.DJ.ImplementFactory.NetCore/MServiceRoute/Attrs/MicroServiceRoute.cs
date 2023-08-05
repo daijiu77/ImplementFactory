@@ -92,20 +92,20 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         /// <summary>
         /// Service interface local mapping interface class identifier
         /// </summary>
-        /// <param name="RouteName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
+        /// <param name="RouteNameOrServiceName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
         /// <param name="ControllerName">Remote Service Interface Controller Name</param>
-        public MicroServiceRoute(string RouteName, string ControllerName)
+        public MicroServiceRoute(string RouteNameOrServiceName, string ControllerName)
         {
-            msr(this, RouteName, ControllerName);
+            msr(this, RouteNameOrServiceName, ControllerName);
         }
 
         /// <summary>
         /// Service interface local mapping interface class identifier,The default current interface class name is the remote service interface controller name.
         /// </summary>
-        /// <param name="RouteName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
-        public MicroServiceRoute(string RouteName)
+        /// <param name="RouteNameOrServiceName">The 'Name' attribute value of the 'Route' node in the 'MicroServiceRoute.xml' configuration file.</param>
+        public MicroServiceRoute(string RouteNameOrServiceName)
         {
-            msr(this, RouteName, null);
+            msr(this, RouteNameOrServiceName, null);
         }
 
         /// <summary>

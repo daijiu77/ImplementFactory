@@ -613,6 +613,11 @@ namespace System.DJ.ImplementFactory.Commons
             return count;
         }
 
+        public static string ToTimeString(this DateTime dt)
+        {
+            return dt.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
         /// <summary>
         /// Object property-relationship mapping assignments
         /// </summary>
