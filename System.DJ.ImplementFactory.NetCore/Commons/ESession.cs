@@ -39,6 +39,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_ESessionLock)
             {
+                if (0 == kvDic.Count) return;
                 List<string> keys = new List<string>();
                 List<string> client_ips = new List<string>();
                 List<Type> types = new List<Type>();
@@ -72,6 +73,7 @@ namespace System.DJ.ImplementFactory.Commons
                     if (!string.IsNullOrEmpty(ip)) client_ips.Add(ip);
                 }
 
+                if (0 == client_ips.Count) return;
                 foreach (var item in client_ips)
                 {
                     kvDic.Remove(item);
