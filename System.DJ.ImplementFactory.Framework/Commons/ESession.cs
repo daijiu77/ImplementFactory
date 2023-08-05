@@ -11,6 +11,9 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class ESession
     {
+        /// <summary>
+        /// key: client_ip
+        /// </summary>
         private static Dictionary<string, SrcIPData> kvDic = new Dictionary<string, SrcIPData>();
         private static AutoCall autoCall = new AutoCall();
         private const int defMinute = 3;
@@ -37,7 +40,9 @@ namespace System.DJ.ImplementFactory.Commons
             lock (_ESessionLock)
             {
                 List<string> keys = new List<string>();
+                List<string> client_ips = new List<string>();
                 List<Type> types = new List<Type>();
+                string ip = "";
                 foreach (var item in kvDic)
                 {
                     types.Clear();
@@ -56,69 +61,36 @@ namespace System.DJ.ImplementFactory.Commons
                         if (0 < keys.Count)
                         {
                             types.Add(ipData.SrcType);
+                            foreach (var k in keys)
+                            {
+                                ipData.Remove(k);
+                            }
                         }
-                        RemoveGData(keys, ipData);
                     });
-                    RemoveIPData(types, item.Value);
-                }
-                RemoveKvDic();
-            }
-        }
-
-        private static void RemoveKvDic()
-        {
-            lock (_ESessionLock)
-            {
-                int n = 0;
-                int size = kvDic.Count;
-                List<string> list = new List<string>();
-                foreach (var item in kvDic)
-                {
-                    list.Add(item.Key);
+                    ip = "";
+                    RemoveIPData(types, item.Value, ref ip);
+                    if (!string.IsNullOrEmpty(ip)) client_ips.Add(ip);
                 }
 
-                string key = "";
-                while (n < size)
+                foreach (var item in client_ips)
                 {
-                    key = list[n];
-                    if (0 == kvDic[key].Count)
-                    {
-                        list.Remove(key);
-                        kvDic.Remove(key);
-                        size = kvDic.Count;
-                        n = 0;
-                    }
-                    else
-                    {
-                        n++;
-                    }
+                    kvDic.Remove(item);
                 }
             }
         }
 
-        private static void RemoveIPData(List<Type> types, SrcIPData srcIPData)
+        private static void RemoveIPData(List<Type> types, SrcIPData srcIPData, ref string client_ip)
         {
             lock (_ESessionLock)
             {
+                client_ip = "";
                 if (null == types) return;
                 if (0 == types.Count) return;
                 foreach (var item in types)
                 {
                     srcIPData.Remove(item);
                 }
-            }
-        }
-
-        private static void RemoveGData(List<string> keys, IPData ipData)
-        {
-            lock (_ESessionLock)
-            {
-                if (null == keys) return;
-                if (0 == keys.Count) return;
-                foreach (string key in keys)
-                {
-                    ipData.Remove(key);
-                }
+                if (0 == srcIPData.Count) client_ip = srcIPData.client_ip;
             }
         }
 
@@ -132,6 +104,7 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null == srcIPData)
                 {
                     srcIPData = new SrcIPData();
+                    srcIPData.client_ip = client_ip;
                     kvDic.Add(client_ip, srcIPData);
                 }
 
@@ -416,6 +389,7 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
+            public string client_ip { get; set; }
         }
     }
 
