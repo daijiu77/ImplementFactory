@@ -39,6 +39,7 @@ namespace System.DJ.ImplementFactory.Commons
         {
             lock (_ESessionLock)
             {
+                if (0 == kvDic.Count) return;
                 List<string> keys = new List<string>();
                 List<string> client_ips = new List<string>();
                 List<Type> types = new List<Type>();
@@ -72,6 +73,7 @@ namespace System.DJ.ImplementFactory.Commons
                     if (!string.IsNullOrEmpty(ip)) client_ips.Add(ip);
                 }
 
+                if (0 == client_ips.Count) return;
                 foreach (var item in client_ips)
                 {
                     kvDic.Remove(item);
@@ -169,6 +171,7 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     kvDic.Remove(client_ip);
                 }
+                printLog(gd, "Remove TypeName: {0}, EndTime: {1}".ExtFormat(dataFromClass.FullName, gd.end.ToTimeString()));
                 return gd;
             }
         }
@@ -242,16 +245,15 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 if ((false == ImplementAdapter.dbInfo1.IsPrintSQLToTrace)
                     && (false == ImplementAdapter.dbInfo1.IsPrintSqlToLog)) return;
-                string printTag = "++++++++++++++++++ ESession {0} {1} ++++++++++++++++++++++";
+                string printTag = "++++++++++++++++++ ESession {0} curTime: {1} ++++++++++++++++++++++";
                 printTag = printTag.ExtFormat(tag, DateTime.Now.ToTimeString());
                 string val = "";
                 if (null != gd.data)
                 {
-                    if (gd.GetType().IsBaseType()) val = gd.data.ToString();
+                    if (gd.data.GetType().IsBaseType()) val = gd.data.ToString();
                 }
-                string txt = "IP: {0}, Key: {1}, Value: {2}".ExtFormat(gd.ip, gd.key, val);
-                DJTools.append(ref txt, "StartTime: {0}", gd.start.ToTimeString());
-                DJTools.append(ref txt, "  EndTime: {0}", gd.end.ToTimeString());
+                string txt = "IP: {0}, Key: {1}, Value: {2}, StartTime: {3}, EndTime: {4}"
+                    .ExtFormat(gd.ip, gd.key, val, gd.start.ToTimeString(), gd.end.ToTimeString());
                 DbAdapter.printSql(autoCall, txt, printTag);
             }
         }
