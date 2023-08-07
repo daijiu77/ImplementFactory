@@ -111,7 +111,9 @@ namespace System.DJ.ImplementFactory.Commons
                 }
 
                 if (0 >= liveCycle_second) liveCycle_second = 60 * defMinute;
-                Type srcType = GetSrcType();
+                CommonMethods commonMethods = new CommonMethods();
+                Type srcType = commonMethods.GetSrcType<ESession>();
+                if (null == srcType) srcType = typeof(ESession);
                 DateTime dt = DateTime.Now;
 
                 GData gd = new GData(key, value);
@@ -152,7 +154,14 @@ namespace System.DJ.ImplementFactory.Commons
                     NotExist(client_ip);
                     return gd;
                 }
+                
                 IPData iPData = srcIPData[dataFromClass];
+                if (null == iPData)
+                {
+                    dataFromClass = typeof(ESession);
+                    iPData = srcIPData[dataFromClass];
+                }
+
                 if (null == iPData)
                 {
                     NotExist(dataFromClass.FullName);
@@ -199,8 +208,7 @@ namespace System.DJ.ImplementFactory.Commons
                             {
                                 if (gd.GetType().IsBaseType()) val = gd.data.ToString();
                             }
-                            s = "type: {0}, IP: {1}, Key: {2}, Value: {3}".ExtFormat(typeName, gd.ip, gd.key, val);
-                            DJTools.append(ref txt, s);
+                            txt += " <----> type: {0}, IP: {1}, Key: {2}, Value: {3}".ExtFormat(typeName, gd.ip, gd.key, val);
                         });
                     });
                 }
@@ -208,35 +216,6 @@ namespace System.DJ.ImplementFactory.Commons
                 printTag = printTag.ExtFormat(flag);
                 DbAdapter.printSql(autoCall, txt, printTag);
             }
-        }
-
-        private static Type GetSrcType()
-        {
-            StackTrace trace = new StackTrace();
-            StackFrame stackFrame = null;
-            MethodBase mb = null;
-            Type meType = typeof(ESession);
-            Type pt = null;
-            Type srcType = null;
-            const int maxNum = 10;
-            int num = 0;
-            while (num <= maxNum)
-            {
-                stackFrame = trace.GetFrame(num);
-                if (null == stackFrame) break;
-                mb = stackFrame.GetMethod();
-                if (null == mb) break;
-                pt = mb.DeclaringType;
-                if (null == pt) break;
-                if (pt != meType)
-                {
-                    srcType = pt;
-                    break;
-                }
-                num++;
-            }
-
-            return srcType;
         }
 
         private static void printLog(GData gd, string tag)
