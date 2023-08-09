@@ -183,20 +183,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return s;
         }
 
-        public string GetResult(object me, string routeName, string uri, string controller, string action, string contractKey, MethodTypes methodTypes, object data)
+        public string GetResult(MicroServiceMethodImpl microServiceMethodImpl, object me, string routeName, string uri, string controller, string action, string contractKey, MethodTypes methodTypes, object data)
         {
             string result = null;
             if (null == httpHelper) return result;
             IExtMSDataVisitor extMSDataVisitor = null;
             if (null != me) extMSDataVisitor = me as IExtMSDataVisitor;
+            IMSAllot mSAllot1 = mSAllot;
             if (null != extMSDataVisitor)
             {
-                if (null != extMSDataVisitor.mSAllot) mSAllot = extMSDataVisitor.mSAllot;
+                if (null != extMSDataVisitor.mSAllot) mSAllot1 = extMSDataVisitor.mSAllot;
             }
+
+            microServiceMethodImpl.mSAllot = mSAllot1;
             object data1 = data;
-            if (null != mSAllot)
+
+            if (null != mSAllot1)
             {
-                object dt = mSAllot.GetSendData(routeName, me, extMSDataVisitor);
+                object dt = mSAllot1.GetSendData(routeName, me, extMSDataVisitor);
                 if (null != dt) data1 = dt;
             }
 
@@ -205,9 +209,9 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             actionName = InitUri(actionName);
             
             string[] arr = null;
-            if (null != mSAllot)
+            if (null != mSAllot1)
             {
-                string[] uri1 = mSAllot.UrlCollection(routeName, me, extMSDataVisitor);
+                string[] uri1 = mSAllot1.UrlCollection(routeName, me, extMSDataVisitor);
                 if (null != uri1)
                 {
                     if (0 < uri1.Length)
@@ -251,11 +255,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
             Dictionary<string, string> headers = null;
             string paras = "";
-            if (null != mSAllot)
+            if (null != mSAllot1)
             {
                 string action1 = actionName;
                 if (-1 != action1.IndexOf("?")) action1 = action1.Substring(0, action1.IndexOf("?"));
-                Dictionary<string, string> parameters = mSAllot.HttpParameters(routeName, controller, action1, me, extMSDataVisitor);
+                Dictionary<string, string> parameters = mSAllot1.HttpParameters(routeName, controller, action1, me, extMSDataVisitor);
                 if (null != parameters)
                 {
                     foreach (var item in parameters)
@@ -276,18 +280,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         }
                     }
                 }
-                headers = mSAllot.HttpHeaders(routeName, controller, action1, me, extMSDataVisitor);
+                headers = mSAllot1.HttpHeaders(routeName, controller, action1, me, extMSDataVisitor);
             }
 
             if (null == headers) headers = new Dictionary<string, string>();
 
             MethodTypes methodTypes1 = methodTypes;
-            if (null != mSAllot)
+            if (null != mSAllot1)
             {
-                string contract_key = mSAllot.GetContractKey(routeName, me, extMSDataVisitor);
+                string contract_key = mSAllot1.GetContractKey(routeName, me, extMSDataVisitor);
                 if (!string.IsNullOrEmpty(contract_key)) contractKey = contract_key;
 
-                MethodTypes mts = mSAllot.GetMethodTypes(routeName, me, extMSDataVisitor);
+                MethodTypes mts = mSAllot1.GetMethodTypes(routeName, me, extMSDataVisitor);
                 if (MethodTypes.None != mts)
                 {
                     methodTypes1 = mts;
@@ -310,7 +314,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 string errMsg = "The service is unavailable";
                 if (1 < arr.Length) errMsg = "The service cluster is not reachable";
-                if (null != mSAllot) mSAllot.HttpVisitingException(routeName, string.Join(';', arr), errMsg, me, extMSDataVisitor);
+                if (null != mSAllot1) mSAllot1.HttpVisitingException(routeName, string.Join(';', arr), errMsg, me, extMSDataVisitor);
                 return result;
             }
             url = InitUri(arr[index]);
@@ -318,11 +322,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             httpAddr = http1 + paras;
             httpHelper.SendData(httpAddr, headers, data, true, methodTypes1, (resultData, err) =>
             {
-                if (null != mSAllot)
+                if (null != mSAllot1)
                 {
                     try
                     {
-                        mSAllot.HttpResponse(routeName, controller, actionName, url, resultData);
+                        mSAllot1.HttpResponse(routeName, controller, actionName, url, resultData);
                     }
                     catch (Exception)
                     {
@@ -344,11 +348,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         isTimeout = SetTimeoutIndex(routeName, httpAddr, urlSize, index);
 
                     }
-                    if (null != mSAllot)
+                    if (null != mSAllot1)
                     {
                         try
                         {
-                            mSAllot.HttpVisitingException(routeName, httpAddr, err, me, extMSDataVisitor);
+                            mSAllot1.HttpVisitingException(routeName, httpAddr, err, me, extMSDataVisitor);
                         }
                         catch (Exception)
                         {

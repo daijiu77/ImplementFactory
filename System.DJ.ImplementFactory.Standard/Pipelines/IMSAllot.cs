@@ -68,5 +68,7 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <param name="url">Http address</param>
         /// <param name="resultData">The data from http request</param>
         void HttpResponse(string routeName, string controllerName, string actionName, string url, object resultData);
+
+        object ResultToData<T>(string routeName, string controllerName, string actionName, string url, object resultData);
     }
 }

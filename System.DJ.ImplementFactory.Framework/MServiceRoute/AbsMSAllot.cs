@@ -45,6 +45,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             HttpResponse(routeName, controllerName, actionName, url, resultData);
         }
 
+        object IMSAllot.ResultToData<T>(string routeName, string controllerName, string actionName, string url, object resultData)
+        {
+            return ResultToData<T>(routeName, controllerName, actionName, url, resultData);
+        }
+
         /// <summary>
         /// Sets the Headers for the HttpClient access operation
         /// </summary>
@@ -108,6 +113,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public virtual void HttpResponse(string routeName, string controllerName, string actionName, string url, object resultData)
         {
             //
+        }
+
+        public object ResultToData<T>(string routeName, string controllerName, string actionName, string url, object resultData)
+        {
+            return null;
         }
     }
 }

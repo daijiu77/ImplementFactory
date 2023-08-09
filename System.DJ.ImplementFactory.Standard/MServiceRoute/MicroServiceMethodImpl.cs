@@ -342,7 +342,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public T MSVisitor<T>(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            string result = dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            string result = dataVisitor.GetResult(this, me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
             if (string.IsNullOrEmpty(result)) return default(T);
             Type type = typeof(T);
             if (type == typeof(Guid))
@@ -381,7 +381,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public void ExecMSVisitor(object me, string routeName, string url, string controllerName, string actionName, string contractKey, object data)
         {
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            dataVisitor.GetResult(this, me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
         }
+
+        public IMSAllot mSAllot { get; set; }
+
     }
 }

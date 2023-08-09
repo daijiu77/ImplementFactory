@@ -344,7 +344,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             GetUrlInfo(routeName, ref url, ref contractKey);
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            string result = dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            string result = dataVisitor.GetResult(this, me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            if (null != mSAllot)
+            {
+                object tData = mSAllot.ResultToData<T>(routeName, controllerName, actionName, url, result);                
+                if (null != tData)
+                {
+                    return (T)tData;
+                }
+            }
             if (string.IsNullOrEmpty(result)) return default(T);
             Type type = typeof(T);
             if (type == typeof(Guid))
@@ -388,8 +396,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         {
             GetUrlInfo(routeName, ref url, ref contractKey);
             MSDataVisitor dataVisitor = new MSDataVisitor();
-            dataVisitor.GetResult(me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
+            dataVisitor.GetResult(this, me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
         }
+
+        public IMSAllot mSAllot { get; set; }
 
         private static string httpStr = "";
         private static string areaName = "";
