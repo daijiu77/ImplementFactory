@@ -58,5 +58,15 @@ namespace System.DJ.ImplementFactory.Pipelines
         /// <param name="url">Http address</param>
         /// <param name="exceptionMessage">Exception message</param>
         void HttpVisitingException(string routeName, string url, string exceptionMessage, object arg, IExtMSDataVisitor extMSDataVisitor);
+
+        /// <summary>
+        /// Receive the data from http request.
+        /// </summary>
+        /// <param name="routeName">Target service name</param>
+        /// <param name="controllerName">Controller name</param>
+        /// <param name="actionName">The name of the routing action method</param>
+        /// <param name="url">Http address</param>
+        /// <param name="resultData">The data from http request</param>
+        void HttpResponse(string routeName, string controllerName, string actionName, string url, object resultData);
     }
 }

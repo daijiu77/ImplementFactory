@@ -40,6 +40,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             return GetSendData(routeName, arg, extMSDataVisitor);
         }
 
+        void IMSAllot.HttpResponse(string routeName, string controllerName, string actionName, string url, object resultData)
+        {
+            HttpResponse(routeName, controllerName, actionName, url, resultData);
+        }
+
         /// <summary>
         /// Sets the Headers for the HttpClient access operation
         /// </summary>
@@ -98,6 +103,11 @@ namespace System.DJ.ImplementFactory.MServiceRoute
         public virtual object GetSendData(string routeName, object arg, IExtMSDataVisitor extMSDataVisitor)
         {
             return null;
+        }
+
+        public virtual void HttpResponse(string routeName, string controllerName, string actionName, string url, object resultData)
+        {
+            //
         }
     }
 }

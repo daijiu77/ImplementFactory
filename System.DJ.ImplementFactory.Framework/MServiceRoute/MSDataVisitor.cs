@@ -13,7 +13,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
     {
         private IHttpHelper httpHelper;
 
-        [AutoCall]
+        [AutoCall, SingleCall]
         private IMSAllot mSAllot;
 
         private const string IPAddr = "IPAddress";
@@ -318,10 +318,23 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             httpAddr = http1 + paras;
             httpHelper.SendData(httpAddr, headers, data, true, methodTypes1, (resultData, err) =>
             {
+                if (null != mSAllot)
+                {
+                    try
+                    {
+                        mSAllot.HttpResponse(routeName, controller, actionName, url, resultData);
+                    }
+                    catch (Exception)
+                    {
+
+                        //throw;
+                    }
+                }
+
                 if (string.IsNullOrEmpty(err))
                 {
                     if (null == resultData) resultData = "";
-                    result = resultData.ToString();
+                    result = resultData.ToString();                    
                 }
                 else
                 {
@@ -331,7 +344,18 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                         isTimeout = SetTimeoutIndex(routeName, httpAddr, urlSize, index);
 
                     }
-                    if (null != mSAllot) mSAllot.HttpVisitingException(routeName, httpAddr, err, me, extMSDataVisitor);
+                    if (null != mSAllot)
+                    {
+                        try
+                        {
+                            mSAllot.HttpVisitingException(routeName, httpAddr, err, me, extMSDataVisitor);
+                        }
+                        catch (Exception)
+                        {
+
+                            //throw;
+                        }
+                    }
                 }
 
             });
