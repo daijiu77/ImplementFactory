@@ -115,7 +115,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             //
         }
 
-        public object ResultToData<T>(string routeName, string controllerName, string actionName, string url, object resultData)
+        public virtual object ResultToData<T>(string routeName, string controllerName, string actionName, string url, object resultData)
         {
             return null;
         }

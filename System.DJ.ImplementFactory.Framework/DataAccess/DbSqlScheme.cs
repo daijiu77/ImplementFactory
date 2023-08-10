@@ -342,6 +342,11 @@ namespace System.DJ.ImplementFactory.DataAccess
                     ele.SetMethodValue(fieldName, _vObj, _vObj);
                     //throw;
                 }
+
+                if (null != (ele as IEntityCopy))
+                {
+                    ((IEntityCopy)ele).AssignmentNo = false;
+                }
             });
             return _vObj;
         }
