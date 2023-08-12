@@ -107,7 +107,7 @@ namespace System.DJ.ImplementFactory.Commons
                 IgnoreError = false;
                 //throw;
             }
-            
+
             if (null == conn) return mbool;
 
             if (null != dbConnectionState)
@@ -189,7 +189,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         public static void printSql(AutoCall autoCall, string sql)
         {
-            lock(_DbAdapter)
+            lock (_DbAdapter)
             {
                 string printTag = "++++++++++++++++++++ SQL Expression +++++++++++++++++++++++++++";
                 printSql(autoCall, sql, printTag);
@@ -233,11 +233,21 @@ namespace System.DJ.ImplementFactory.Commons
                     }
                     if (null == cmd) return;
 
+                    string paraJsonData = "";
                     if (null != parameters)
                     {
+                        string paraVal = "";
                         foreach (var item in parameters)
                         {
                             cmd.Parameters.Add(item);
+                            paraVal = GetParaJsonValue(item);
+                            paraJsonData += ", \"{0}\": {1}".ExtFormat(item.ParameterName, paraVal);
+                        }
+
+                        if (!string.IsNullOrEmpty(paraJsonData))
+                        {
+                            paraJsonData = paraJsonData.Substring(1).Trim();
+                            paraJsonData = "{" + paraJsonData + "}";
                         }
                     }
 
@@ -254,6 +264,10 @@ namespace System.DJ.ImplementFactory.Commons
 
                         err = ex.ToString();
                         err += "\r\n\r\n" + sql;
+                        if (!string.IsNullOrEmpty(paraJsonData))
+                        {
+                            err += "\r\n\r\n" + paraJsonData;
+                        }
                         if (null != autoCall && false == IgnoreError)
                         {
                             autoCall.ExecuteException(this.GetType(), this, "Exec", null, new Exception(err));
@@ -298,7 +312,7 @@ namespace System.DJ.ImplementFactory.Commons
             {
                 object vObj = default(T);
                 if (typeof(T) == typeof(DataTable))
-                {                    
+                {
                     try
                     {
                         DataTable dt = null;
@@ -355,6 +369,43 @@ namespace System.DJ.ImplementFactory.Commons
             if (null == conn) return;
             conn.Close();
             conn.Dispose();
+        }
+
+        private string GetParaJsonValue(DbParameter item)
+        {
+            string paraVal = "";
+            if (DbType.Binary == item.DbType)
+            {
+                if (null != item.Value)
+                {
+                    paraVal = "\"byte[{0}]\"".ExtFormat(((byte[])item.Value).Length);
+                }
+                else
+                {
+                    paraVal = "\"The value is null that its type is byte[]\"";
+                }
+            }
+            else if (null == item.Value || DBNull.Value == item.Value)
+            {
+                paraVal = "null";
+            }
+            else
+            {
+                Type pt = item.Value.GetType();
+                if ((typeof(Guid) == pt) || (typeof(Guid?) == pt) || (typeof(string) == pt))
+                {
+                    paraVal = "\"{0}\"".ExtFormat(item.Value.ToString().Replace("\"", @"\"""));
+                }
+                else if ((typeof(DateTime) == pt) || (typeof(DateTime?) == pt))
+                {
+                    paraVal = "\"{0}\"".ExtFormat(((DateTime)item.Value).ToString("yyyy-MM-dd HH:mm:ss"));
+                }
+                else
+                {
+                    paraVal = "{0}".ExtFormat(item.Value);
+                }
+            }
+            return paraVal;
         }
 
         ~DbAdapter()
