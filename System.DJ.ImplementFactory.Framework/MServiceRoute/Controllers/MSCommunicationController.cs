@@ -237,11 +237,35 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             SvrAPIOption option = svrApi.GetSvrAPIOption();
             string callerIP = AbsActionFilterAttribute.GetIP(this.HttpContext);
 
+            string url_src = "{0}://{1}:{2}/{3}/{4}";
+            string url = "";
+            IHttpHelper httpHelper = new HttpHelper();
+            if (1 < svrApi.Items.Count)
+            {
+                const int maxNum = 100;
+                int num = 0;
+                int ncount = svrApi.Items.Count;
+                string msg = "";
+                while (maxNum > num)
+                {
+                    num++;
+                    url = url_src.ExtFormat(option.HttpType,
+                    option.IP,
+                    option.Port,
+                    MSConst.MSCommunication,
+                    MSConst.SysTest);
+                    httpHelper.SendData(url, null, null, true, MethodTypes.Post, 5, (res, err) =>
+                    {
+                        msg = err;
+                    });
+                    if (num == ncount) break;
+                    if (string.IsNullOrEmpty(msg)) break;
+                    option = svrApi.GetSvrAPIOption();
+                }
+            }
+
             if (option.IP.Equals(MSConst.Localhost) && (false == callerIP.Equals(MSConst.Localhost)))
-            {                
-                string url_src = "{0}://{1}:{2}/{3}/{4}";
-                string url = "";
-                IHttpHelper httpHelper = new HttpHelper();
+            {
                 url = url_src.ExtFormat(
                 option.HttpType,
                 callerIP,
@@ -285,17 +309,24 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
 
         private ActionResult GetSvrAPIOptionResult()
         {
-            string json = GetSvrAPIOption(null,null, null, null);
+            string json = GetSvrAPIOption(null, null, null, null);
             return Content(json);
         }
 
         private string GetSvrAPIOption(string httpType, string ip, string port, string contractKey)
         {
+            string key = contractKey;
+            if (!string.IsNullOrEmpty(key))
+            {
+                string kv=Guid.NewGuid().ToString();
+                TCK(kv, false);
+                key += MSConst.keySplit + kv;
+            }
             SvrAPIOption option1 = new SvrAPIOption();
             option1.HttpType = httpType;
             option1.IP = ip;
             option1.Port = port;
-            option1.ContractKey = contractKey;
+            option1.ContractKey = key;
             string json = JsonConvert.SerializeObject(option1);
             return json;
         }

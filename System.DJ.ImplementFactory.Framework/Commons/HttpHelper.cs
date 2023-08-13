@@ -12,7 +12,7 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class HttpHelper : IHttpHelper
     {
-        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, MethodTypes methodTypes, Action<object, string> action)
+        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, MethodTypes methodTypes, int timeoutOfSecond, Action<object, string> action)
         {
             byte[] dts = null;
             string mvType = "application/octet-stream";
@@ -89,6 +89,7 @@ namespace System.DJ.ImplementFactory.Commons
 
             int timeout = ImplementAdapter.dbInfo1.HttpTimeout_Second;
             if (0 >= timeout) timeout = 30;
+            if (0 < timeoutOfSecond) timeout = timeoutOfSecond;
             HttpClient httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(timeout);
             if (null != heads)
@@ -182,7 +183,12 @@ namespace System.DJ.ImplementFactory.Commons
 
         void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, Action<object, string> action)
         {
-            ((IHttpHelper)this).SendData(uri, heads, data, isJson, MethodTypes.Post, action);
+            ((IHttpHelper)this).SendData(uri, heads, data, isJson, MethodTypes.Post, -1, action);
+        }
+
+        void IHttpHelper.SendData(string uri, Dictionary<string, string> heads, object data, bool isJson, MethodTypes methodTypes, Action<object, string> action)
+        {
+            ((IHttpHelper)this).SendData(uri, heads, data, isJson, methodTypes, -1, action);
         }
     }
 }

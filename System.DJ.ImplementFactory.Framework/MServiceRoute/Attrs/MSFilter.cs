@@ -24,6 +24,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
         private static string tokenKeyName = "token";
 
         private static Dictionary<string, TokenObj> tokenKV = new Dictionary<string, TokenObj>();
+        /// <summary>
+        /// key: clientIP@contractKey, value: svrKey
+        /// </summary>
+        private static Dictionary<string, string> svrKeyDic = new Dictionary<string, string>();
         private static MSFilter mSFilter = new MSFilter();
 
         static MSFilter()
@@ -79,6 +83,34 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     tokenKV.Remove(item.token);
                 }
                 tokens.Clear();
+            }
+        }
+
+        private static string LegalSvrKey(string clientIP, string contractKey, string svrKey, bool isSave)
+        {
+            lock (mSFilter)
+            {
+                string svr_key = "";
+                if (string.IsNullOrEmpty(clientIP)
+                    || string.IsNullOrEmpty(contractKey)
+                    || string.IsNullOrEmpty(svrKey)) return svr_key;
+
+                string key = clientIP + MSConst.keySplit + contractKey;                
+                svrKeyDic.TryGetValue(key, out svr_key);
+                if (!svrKey.Equals(svr_key))
+                {
+                    svr_key = "";
+                }
+
+                if (isSave)
+                {
+                    if (string.IsNullOrEmpty(svr_key) && (false == string.IsNullOrEmpty(svrKey)))
+                    {
+                        svrKeyDic[key] = svrKey;
+                    }
+                }
+                
+                return svr_key;
             }
         }
 
@@ -349,24 +381,35 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                 if (-1 != contractVal1.IndexOf(MSConst.keySplit))
                 {
                     int n = contractVal1.LastIndexOf(MSConst.keySplit);
-                    svrKey = contractVal1.Substring(n + MSConst.keySplit.Length);
-                    mbool = AuthenticateKey(svrKey);
-                    if (mbool)
+                    string svrKey1 = contractVal1.Substring(n + MSConst.keySplit.Length);
+                    string contractVal3 = contractVal1.Substring(0, n);
+                    svrKey = LegalSvrKey(clientIP, contractVal3, svrKey1, false);
+                    if(string.IsNullOrEmpty(svrKey))
                     {
-                        contractVal1 = contractVal1.Substring(0, n);
+                        mbool = AuthenticateKey(svrKey1);
+                        if (mbool)
+                        {
+                            contractVal1 = contractVal3;
+                            svrKey = svrKey1;
+                        }
+                        else
+                        {
+                            svrKey = "";
+                        }
                     }
                     else
                     {
-                        svrKey = "";
+                        contractVal1 = contractVal3;
                     }
                 }
+
                 string contractVal2 = MSServiceImpl.GetContractValue();
                 if (!contractVal1.Equals(contractVal2))
                 {
                     throw new Exception(err);
                 }
 
-                PrintIpToLogs("IP: " + clientIP);
+                PrintIpToLogs("IP: " + clientIP);                
                 if (string.IsNullOrEmpty(svrKey))
                 {
                     attr = mi.GetCustomAttribute(typeof(MSClientRegisterAction), true);
@@ -374,6 +417,10 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
                     {
                         throw new Exception(err);
                     }
+                }
+                else
+                {
+                    LegalSvrKey(clientIP, contractVal1, svrKey, true);
                 }
             }
 
