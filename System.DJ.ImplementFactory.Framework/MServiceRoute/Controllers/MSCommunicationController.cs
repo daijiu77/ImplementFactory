@@ -219,9 +219,16 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
             return Content(json);
         }
 
+        /// <summary>
+        /// Get target service url information.
+        /// </summary>
+        /// <param name="serviceName">Target service name</param>
+        /// <param name="callerPort">A port of service of call method 'GetUrlInfoByServiceName'</param>
+        /// <returns></returns>
         [HttpPost, Route("GetUrlInfoByServiceName")]
         public ActionResult GetUrlInfoByServiceName(string serviceName, string callerPort)
         {
+            Response.ContentType = "application/json";
             SvrAPISchema svrAPISchema = new SvrAPISchema();
             SvrAPI svrApi = svrAPISchema.GetServiceAPIByServiceName(serviceName);
             if (null == svrApi) return GetSvrAPIOptionResult();

@@ -1,6 +1,6 @@
 ﻿namespace System.DJ.ImplementFactory.MServiceRoute
 {
-    internal class MSConst
+    public class MSConst
     {
         public const string ResourceKey = "ResourceKey";
         public const string ServiceFlagDic = "ServiceFlagDic";

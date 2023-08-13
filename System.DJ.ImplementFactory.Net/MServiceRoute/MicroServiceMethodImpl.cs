@@ -458,9 +458,12 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             {
                 msUrl += "/";
             }
-            msUrl += "{0}/{1}?serviceName={2}&port={3}".ExtFormat(MSConst.MSCommunication,
+            msUrl += "{0}/{1}?{2}={3}&{4}={5}".ExtFormat(
+                MSConst.MSCommunication,
                 MSConst.GetUrlInfoByServiceName,
+                MSConst.GetUrlInfoByServiceName_serviceName,
                 serviceName,
+                MSConst.GetUrlInfoByServiceName_callerPort,
                 MicroServiceRoute.Port);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
