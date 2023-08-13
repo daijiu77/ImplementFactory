@@ -207,7 +207,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string actionName = InitActionName(action, data1);
             controller = InitUri(controller);
             actionName = InitUri(actionName);
-            
+
             string[] arr = null;
             if (null != mSAllot1)
             {
@@ -245,7 +245,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     }
                     arr = list.ToArray();
                 }
-                else if(!string.IsNullOrEmpty(uri))
+                else if (!string.IsNullOrEmpty(uri))
                 {
                     arr = new string[] { uri };
                 }
@@ -304,6 +304,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string url = "";
             string http1 = "";
             string httpAddr = "";
+            string url1 = "";
+            string contractkey1 = "";
             bool isTimeout = false;
             int urlSize = arr.Length;
             Regex badRg = new Regex(@"bad\s+gateway", RegexOptions.IgnoreCase);
@@ -312,12 +314,32 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             index = GetIndex(routeName, key, urlSize);
             if (0 > index)
             {
-                string errMsg = "The service is unavailable";
-                if (1 < arr.Length) errMsg = "The service cluster is not reachable";
-                if (null != mSAllot1) mSAllot1.HttpVisitingException(routeName, string.Join(";", arr), errMsg, me, extMSDataVisitor);
-                return result;
+                microServiceMethodImpl.RemoveSvrUrlContractKey(routeName);
+                microServiceMethodImpl.GetUrlInfo(routeName, ref url1, ref contractkey1);
+                if(string.IsNullOrEmpty(url1) || string.IsNullOrEmpty(contractkey1))
+                {
+                    string errMsg = "The service is unavailable";
+                    if (1 < arr.Length) errMsg = "The service cluster is not reachable";
+                    if (null != mSAllot1) mSAllot1.HttpVisitingException(routeName, string.Join(";", arr), errMsg, me, extMSDataVisitor);
+                    return result;
+                }
+                if(null != mSAllot1)
+                {
+                    string contract_key1 = mSAllot1.GetContractKey(routeName, me, extMSDataVisitor);
+                    if (!string.IsNullOrEmpty(contract_key1)) contractkey1 = contract_key1;
+                }
+                headers.Clear();
+                headers[MSConst.contractKey] = contractkey1;
             }
-            url = InitUri(arr[index]);
+
+            if (string.IsNullOrEmpty(url1))
+            {
+                url = InitUri(arr[index]);
+            }
+            else
+            {
+                url = InitUri(url1);
+            }
             http1 = "{0}/{1}/{2}".ExtFormat(url, controller, actionName);
             httpAddr = http1 + paras;
             httpHelper.SendData(httpAddr, headers, data, true, methodTypes1, (resultData, err) =>
@@ -338,7 +360,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 if (string.IsNullOrEmpty(err))
                 {
                     if (null == resultData) resultData = "";
-                    result = resultData.ToString();                    
+                    result = resultData.ToString();
                 }
                 else
                 {
@@ -346,7 +368,6 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                     if ((-1 != errLower.IndexOf("timeout")) || badRg.IsMatch(errLower))
                     {
                         isTimeout = SetTimeoutIndex(routeName, httpAddr, urlSize, index);
-
                     }
                     if (null != mSAllot1)
                     {

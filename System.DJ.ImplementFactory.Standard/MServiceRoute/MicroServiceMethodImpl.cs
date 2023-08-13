@@ -386,5 +386,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         public IMSAllot mSAllot { get; set; }
 
+        public void GetUrlInfo(string serviceName, ref string url, ref string contractKey) { }
+
+        public void RemoveSvrUrlContractKey(string serviceName) { }
     }
 }

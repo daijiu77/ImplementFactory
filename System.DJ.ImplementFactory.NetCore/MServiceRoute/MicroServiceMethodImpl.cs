@@ -403,7 +403,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
 
         private static string httpStr = "";
         private static string areaName = "";
-        private void GetUrlInfo(string serviceName, ref string url, ref string contractKey)
+        public void GetUrlInfo(string serviceName, ref string url, ref string contractKey)
         {
             Regex rg = new Regex(@"^(?<HttpHeader>(http)|(https))\:\/\/(?<HttpBody>[^\/]+)(\/(?<AreaName>[^\/]+))?", RegexOptions.IgnoreCase);
             if (string.IsNullOrEmpty(httpStr))
@@ -517,6 +517,15 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 }
                 ucDic.TryGetValue(key, out ucArr);
                 return ucArr;
+            }
+        }
+
+        public void RemoveSvrUrlContractKey(string serviceName)
+        {
+            lock (SvrUrlContractKeyLock)
+            {
+                string key = serviceName.ToLower();
+                ucDic.Remove(key);
             }
         }
     }

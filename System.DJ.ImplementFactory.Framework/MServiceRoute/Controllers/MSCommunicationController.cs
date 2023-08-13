@@ -262,6 +262,8 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Controllers
                     if (string.IsNullOrEmpty(msg)) break;
                     option = svrApi.GetSvrAPIOption();
                 }
+
+                if(!string.IsNullOrEmpty(msg)) return GetSvrAPIOptionResult();
             }
 
             if (option.IP.Equals(MSConst.Localhost) && (false == callerIP.Equals(MSConst.Localhost)))
