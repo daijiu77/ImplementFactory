@@ -201,6 +201,28 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             }
         }
 
+        /// <summary>
+        /// Check whether the token is in the lifetime
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="clientIP"></param>
+        /// <returns></returns>
+        public static bool CheckTokenLiveCylce(string token, string clientIP)
+        {
+            lock (mSFilter)
+            {
+                bool mbool = false;
+                GetIP_Token(token, tokenObj =>
+                {
+                    if (null != tokenObj)
+                    {
+                        mbool = clientIP.Equals(tokenObj.ip);
+                    }
+                });
+                return mbool;
+            }
+        }
+
         public static void RemoveToken(string token)
         {
             lock (mSFilter)
