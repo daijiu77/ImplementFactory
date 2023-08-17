@@ -113,10 +113,15 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
 
         public object CreateDataModel(Type srcType, MethodInfo methodInfo, Type dataModelType, DbSqlBody dbSqlBody)
         {
-            object dtModel = null;
+            if (null == srcType)
+            {
+                AutoCall.Instance.e("ErrCode: 99, The source type that calls the CreateDataModel method cannot be empty");
+                return null;
+            }
             if (null == dataModelType) return null;
             if (!typeof(AbsDataModel).IsAssignableFrom(dataModelType)) return null;
 
+            object dtModel = null;
             Type newType = ModelCopy(srcType, methodInfo, dataModelType, null);
             if (null != newType)
             {
@@ -372,6 +377,12 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             DJTools.append(ref GetBody, level, "IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.New.From<{0}>());", typeName);
                             pt = GetPropertyType(dataModelType, constraint.ForeignKey);
                             string srcName = GetSrcPropertyName(dataModelType, constraint.ForeignKey);
+                            if (null == pt)
+                            {
+                                string st1 = dataModelType.TypeToString(true);
+                                AutoCall.Instance.e("ErrCode: 100, Find not type of property '{0}' in class '{1}'".ExtFormat(srcName, st1));
+                                return;
+                            }
                             s = DJTools.ExtFormat("ConditionItem.Me.And(\"{0}\", ConditionRelation.Equals, this.{1}, typeof({2}))", constraint.RefrenceKey, srcName, pt.TypeToString(true));
                             if (null != constraint.Foreign_refrenceKeys)
                             {
