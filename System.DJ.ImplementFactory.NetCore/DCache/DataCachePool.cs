@@ -22,6 +22,7 @@ namespace System.DJ.ImplementFactory.DCache
         private static List<WaitUpdateItem> waitUpdateItems = new List<WaitUpdateItem>();
         private static int cacheTime = 0;
         private static bool execState = false;
+        private const string flag = "@";
 
         static DataCachePool()
         {
@@ -178,12 +179,22 @@ namespace System.DJ.ImplementFactory.DCache
         object IDataCache.Get(MethodInfo method, string key)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if (string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             return GetValueByKey(methodPath, key);
         }
 
         object IDataCache.Get(MethodInfo method, string key, ref RefOutParams refOutParams)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if (string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             return GetValueByKey(methodPath, key, ref refOutParams);
         }
 
@@ -200,6 +211,11 @@ namespace System.DJ.ImplementFactory.DCache
         void IDataCache.Set(MethodInfo method, string key, object value, int cacheTime, bool persistenceCache)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if(string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             SetValue(methodPath, key, value, cacheTime, persistenceCache);
         }
 
@@ -338,6 +354,11 @@ namespace System.DJ.ImplementFactory.DCache
                     break;
                 }
             }
+        }
+
+        public virtual string SetKey(MethodInfo methodInfo)
+        {
+            return null;
         }
 
         private void GetKeyBy(Type paraType, string fn, object dt, ref string s1)
