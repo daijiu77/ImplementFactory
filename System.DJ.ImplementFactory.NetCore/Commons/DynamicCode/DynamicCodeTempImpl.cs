@@ -918,6 +918,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
             uskv.Add(new CKeyValue() { Key = typeof(DJTools).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(CKeyValue).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(DataPage).Namespace });
+            uskv.Add(new CKeyValue() { Key = typeof(DataCacheVal).Namespace });
             uskv.Add(new CKeyValue() { Key = typeof(EList<CKeyValue>).Namespace });
 
             //append(ref code, "");
@@ -1189,6 +1190,7 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                     }
 
                     EList<CKeyValue> pvList = null;
+                    RefOutParams refOutParams = null;
                     if ((eMethod.ReturnType != typeof(void) || null != actionType))
                     {
                         #region 数据缓存代码实现 DataCache
@@ -1200,7 +1202,8 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
 
                             mInfo.append(ref code, LeftSpaceLevel.four, "DataCachePool _dataCachePool = (DataCachePool)Activator.CreateInstance(ImplementAdapter.dataCache);");
                             mInfo.append(ref code, LeftSpaceLevel.four, "string cacheKey = \"null\";");
-                            pvList = dataCacheImpl.GetParaNameList(eMethod);
+
+                            pvList = dataCacheImpl.GetParaNameList(eMethod, ref refOutParams);
                             if (null != pvList)
                             {
                                 //mInfo.append(ref code, LeftSpaceLevel.four, "");
@@ -1213,7 +1216,24 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                                 mInfo.append(ref code, LeftSpaceLevel.four, "");
                                 mInfo.append(ref code, LeftSpaceLevel.four, "cacheKey = _dataCachePool.GetParaKey(paraInfoList);");
                             }
-                            mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(thisMethodInfo, cacheKey);");
+
+                            if (null == refOutParams)
+                            {
+                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(thisMethodInfo, cacheKey);");
+                            }
+                            else
+                            {
+                                mInfo.append(ref code, LeftSpaceLevel.four, "RefOutParams refOutParams = null;");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "object dataCacheVal = ((IDataCache)_dataCachePool).Get(thisMethodInfo, cacheKey, ref refOutParams);");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "if (null != refOutParams)");
+                                mInfo.append(ref code, LeftSpaceLevel.four, "{");
+                                refOutParams.Foreach(ckv =>
+                                {
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "refOutParams.TryGetValue<{0}>(\"{1}\", out {1});", ckv.ValueType.TypeToString(true), ckv.Key);
+                                    return true;
+                                });
+                                mInfo.append(ref code, LeftSpaceLevel.four, "}");
+                            }
                             mInfo.append(ref code, LeftSpaceLevel.four, "");
                         }
                         #endregion
@@ -1435,8 +1455,25 @@ namespace System.DJ.ImplementFactory.Commons.DynamicCode
                             //数据缓存代码实现 DataCache
                             mInfo.append(ref code, LeftSpaceLevel.four, "if (null != ({0}))", resultStr);
                             mInfo.append(ref code, LeftSpaceLevel.four, "{");
-                            mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(thisMethodInfo, cacheKey, {0}, {1}, {2});",
+                            if (null == refOutParams)
+                            {
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(thisMethodInfo, cacheKey, {0}, {1}, {2});",
                                 resultStr, dataCache.CacheTime.ToString(), dataCache.PersistenceCache.ToString().ToLower());
+                            }
+                            else
+                            {
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "DataCacheVal _dataCacheVal = new DataCacheVal();");
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "_dataCacheVal.result = {0};", resultStr);
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "_dataCacheVal.refOutParams = new RefOutParams();");
+                                refOutParams.Foreach(ckv =>
+                                {
+                                    mInfo.append(ref code, LeftSpaceLevel.four + 1, "_dataCacheVal.refOutParams.Add(\"{0}\", {0}, typeof({1}));", ckv.Key, ckv.ValueType.TypeToString(true));
+                                    return true;
+                                });
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "((IDataCache)_dataCachePool).Set(thisMethodInfo, cacheKey, {0}, {1}, {2});",
+                                "_dataCacheVal", dataCache.CacheTime.ToString(), dataCache.PersistenceCache.ToString().ToLower());
+                                mInfo.append(ref code, LeftSpaceLevel.four + 1, "");
+                            }
                             mInfo.append(ref code, LeftSpaceLevel.four, "}");
                         }
                         //如果接口方法返回类型不为 void

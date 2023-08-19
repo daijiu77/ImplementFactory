@@ -229,6 +229,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute.Attrs
             {
                 if (!tokenKV.ContainsKey(token)) return;
                 TokenObj token1 = tokenKV[token];
+                if (null == token1) return;
                 string ip = token1.ip;
                 tokenKV.Remove(token);
                 if (null != ImplementAdapter.mSFilterMessage)

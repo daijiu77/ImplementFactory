@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
+using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.DataAccess.AnalysisDataModel;
+using System.DJ.ImplementFactory.Entities;
 using System.DJ.ImplementFactory.Pipelines;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -179,6 +181,12 @@ namespace System.DJ.ImplementFactory.DCache
             return GetValueByKey(methodPath, key);
         }
 
+        object IDataCache.Get(MethodInfo method, string key, ref RefOutParams refOutParams)
+        {
+            string methodPath = GetMethodPath(method);
+            return GetValueByKey(methodPath, key, ref refOutParams);
+        }
+
         void IDataCache.Set(MethodInfo method, string key, object value)
         {
             ((IDataCache)this).Set(method, key, value, cacheTime, false);
@@ -223,7 +231,7 @@ namespace System.DJ.ImplementFactory.DCache
                 .SetEnd(end);
         }
 
-        public EList<CKeyValue> GetParaNameList(MethodInfo methodInfo)
+        public EList<CKeyValue> GetParaNameList(MethodInfo methodInfo, ref RefOutParams refOutParams)
         {
             EList<CKeyValue> list = new EList<CKeyValue>();
             ParameterInfo[] args = methodInfo.GetParameters();
@@ -231,7 +239,16 @@ namespace System.DJ.ImplementFactory.DCache
             foreach (ParameterInfo item in args)
             {
                 if (item.ParameterType.BaseType == typeof(MulticastDelegate)) continue;
-                if (item.ParameterType.IsByRef || item.IsOut) continue;
+                if (item.ParameterType.IsByRef || item.IsOut)
+                {
+                    if (null == refOutParams) refOutParams = new RefOutParams();
+                    refOutParams.Add(item.Name, new CKeyValue()
+                    {
+                        Key = item.Name,
+                        ValueType = item.ParameterType
+                    });
+                    continue;
+                }
                 if (typeof(IEnumerable).IsAssignableFrom(item.ParameterType) && typeof(string) != item.ParameterType)
                 {
                     if (!item.ParameterType.IsArray) continue;
@@ -269,11 +286,27 @@ namespace System.DJ.ImplementFactory.DCache
             return key;
         }
 
-        public virtual object GetValueByKey(string methodPath, string key)
+        public virtual object GetValueByKey(string methodPath, string key, ref RefOutParams refOutParams)
         {
             PersistenceCache.task.Wait();
             if (!cacheDic.ContainsKey(methodPath)) return null;
-            return cacheDic[methodPath].GetValue(key);
+            object val = cacheDic[methodPath].GetValue(key);
+            object result = val;
+            if (null != val)
+            {
+                if (null != (val as DataCacheVal))
+                {
+                    result = ((DataCacheVal)val).result;
+                    refOutParams = ((DataCacheVal)val).refOutParams;
+                }
+            }
+            return result;
+        }
+
+        public virtual object GetValueByKey(string methodPath, string key)
+        {
+            RefOutParams refOutParams = null;
+            return GetValueByKey(methodPath, key, ref refOutParams);
         }
 
         public virtual void SetValue(string methodPath, string key, object value, int cacheCycle_second, bool persistenceCache)
