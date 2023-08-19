@@ -1001,6 +1001,7 @@ namespace System.DJ.ImplementFactory.Commons
         public static string TypeToString(this Type type, bool isFullName)
         {
             string s = "";
+            if (null == type) return s;
             string tn = "";
             Regex rg = new Regex(@"(?<TypeName>[a-z0-9_\.]+)[^a-z0-9_\.]", RegexOptions.IgnoreCase);
             Type[] types = type.GetGenericArguments();

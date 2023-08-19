@@ -65,8 +65,8 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     codeCompiler.SavePathOfDll = dllFilePath;
                 }
-                Assembly assObj = codeCompiler.TranslateCode(dllArr, "v4.0", code, ref err);
-
+                Assembly assObj = null; // codeCompiler.TranslateCode(dllArr, "v4.0", code, ref err);
+                assObj = ShareCodeCompiler.TranslateCode(dllFilePath, dllArr, "v4.0", code, ref err);
                 if (string.IsNullOrEmpty(err))
                 {
                     try

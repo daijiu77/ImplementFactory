@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
@@ -7,7 +6,6 @@ using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
 using System.IO;
-using System.Net;
 using System.Reflection;
 
 namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
@@ -614,8 +612,9 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                     dllPath = Path.Combine(dllPath, TempImplCode.libName);
                     DJTools.InitDirectory(dllPath, true);
                     dllPath = Path.Combine(dllPath, newClassName + "_" + guid + ".dll");
-                    ImplementAdapter.codeCompiler.SavePathOfDll = dllPath;
-                    Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
+                    //ImplementAdapter.codeCompiler.SavePathOfDll = dllPath;
+                    Assembly assembly = null; // ImplementAdapter.codeCompiler.TranslateCode(null, null, code, ref err);
+                    assembly = ShareCodeCompiler.TranslateCode(dllPath, null, "v4.0", code, ref err);
                     if (!string.IsNullOrEmpty(err)) error = err;
                     if (null != assembly && string.IsNullOrEmpty(err))
                     {

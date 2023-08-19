@@ -1,11 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Exts;
-using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.Commons
@@ -49,7 +45,7 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = null;
 
             MatchProperties(jt, ref clsType);
-            if(null == clsType)
+            if (null == clsType)
             {
                 JsonToClassDesign(clsName, "cs", jt);
                 if (0 < codes.Count)
@@ -60,8 +56,9 @@ namespace System.DJ.ImplementFactory.Commons
                         DJTools.append(ref txt, item);
                     }
                     string err = "";
-                    ImplementAdapter.codeCompiler.SavePathOfDll = "";
-                    Assembly assembly = ImplementAdapter.codeCompiler.TranslateCode(null, null, txt, ref err);
+                    //ImplementAdapter.codeCompiler.SavePathOfDll = "";
+                    Assembly assembly = null; // ImplementAdapter.codeCompiler.TranslateCode(null, null, txt, ref err);
+                    assembly = ShareCodeCompiler.TranslateCode("", null, null, txt, ref err);
                     if (null != assembly)
                     {
                         Type[] types = assembly.GetTypes();
@@ -152,7 +149,7 @@ namespace System.DJ.ImplementFactory.Commons
                         clsType = null;
                         MatchProperties(ele1, ref clsType);
                         if (null == clsType)
-                        {                            
+                        {
                             JsonToClassDesign(item.Name, extendName, ele1);
                         }
                         else
@@ -248,7 +245,7 @@ namespace System.DJ.ImplementFactory.Commons
             IEnumerable<JProperty> properties1 = jo.Properties();
             PropertyInfo pi = null;
             Type type = null;
-            Type vType = null;           
+            Type vType = null;
             object v1 = null;
             foreach (var item in properties1)
             {

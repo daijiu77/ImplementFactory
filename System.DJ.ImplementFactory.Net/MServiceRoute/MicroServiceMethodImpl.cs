@@ -307,12 +307,14 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string binDirPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
             binDirPath = Path.Combine(binDirPath, TempImplCode.libName);
             binDirPath.InitDirectory();
-            instanceCodeCompiler.SavePathOfDll = Path.Combine(binDirPath, clssName + ".dll");
+            //instanceCodeCompiler.SavePathOfDll = Path.Combine(binDirPath, clssName + ".dll");
+            string dllPath = Path.Combine(binDirPath, clssName + ".dll");
 
             err = "";
             Type type = null;
             string[] dllArr = new string[] { "System.dll", "System.Xml.dll" };
-            Assembly assObj = instanceCodeCompiler.TranslateCode(dllArr, "v4.0", code, ref err);
+            Assembly assObj = null; // instanceCodeCompiler.TranslateCode(dllArr, "v4.0", code, ref err);
+            assObj = ShareCodeCompiler.TranslateCode(dllPath, dllArr, "v4.0", code, ref err);
             if (string.IsNullOrEmpty(err))
             {
                 try
@@ -347,7 +349,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string result = dataVisitor.GetResult(this, me, routeName, url, controllerName, actionName, contractKey, MethodTypes.Post, data);
             if (null != mSAllot)
             {
-                object tData = mSAllot.ResultToData<T>(routeName, controllerName, actionName, url, result);                
+                object tData = mSAllot.ResultToData<T>(routeName, controllerName, actionName, url, result);
                 if (null != tData)
                 {
                     return (T)tData;
