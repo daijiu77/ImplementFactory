@@ -180,7 +180,7 @@ namespace System.DJ.ImplementFactory.DCache
         {
             string methodPath = GetMethodPath(method);
             string k = SetKey(method);
-            if (string.IsNullOrEmpty(k))
+            if (!string.IsNullOrEmpty(k))
             {
                 key += flag + k;
             }
@@ -191,7 +191,7 @@ namespace System.DJ.ImplementFactory.DCache
         {
             string methodPath = GetMethodPath(method);
             string k = SetKey(method);
-            if (string.IsNullOrEmpty(k))
+            if (!string.IsNullOrEmpty(k))
             {
                 key += flag + k;
             }
@@ -212,7 +212,7 @@ namespace System.DJ.ImplementFactory.DCache
         {
             string methodPath = GetMethodPath(method);
             string k = SetKey(method);
-            if(string.IsNullOrEmpty(k))
+            if(!string.IsNullOrEmpty(k))
             {
                 key += flag + k;
             }
