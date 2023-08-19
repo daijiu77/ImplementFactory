@@ -231,10 +231,11 @@ namespace System.DJ.ImplementFactory.DCache
             foreach (ParameterInfo item in args)
             {
                 if (item.ParameterType.BaseType == typeof(MulticastDelegate)) continue;
+                if (item.ParameterType.IsByRef || item.IsOut) continue;
                 if (typeof(IEnumerable).IsAssignableFrom(item.ParameterType) && typeof(string) != item.ParameterType)
                 {
                     if (!item.ParameterType.IsArray) continue;
-                    eleType = item.ParameterType.GetTypeForArrayElement();                    
+                    eleType = item.ParameterType.GetTypeForArrayElement();
                     if (null == eleType) continue;
                     if (!eleType.IsBaseType()) continue;
                 }

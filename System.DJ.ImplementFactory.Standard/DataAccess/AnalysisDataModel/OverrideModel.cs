@@ -213,8 +213,10 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
             uskv.Add(new CKeyValue() { Key = typeof(OverrideModel).Namespace });
 
             string doListTypeName = "";
+            string typeFull = "";
             dataModelType.ForeachProperty((pi, type, fn) =>
             {
+                typeFull = type.TypeToString(true);
                 fnLower = fn.ToLower();
                 pro = "";
                 level = 2;
@@ -286,11 +288,11 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             }
                         }
                     }
-                    typeName = type.TypeToString(true);
+                    
                     DJTools.append(ref pro, level + 1, "if (false == (({0})this).{1})", _IEntityCopy, _AssignmentNo);
                     DJTools.append(ref pro, level + 1, "{");
                     //SetValue(object currentModel, Constraint constraint, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
-                    DJTools.append(ref pro, level + 2, "{0}.SetValue(this, constraint, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeName, fn);
+                    DJTools.append(ref pro, level + 2, "{0}.SetValue(this, constraint, typeof({1}), \"{2}\", base.{2}, value);", LazyDataOptVar, typeFull, fn);
                     DJTools.append(ref pro, level + 1, "}");
                     DJTools.append(ref pro, level + 1, "(({0})this).{1} = false;", _IEntityCopy, _AssignmentNo);
                     DJTools.append(ref pro, level + 1, "");
@@ -335,7 +337,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         else if (!type.IsBaseType())
                         {
                             propType = PropType.isClass;
-                            typeName = type.TypeToString(true);
+                            typeName = typeFull;
                             uskv.Add(new CKeyValue() { Key = type.Namespace });
                         }
 
@@ -508,20 +510,19 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             }
                             else if (PropType.isList == propType)
                             {
-                                string srcTp = type.TypeToString(true);
                                 DJTools.append(ref GetBody, level, "if (null == base.{0})", fn);
                                 DJTools.append(ref GetBody, level, "{");
-                                DJTools.append(ref GetBody, level + 1, "IList<{0}> results = scheme.ToList<{0}>();", typeName, srcTp);
+                                DJTools.append(ref GetBody, level + 1, "IList<{0}> results = scheme.ToList<{0}>();", typeName, typeFull);
                                 if (!string.IsNullOrEmpty(doListTypeName))
                                 {
                                     DJTools.append(ref GetBody, level, "OverrideModel.SetDOListProperty<{0}>(this, \"{1}\", results);", typeName, fn);
                                 }
-                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})results;", fn, srcTp);
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})results;", fn, typeFull);
                                 DJTools.append(ref GetBody, level, "}");
                                 DJTools.append(ref GetBody, level, "else");
                                 DJTools.append(ref GetBody, level, "{");
                                 DJTools.append(ref GetBody, level + 1, "IList<{0}> results = scheme.ToList<{0}>();", typeName);
-                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})OverrideModel.MergeToListFromIList<{2}>(base.{0}, results);", fn, srcTp, typeName);
+                                DJTools.append(ref GetBody, level + 1, "base.{0} = ({1})OverrideModel.MergeToListFromIList<{2}>(base.{0}, results);", fn, typeFull, typeName);
                                 DJTools.append(ref GetBody, level, "}");
                             }
                             else
@@ -558,8 +559,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                         DJTools.append(ref s, level, "{0}", _is_frist_prop);
                     }
 
-                    typeName = type.TypeToString(true);
-                    DJTools.append(ref s, level, "public {0} {1} {2}", tag, typeName, fn);
+                    DJTools.append(ref s, level, "public {0} {1} {2}", tag, typeFull, fn);
                     DJTools.append(ref s, level, "{");
                     DJTools.append(ref s, 0, pro);
                     DJTools.append(ref s, level, "}");
