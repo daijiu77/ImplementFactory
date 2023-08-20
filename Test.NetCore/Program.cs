@@ -108,6 +108,14 @@ namespace Test.NetCore
 
         static void Main(string[] args)
         {
+            string s = "@1234567890";
+            byte[] buffer = Encoding.UTF8.GetBytes(s);
+            byte[] datas = new byte[20];
+            Array.Copy(buffer, 0, datas, 0, buffer.Length);
+            string s1 = Encoding.UTF8.GetString(datas).Trim();
+            s1 = s1.Substring(1);
+            int n = s1.IndexOf("\0");
+            s1 = s1.Substring(0, n);
             ParameterInfo[] paras = null;
             int param_min_count = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
             ImplAdapter implAdapter = new ImplAdapter();
@@ -507,7 +515,7 @@ namespace Test.NetCore
                 plan.EndDate = DateTime.Now;
                 plan.Id = Guid.NewGuid();
                 plans.AddData(plan); //添加与 UserInfo 关联的 Plan 数据
-                
+
 
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());

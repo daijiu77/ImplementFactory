@@ -22,7 +22,7 @@ namespace System.DJ.ImplementFactory.DCache
         private static List<WaitUpdateItem> waitUpdateItems = new List<WaitUpdateItem>();
         private static int cacheTime = 0;
         private static bool execState = false;
-        private const string flag = "@";
+        public const string flag = "@";
 
         static DataCachePool()
         {
@@ -122,12 +122,20 @@ namespace System.DJ.ImplementFactory.DCache
 
             PersistenceCache persistence = new PersistenceCache();
             object val = null;
+            RefOutParams refOutParams = null;
             foreach (var item in waitUpdate.dataItems)
             {
                 val = item.GetValue();
                 Type tp = val.GetType();
                 Type type = null;
                 object vObj = null;
+                if (null != (val as DataCacheVal))
+                {
+                    refOutParams = ((DataCacheVal)val).refOutParams;
+                    val = ((DataCacheVal)val).result;
+                    tp = val.GetType();
+                }
+
                 if (typeof(IList).IsAssignableFrom(tp))
                 {
                     Type[] ts = tp.GetGenericArguments();
@@ -153,7 +161,7 @@ namespace System.DJ.ImplementFactory.DCache
                         return true;
                     });
                 }
-                Guid guid = persistence.Set(item.GetMethodPath(), item.GetKey(), val, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
+                Guid guid = persistence.Set(item.GetMethodPath(), item.GetKey(), val, refOutParams, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
                 if (Guid.Empty != guid)
                 {
                     item.SetId(guid.ToString());
@@ -212,7 +220,7 @@ namespace System.DJ.ImplementFactory.DCache
         {
             string methodPath = GetMethodPath(method);
             string k = SetKey(method);
-            if(!string.IsNullOrEmpty(k))
+            if (!string.IsNullOrEmpty(k))
             {
                 key += flag + k;
             }

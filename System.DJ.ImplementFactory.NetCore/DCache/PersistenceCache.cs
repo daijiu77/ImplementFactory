@@ -14,12 +14,13 @@ namespace System.DJ.ImplementFactory.DCache
 {
     public class PersistenceCache
     {
+        private const int flagSize = 20;
         public static Task task = null;
         static PersistenceCache()
         {
             task = Task.Run(() =>
             {
-                if(null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
+                if (null != ImplementAdapter.taskMultiTablesExec) ImplementAdapter.taskMultiTablesExec.Wait();
                 if (null != ImplementAdapter.taskUpdateTableDesign) ImplementAdapter.taskUpdateTableDesign.Wait();
                 DbVisitor db = new DbVisitor();
                 IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<DataCacheTable>());
@@ -35,7 +36,7 @@ namespace System.DJ.ImplementFactory.DCache
                 IList<DataCacheTable> list = null;
                 DataCachePool cachePool = new DataCachePool();
                 List<Guid> ids = new List<Guid>();
-                
+
                 for (int i = 0; i < pageCount; i++)
                 {
                     pageIndex = i + 1;
@@ -59,7 +60,7 @@ namespace System.DJ.ImplementFactory.DCache
                             tb.Start,
                             tb.End);
                         Thread.Sleep(10);
-                    }                    
+                    }
                     Thread.Sleep(100);
                 }
 
@@ -74,9 +75,52 @@ namespace System.DJ.ImplementFactory.DCache
 
         private static object ByteArrayToObject(byte[] data, string dataType)
         {
-            object vObj = null;            
+            object vObj = null;
             if (null == data) return vObj;
             if (string.IsNullOrEmpty(dataType)) return vObj;
+
+            RefOutParams refOutParams = null;
+            if (flagSize < data.Length)
+            {
+                byte[] buffer = new byte[flagSize];
+                Array.Copy(data, 0, buffer, 0, flagSize);
+                string s = Encoding.UTF8.GetString(buffer).Trim();
+                string s1 = "";
+                if (0 < s.Length)
+                {
+                    s1 = s.Substring(0, 1);
+                }
+
+                if (DataCachePool.flag.Equals(s1))
+                {
+                    s1 = s.Substring(1);
+                    int n = s1.IndexOf('\0');
+                    if (-1 != n)
+                    {
+                        s1 = s1.Substring(0, n);
+                    }
+                    int pos = flagSize;
+                    int size = 0;
+                    int.TryParse(s1, out size);
+                    buffer = new byte[size];
+                    Array.Copy(data, pos, buffer, 0, size);
+                    Type t = typeof(CKeyValue);
+                    DataTable dataTable = buffer.ByteArrayToDataTable();
+                    List<CKeyValue> list = dataTable.DataTableToList<CKeyValue>();
+
+                    refOutParams = new RefOutParams();
+                    foreach (CKeyValue item in list)
+                    {
+                        refOutParams.Add(item.Key, item);
+                    }
+
+                    pos += size;
+                    size = data.Length - pos;
+                    buffer = new byte[size];
+                    Array.Copy(data, pos, buffer, 0, size);
+                    data = buffer;
+                }
+            }
             Type type = Type.GetType(dataType);
             if (null == type)
             {
@@ -99,6 +143,14 @@ namespace System.DJ.ImplementFactory.DCache
                 DataTable dt = data.ByteArrayToDataTable();
                 List<object> list = dt.DataTableToList(type);
                 if (0 < list.Count) vObj = list[0];
+            }
+
+            if (null != refOutParams)
+            {
+                DataCacheVal dataCacheVal = new DataCacheVal();
+                dataCacheVal.refOutParams = refOutParams;
+                dataCacheVal.result = vObj;
+                vObj = dataCacheVal;
             }
             return vObj;
         }
@@ -136,7 +188,7 @@ namespace System.DJ.ImplementFactory.DCache
             return bts;
         }
 
-        public Guid Set(string methodPath, string key, object value, Type dataType, int cacheTime, DateTime start, DateTime end)
+        public Guid Set(string methodPath, string key, object value, RefOutParams refOutParams, Type dataType, int cacheTime, DateTime start, DateTime end)
         {
             DbVisitor db = new DbVisitor();
             IDbSqlScheme sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From<DataCacheTable>());
@@ -156,7 +208,38 @@ namespace System.DJ.ImplementFactory.DCache
                 End = end
             };
 
+            byte[] refOutDatas = null;
+            if (null != refOutParams)
+            {
+                List<CKeyValue> list = new List<CKeyValue>();
+                Type typeRefOut = typeof(List<CKeyValue>);
+                refOutParams.Foreach(ckv =>
+                {
+                    list.Add(ckv);
+                    return true;
+                });
+                refOutDatas = ObjectToByteArray(list, typeRefOut.TypeToString(true));
+            }
+
             cacheTable.Data = ObjectToByteArray(value, dataType.FullName);
+            if (null != refOutDatas)
+            {
+                int size = cacheTable.Data.Length;
+                size += refOutDatas.Length;
+                size += flagSize;
+                byte[] datas = new byte[size];
+                string s = DataCachePool.flag + refOutDatas.Length;
+                byte[] buffer = Encoding.UTF8.GetBytes(s);
+                int pos = 0;
+                Array.Copy(datas, pos, buffer, 0, buffer.Length);
+                pos += flagSize;
+
+                Array.Copy(datas, pos, refOutDatas, 0, refOutDatas.Length);
+                pos += refOutDatas.Length;
+
+                Array.Copy(datas, pos, cacheTable.Data, 0, cacheTable.Data.Length);
+                cacheTable.Data = datas;
+            }
             sqlScheme = db.CreateSqlFrom(SqlFromUnit.Me.From(cacheTable));
             sqlScheme.Insert();
             return cacheTable.Id;
