@@ -13,6 +13,9 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
         Dictionary<string, string> AliasDic { get; set; }
         string PageSizeSignOfSql { get; set; }
         string StartQuantitySignOfSql { get; set; }
+        char GetLeftTag { get; }
+        char GetRightTag { get; }
+
         string GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue);
         string GetConditionOfCollection(string fieldName, ConditionRelation relation, ICollection fieldValueOfCollection);
         string GetConditionOfDbSqlBody(string fieldName, ConditionRelation relation, string fieldValueOfSql);

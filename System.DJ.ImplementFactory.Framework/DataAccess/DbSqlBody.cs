@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs.Sorts;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl;
 using System.DJ.ImplementFactory.Entities;
@@ -328,6 +329,30 @@ namespace System.DJ.ImplementFactory.DataAccess
             return this;
         }
 
+        public Dictionary<Type, object> IgnoreSortDic = new Dictionary<Type, object>();
+
+        public DbSqlBody IgnoreSort<T>(params string[] fields) where T : AbsDataModel
+        {
+            Type type = typeof(T);
+            if (IgnoreSortDic.ContainsKey(type))
+            {
+                IgnoreSortDic.Remove(type);
+            }
+            if (null == fields) return this;
+            if (0 == fields.Length) return this;
+            Dictionary<string, string> fDic = new Dictionary<string, string>();
+            string fn = "";
+            foreach (var item in fields)
+            {
+                if (null == item) continue;
+                fn = item.Trim().ToLower();
+                if (string.IsNullOrEmpty(fn)) continue;
+                fDic[fn] = item;
+            }
+            IgnoreSortDic[type] = fDic;
+            return this;
+        }
+
         public bool GetWhereIgnoreAll()
         {
             return whereIgnoreAll;
@@ -337,15 +362,20 @@ namespace System.DJ.ImplementFactory.DataAccess
         {
             string selectPart = "";
             string s = "";
+            string key = "";
             Attribute att = null;
             Regex rg = new Regex(@"[^a-z0-9_\s\.\*]", RegexOptions.IgnoreCase);
             foreach (KeyValuePair<string, object> item in dicSelect)
             {
                 if (null == item.Value) continue;
+                key = item.Key;
                 if (null != (item.Value as DbSqlBody))
                 {
-                    s = ((DbSqlBody)item.Value).GetSql();
-                    s = "(" + s + ")";
+                    s = getTopSql((DbSqlBody)item.Value, out string field);
+                    field = sqlAnalysis.GetFieldName(field);
+                    s = "({0}) {1}".ExtFormat(s, field);
+                    key = Guid.NewGuid().ToString();
+                    dicSlt.Add(key, key);
                 }
                 else if ((false == item.Value.GetType().IsBaseType()) && item.Value.GetType().IsClass)
                 {
@@ -361,13 +391,18 @@ namespace System.DJ.ImplementFactory.DataAccess
                             s += ", " + sqlAnalysis.GetFieldName(fn);
                         }
                     });
+
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        s = s.Substring(1).Trim();
+                    }
                 }
                 else
                 {
                     s = item.Value.ToString();
                 }
 
-                if (dicSlt.ContainsKey(item.Key))
+                if (dicSlt.ContainsKey(key))
                 {
                     selectPart += ", " + s;
                 }
@@ -403,11 +438,13 @@ namespace System.DJ.ImplementFactory.DataAccess
                         if (!string.IsNullOrEmpty(fItem.Alias)) fAlias = " " + fItem.Alias;
                         if (null != (fItem.NameOrSelectFrom as DbSqlBody))
                         {
-                            fName = ((DbSqlBody)fItem.NameOrSelectFrom).GetSql();
+                            fName = getTopSql((DbSqlBody)fItem.NameOrSelectFrom, out string field1);
                             if (!string.IsNullOrEmpty(fName))
                             {
                                 tbAlias = "";
-                                fName = "(" + fName + ")";
+                                fAlias = "";
+                                field1 = sqlAnalysis.GetFieldName(field1);
+                                fName = "({0}) {1}".ExtFormat(fName, field1);
                             }
                         }
                         else
@@ -443,6 +480,21 @@ namespace System.DJ.ImplementFactory.DataAccess
                 selectPart = alias + "*";
             }
             return selectPart;
+        }
+
+        private string getTopSql(DbSqlBody body, out string field)
+        {
+            string selectPart = body.GetSelectPart();
+            if (selectPart.Equals("*") || (-1 != selectPart.IndexOf(",")))
+            {
+                throw new Exception("The sql expression contain '{0}' can not be used select-part of the other one.".ExtFormat(selectPart));
+            }
+            body.Skip(1, 1);
+            string sql = body.GetSql();
+            field = AbsSqlAnalysis.GetLastFieldName(sqlAnalysis, selectPart);
+            string field1 = sqlAnalysis.GetFieldName(field);
+            sql = "select {0} from ({1}) slt_tb".ExtFormat(field1, sql);
+            return sql;
         }
 
         private object GetValueByType(ConditionItem conditionItem)
@@ -495,7 +547,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                 }
                 else if (null != (item.FieldValue as DbSqlBody))
                 {
-                    sql = ((DbSqlBody)item.FieldValue).GetSql();
+                    sql = ((DbSqlBody)item.FieldValue).GetSql(true);
                     s = sqlAnalysis.GetConditionOfDbSqlBody(item.FieldName, item.Relation, sql);
                     if (!string.IsNullOrEmpty(s)) cdt += cnts + s;
                 }
@@ -751,6 +803,50 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         private string GetOrderbyPart()
         {
+            if (0 < fromUnits.Count)
+            {
+                Dictionary<string, string> fdic = null;
+                foreach (SqlFromUnit fromUnit in fromUnits)
+                {
+                    if (null == fromUnit.modelType) continue;
+                    fdic = null;
+                    foreach (var item in IgnoreSortDic)
+                    {
+                        if (item.Key.IsAssignableFrom(fromUnit.modelType))
+                        {
+                            if (null != item.Value) fdic = item.Value as Dictionary<string, string>;
+                            break;
+                        }
+                    }
+                    SortAttribute sort = null;
+                    FieldMapping mapping = null;
+                    string field = null;
+                    List<SortAttribute> sorts = new List<SortAttribute>();
+                    fromUnit.modelType.ForeachProperty((pi, pt, fn) =>
+                    {
+                        sort = pi.GetCustomAttribute<SortAttribute>();
+                        if (null == sort) return;
+                        if (null != fdic)
+                        {
+                            if (fdic.ContainsKey(fn.ToLower())) return;
+                        }
+                        field = fn;
+                        mapping = pi.GetCustomAttribute<FieldMapping>();
+                        if (null != mapping)
+                        {
+                            field = mapping.FieldName;
+                        }
+                        sort.FieldName = fromUnit.alias + "." + field;
+                        sorts.Add(sort);
+                    });
+
+                    sorts.Sort();
+                    foreach (var item in sorts)
+                    {
+                        orderbyItems.Add(OrderbyItem.Me.Set(item.FieldName, item.GetOrderByRule));
+                    }
+                }
+            }
             string orderbyPart = "";
             string OrderBy_Item = "";
             foreach (var item in orderbyItems)
@@ -1352,6 +1448,11 @@ namespace System.DJ.ImplementFactory.DataAccess
 
         protected string GetSql()
         {
+            return GetSql(false);
+        }
+
+        protected string GetSql(bool isCondition)
+        {
             sqlAnalysis.AliasDic = aliasDic;
             string wherePart = "";
             Dictionary<string, object> fieldDic = new Dictionary<string, object>();
@@ -1364,14 +1465,19 @@ namespace System.DJ.ImplementFactory.DataAccess
             wherePart += GetWhereByProperty(this, fieldDic);
 
             string groupPart = GetGroupPart();
-            string orderbyPart = GetOrderbyPart();
+            string orderbyPart = "";
 
-            orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
+            if (!isCondition)
+            {
+                orderbyPart = GetOrderbyPart();
+                orderbyPart = sqlAnalysis.GetOrderBy(orderbyPart);
+                orderbyPart = orderbyPart.Trim();
+            }
+
             groupPart = sqlAnalysis.GetGroupBy(groupPart);
 
             wherePart = wherePart.Trim();
             groupPart = groupPart.Trim();
-            orderbyPart = orderbyPart.Trim();
 
             string sql = "";
             if (0 < pageSize)

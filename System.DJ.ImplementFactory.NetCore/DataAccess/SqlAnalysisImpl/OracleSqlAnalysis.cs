@@ -20,6 +20,10 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.PageSizeSignOfSql { get; set; }
         string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
 
+        char ISqlAnalysis.GetLeftTag { get { return leftTag; } }
+
+        char ISqlAnalysis.GetRightTag { get { return rightTag; } }
+
         string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
             return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue, ((ISqlAnalysis)this).AliasDic);
@@ -51,19 +55,21 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         }
 
         string ISqlAnalysis.GetPageChange(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int pageSize1, int pageNumber1)
-        {            
+        {
             return GetPageChange(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, pageSize1, pageNumber1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int pageSize, int pageNumber)
                 {
                     Random rnd = new Random();
-                    string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
-                    string sql = "select {0} from (select {0} from {2}{3}{4}{1}) {5} where {5}.ROWNUM>{6} and {5}.ROWNUM<={7}";
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
+                    string sql = "select {0} from (select ROWNUM row_num,{1} from {2}{3}{4}{5}) {6} where {6}.row_num>{7} and {6}.row_num<={8}";
                     ISqlAnalysis sqlAnalysis = this;
-                    sqlAnalysis.PageSizeSignOfSql = "{0}.ROWNUM<=".ExtFormat(tb);
-                    sqlAnalysis.StartQuantitySignOfSql = "{0}.ROWNUM>".ExtFormat(tb);
-                    sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.row_num<=".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.row_num>".ExtFormat(tb);
+                    string newSelectPart = GetNewSelectPart(selectPart, null);
+                    sql = sql.ExtFormat(newSelectPart, selectPart, fromPart, wherePart, groupPart, orderByPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
                     return sql;
-                });   
+                });
         }
 
         string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int top1)
@@ -71,26 +77,32 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, top1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
                 {
-                    string sql = "select * from (select {1} from {2}{3}{4}{5}) tb where ROWNUM<={0} and ROWNUM>0;";
+                    Random rnd = new Random();
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
+                    string sql = "select * from (select ROWNUM row_num,{1} from {2}{3}{4}{5}) {6} where {6}.row_num<={0} and {6}.row_num>0;";
                     ISqlAnalysis sqlAnalysis = this;
-                    sqlAnalysis.PageSizeSignOfSql = "ROWNUM<=";
-                    sqlAnalysis.StartQuantitySignOfSql = "ROWNUM>";
-                    sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.row_num<=".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.row_num>".ExtFormat(tb);
+                    sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart, tb);
                     return sql;
-                });            
+                });
         }
 
         string ISqlAnalysis.GetTop(string selectPart1, string fromPart1, string wherePart1, string groupPart1, string orderByPart1, int startNumber1, int length1)
-        {            
+        {
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, startNumber1, length1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
                 {
+                    Random rnd = new Random();
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
                     int end = startNumber + length;
-                    string sql = "select * from (select rownum,{0} from {1}{2}{3}{4}) tb where ROWNUM>={5} and ROWNUM<{6};";
+                    string sql = "select * from (select ROWNUM row_num,{0} from {1}{2}{3}{4}) {5} where {5}.row_num>={6} and {5}.row_num<{7};";
                     ISqlAnalysis sqlAnalysis = this;
-                    sqlAnalysis.PageSizeSignOfSql = "ROWNUM<";
-                    sqlAnalysis.StartQuantitySignOfSql = "ROWNUM>=";
-                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.row_num<".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.row_num>=".ExtFormat(tb);
+                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, tb, startNumber.ToString(), end.ToString());
                     return sql;
                 });
         }
@@ -128,7 +140,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         }
 
         string ISqlAnalysis.GetTableName(string tableName)
-        {            
+        {
             return GetTableName(tableName);
         }
 
@@ -148,7 +160,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         }
 
         bool ISqlAnalysis.IsLegalCaseDefaultValueWhenInsert(string tableName1, object fieldValue1, PropertyInfo propertyInfo1, FieldMapping fieldMapping1, ref object defaultValue1)
-        {            
+        {
             return IsLegalCaseDefaultValueWhenInsert(tableName1, fieldValue1, propertyInfo1, fieldMapping1, ref defaultValue1,
                 delegate (string primaryKeyName, string tableName)
                 {

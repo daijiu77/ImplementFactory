@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
-using System.Text;
+using System.DJ.ImplementFactory.Commons.Attrs.Sorts;
+using System.DJ.ImplementFactory.DataAccess;
 
 namespace Test.Framework.Entities
 {
@@ -13,6 +13,7 @@ namespace Test.Framework.Entities
         public virtual DateTime StartDate { get; set; }
         public virtual DateTime EndDate { get; set; }
 
+        [Sort1(OrderByRule.Desc)]
         public virtual int num { get; set; }
 
         public virtual Plan plan { get; set; }

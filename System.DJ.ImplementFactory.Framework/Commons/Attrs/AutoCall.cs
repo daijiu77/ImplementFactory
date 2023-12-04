@@ -184,7 +184,7 @@ namespace System.DJ.ImplementFactory.Commons.Attrs
                 if (!Directory.Exists(dir)) return;
 
                 string txt = "";
-                string date = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+                string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 string msg = date;
                 DJTools.append(ref msg, "The exception level: [{0}]{1}", ((int)errorLevels).ToString(), Enum.GetName(typeof(ErrorLevels), errorLevels));
                 DJTools.append(ref msg, "Interface: {0}", (null == interfaceType ? "" : interfaceType.FullName));

@@ -22,6 +22,7 @@ namespace System.DJ.ImplementFactory.DCache
         private static List<WaitUpdateItem> waitUpdateItems = new List<WaitUpdateItem>();
         private static int cacheTime = 0;
         private static bool execState = false;
+        public const string flag = "@";
 
         static DataCachePool()
         {
@@ -121,12 +122,20 @@ namespace System.DJ.ImplementFactory.DCache
 
             PersistenceCache persistence = new PersistenceCache();
             object val = null;
+            RefOutParams refOutParams = null;
             foreach (var item in waitUpdate.dataItems)
             {
                 val = item.GetValue();
                 Type tp = val.GetType();
                 Type type = null;
                 object vObj = null;
+                if (null != (val as DataCacheVal))
+                {
+                    refOutParams = ((DataCacheVal)val).refOutParams;
+                    val = ((DataCacheVal)val).result;
+                    tp = val.GetType();
+                }
+
                 if (typeof(IList).IsAssignableFrom(tp))
                 {
                     Type[] ts = tp.GetGenericArguments();
@@ -152,7 +161,7 @@ namespace System.DJ.ImplementFactory.DCache
                         return true;
                     });
                 }
-                Guid guid = persistence.Set(item.GetMethodPath(), item.GetKey(), val, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
+                Guid guid = persistence.Set(item.GetMethodPath(), item.GetKey(), val, refOutParams, tp, cacheTime, DateTime.Now, DateTime.Now.AddSeconds(cacheTime));
                 if (Guid.Empty != guid)
                 {
                     item.SetId(guid.ToString());
@@ -178,12 +187,22 @@ namespace System.DJ.ImplementFactory.DCache
         object IDataCache.Get(MethodInfo method, string key)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if (!string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             return GetValueByKey(methodPath, key);
         }
 
         object IDataCache.Get(MethodInfo method, string key, ref RefOutParams refOutParams)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if (!string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             return GetValueByKey(methodPath, key, ref refOutParams);
         }
 
@@ -200,6 +219,11 @@ namespace System.DJ.ImplementFactory.DCache
         void IDataCache.Set(MethodInfo method, string key, object value, int cacheTime, bool persistenceCache)
         {
             string methodPath = GetMethodPath(method);
+            string k = SetKey(method);
+            if (!string.IsNullOrEmpty(k))
+            {
+                key += flag + k;
+            }
             SetValue(methodPath, key, value, cacheTime, persistenceCache);
         }
 
@@ -340,6 +364,11 @@ namespace System.DJ.ImplementFactory.DCache
             }
         }
 
+        public virtual string SetKey(MethodInfo methodInfo)
+        {
+            return null;
+        }
+
         private void GetKeyBy(Type paraType, string fn, object dt, ref string s1)
         {
             if (null == dt) s1 = "";
@@ -462,7 +491,7 @@ namespace System.DJ.ImplementFactory.DCache
 
             public DataItem(string key, object value, int cacheTime)
             {
-                this.key = key;
+                this.key = key.Replace("\t", "");
                 this.value = value;
                 this.cacheTime = cacheTime;
                 start = DateTime.Now;

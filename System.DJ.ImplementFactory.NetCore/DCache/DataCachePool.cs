@@ -491,7 +491,7 @@ namespace System.DJ.ImplementFactory.DCache
 
             public DataItem(string key, object value, int cacheTime)
             {
-                this.key = key;
+                this.key = key.Replace("\t", "");
                 this.value = value;
                 this.cacheTime = cacheTime;
                 start = DateTime.Now;

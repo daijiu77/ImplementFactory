@@ -1,16 +1,16 @@
-using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.DJ.ImplementFactory;
 using System.DJ.ImplementFactory.Commons;
-using System.DJ.ImplementFactory.Commons.DynamicCode;
 using System.DJ.ImplementFactory.DataAccess;
 using System.DJ.ImplementFactory.DataAccess.FromUnit;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
+using System.DJ.ImplementFactory.DCache;
 using System.DJ.ImplementFactory.Entities;
-using System.DJ.ImplementFactory.MServiceRoute;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Test.Framework.DataInterface;
+using Test.Framework.DTO;
 using Test.Framework.Entities;
 using Test.Framework.InterfaceTest;
 using Test.Framework.MSVisitor;
@@ -103,15 +104,214 @@ namespace Test.Framework
 
         class ImplAdapter : ImplementAdapter
         {
-            //
+            const int flagSize = 20;
+            private static object ByteArrayToObject(byte[] data, string dataType)
+            {
+                object vObj = null;
+                if (null == data) return vObj;
+                if (string.IsNullOrEmpty(dataType)) return vObj;
+
+                RefOutParams refOutParams = null;
+                if (flagSize < data.Length)
+                {
+                    byte[] buffer = new byte[flagSize];
+                    Array.Copy(data, 0, buffer, 0, flagSize);
+                    string s = Encoding.UTF8.GetString(buffer).Trim();
+                    string s1 = "";
+                    if (0 < s.Length)
+                    {
+                        s1 = s.Substring(0, 1);
+                    }
+
+                    if (DataCachePool.flag.Equals(s1))
+                    {
+                        s1 = s.Substring(1);
+                        int n = s1.IndexOf('\0');
+                        if (-1 != n)
+                        {
+                            s1 = s1.Substring(0, n);
+                        }
+                        int pos = flagSize;
+                        int size = 0;
+                        int.TryParse(s1, out size);
+                        buffer = new byte[size];
+                        Array.Copy(data, pos, buffer, 0, size);
+                        Type t = typeof(CKeyValue);
+                        DataTable dataTable = buffer.ByteArrayToDataTable();
+                        List<CKeyValue> list = dataTable.DataTableToList<CKeyValue>();
+
+                        refOutParams = new RefOutParams();
+                        foreach (CKeyValue item in list)
+                        {
+                            refOutParams.Add(item.Key, item);
+                        }
+
+                        pos += size;
+                        size = data.Length - pos;
+                        buffer = new byte[size];
+                        Array.Copy(data, pos, buffer, 0, size);
+                        data = buffer;
+                    }
+                }
+                Type type = Type.GetType(dataType);
+                if (null == type)
+                {
+                    type = DJTools.GetTypeByFullName(dataType);
+                }
+                if (null == type) return vObj;
+                if (type.IsBaseType())
+                {
+                    string s = Encoding.UTF8.GetString(data);
+                    vObj = DJTools.ConvertTo(s, type);
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(type))
+                {
+                    DataTable dt = data.ByteArrayToDataTable();
+                    Type[] tps = type.GetGenericArguments();
+                    vObj = dt.DataTableToList(tps[0]);
+                }
+                else
+                {
+                    DataTable dt = data.ByteArrayToDataTable();
+                    List<object> list = dt.DataTableToList(type);
+                    if (0 < list.Count) vObj = list[0];
+                }
+
+                if (null != refOutParams)
+                {
+                    DataCacheVal dataCacheVal = new DataCacheVal();
+                    dataCacheVal.refOutParams = refOutParams;
+                    dataCacheVal.result = vObj;
+                    vObj = dataCacheVal;
+                }
+                return vObj;
+            }
+
+            private byte[] ObjectToByteArray(object vObj, string dataType)
+            {
+                //System.Collections.Generic.List<System.DJ.ImplementFactory.Commons.CKeyValue>
+                byte[] bts = null;
+                if (null == vObj) return bts;
+                if (string.IsNullOrEmpty(dataType)) return bts;
+                Type type = Type.GetType(dataType);
+                if (null == type)
+                {
+                    type = DJTools.GetTypeByFullName(dataType);
+                }
+                if (null == type) return bts;
+
+                if (type.IsBaseType())
+                {
+                    bts = Encoding.UTF8.GetBytes(vObj.ToString());
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(type))
+                {
+                    List<object> list = new List<object>();
+                    IEnumerable enums = vObj as IEnumerable;
+                    foreach (var item in enums)
+                    {
+                        list.Add(item);
+                    }
+                    bts = list.ListToByteArray();
+                }
+                else
+                {
+                    bts = vObj.ObjectToByteArray();
+                }
+                return bts;
+            }
+
+            public void DataTranslateTest()
+            {
+                object value = null;
+                List<CKeyValue> list1 = new List<CKeyValue>();
+                RefOutParams refOutParams = new RefOutParams();
+                list1.Add(new CKeyValue()
+                {
+                    Key = "a1",
+                    Value = "a",
+                    ValueType = typeof(string)
+                });
+                list1.Add(new CKeyValue()
+                {
+                    Key = "b1",
+                    Value = "b",
+                    ValueType = typeof(string)
+                });
+                value = list1;
+
+                refOutParams.Add("a", new CKeyValue()
+                {
+                    Key = "a",
+                    Value = "a",
+                    ValueType = typeof(string)
+                });
+                refOutParams.Add("b", new CKeyValue()
+                {
+                    Key = "b",
+                    Value = "b",
+                    ValueType = typeof(string)
+                });
+
+                byte[] refOutDatas = null;
+                if (null != refOutParams)
+                {
+                    List<CKeyValue> list = new List<CKeyValue>();
+                    Type typeRefOut = typeof(List<CKeyValue>);
+                    refOutParams.Foreach(ckv =>
+                    {
+                        list.Add(ckv);
+                        return true;
+                    });
+
+                    refOutDatas = ObjectToByteArray(list, typeRefOut.TypeToString(true));
+                }
+
+                Type dataType = typeof(List<CKeyValue>);
+                DataCacheTable cacheTable = new DataCacheTable();
+                cacheTable.Data = ObjectToByteArray(value, dataType.TypeToString(true));
+                if (null != refOutDatas)
+                {
+                    int size = cacheTable.Data.Length;
+                    size += refOutDatas.Length;
+                    size += flagSize;
+                    byte[] datas = new byte[size];
+                    string s = DataCachePool.flag + refOutDatas.Length;
+                    byte[] buffer = Encoding.UTF8.GetBytes(s);
+                    int pos = 0;
+                    Array.Copy(buffer, pos, datas, 0, buffer.Length);
+                    pos += flagSize;
+
+                    Array.Copy(refOutDatas, 0, datas, pos, refOutDatas.Length);
+                    pos += refOutDatas.Length;
+
+                    Array.Copy(cacheTable.Data, 0, datas, pos, cacheTable.Data.Length);
+                    cacheTable.Data = datas;
+                }
+
+                object vObj = ByteArrayToObject(cacheTable.Data, typeof(List<CKeyValue>).TypeToString(true));
+            }
         }
 
         static void Main(string[] args)
         {
+            ModeToDto();
+            TestDataTableByteArray();
+            ImplAdapter implAdapter1 = new ImplAdapter();
+            implAdapter1.DataTranslateTest();
+            string s = "@1234567890";
+            byte[] buffer = Encoding.UTF8.GetBytes(s);
+            byte[] datas = new byte[20];
+            Array.Copy(buffer, 0, datas, 0, buffer.Length);
+            string s1 = Encoding.UTF8.GetString(datas).Trim();
+            s1 = s1.Substring(1);
+            int n = s1.IndexOf("\0");
+            s1 = s1.Substring(0, n);
             ParameterInfo[] paras = null;
             int param_min_count = ImplementAdapter.GetConstructor(typeof(TestAbc), ref paras);
             ImplAdapter implAdapter = new ImplAdapter();
             object testAbs = implAdapter.GetInstanceByType(typeof(TestAbc));
+
             //Test1 test1 = new Test1();
             //test1.Test();
             //MService.Start();
@@ -120,11 +320,11 @@ namespace Test.Framework
             int n3 = 3 % 3; //n3=0
             //QueryData();
             TestObj testObj = new TestObj();
+            bool mbool = testObj.Compare();
             //testObj.test_ToObjectFrom();
-            //testObj.test_user();
-            string un = testObj.VisitService("aa");
+            testObj.test_user();
+            //string un = testObj.VisitService("aa");
             //bool mbool = testObj.Compare();
-            //TestDataTableByteArray();
 
             //testObj = new TestObj();
             //un = testObj.VisitService("bb");
@@ -305,6 +505,27 @@ namespace Test.Framework
             int len = data.Length;
         }
 
+        private static void ModeToDto()
+        {
+            UserInfo_Insert dto = new UserInfo_Insert()
+            {
+                name = "ZanShan",
+                age = 12,
+                address = "ShenZhen",
+                userType = 2
+            };
+
+            //dto转数据模型
+            UserInfo userInfo = dto.ToObjectFrom<UserInfo>();
+
+            List<UserInfo_Insert> dtoList = new List<UserInfo_Insert>();
+            dtoList.Add(dto);
+
+            //dto数据集合转数据模型集合
+            List<UserInfo> list = (List<UserInfo>)dtoList.ToListFrom<UserInfo, UserInfo_Insert>();
+            Console.WriteLine(dto.ToString());
+        }
+
         class Test1 : ImplementAdapter
         {
             [MyAutoCall]
@@ -350,6 +571,12 @@ namespace Test.Framework
 
             public bool Compare()
             {
+                int c = 0;
+                int d = 0;
+                int num = calculate.Sum(3, 1, ref c, out d);
+                num = calculate.Sum(3, 1, ref c, out d);
+                Plan plan = calculate.getDataObj(ref c, out d);
+                plan = calculate.getDataObj(ref c, out d);
                 calculate.Division(1, 2);
                 dbHelper1.ConStr = "1";
                 dbHelper2.ConStr = "2";
@@ -494,6 +721,12 @@ namespace Test.Framework
                     LeftJoin.Me.From<Plan>("p",
                     ConditionItem.Me.And("p.UserInfoId", ConditionRelation.Equals, "ui.Id")));
                 scheme2.dbSqlBody.Where(ConditionItem.Me.And("ui.name", ConditionRelation.Equals, "ff1"));
+                scheme2.dbSqlBody.Orderby(OrderbyItem.Me.Set("age", OrderByRule.Asc));
+
+                //特殊情况，可设置忽视数据模型里的 Sort 属性标识
+                scheme2.dbSqlBody.IgnoreSort<UserInfo>("cdatetime")
+                    .IgnoreSort<Plan>("CreateDate");
+
                 //int num = scheme2.Delete(true); //当为 true 时，删除与之关联的表数据
 
                 List<UserInfo> _userInfos = (List<UserInfo>)scheme2.ToList<UserInfo>();
@@ -507,7 +740,7 @@ namespace Test.Framework
                 plan.EndDate = DateTime.Now;
                 plan.Id = Guid.NewGuid();
                 plans.AddData(plan); //添加与 UserInfo 关联的 Plan 数据
-                
+
 
                 IDbSqlScheme scheme = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
                 IDbSqlScheme scheme1 = db.CreateSqlFrom(SqlFromUnit.Me.From<UserInfo>());
@@ -519,6 +752,8 @@ namespace Test.Framework
                     .Skip(1, 2).Orderby(OrderbyItem.Me.Set("cdatetime", OrderByRule.Asc));
                 scheme.dbSqlBody.WhereIgnore("IsEnabled");
                 List<UserInfo> users = (List<UserInfo>)scheme.ToList<UserInfo>();
+                if (null == users) return;
+                if (0 == users.Count) return;
                 users[0].address = "test-123"; //向数据库更新 address 属性值
 
                 UserInfo userInfo1 = new UserInfo();

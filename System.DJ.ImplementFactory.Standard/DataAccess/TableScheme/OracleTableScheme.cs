@@ -12,59 +12,6 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
 
         ISqlAnalysis IDbTableScheme.sqlAnalysis => sqlAnalysis;
 
-        private string getFieldType(FieldMapping fieldMapping)
-        {
-            string ft = "";
-            if (null == fieldMapping.FieldType) return ft;
-            if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
-            if (typeof(string) == fieldMapping.FieldType)
-            {
-                ft = "varchar({0})";
-                ft = ft.ExtFormat(fieldMapping.Length.ToString());
-            }
-            else if (typeof(Guid) == fieldMapping.FieldType || typeof(Guid?) == fieldMapping.FieldType)
-            {
-                ft = "varchar(50)";
-            }
-            else if (typeof(float) == fieldMapping.FieldType || typeof(float?) == fieldMapping.FieldType)
-            {
-                ft = "float";
-            }
-            else if (typeof(decimal) == fieldMapping.FieldType || typeof(decimal?) == fieldMapping.FieldType)
-            {
-                ft = "decimal(18, 0)";
-            }
-            else if (typeof(bool) == fieldMapping.FieldType || typeof(bool?) == fieldMapping.FieldType)
-            {
-                ft = "bit";
-            }
-            else if (typeof(DateTime) == fieldMapping.FieldType || typeof(DateTime?) == fieldMapping.FieldType)
-            {
-                ft = "datetime";
-            }
-            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType || fieldMapping.FieldType.IsEnum)
-            {
-                ft = "int";
-            }
-            else if (typeof(Int64) == fieldMapping.FieldType
-                 || typeof(Int64?) == fieldMapping.FieldType
-                  || typeof(long) == fieldMapping.FieldType
-                   || typeof(long?) == fieldMapping.FieldType)
-            {
-                ft = "bigint";
-            }
-            else if (typeof(double) == fieldMapping.FieldType || typeof(double?) == fieldMapping.FieldType)
-            {
-                ft = "money";
-            }
-            else if (typeof(byte[]) == fieldMapping.FieldType)
-            {
-                ft = "varbinary({0})";
-                ft = ft.ExtFormat(fieldMapping.Length.ToString());
-            }
-            return ft;
-        }
-
         private string getFieldScheme(FieldMapping fieldMapping)
         {
             string sql = sqlAnalysis.GetFieldName(fieldMapping.FieldName);

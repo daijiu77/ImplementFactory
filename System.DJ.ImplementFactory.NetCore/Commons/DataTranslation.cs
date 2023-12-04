@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Contracts;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.IO;
 using System.Reflection;
@@ -37,8 +39,9 @@ namespace System.DJ.ImplementFactory.Commons
             return Encoding.UTF8.GetBytes(s);
         }
 
-        private const int dataTableTopSize = 50;
+        private const int dataTableTopSize = 150;
         private const string dataTableTag = "DataTable@";
+        private const string baseTypeFName = "null";
         private const char unitSplit = ':';
         private const char cellSplit = ',';
         private const char rowSplit = ';';
@@ -205,7 +208,12 @@ namespace System.DJ.ImplementFactory.Commons
                     {
                         dr[dc.ColumnName] = bt;
                     }
-                    else
+                    else if (typeof(Type) == dc.DataType)
+                    {
+                        s = bt.ByteToStr();
+                        dr[dc.ColumnName] = DJTools.GetTypeByFullName(s);
+                    }
+                    else if(dc.DataType.IsBaseType())
                     {
                         s = bt.ByteToStr();
                         dr[dc.ColumnName] = DJTools.ConvertTo(s, dc.DataType);
@@ -225,31 +233,94 @@ namespace System.DJ.ImplementFactory.Commons
             DataTable dt = new DataTable();
             Attribute attr = null;
             Dictionary<string, string> dicFn = new Dictionary<string, string>();
-            type.ForeachProperty((pi, pt, fn) =>
+            Type columnType = null;
+            bool isBaseType = type.IsBaseType();
+            const string runTimeTypeName = "runtimetype";
+            if (isBaseType)
             {
-                attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
-                if (null != attr) return;
-                if (!pt.IsBaseType()) return;
-                dt.Columns.Add(fn, pi.PropertyType);
-                dicFn.Add(fn.ToLower(), fn);
-            });
+                dt.Columns.Add(baseTypeFName, type);
+            }
+            else
+            {
+                type.ForeachProperty((pi, pt, fn) =>
+                {
+                    attr = pi.GetCustomAttribute(typeof(Attrs.Constraint), true);
+                    if (null != attr) return;
+                    //if (!pt.IsBaseType()) return;
+                    if (!pi.PropertyType.IsBaseType())
+                    {
+                        Type tp = typeof(string);
+                        object vObj = pi.GetValue(list[0]);
+                        if (null != vObj) tp = vObj.GetType();
+                        if (!string.IsNullOrEmpty(tp.Name))
+                        {
+                            if (tp.Name.ToLower().Equals(runTimeTypeName))
+                            {
+                                tp = typeof(Type);
+                            }
+                        }                        
+                        columnType = tp;
+                    }
+                    else
+                    {
+                        columnType = pi.PropertyType;
+                    }
+                    dt.Columns.Add(fn, columnType);
+                    dicFn.Add(fn.ToLower(), fn);
+                });
+            }
 
             DataRow dr = null;
             string field = "";
             foreach (T item in list)
             {
                 dr = dt.NewRow();
-                item.ForeachProperty((pi, pt, fn, fv) =>
+                if (isBaseType)
                 {
-                    if (null == fv) return;
-                    field = fn.ToLower();
-                    if (!dicFn.ContainsKey(field)) return;
-                    dr[fn] = DJTools.ConvertTo(fv, pi.PropertyType);
-                });
+                    dr[baseTypeFName] = DJTools.ConvertTo(item, dt.Columns[0].DataType);
+                }
+                else
+                {
+                    item.ForeachProperty((pi, pt, fn, fv) =>
+                    {
+                        if (null == fv) return;
+                        field = fn.ToLower();
+                        if (!dicFn.ContainsKey(field)) return;
+                        if (!pi.PropertyType.IsBaseType())
+                        {
+                            columnType = typeof(string);
+                        }
+                        else
+                        {
+                            columnType = pi.PropertyType;
+                        }
+                        dr[fn] = DJTools.ConvertTo(fv, columnType);
+                    });
+                }
                 dt.Rows.Add(dr);
             }
+
             return dt.DataTableToByteArray();
             //throw new NotImplementedException();
+        }
+
+        public static byte[] ListToByteArray(this IList list, Type elementType)
+        {
+            byte[] bytes = null;
+            MethodInfo method = typeof(DataTranslation).GetMethod("ListToByteArray", BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+            if (null == method) return bytes;
+            method = method.MakeGenericMethod(elementType);
+            if (null == method) return bytes;
+            try
+            {
+                object vObj = method.Invoke(null, new object[] { list });
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+            return bytes;
         }
 
         public static List<T> ByteArrayToList<T>(this byte[] data)
@@ -412,12 +483,18 @@ namespace System.DJ.ImplementFactory.Commons
             object vObj = null;
             string field = "";
             string fn1 = "";
-            string ft = "";
             Type type1 = null;
             bool isArr = false;
+            bool isBaseType = type.IsBaseType();
             Attribute att = null;
             foreach (DataRow dr in dataTable.Rows)
             {
+                if (isBaseType)
+                {
+                    ele = DJTools.ConvertTo(dr[0], type);
+                    list.Add(ele);
+                    continue;
+                }
                 ele = Activator.CreateInstance(type);
                 type.ForeachProperty((pi, tp, fn) =>
                 {
@@ -432,10 +509,6 @@ namespace System.DJ.ImplementFactory.Commons
                                 isArr = DJTools.IsBaseType(type1);
                             }
                             if (!isArr) return;
-                        }
-                        else
-                        {
-                            return;
                         }
                     }
                     field = "";

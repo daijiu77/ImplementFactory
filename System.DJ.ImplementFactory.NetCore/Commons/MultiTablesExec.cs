@@ -406,13 +406,13 @@ where b.OWNER=‘数据库名称‘ order by a.TABLE_NAME;
                 }
             };
 
-            Regex rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+\s((where)|(group)|(order))\s", RegexOptions.IgnoreCase);
+            Regex rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\slimit\s)).)+\s((where)|(group)|(order)|(limit))\s", RegexOptions.IgnoreCase);
             action(rg2);
 
-            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\()(?!\))).)+\)", RegexOptions.IgnoreCase);
+            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\slimit\s)(?!\()(?!\))).)+\)", RegexOptions.IgnoreCase);
             action(rg2);
 
-            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)).)+", RegexOptions.IgnoreCase);
+            rg2 = new Regex(@"\sfrom\s+(((?!\sfrom\s)(?!\swhere\s)(?!\sgroup\s)(?!\sorder\s)(?!\slimit\s)).)+", RegexOptions.IgnoreCase);
             action(rg2);
 
             rg2 = new Regex(@"[a-z0-9_]+", RegexOptions.IgnoreCase);

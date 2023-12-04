@@ -2,12 +2,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace System.DJ.ImplementFactory.DataAccess
 {
+    /// <summary>
+    /// Collation
+    /// </summary>
     public enum OrderByRule
     {
+        /// <summary>
+        /// Positive ordering, for example: 1, 2, 3, 4
+        /// </summary>
         Asc,
+        /// <summary>
+        /// Reverse order, for example: 4, 3, 2, 1
+        /// </summary>
         Desc
     }
 
@@ -66,6 +76,45 @@ namespace System.DJ.ImplementFactory.DataAccess
             {
                 dic.Remove(fn);
                 list.Remove(fn);
+            }
+            else
+            {
+                const string fname = "FName";
+                Regex rg = new Regex(@"[a-z0-9_]+\.(?<FName>[a-z0-9_]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                string FName = "";
+                if (rg.IsMatch(fn))
+                {
+                    FName = rg.Match(fn).Groups[fname].Value;
+                    if (dic.ContainsKey(FName))
+                    {
+                        dic.Remove(FName);
+                        list.Remove(FName);
+                    }
+                }
+                else
+                {
+                    string key = "";
+                    string s = "";
+                    foreach (var item in dic)
+                    {
+                        s = item.Key;
+                        if (rg.IsMatch(s))
+                        {
+                            FName = rg.Match(s).Groups[fname].Value;
+                            if (FName.Equals(fn))
+                            {
+                                key = s;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        dic.Remove(key);
+                        list.Remove(key);
+                    }
+                }
             }
             dic.Add(fn, orderbyItem);
             list.Add(fn);

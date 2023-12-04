@@ -10,8 +10,11 @@ namespace System.DJ.ImplementFactory.DataAccess.Pipelines
     {
         int Count();
         DataTable ToDataTable();
-        IList<T> ToList<T>();
-        IList<object> ToList(Type modelType);
+        IList<T> ToIList<T>();
+        IList<object> ToIList(Type modelType);
+
+        List<T> ToList<T>();
+        List<object> ToList(Type modelType);
 
         T DefaultFirst<T>();
         object DefaultFirst(Type modelType);

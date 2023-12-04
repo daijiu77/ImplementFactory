@@ -22,6 +22,7 @@
     <UpdateTableDesign description="是否开启更新数据表设计">true</UpdateTableDesign>
     <CacheTime_Second description="数据缓存生命周期, 默认为1小时,即: 3600秒">3600</CacheTime_Second>
     <PersistenceCylceSync_Second description="缓存持久化周期同步间隔，默认10秒">10</PersistenceCylceSync_Second>
+	<PersistenceSource description="数据持久化源，可以是：db 或 file">file</PersistenceSource>
     <IsPrintFilterIPToLogs description="把网关拦截的 IP 输出到 Logs 文件夹">true</IsPrintFilterIPToLogs>
     <TryTimeServiceRegister description="服务注册尝试次数，默认50次">50</TryTimeServiceRegister>
     <HttpTimeout_Second description="Http请求等待时长, 默认30秒">30</HttpTimeout_Second>

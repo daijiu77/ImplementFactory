@@ -202,7 +202,7 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                     if (null == aliasDic) aliasDic = new Dictionary<string, string>();
                     string alias = "";
                     string field = "";
-                    bool mbool = IsAliasField(s, ref alias, ref field);                    
+                    bool mbool = IsAliasField(s, ref alias, ref field);
                     if (mbool)
                     {
                         string aliasLower = alias.ToLower();
@@ -314,6 +314,62 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             groupPart = groupPart.Trim();
             if (!string.IsNullOrEmpty(groupPart)) groupPart = " " + groupPart;
             return pageChange(selectPart, fromPart, wherePart, groupPart, orderByPart, pageSize, pageNumber);
+        }
+
+        protected string GetNewSelectPart(string selectPart, string tb)
+        {
+            string sltPart = "";
+            bool existTb = false == string.IsNullOrEmpty(tb);
+            if (-1 != selectPart.IndexOf("*"))
+            {
+                if (existTb)
+                {
+                    sltPart = tb + ".*";
+                }
+                else
+                {
+                    sltPart = "*";
+                }
+            }
+            else
+            {
+                string[] arr = selectPart.Split(',');
+                string fn = "";
+                ISqlAnalysis sqlAnalysis = (ISqlAnalysis)this;
+                foreach (var item in arr)
+                {
+                    fn = GetLastFieldName(sqlAnalysis, item);
+
+                    if (existTb)
+                    {
+                        sltPart += ",{0}.{1}".ExtFormat(tb, fn);
+                    }
+                    else
+                    {
+                        sltPart += "," + fn;
+                    }
+                }
+                if (!string.IsNullOrEmpty(sltPart))
+                {
+                    sltPart = sltPart.Substring(1);
+                }
+            }
+            return sltPart;
+        }
+
+        public static string GetLastFieldName(ISqlAnalysis sqlAnalysis, string field)
+        {
+            if (string.IsNullOrEmpty(field)) return field;
+            string fn = field.Trim();
+            fn = fn.Replace(sqlAnalysis.GetLeftTag.ToString(), "");
+            fn = fn.Replace(sqlAnalysis.GetRightTag.ToString(), "");
+            Regex rg = new Regex(@"(?<fName>^([a-z0-9_]+)$)|(^[a-z0-9_]+\s+(as\s+)?(?<fName>[a-z0-9_]+)$)|(^[a-z0-9_]+\.(?<fName>[a-z0-9_]+)$)|(^[a-z0-9_]+\.[a-z0-9_]+\s+(as\s+)?(?<fName>[a-z0-9_]+)$)",
+                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            if (rg.IsMatch(fn))
+            {
+                fn = rg.Match(fn).Groups["fName"].Value;
+            }
+            return fn;
         }
 
         protected delegate string DgtGetTop(string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top);

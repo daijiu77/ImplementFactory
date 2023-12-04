@@ -129,6 +129,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\Attrs\Sorts\SortThird.cs" />
+    <Compile Include="Commons\Attrs\Sorts\SortSecond.cs" />
+    <Compile Include="Commons\Attrs\Sorts\SortFourth.cs" />
+    <Compile Include="Commons\Attrs\Sorts\SortFirst.cs" />
+    <Compile Include="Commons\Attrs\Sorts\SortFifth.cs" />
+    <Compile Include="Commons\Attrs\Sorts\SortAttribute.cs" />
+    <Compile Include="Commons\Attrs\Sorts\Sort5.cs" />
+    <Compile Include="Commons\Attrs\Sorts\Sort4.cs" />
+    <Compile Include="Commons\Attrs\Sorts\Sort3.cs" />
+    <Compile Include="Commons\Attrs\Sorts\Sort2.cs" />
+    <Compile Include="Commons\Attrs\Sorts\Sort1.cs" />
     <Compile Include="Entities\DataCacheVal.cs" />
     <Compile Include="ShareCodeCompiler.cs" />
     <Compile Include="Commons\ESession.cs" />
@@ -277,7 +288,6 @@
     <Compile Include="Commons\Attrs\FieldMapping.cs" />
     <Compile Include="Commons\Attrs\SingleCall.cs" />
     <Compile Include="Commons\BasicExecForSQL.cs" />
-    <Compile Include="Commons\BufferData.cs" />
     <Compile Include="Commons\DataEntity.cs" />
     <Compile Include="Commons\DataOperate\AbsBatch.cs" />
     <Compile Include="Commons\DataOperate\DeleteBatch.cs" />

@@ -286,7 +286,7 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                             }
                         }
                     }
-                    
+
                     DJTools.append(ref pro, level + 1, "if (false == (({0})this).{1})", _IEntityCopy, _AssignmentNo);
                     DJTools.append(ref pro, level + 1, "{");
                     //SetValue(object currentModel, Constraint constraint, Type propertyType, string propertyName, object currentPropertyValue, object newPropertyValue)
@@ -492,6 +492,27 @@ namespace System.DJ.ImplementFactory.DataAccess.AnalysisDataModel
                                     lazyOrderbyStr += ".OrderbyLazy(\"{0}\", {1})".ExtFormat(item.Key.ToLower(), los);
                                 }
                                 DJTools.append(ref GetBody, level, "scheme.dbSqlBody{0};", lazyOrderbyStr);
+                            }
+
+                            if (0 < dbSqlBody.IgnoreSortDic.Count)
+                            {
+                                string tpName = "";
+                                string fArr = "";
+                                Dictionary<string, string> fDic = null;
+                                foreach (var dItem in dbSqlBody.IgnoreSortDic)
+                                {
+                                    tpName = dItem.Key.TypeToString(true);
+                                    fDic = dItem.Value as Dictionary<string, string>;
+                                    if (null == fDic) continue;
+                                    fArr = "";
+                                    foreach (var fItem in fDic)
+                                    {
+                                        fArr += ",\"" + fItem.Key + "\"";
+                                    }
+                                    if (string.IsNullOrEmpty(fArr)) continue;
+                                    fArr = fArr.Substring(1);
+                                    DJTools.append(ref GetBody, level, "scheme.dbSqlBody.IgnoreSort<{0}>({1});", tpName, fArr);
+                                }
                             }
 
                             if (PropType.isArray == propType)

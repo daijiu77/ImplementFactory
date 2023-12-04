@@ -207,7 +207,7 @@ namespace System.DJ.ImplementFactory.DataAccess
                         //throw;
                     }
                 }
-                else if (typeof(IList).IsAssignableFrom(pi.PropertyType))
+                else if (pi.PropertyType.IsList())
                 {
                     type = pi.PropertyType.GetGenericArguments()[0];
                     IList<object> results = func(type);
@@ -403,10 +403,10 @@ namespace System.DJ.ImplementFactory.DataAccess
             ((IDisposable)dbHelper).Dispose();
         }
 
-        IList<T> IDbSqlScheme.ToList<T>()
+        List<T> IDbSqlScheme.ToList<T>()
         {
             Type modelType = typeof(T);
-            IList<T> dataList = new DOList<T>();
+            List<T> dataList = new DOList<T>();
             ListData(modelType, ele =>
             {
                 dataList.Add((T)ele);
@@ -414,14 +414,24 @@ namespace System.DJ.ImplementFactory.DataAccess
             return dataList;
         }
 
-        IList<object> IDbSqlScheme.ToList(Type modelType)
+        List<object> IDbSqlScheme.ToList(Type modelType)
         {
-            IList<object> dataList = new DOList<object>();
+            List<object> dataList = new DOList<object>();
             ListData(modelType, ele =>
             {
                 dataList.Add(ele);
             });
             return dataList;
+        }
+
+        IList<T> IDbSqlScheme.ToIList<T>()
+        {
+            return ((IDbSqlScheme)this).ToList<T>();
+        }
+
+        IList<object> IDbSqlScheme.ToIList(Type modelType)
+        {
+            return ((IDbSqlScheme)this).ToList(modelType);
         }
 
         T IDbSqlScheme.DefaultFirst<T>()

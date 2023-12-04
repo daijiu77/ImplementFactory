@@ -5,13 +5,17 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class MixedCalculate : IMixedCalculate
     {
-        Regex bracketRg = null;
+        private Regex bracketRg = null;
         /// <summary>
         /// 按运算符的优先级顺序来做匹配(数组元素的先后顺序决定运算符的优先级)
         /// </summary>
-        Regex[] regexes = null;
-        
-        const int max = 100;
+        private Regex[] regexes = null;
+
+        private const int max = 100;
+
+        private string err = "";
+
+        string IMixedCalculate.Err {  get { return err; } }
 
         public MixedCalculate()
         {
@@ -34,6 +38,7 @@ namespace System.DJ.ImplementFactory.Commons
 
         T IMixedCalculate.Exec<T>(string expression)
         {
+            err = "";
             T val = default(T);
             if (string.IsNullOrEmpty(expression)) return val;
             BracketCalculate(ref expression);
@@ -139,7 +144,7 @@ namespace System.DJ.ImplementFactory.Commons
                 CalculateExp = m.Groups["CalculateExp"].Value;
                 foreach (var item in regexes)
                 {
-                    Level_Calculate(item, ref CalculateExp);                    
+                    Level_Calculate(item, ref CalculateExp);
                 }
                 s = s.Replace(m.Groups[0].Value, CalculateExp);
                 n++;
@@ -165,6 +170,11 @@ namespace System.DJ.ImplementFactory.Commons
                     v1 = num1 * num2;
                     break;
                 case "/":
+                    if (0 == num2)
+                    {
+                        err = "The number can not be zero in the expression '{0}/{1}'".ExtFormat(num1, num2);
+                        return v1;
+                    }
                     v1 = num1 / num2;
                     break;
                 case "%":

@@ -304,7 +304,7 @@ namespace System.DJ.ImplementFactory
                     {
                         MakeInsertSql makeInsertSql = new MakeInsertSql();
                         makeInsertSql.Execute();
-                    });                    
+                    });
                 }
 
                 new PersistenceCache();
@@ -846,7 +846,8 @@ namespace System.DJ.ImplementFactory
                             });
                             if (null == implType)
                             {
-                                implType = microServiceMethod.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
+                                IMicroServiceMethod msm = (IMicroServiceMethod)Activator.CreateInstance(microServiceMethod.GetType());
+                                implType = msm.GetMS(codeCompiler, autoCall, microServiceRoute, interfaceType);
                                 implNew = implType;
                             }
                         }
@@ -1278,7 +1279,7 @@ namespace System.DJ.ImplementFactory
                     if (null != impl_type) break;
                 }
                 return impl_type;
-            }            
+            }
         }
 
         public Type GetImplementTypeOfTemp(Type interfaceType, AutoCall autoCall)
@@ -1286,7 +1287,7 @@ namespace System.DJ.ImplementFactory
             lock (_SetAssembliesOfTemp)
             {
                 return GetImplementTypeOfTemp(interfaceType, autoCall, null);
-            }            
+            }
         }
 
         /// <summary>

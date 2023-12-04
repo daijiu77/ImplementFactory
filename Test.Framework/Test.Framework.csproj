@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTO\UserInfo_Insert.cs" />
     <Compile Include="MSVisitor\IUserInfo.cs" />
     <Compile Include="MSVisitor\IHomeController.cs" />
     <Compile Include="ServiceRegisterMessageImpl.cs" />

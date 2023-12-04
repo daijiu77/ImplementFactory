@@ -307,7 +307,7 @@ namespace System.DJ.ImplementFactory.MServiceRoute
             string binDirPath = Path.Combine(DJTools.RootPath, TempImplCode.dirName);
             binDirPath = Path.Combine(binDirPath, TempImplCode.libName);
             binDirPath.InitDirectory();
-            //instanceCodeCompiler.SavePathOfDll = Path.Combine(binDirPath, clssName + ".dll");
+            clssName = ClearDot(interfaceName) + "_" + controllerName + "_" + routeName;
             string dllPath = Path.Combine(binDirPath, clssName + ".dll");
 
             err = "";
@@ -520,6 +520,27 @@ namespace System.DJ.ImplementFactory.MServiceRoute
                 ucDic.TryGetValue(key, out ucArr);
                 return ucArr;
             }
+        }
+
+        private string ClearDot(string str)
+        {
+            if (string.IsNullOrEmpty(str)) return str;
+            if (-1 == str.IndexOf(".")) return str;
+            string[] arr = str.Split('.');
+            int size = arr.Length;
+            string s = "";
+            for (int i = 0; i < size; i++)
+            {
+                if (0 == i)
+                {
+                    s = arr[i];
+                }
+                else
+                {
+                    s += arr[i].Substring(0, 1).ToUpper() + arr[i].Substring(1);
+                }
+            }
+            return s;
         }
 
         public void RemoveSvrUrlContractKey(string serviceName)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs.Sorts;
 using System.DJ.ImplementFactory.DataAccess;
 
 namespace Test.Framework.Entities
@@ -36,6 +37,7 @@ namespace Test.Framework.Entities
         [Condition("like", Condition.WhereIgrons.igroneEmptyNull)]
         public virtual string name { get; set; }
 
+        [Sort1]
         [Condition("=", Condition.WhereIgrons.igroneZero)]
         public virtual int age { get; set; }
 
@@ -52,6 +54,7 @@ namespace Test.Framework.Entities
 
         public virtual UserType userType { get; set; }
 
+        [Sort2]
         public virtual DateTime cdatetime { get; set; }
 
         [Constraint(foreignKey: "id", refrenceKey: "UserInfoId")]

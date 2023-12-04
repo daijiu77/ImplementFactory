@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using System.DJ.ImplementFactory.Commons;
 using System.DJ.ImplementFactory.Commons.Attrs;
 using System.DJ.ImplementFactory.DataAccess.Pipelines;
 using System.DJ.ImplementFactory.Pipelines;
@@ -50,6 +51,70 @@ namespace System.DJ.ImplementFactory.DataAccess.TableScheme
             }
             ImplementAdapter.Destroy(dbHelper);
             return list;
+        }
+
+        protected string getFieldType(FieldMapping fieldMapping, Func<Type, string> func)
+        {
+            string ft = "";
+            if (null == fieldMapping.FieldType) return ft;
+            if (0 >= fieldMapping.Length) fieldMapping.Length = 100;
+
+            if (null == func) func = (tp) => { return null; };
+            string ft1 = func(fieldMapping.FieldType);
+            if (!string.IsNullOrEmpty(ft1)) return ft1;
+
+            if (typeof(string) == fieldMapping.FieldType)
+            {
+                ft = "varchar({0})";
+                ft = ft.ExtFormat(fieldMapping.Length.ToString());
+            }
+            else if (typeof(Guid) == fieldMapping.FieldType || typeof(Guid?) == fieldMapping.FieldType)
+            {
+                ft = "varchar(50)";
+            }
+            else if (typeof(float) == fieldMapping.FieldType || typeof(float?) == fieldMapping.FieldType)
+            {
+                ft = "float";
+            }
+            else if (typeof(decimal) == fieldMapping.FieldType || typeof(decimal?) == fieldMapping.FieldType)
+            {
+                ft = "decimal(18, {0})";
+                ft = ft.ExtFormat(fieldMapping.Length.ToString());
+            }
+            else if (typeof(bool) == fieldMapping.FieldType || typeof(bool?) == fieldMapping.FieldType)
+            {
+                ft = "bit";
+            }
+            else if (typeof(DateTime) == fieldMapping.FieldType || typeof(DateTime?) == fieldMapping.FieldType)
+            {
+                ft = "datetime";
+            }
+            else if (typeof(int) == fieldMapping.FieldType || typeof(int?) == fieldMapping.FieldType || fieldMapping.FieldType.IsEnum)
+            {
+                ft = "int";
+            }
+            else if (typeof(Int64) == fieldMapping.FieldType
+                 || typeof(Int64?) == fieldMapping.FieldType
+                  || typeof(long) == fieldMapping.FieldType
+                   || typeof(long?) == fieldMapping.FieldType)
+            {
+                ft = "bigint";
+            }
+            else if (typeof(double) == fieldMapping.FieldType || typeof(double?) == fieldMapping.FieldType)
+            {
+                ft = "money";
+            }
+            else if (typeof(byte[]) == fieldMapping.FieldType)
+            {
+                ft = "varbinary({0})";
+                ft = ft.ExtFormat(fieldMapping.Length.ToString());
+            }
+            return ft;
+        }
+
+        protected string getFieldType(FieldMapping fieldMapping)
+        {
+            return getFieldType(fieldMapping, ft => { return null; });
         }
     }
 }

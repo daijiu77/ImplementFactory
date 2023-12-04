@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.Commons.Attrs.Sorts;
 using System.DJ.ImplementFactory.DataAccess;
-using System.Text;
 
 namespace Test.Framework.Entities
 {
@@ -14,6 +13,7 @@ namespace Test.Framework.Entities
         [FieldMapping("IsEnabled", typeof(bool), 0, "1")]
         public virtual bool IsEnabled { get; set; }
 
+        [Sort2]
         [FieldMapping("CreateDate", typeof(DateTime), 0, "getdate()")]
         public virtual DateTime CreateDate { get; set; }
     }

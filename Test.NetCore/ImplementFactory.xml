@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configurations>
 	<database>
-		<ConnectionString>Data Source=(local);Initial Catalog=TestDb;User Id=sa;Password=admin;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
+		<ConnectionString>Data Source=(local);Initial Catalog=DbTest;User Id=sa;Password=admin;Encrypt=True;TrustServerCertificate=True;</ConnectionString>
     <DatabaseType description="数据库类型:sqlserver,oracle,mysql">sqlserver</DatabaseType>
     <SqlProviderRelativePathOfDll description="动态 sql 提供者所在的dll文件程序集的相对路径,注：该提供者必须继承 System.DJ.ImplementFactory.Pipelines.ISqlExpressionProvider 接口">
     </SqlProviderRelativePathOfDll>
@@ -22,7 +22,7 @@
     <IsDbUsed description="当设置为 true 时，每次使用完 DbConnection 都会被释放">false</IsDbUsed>
     <UpdateTableDesign description="是否开启更新数据表设计">true</UpdateTableDesign>
     <CacheTime_Second description="数据缓存生命周期, 默认为1小时,即: 3600秒">3600</CacheTime_Second>
-    <PersistenceCylceSync_Second description="缓存持久化周期同步间隔，默认10秒">10</PersistenceCylceSync_Second>
+    <PersistenceCylceSync_Second description="缓存持久化周期同步间隔，默认10秒">1</PersistenceCylceSync_Second>
 	</database>
 	<LogsRange description="日志策略,依次为: 0 severe(严重的), 1 dangerous(危险的), 2 normal(一般的), 3 lesser(次要的), 4 debug(调试)">
 		<upperLimit description="可以是数字或英文名称, 为数字时 upperLimit 应小于 lowerLimit">severe</upperLimit>

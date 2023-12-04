@@ -20,6 +20,10 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.PageSizeSignOfSql { get; set; }
         string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
 
+        char ISqlAnalysis.GetLeftTag { get { return leftTag; } }
+
+        char ISqlAnalysis.GetRightTag { get { return rightTag; } }
+
         string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
             return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue, ((ISqlAnalysis)this).AliasDic);

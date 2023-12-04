@@ -11,5 +11,6 @@ namespace System.DJ.ImplementFactory.Pipelines
     public interface IMixedCalculate
     {
         T Exec<T>(string expression);
+        string Err {  get; }        
     }
 }

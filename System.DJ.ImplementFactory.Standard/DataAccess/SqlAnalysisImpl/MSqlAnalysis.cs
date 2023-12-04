@@ -21,6 +21,10 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
         string ISqlAnalysis.PageSizeSignOfSql { get; set; }
         string ISqlAnalysis.StartQuantitySignOfSql { get; set; }
 
+        char ISqlAnalysis.GetLeftTag { get { return leftTag; } }
+
+        char ISqlAnalysis.GetRightTag { get { return rightTag; } }
+
         string ISqlAnalysis.GetConditionOfBaseValue(string fieldName, ConditionRelation relation, object fieldValueOfBaseValue)
         {
             return GetConditionOfBaseValue(fieldName, relation, fieldValueOfBaseValue, ((ISqlAnalysis)this).AliasDic);
@@ -58,12 +62,14 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
                 {
                     if (string.IsNullOrEmpty(orderByPart)) throw new Exception("A field for sorting is required.");
                     Random rnd = new Random();
-                    string tb = "tb_" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
-                    string sql = "select {0} from (select ROW_NUMBER() OVER({1}) rowNumber,{0} from {2}{3}{4}) {5} where {5}.rowNumber>{6} and {5}.rowNumber<={7}";
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
+                    string sql = "select {0} from (select ROW_NUMBER() OVER({1}) row_num,{2} from {3}{4}{5}) {6} where {6}.row_num>{7} and {6}.row_num<={8}";
                     ISqlAnalysis sqlAnalysis = this;
-                    sqlAnalysis.PageSizeSignOfSql = "{0}.rowNumber<=".ExtFormat(tb);
-                    sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNumber>".ExtFormat(tb);
-                    sql = sql.ExtFormat(selectPart, orderByPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.row_num<=".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.row_num>".ExtFormat(tb);
+                    string newSelectPart = GetNewSelectPart(selectPart, null);
+                    sql = sql.ExtFormat(newSelectPart, orderByPart, selectPart, fromPart, wherePart, groupPart, tb, (pageSize * (pageNumber - 1)).ToString(), (pageSize * pageNumber).ToString());
                     return sql;
                 });
         }
@@ -73,13 +79,16 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, top1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int top)
                 {
-                    string sql = "select * from (select row_number() over({5}) rowNum, {1} from {2}{3}{4}) tb where tb.rowNum<={0} and tb.rowNum>0";
+                    Random rnd = new Random();
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
+                    string sql = "select * from (select row_number() over({5}) rowNum, {1} from {2}{3}{4}) {5} where tb.rowNum<={0} and tb.rowNum>0";
                     if (!string.IsNullOrEmpty(orderByPart))
                     {
-                        sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart);
+                        sql = sql.ExtFormat(top.ToString(), selectPart, fromPart, wherePart, groupPart, orderByPart, tb);
                         ISqlAnalysis sqlAnalysis = this;
-                        sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<=";
-                        sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>";
+                        sqlAnalysis.PageSizeSignOfSql = "{0}.rowNum<=".ExtFormat(tb);
+                        sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNum>".ExtFormat(tb);
                     }
                     else
                     {
@@ -96,14 +105,17 @@ namespace System.DJ.ImplementFactory.DataAccess.SqlAnalysisImpl
             return GetTop(selectPart1, fromPart1, wherePart1, groupPart1, orderByPart1, startNumber1, length1,
                 delegate (string selectPart, string fromPart, string wherePart, string groupPart, string orderByPart, int startNumber, int length)
                 {
+                    Random rnd = new Random();
+                    rnd.Next(1, 99);
+                    string tb = "tb" + DateTime.Now.ToString("HHmmss") + "_" + rnd.Next(1, 99);
                     int end = startNumber + length;
-                    string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) tb where tb.rowNum>={5} and tb.rowNum<{6}";
-                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, startNumber.ToString(), end.ToString());
+                    string sql = "select * from (select row_number() over({4}) rowNum,{0} from {1}{2}{3}{4}) {5} where tb.rowNum>={6} and tb.rowNum<{7}";
+                    sql = sql.ExtFormat(selectPart, fromPart, wherePart, groupPart, orderByPart, tb, startNumber.ToString(), end.ToString());
                     ISqlAnalysis sqlAnalysis = this;
-                    sqlAnalysis.PageSizeSignOfSql = "tb.rowNum<";
-                    sqlAnalysis.StartQuantitySignOfSql = "tb.rowNum>=";
+                    sqlAnalysis.PageSizeSignOfSql = "{0}.rowNum<".ExtFormat(tb);
+                    sqlAnalysis.StartQuantitySignOfSql = "{0}.rowNum>=".ExtFormat(tb);
                     return sql;
-                });       
+                });
         }
 
         string ISqlAnalysis.GetCount(string fromPart, string wherePart, string groupPart)

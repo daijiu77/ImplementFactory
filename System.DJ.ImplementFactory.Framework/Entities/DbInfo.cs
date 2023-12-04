@@ -115,6 +115,9 @@
         private string _PersistenceCylceSync_Second = "缓存持久化周期同步间隔，默认10秒";
         public int PersistenceCylceSync_Second { get; set; } = 10;
 
+        private string _PersistenceSource = "数据持久化源，可以是：db 或 file";
+        public string PersistenceSource { get; set; } = "file";
+
         private string _IsPrintFilterIPToLogs = "把网关拦截的 IP 输出到 Logs 文件夹";
         public bool IsPrintFilterIPToLogs { get; set; }
 

@@ -9,6 +9,8 @@ namespace System.DJ.ImplementFactory.Commons
 {
     public class DataModelMapping
     {
+        private const string _ToListData = "ToListData";
+        private const string _ToObjectData = "ToObjectData";
 
         /// <summary>
         /// Object property-relationship mapping assignments
@@ -54,8 +56,11 @@ namespace System.DJ.ImplementFactory.Commons
                 {
                     if (!funcAssign(pi, fn)) return true;
                 }
+
                 fv = pi.GetValue(srcObj, null);
+                if (null == fv) return true;
                 vObj = fv;
+
                 if (null != funcVal)
                 {
                     vObj = funcVal(tObj, srcObj, fn, fv);
@@ -64,25 +69,33 @@ namespace System.DJ.ImplementFactory.Commons
                 if (null != vObj)
                 {
                     piType = tgPropertyInfo.PropertyType;
-                    if (typeof(IList).IsAssignableFrom(pt) && typeof(IList).IsAssignableFrom(piType))
+
+                    bool ptList = pt.IsList();
+                    bool piTypeList = piType.IsList();
+                    bool ptBaseType = pt.IsBaseType();
+                    bool piBaseType = piType.IsBaseType();
+                    //if (typeof(IList).IsAssignableFrom(pt) && typeof(IList).IsAssignableFrom(piType))
+                    if (ptList && piTypeList)
                     {
                         Type srcParaType = pt.GetGenericArguments()[0];
                         Type tegartParaType = tgPropertyInfo.PropertyType.GetGenericArguments()[0];
-                        vObj = ExecuteStaticMethod("ToListData", new Type[] { tegartParaType, srcParaType }, new object[] { vObj, isTrySetVal, funcAssign, funcVal });
+                        vObj = ExecuteStaticMethod(_ToListData, new Type[] { tegartParaType, srcParaType }, new object[] { vObj, isTrySetVal, funcAssign, funcVal });
                     }
                     else if (pt.IsClass
-                        && (false == pt.IsBaseType())
+                        && (false == ptBaseType)
                         && (false == pt.IsAbstract)
                         && (false == pt.IsInterface)
                         && piType.IsClass
-                        && (false == piType.IsBaseType())
+                        && (false == piBaseType)
                         && (false == piType.IsAbstract)
                         && (false == piType.IsInterface))
                     {
-                        vObj = ExecuteStaticMethod("ToObjectData", new Type[] { piType },
+                        vObj = ExecuteStaticMethod(_ToObjectData, new Type[] { piType },
                             new object[] { vObj, isTrySetVal, funcAssign, funcVal });
                     }
                 }
+
+                if (null == vObj) return true;
 
                 try
                 {
@@ -92,7 +105,8 @@ namespace System.DJ.ImplementFactory.Commons
                         if (null != tgVal)
                         {
                             IEnumerable ienum = (IEnumerable)vObj;
-                            IList list = (IList)tgVal;
+                            IList list = tgVal as IList;
+                            if (null == list) return true;
                             foreach (var item in ienum)
                             {
                                 list.Add(item);
@@ -106,7 +120,7 @@ namespace System.DJ.ImplementFactory.Commons
                         if (null != tgVal)
                         {
                             Type eleTp = pt.GetTypeForArrayElement();
-                            
+
                             if (null != eleTp)
                             {
                                 object list = ExtCollection.createListByType(eleTp);

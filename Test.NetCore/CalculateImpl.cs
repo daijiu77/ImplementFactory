@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.DJ.ImplementFactory.Commons.Attrs;
+using System.DJ.ImplementFactory.DCache.Attrs;
 using System.Text;
 using System.Threading.Tasks;
 using Test.NetCore.DataInterface;
@@ -73,12 +74,26 @@ namespace Test.NetCore
             return await Task.FromResult((a + b));
         }
 
-        Plan IBaseTest<Plan>.getDataObj()
+        [DataCache(true)]
+        Plan IBaseTest<Plan>.getDataObj(ref int a, out int b)
         {
+            a = 1;
+            b = 2;
             return new Plan()
             {
-                PName = "abc"
+                PName = "abc",
+                Id = Guid.NewGuid(),
+                num = 5,
             };
+        }
+
+        [DataCache(true)]
+        int ICalculate.Sum(int a, int b, ref int c, out int d)
+        {
+            int num = a + b;
+            c = num;
+            d = a * b;
+            return a - b;
         }
     }
 }

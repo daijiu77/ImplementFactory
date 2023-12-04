@@ -9,7 +9,7 @@ namespace Test.NetCore.InterfaceTest
 
     public interface IBaseTest<T>
     {
-        T getDataObj();
+        T getDataObj(ref int a, out int b);
     }
 
     public interface ICalculate: IBaseTest<Plan>
@@ -20,6 +20,8 @@ namespace Test.NetCore.InterfaceTest
 
         [DataCache]
         int Sum(int a, int b);
+
+        int Sum(int a, int b, ref int c, out int d);
 
         [DataCache]
         Task<int> TaskSum(int a, int b);

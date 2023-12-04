@@ -120,6 +120,12 @@ namespace System.DJ.ImplementFactory.Commons
                 }
             }
 
+            if ((value.GetType() == typeof(string)) && (type == typeof(Type)))
+            {
+                Type tp1 = value.ToString().GetClassTypeByPath();
+                if (null != tp1) return tp1;
+            }
+
             if (!IsBaseType(value.GetType())) return value;
             if (type.IsEnum)
             {
@@ -584,7 +590,19 @@ namespace System.DJ.ImplementFactory.Commons
             foreach (object item in arr)
             {
                 s2 = "";
-                if (null != item) s2 = item.ToString();
+                if (null != item)
+                {
+                    Type vt = item.GetType();
+                    if ((typeof(DateTime) == vt) || (typeof(DateTime?) == vt))
+                    {
+                        DateTime dt = Convert.ToDateTime(item);
+                        s2 = dt.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        s2 = item.ToString();
+                    }
+                }
                 s1 = s1.Replace("{" + n + "}", s2);
                 n++;
             }
@@ -1180,7 +1198,21 @@ namespace System.DJ.ImplementFactory.Commons
             classType = GetDynamicType(classPath);
             if (null != classType) return classType;
 
-            if (-1 != classPath.IndexOf("+"))
+            Regex rg = new Regex(@"(?<ListType>[a-z0-9_\.]+)\<(?<EleType>[a-z0-9_\.]+)\>$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            if (rg.IsMatch(classPath))
+            {
+                Match match = rg.Match(classPath);
+                string ListType = match.Groups["ListType"].Value;
+                string EleType = match.Groups["EleType"].Value;
+                ListType += "`1";
+                Type type = GetClassTypeByPath(ListType);
+                if (null == ListType) return classType;
+
+                Type type1 = GetClassTypeByPath(EleType);
+                if (null == type1) return classType;
+                classType = type.MakeGenericType(type1);
+            }
+            else if (-1 != classPath.IndexOf("+"))
             {
                 string[] arr = classPath.Split('+');
                 Type tp = arr[0].getTypeFromAssemblies();
